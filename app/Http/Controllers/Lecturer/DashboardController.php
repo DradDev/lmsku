@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Http\Controllers\Lecturer;
+
+use App\Http\Controllers\Controller;
+use App\Models\Material;
+use App\Models\Question;
+use App\Models\Quiz;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+
+class DashboardController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $tab = $request->input('tab', 'overview');
+
+        $materials = Material::query()
+            ->whereHas('course', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->latest()
+            ->get();
+
+        $questions = Question::query()
+            ->where('user_id', Auth::id())
+            ->with(['quiz.course'])
+            ->latest()
+            ->get();
+
+        $quizzes = Quiz::query()
+            ->whereHas('course', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->with(['course'])
+            ->latest()
+            ->get();
+
+        return view('lecturer.dashboard', compact(
+            'tab',
+            'materials',
+            'questions',
+            'quizzes'
+        ));
+    }
+}

@@ -1,0 +1,252 @@
+<x-app-layout>
+    <div class="min-h-screen bg-slate-50">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="mb-6">
+                <a href="{{ route('student.courses.index') }}"
+                   class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
+                    ← Back to Courses
+                </a>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                        <div>
+                            <h1 class="text-3xl font-bold text-slate-900">
+                                {{ $course->name ?? $course->title }}
+                            </h1>
+
+                            <p class="text-slate-500 mt-2">
+                                Instructor: {{ $course->user->name ?? 'Unknown Instructor' }}
+                            </p>
+
+                            @if(!empty($course->description))
+                                <p class="text-slate-600 mt-4 max-w-3xl leading-relaxed">
+                                    {{ $course->description }}
+                                </p>
+                            @endif
+                        </div>
+
+                        <div class="w-full lg:w-80 bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                            @php
+                                $materialsCount = $course->materials->count();
+                                $quizzesCount = $course->quizzes->count();
+                                $progress = $course->progress ?? 0;
+                            @endphp
+
+                            <p class="text-sm text-slate-500 mb-2">Course Progress</p>
+                            <h2 class="text-3xl font-bold text-slate-900 mb-4">{{ $progress }}%</h2>
+
+                            <div class="w-full bg-slate-200 rounded-full h-2 mb-4">
+                                <div class="bg-indigo-600 h-2 rounded-full" style="width: {{ $progress }}%"></div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="rounded-xl bg-white border border-slate-200 p-3">
+                                    <span class="block text-lg font-bold text-slate-900">{{ $materialsCount }}</span>
+                                    <span class="text-slate-500">Materials</span>
+                                </div>
+
+                                <div class="rounded-xl bg-white border border-slate-200 p-3">
+                                    <span class="block text-lg font-bold text-slate-900">{{ $quizzesCount }}</span>
+                                    <span class="text-slate-500">Quizzes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if(session('success'))
+                <div class="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {{ session('error') }}
+                </div>
+            @endif
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                <div class="xl:col-span-2 space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <div class="flex items-center justify-between mb-5">
+                            <div>
+                                <h2 class="text-xl font-semibold text-slate-900">Learning Materials</h2>
+                                <p class="text-sm text-slate-500">Read and explore your course materials.</p>
+                            </div>
+                        </div>
+
+                        @if($course->materials->count() > 0)
+                            <div class="space-y-4">
+                                @foreach($course->materials as $material)
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-2xl border border-slate-200 p-4">
+                                        <div>
+                                            <h3 class="font-semibold text-slate-900">
+                                                {{ $material->title }}
+                                            </h3>
+
+                                            <p class="text-sm text-slate-500 mt-1">
+                                                Material for {{ $course->name ?? $course->title }}
+                                            </p>
+                                        </div>
+
+                                        <div class="flex gap-3">
+                                            <a href="{{ route('student.materials.show', $material->id) }}"
+                                               class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                                                View Material
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-slate-500">
+                                Belum ada materi untuk course ini.
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <div class="flex items-center justify-between mb-5">
+                            <div>
+                                <h2 class="text-xl font-semibold text-slate-900">Quizzes</h2>
+                                <p class="text-sm text-slate-500">Test your understanding and track your performance.</p>
+                            </div>
+                        </div>
+
+                        @if($course->quizzes->count() > 0)
+                            <div class="space-y-4">
+                                @foreach($course->quizzes as $quiz)
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 rounded-2xl border border-slate-200 p-4">
+                                        <div>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h3 class="font-semibold text-slate-900">
+                                                    {{ $quiz->title }}
+                                                </h3>
+
+                                                @if($quiz->is_final)
+                                                    <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                                        Final Quiz
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            <p class="text-sm text-slate-500 mt-1">
+                                                {{ $quiz->questions->count() ?? 0 }} questions
+                                            </p>
+
+                                            @if($quiz->is_final)
+                                                <p class="text-xs text-emerald-600 font-medium mt-2">
+                                                    Quiz ini digunakan untuk menentukan certificate.
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        <div class="flex gap-3">
+                                            <a href="{{ route('student.quiz.show', $quiz->id) }}"
+                                               class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                                                Start Quiz
+                                            </a>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5 text-slate-500">
+                                Belum ada quiz untuk course ini.
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4">Course Summary</h2>
+
+                        <div class="space-y-4">
+                            <div class="rounded-xl bg-slate-50 p-4">
+                                <p class="text-sm text-slate-500">Instructor</p>
+                                <p class="font-semibold text-slate-900 mt-1">
+                                    {{ $course->user->name ?? 'Unknown Instructor' }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 p-4">
+                                <p class="text-sm text-slate-500">Total Materials</p>
+                                <p class="font-semibold text-slate-900 mt-1">
+                                    {{ $course->materials->count() }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 p-4">
+                                <p class="text-sm text-slate-500">Total Quizzes</p>
+                                <p class="font-semibold text-slate-900 mt-1">
+                                    {{ $course->quizzes->count() }}
+                                </p>
+                            </div>
+
+                            <div class="rounded-xl bg-slate-50 p-4">
+                                <p class="text-sm text-slate-500">Final Quiz</p>
+                                <p class="font-semibold text-slate-900 mt-1">
+                                    {{ $finalQuiz?->title ?? 'Belum ditentukan' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4">Certificate Status</h2>
+
+                        @if($canDownloadCertificate)
+                            <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4 text-sm text-emerald-700">
+                                {{ $certificateStatusText }}
+                            </div>
+
+                            @if($verifiedFinalAttempt)
+                                <div class="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+                                    <p class="text-sm text-slate-500">Verified Final Score</p>
+                                    <p class="mt-1 text-2xl font-bold text-slate-900">
+                                        {{ $verifiedFinalAttempt->score }}
+                                    </p>
+                                </div>
+                            @endif
+                        @else
+                            <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-700">
+                                {{ $certificateStatusText }}
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        <h2 class="text-xl font-semibold text-slate-900 mb-4">Quick Actions</h2>
+
+                        <div class="space-y-3">
+                            <a href="{{ route('student.courses.index') }}"
+                               class="block w-full text-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">
+                                Browse More Courses
+                            </a>
+
+                            <a href="{{ route('student.results.index') }}"
+                               class="block w-full text-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-700">
+                                View My Results
+                            </a>
+
+                            @if($canDownloadCertificate)
+                                <a href="{{ route('student.certificate.show', $course->id) }}"
+                                   class="block w-full text-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700">
+                                    View Certificate
+                                </a>
+
+                                <a href="{{ route('student.certificate.download', $course->id) }}"
+                                   class="block w-full text-center rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-violet-700">
+                                    Download Certificate
+                                </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
