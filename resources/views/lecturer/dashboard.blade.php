@@ -551,6 +551,40 @@ textarea.form-control { resize: vertical; }
     flex-wrap: wrap;
 }
 
+
+/* ── Skill Mapping Fields ── */
+.hidden { display: none !important; }
+
+.skill-detail-panel {
+    background: #fff;
+    border: 1px solid #e8eaf2;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+}
+
+.skill-detail-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1e2435;
+    margin-bottom: 9px;
+}
+
+.skill-checkbox {
+    display: block;
+    font-size: 13px;
+    color: #3d4460;
+    margin-bottom: 7px;
+}
+
+.skill-checkbox input { margin-right: 7px; }
+
+.skill-help {
+    font-size: 12px;
+    color: #9399b0;
+    margin-top: 6px;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -797,6 +831,51 @@ textarea.form-control { resize: vertical; }
                                 </div>
                             </div>
 
+                            <div class="form-grid-2" style="margin-top:12px;">
+                                <div class="form-group" style="margin-bottom:0">
+                                    <label class="form-label">Bidang / Skill Utama</label>
+                                    <select
+                                        name="questions[0][main_skill_id]"
+                                        class="question-main-skill form-control"
+                                        data-question-index="0"
+                                    >
+                                        <option value="">-- Pilih Bidang Utama --</option>
+                                        @foreach($mainSkills as $mainSkill)
+                                            <option value="{{ $mainSkill->id }}">{{ $mainSkill->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="skill-help">Contoh: Software, ML / AI, Jaringan.</p>
+                                </div>
+
+                                <div class="form-group" style="margin-bottom:0">
+                                    <label class="form-label">Detail Skill yang Diuji</label>
+                                    @foreach($mainSkills as $mainSkill)
+                                        <div
+                                            class="question-skill-detail-group hidden"
+                                            data-question-index="0"
+                                            data-parent-id="{{ $mainSkill->id }}"
+                                        >
+                                            <div class="skill-detail-panel">
+                                                <div class="skill-detail-title">Detail {{ $mainSkill->name }}</div>
+
+                                                @forelse($mainSkill->children as $childSkill)
+                                                    <label class="skill-checkbox">
+                                                        <input
+                                                            type="checkbox"
+                                                            name="questions[0][skill_ids][]"
+                                                            value="{{ $childSkill->id }}"
+                                                        >
+                                                        {{ $childSkill->name }}
+                                                    </label>
+                                                @empty
+                                                    <p class="skill-help">Belum ada detail skill untuk bidang ini.</p>
+                                                @endforelse
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
                             <div class="form-group" style="margin-top:12px; margin-bottom:0;">
                                 <label class="form-label">Question</label>
                                 <textarea name="questions[0][question]" rows="3" class="form-control" placeholder="Write your question here..." required></textarea>
@@ -978,12 +1057,34 @@ textarea.form-control { resize: vertical; }
                     const addBtnTop = document.getElementById('add-question');
                     const addBtnBottom = document.getElementById('add-question-bottom');
 
+                    function refreshQuestionSkillDetails(selectElement) {
+                        const questionIndexValue = selectElement.dataset.questionIndex;
+                        const selectedParentId = selectElement.value;
+
+                        const groups = document.querySelectorAll(
+                            `.question-skill-detail-group[data-question-index="${questionIndexValue}"]`
+                        );
+
+                        groups.forEach(function (group) {
+                            if (group.dataset.parentId === selectedParentId) {
+                                group.classList.remove('hidden');
+                            } else {
+                                group.classList.add('hidden');
+
+                                group.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
+                                    checkbox.checked = false;
+                                });
+                            }
+                        });
+                    }
+
                     function setupCard(card) {
                         const typeSelect = card.querySelector('.question-type');
                         const mcFields = card.querySelector('.mc-fields');
                         const optionInputs = card.querySelectorAll('.option-input');
                         const correctAnswer = card.querySelector('.correct-answer');
                         const removeBtn = card.querySelector('.remove-question');
+                        const mainSkillSelect = card.querySelector('.question-main-skill');
 
                         function toggleMc() {
                             const isMc = typeSelect.value === 'multiple_choice';
@@ -994,6 +1095,14 @@ textarea.form-control { resize: vertical; }
 
                         typeSelect.addEventListener('change', toggleMc);
                         toggleMc();
+
+                        if (mainSkillSelect) {
+                            mainSkillSelect.addEventListener('change', function () {
+                                refreshQuestionSkillDetails(mainSkillSelect);
+                            });
+
+                            refreshQuestionSkillDetails(mainSkillSelect);
+                        }
 
                         removeBtn.addEventListener('click', function () {
                             card.remove();
@@ -1010,11 +1119,51 @@ textarea.form-control { resize: vertical; }
                             removeBtn.classList.toggle('hidden', index === 0);
 
                             card.querySelectorAll('input, textarea, select').forEach(input => {
-                                input.name = input.name.replace(/questions\[\d+\]/, `questions[${index}]`);
+                                if (input.name) {
+                                    input.name = input.name.replace(/questions\[\d+\]/, `questions[${index}]`);
+                                }
+                            });
+
+                            const mainSkillSelect = card.querySelector('.question-main-skill');
+                            if (mainSkillSelect) {
+                                mainSkillSelect.dataset.questionIndex = index;
+                            }
+
+                            card.querySelectorAll('.question-skill-detail-group').forEach(group => {
+                                group.dataset.questionIndex = index;
                             });
                         });
 
                         questionIndex = document.querySelectorAll('.question-card').length;
+                    }
+
+                    function clearNewCardValues(newCard) {
+                        newCard.querySelectorAll('textarea').forEach(textarea => {
+                            textarea.value = '';
+                        });
+
+                        newCard.querySelectorAll('input').forEach(input => {
+                            if (input.type === 'checkbox' || input.type === 'radio') {
+                                input.checked = false;
+                            } else {
+                                input.value = '';
+                            }
+                        });
+
+                        newCard.querySelectorAll('select').forEach(select => {
+                            if (select.classList.contains('question-type')) {
+                                select.value = 'essay';
+                            } else if (select.classList.contains('correct-answer')) {
+                                select.value = '';
+                            } else {
+                                select.selectedIndex = 0;
+                            }
+                        });
+
+                        newCard.querySelector('.mc-fields').classList.add('hidden');
+                        newCard.querySelectorAll('.question-skill-detail-group').forEach(group => {
+                            group.classList.add('hidden');
+                        });
                     }
 
                     function addQuestion() {
@@ -1022,34 +1171,20 @@ textarea.form-control { resize: vertical; }
                         const newCard = firstCard.cloneNode(true);
 
                         newCard.dataset.index = questionIndex;
+                        clearNewCardValues(newCard);
 
-                        newCard.querySelectorAll('input, textarea, select').forEach(input => {
-                            input.name = input.name.replace(/questions\[\d+\]/, `questions[${questionIndex}]`);
-
-                            if (input.tagName === 'TEXTAREA' || input.tagName === 'INPUT') {
-                                input.value = '';
-                            }
-
-                            if (input.tagName === 'SELECT') {
-                                if (input.classList.contains('question-type')) {
-                                    input.value = 'essay';
-                                } else if (input.classList.contains('correct-answer')) {
-                                    input.value = '';
-                                } else {
-                                    input.selectedIndex = 0;
-                                }
-                            }
-                        });
-
-                        newCard.querySelector('.mc-fields').classList.add('hidden');
                         wrapper.appendChild(newCard);
-                        setupCard(newCard);
-                        questionIndex++;
                         renumberCards();
+                        setupCard(newCard);
                     }
 
-                    addBtnTop.addEventListener('click', addQuestion);
-                    addBtnBottom.addEventListener('click', addQuestion);
+                    if (addBtnTop) {
+                        addBtnTop.addEventListener('click', addQuestion);
+                    }
+
+                    if (addBtnBottom) {
+                        addBtnBottom.addEventListener('click', addQuestion);
+                    }
 
                     document.querySelectorAll('.question-card').forEach(setupCard);
                     renumberCards();

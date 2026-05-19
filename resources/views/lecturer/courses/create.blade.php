@@ -1,71 +1,207 @@
 <x-app-layout>
-    <div class="min-h-screen bg-slate-50 py-10">
-        <div class="max-w-3xl mx-auto px-6">
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Tambah Course
+        </h2>
+    </x-slot>
 
-            <div class="mb-8">
-                <a href="{{ route('lecturer.courses.index') }}"
-                   class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
-                    ← Kembali ke Courses
-                </a>
+    @php
+    $skillGroups = $mainSkills ?? collect();
+    $flatSkills = $skills ?? collect();
+    @endphp
 
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
-                    Lecturer Portal
-                </p>
-                <h1 class="text-3xl font-bold text-slate-900">Tambah Mata Kuliah</h1>
-                <p class="text-slate-500 mt-2">
-                    Buat course baru untuk materi, quiz, assignment, dan aktivitas pembelajaran.
-                </p>
-            </div>
+    <div class="py-6">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
             @if ($errors->any())
-                <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
-                    <ul class="list-disc pl-5 text-sm space-y-1">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+            <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
+                <ul class="list-disc list-inside">
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
             @endif
 
-            <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <form action="{{ route('lecturer.courses.store') }}" method="POST" class="space-y-6">
+            <div class="bg-white shadow rounded p-6">
+                <form action="{{ route('lecturer.courses.store') }}" method="POST">
                     @csrf
 
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-slate-700">Nama Mata Kuliah</label>
+                    <div class="mb-5">
+                        <label class="block font-semibold mb-2">
+                            Nama Course
+                        </label>
+
                         <input type="text"
-                               name="name"
-                               value="{{ old('name') }}"
-                               placeholder="Contoh: Pemrograman Web"
-                               class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none"
-                               required>
+                            name="name"
+                            value="{{ old('name') }}"
+                            class="border rounded w-full p-2"
+                            placeholder="Contoh: Web Programming with Laravel"
+                            required>
                     </div>
 
-                    <div>
-                        <label class="block mb-2 text-sm font-medium text-slate-700">Deskripsi</label>
+                    <div class="mb-5">
+                        <label class="block font-semibold mb-2">
+                            Deskripsi
+                        </label>
+
                         <textarea name="description"
-                                  rows="6"
-                                  placeholder="Tulis deskripsi singkat course..."
-                                  class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none">{{ old('description') }}</textarea>
+                            class="border rounded w-full p-2"
+                            rows="4"
+                            placeholder="Jelaskan tujuan dan isi course...">{{ old('description') }}</textarea>
                     </div>
 
-                    <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-                        <p class="text-sm font-semibold text-indigo-700 mb-2">Info</p>
-                        <p class="text-sm text-indigo-600 leading-6">
-                            Setelah course dibuat, Anda bisa langsung menambahkan learning material, quiz, assignment, dan menentukan final quiz untuk certificate.
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                        <div>
+                            <label class="block font-semibold mb-2">
+                                Level
+                            </label>
+
+                            <select name="level"
+                                class="border rounded w-full p-2"
+                                required>
+                                <option value="">Pilih Level</option>
+                                <option value="Beginner" @selected(old('level')==='Beginner' )>
+                                    Beginner
+                                </option>
+                                <option value="Intermediate" @selected(old('level')==='Intermediate' )>
+                                    Intermediate
+                                </option>
+                                <option value="Advanced" @selected(old('level')==='Advanced' )>
+                                    Advanced
+                                </option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-semibold mb-2">
+                                Durasi Minggu
+                            </label>
+
+                            <input type="number"
+                                name="duration_weeks"
+                                value="{{ old('duration_weeks', 4) }}"
+                                min="1"
+                                class="border rounded w-full p-2"
+                                required>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block font-semibold mb-2">
+                            Skill Course
+                        </label>
+
+                        <p class="text-sm text-gray-500 mb-3">
+                            Pilih skill yang berkaitan dengan course ini, lalu tentukan satu skill utama.
                         </p>
+
+                        @if ($skillGroups->isNotEmpty())
+                        <div class="space-y-4">
+                            @foreach ($skillGroups as $parentSkill)
+                            <div class="border rounded p-4 bg-gray-50">
+                                <h4 class="font-semibold text-gray-800 mb-3">
+                                    {{ $parentSkill->name }}
+                                </h4>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    @forelse ($parentSkill->children as $skill)
+                                    <div class="flex items-center justify-between gap-3 bg-white border rounded p-2">
+                                        <label class="flex items-center gap-2">
+                                            <input type="checkbox"
+                                                name="skill_ids[]"
+                                                value="{{ $skill->id }}"
+                                                @checked(in_array($skill->id, old('skill_ids', [])))>
+
+                                            <span>{{ $skill->name }}</span>
+                                        </label>
+
+                                        <label class="flex items-center gap-1 text-xs text-gray-600">
+                                            <input type="radio"
+                                                name="main_skill_id"
+                                                value="{{ $skill->id }}"
+                                                @checked((int) old('main_skill_id')===(int) $skill->id)>
+
+                                            Main
+                                        </label>
+                                    </div>
+                                    @empty
+                                    <p class="text-sm text-gray-500">
+                                        Belum ada detail skill pada kategori ini.
+                                    </p>
+                                    @endforelse
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @else
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            @forelse ($flatSkills as $skill)
+                            <div class="flex items-center justify-between gap-3 border rounded p-2">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox"
+                                        name="skill_ids[]"
+                                        value="{{ $skill->id }}"
+                                        @checked(in_array($skill->id, old('skill_ids', [])))>
+
+                                    <span>{{ $skill->name }}</span>
+                                </label>
+
+                                <label class="flex items-center gap-1 text-xs text-gray-600">
+                                    <input type="radio"
+                                        name="main_skill_id"
+                                        value="{{ $skill->id }}"
+                                        @checked((int) old('main_skill_id')===(int) $skill->id)>
+
+                                    Main
+                                </label>
+                            </div>
+                            @empty
+                            <p class="text-sm text-gray-500">
+                                Belum ada data skill.
+                            </p>
+                            @endforelse
+                        </div>
+                        @endif
                     </div>
 
-                    <div class="flex justify-end gap-3 pt-2">
-                        <a href="{{ route('lecturer.courses.index') }}"
-                           class="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                            Cancel
-                        </a>
+                    <div class="mb-6">
+                        <label class="block font-semibold mb-2">
+                            Tags
+                        </label>
 
+                        <p class="text-sm text-gray-500 mb-3">
+                            Pilih tag/minat yang sesuai dengan course.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            @forelse ($tags as $tag)
+                            <label class="flex items-center gap-2 border rounded p-2">
+                                <input type="checkbox"
+                                    name="tag_ids[]"
+                                    value="{{ $tag->id }}"
+                                    @checked(in_array($tag->id, old('tag_ids', [])))>
+
+                                <span>{{ $tag->name }}</span>
+                            </label>
+                            @empty
+                            <p class="text-sm text-gray-500">
+                                Belum ada data tag.
+                            </p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
                         <button type="submit"
-                                class="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700">
-                            Create Course
+                            class="px-4 py-2 bg-blue-600 text-white rounded">
+                            Simpan Course
                         </button>
+
+                        <a href="{{ route('lecturer.courses.index') }}"
+                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded">
+                            Batal
+                        </a>
                     </div>
                 </form>
             </div>

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\LearningActivityLog;
 use App\Models\Quiz;
-use App\Models\QuizAttempt;
 use App\Models\QuizAnswer;
+use App\Models\QuizAttempt;
+use App\Services\CourseProgressService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +29,15 @@ class QuizController extends Controller
             $query->where('status', 'approved');
         }]);
 
+        LearningActivityLog::create([
+            'user_id' => $user->id,
+            'course_id' => $quiz->course_id,
+            'quiz_id' => $quiz->id,
+            'activity_type' => 'start_quiz',
+            'activity_value' => 1,
+            'occurred_at' => now(),
+        ]);
+
         return view('student.quiz.show', compact('quiz'));
     }
 
@@ -46,7 +57,9 @@ class QuizController extends Controller
             ->get();
 
         if ($questions->count() === 0) {
-            return redirect()->back()->with('error', 'Quiz belum memiliki soal yang disetujui admin.');
+            return redirect()
+                ->back()
+                ->with('error', 'Quiz belum memiliki soal yang disetujui admin.');
         }
 
         $validationRules = [];
@@ -61,7 +74,7 @@ class QuizController extends Controller
             }
         }
 
-        if (!empty($validationRules)) {
+        if (! empty($validationRules)) {
             $request->validate($validationRules, $validationMessages);
         }
 
@@ -118,6 +131,26 @@ class QuizController extends Controller
 
         $attempt->update([
             'score' => $finalScore,
+        ]);
+
+        app(CourseProgressService::class)->recalculate(
+            $user->id,
+            $quiz->course_id
+        );
+
+        LearningActivityLog::create([
+            'user_id' => $user->id,
+            'course_id' => $quiz->course_id,
+            'quiz_id' => $quiz->id,
+            'activity_type' => 'finish_quiz',
+            'activity_value' => $finalScore,
+            'metadata' => [
+                'quiz_attempt_id' => $attempt->id,
+                'total_questions' => $questions->count(),
+                'multiple_choice_count' => $multipleChoiceQuestions->count(),
+                'correct_count' => $correctCount,
+            ],
+            'occurred_at' => now(),
         ]);
 
         return view('student.quiz.result', [

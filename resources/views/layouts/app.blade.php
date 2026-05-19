@@ -276,6 +276,8 @@
                                 <a href="{{ route('lecturer.dashboard') }}" class="lms-footer-link">Dashboard</a>
                                 <a href="{{ route('lecturer.courses.index') }}" class="lms-footer-link">Courses</a>
                                 <a href="{{ route('lecturer.materials.index') }}" class="lms-footer-link">Materials</a>
+                                <x-nav-link :href="route('lecturer.projects.index')" :active="request()->routeIs('lecturer.projects.*')">Projects
+</x-nav-link>
                             @elseif(auth()->user()->role === 'admin')
                                 <a href="{{ route('admin.dashboard') }}" class="lms-footer-link">Dashboard</a>
                                 <a href="{{ route('admin.results.index') }}" class="lms-footer-link">Results</a>

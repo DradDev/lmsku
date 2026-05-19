@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Enrollment;
+use App\Models\LearningActivityLog;
 use App\Models\QuizAttempt;
+use App\Services\CourseProgressService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -14,23 +18,28 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
-        $courses = Course::whereIn('id', function ($query) use ($user) {
-                $query->select('course_id')
-                    ->from('enrollments')
-                    ->where('user_id', $user->id);
-            })
-            ->with(['materials', 'quizzes.questions', 'user'])
+        $courses = Course::with(['materials', 'quizzes.questions', 'user'])
+            ->withCount('students')
             ->latest()
             ->get();
 
+        $enrollments = Enrollment::where('user_id', $user->id)
+            ->get()
+            ->keyBy('course_id');
+
+        $enrolledCourseIds = $enrollments->keys()->toArray();
+
         foreach ($courses as $course) {
-            $course->progress = 0;
-            $course->is_completed = false;
+            $enrollment = $enrollments->get($course->id);
+
+            $course->progress = $enrollment?->progress_percent ?? 0;
+            $course->is_completed = $enrollment?->status === 'completed';
+            $course->enrollment_status = $enrollment?->status;
             $course->can_get_certificate = false;
 
             $finalQuiz = $course->quizzes->firstWhere('is_final', true);
 
-            if ($finalQuiz) {
+            if ($finalQuiz && in_array($course->id, $enrolledCourseIds)) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
                 $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
@@ -50,21 +59,29 @@ class CourseController extends Controller
             }
         }
 
-        return view('student.courses.index', compact('courses'));
+        return view('student.courses.index', compact('courses', 'enrolledCourseIds'));
     }
 
     public function show(Course $course)
     {
         $user = Auth::user();
 
-        $isEnrolled = DB::table('enrollments')
-            ->where('user_id', $user->id)
+        $enrollment = Enrollment::where('user_id', $user->id)
             ->where('course_id', $course->id)
-            ->exists();
+            ->first();
 
-        abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
+        abort_unless($enrollment, 403, 'Kamu tidak terdaftar di course ini.');
+
+        app(CourseProgressService::class)->recalculate($user->id, $course->id);
+
+        $enrollment->refresh();
 
         $course->load(['materials', 'quizzes.questions', 'user']);
+
+        $this->logActivity(
+            activityType: 'view_course',
+            courseId: $course->id
+        );
 
         $finalQuiz = $course->quizzes->firstWhere('is_final', true);
         $verifiedFinalAttempt = null;
@@ -85,9 +102,9 @@ class CourseController extends Controller
                 ->orderByDesc('score')
                 ->first();
 
-            if (!$onlyMultipleChoice) {
+            if (! $onlyMultipleChoice) {
                 $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
-            } elseif (!$verifiedFinalAttempt) {
+            } elseif (! $verifiedFinalAttempt) {
                 $certificateStatusText = 'Kerjakan final quiz dan tunggu verifikasi admin untuk membuka certificate.';
             } elseif ($verifiedFinalAttempt->score < 70) {
                 $certificateStatusText = 'Nilai final quiz minimal 70 untuk membuka certificate.';
@@ -99,10 +116,70 @@ class CourseController extends Controller
 
         return view('student.courses.show', compact(
             'course',
+            'enrollment',
             'finalQuiz',
             'verifiedFinalAttempt',
             'canDownloadCertificate',
             'certificateStatusText'
         ));
+    }
+
+    public function enroll(Course $course): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $alreadyEnrolled = Enrollment::where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->exists();
+
+        if ($alreadyEnrolled) {
+            return redirect()
+                ->route('student.courses.show', $course)
+                ->with('success', 'Kamu sudah terdaftar di course ini.');
+        }
+
+        Enrollment::create([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'progress_percent' => 0,
+            'completed_material_count' => 0,
+            'completed_quiz_count' => 0,
+            'total_material_count' => $course->materials()->count(),
+            'total_quiz_count' => $course->quizzes()->count(),
+            'status' => 'not_started',
+            'started_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+
+        $this->logActivity(
+            activityType: 'enroll_course',
+            courseId: $course->id
+        );
+
+        app(CourseProgressService::class)->recalculate($user->id, $course->id);
+
+        return redirect()
+            ->route('student.courses.show', $course)
+            ->with('success', 'Course berhasil diambil.');
+    }
+
+    private function logActivity(
+        string $activityType,
+        ?int $courseId = null,
+        ?int $materialId = null,
+        ?int $quizId = null,
+        float|int $activityValue = 1,
+        ?array $metadata = null
+    ): void {
+        LearningActivityLog::create([
+            'user_id' => Auth::id(),
+            'course_id' => $courseId,
+            'material_id' => $materialId,
+            'quiz_id' => $quizId,
+            'activity_type' => $activityType,
+            'activity_value' => $activityValue,
+            'metadata' => $metadata,
+            'occurred_at' => now(),
+        ]);
     }
 }

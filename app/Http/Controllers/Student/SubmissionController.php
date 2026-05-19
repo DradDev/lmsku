@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
+use App\Models\LearningActivityLog;
 use App\Models\Submission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,12 +29,7 @@ class SubmissionController extends Controller
     {
         $user = Auth::user();
 
-        $isEnrolled = DB::table('enrollments')
-            ->where('user_id', $user->id)
-            ->where('course_id', $assignment->course_id)
-            ->exists();
-
-        abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke assignment ini.');
+        $this->authorizeStudentEnrollment($user->id, $assignment->course_id);
 
         $assignment->load('course');
 
@@ -43,7 +39,10 @@ class SubmissionController extends Controller
             ->latest()
             ->first();
 
-        return view('student.submissions.create', compact('assignment', 'existingSubmission'));
+        return view('student.submissions.create', compact(
+            'assignment',
+            'existingSubmission'
+        ));
     }
 
     public function store(Request $request): RedirectResponse
@@ -55,21 +54,31 @@ class SubmissionController extends Controller
 
         $user = Auth::user();
 
-        $assignment = Assignment::findOrFail($validated['assignment_id']);
+        $assignment = Assignment::query()
+            ->with('course')
+            ->findOrFail($validated['assignment_id']);
 
-        $isEnrolled = DB::table('enrollments')
-            ->where('user_id', $user->id)
-            ->where('course_id', $assignment->course_id)
-            ->exists();
-
-        abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke assignment ini.');
+        $this->authorizeStudentEnrollment($user->id, $assignment->course_id);
 
         $filePath = $request->file('file')->store('submissions', 'public');
 
-        Submission::create([
+        $submission = Submission::create([
             'assignment_id' => $assignment->id,
             'user_id' => $user->id,
             'file_path' => $filePath,
+        ]);
+
+        LearningActivityLog::create([
+            'user_id' => $user->id,
+            'course_id' => $assignment->course_id,
+            'activity_type' => 'submit_assignment',
+            'activity_value' => 1,
+            'metadata' => [
+                'assignment_id' => $assignment->id,
+                'submission_id' => $submission->id,
+                'file_path' => $filePath,
+            ],
+            'occurred_at' => now(),
         ]);
 
         return redirect()
@@ -88,5 +97,19 @@ class SubmissionController extends Controller
         $submission->load(['assignment.course', 'user']);
 
         return view('student.submissions.show', compact('submission'));
+    }
+
+    private function authorizeStudentEnrollment(int $userId, int $courseId): void
+    {
+        $isEnrolled = DB::table('enrollments')
+            ->where('user_id', $userId)
+            ->where('course_id', $courseId)
+            ->exists();
+
+        abort_unless(
+            $isEnrolled,
+            403,
+            'Kamu tidak memiliki akses ke assignment ini.'
+        );
     }
 }

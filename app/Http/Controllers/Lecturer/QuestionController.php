@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Question;
 use App\Models\Quiz;
+use App\Models\Skill;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,10 @@ class QuestionController extends Controller
                 'questions.*.option_c' => ['nullable', 'string'],
                 'questions.*.option_d' => ['nullable', 'string'],
                 'questions.*.correct_answer' => ['nullable', Rule::in(['A', 'B', 'C', 'D'])],
+
+                'questions.*.skill_ids' => ['nullable', 'array'],
+                'questions.*.skill_ids.*' => ['exists:skills,id'],
+                'questions.*.main_skill_id' => ['nullable', 'exists:skills,id'],
             ]));
         } else {
             $validated = $request->validate(array_merge($quizRules, [
@@ -51,6 +56,10 @@ class QuestionController extends Controller
                 'option_c' => ['nullable', 'string'],
                 'option_d' => ['nullable', 'string'],
                 'correct_answer' => ['nullable', Rule::in(['A', 'B', 'C', 'D'])],
+
+                'skill_ids' => ['nullable', 'array'],
+                'skill_ids.*' => ['exists:skills,id'],
+                'main_skill_id' => ['nullable', 'exists:skills,id'],
             ]));
 
             $validated['questions'] = [[
@@ -62,6 +71,9 @@ class QuestionController extends Controller
                 'option_c' => $validated['option_c'] ?? null,
                 'option_d' => $validated['option_d'] ?? null,
                 'correct_answer' => $validated['correct_answer'] ?? null,
+
+                'skill_ids' => $validated['skill_ids'] ?? [],
+                'main_skill_id' => $validated['main_skill_id'] ?? null,
             ]];
         }
 
@@ -97,7 +109,7 @@ class QuestionController extends Controller
                 $item['correct_answer'] = null;
             }
 
-            Question::create([
+            $question = Question::create([
                 'quiz_id' => $quiz->id,
                 'user_id' => Auth::id(),
                 'question' => $item['question'],
@@ -110,6 +122,12 @@ class QuestionController extends Controller
                 'correct_answer' => $item['correct_answer'] ?? null,
                 'status' => $item['question_type'] === 'essay' ? 'approved' : 'draft',
             ]);
+
+            $this->syncQuestionSkills(
+                $question,
+                $item['skill_ids'] ?? [],
+                $item['main_skill_id'] ?? null
+            );
 
             if ($item['question_type'] === 'essay') {
                 $createdEssay++;
@@ -157,7 +175,16 @@ class QuestionController extends Controller
             ->latest()
             ->get();
 
-        return view('lecturer.questions.edit', compact('question', 'quizzes'));
+        $mainSkills = Skill::with(['children' => function ($query) {
+                $query->orderBy('name');
+            }])
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->get();
+
+        $question->load('skills');
+
+        return view('lecturer.questions.edit', compact('question', 'quizzes', 'mainSkills'));
     }
 
     public function update(Request $request, Question $question): RedirectResponse
@@ -178,6 +205,10 @@ class QuestionController extends Controller
             'question' => ['required', 'string'],
             'question_type' => ['required', Rule::in(['essay', 'multiple_choice'])],
             'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
+
+            'skill_ids' => ['nullable', 'array'],
+            'skill_ids.*' => ['exists:skills,id'],
+            'main_skill_id' => ['nullable', 'exists:skills,id'],
         ];
 
         if ($type === 'multiple_choice') {
@@ -191,6 +222,11 @@ class QuestionController extends Controller
         }
 
         $data = $request->validate($rules);
+
+        $skillIds = $data['skill_ids'] ?? [];
+        $mainSkillId = $data['main_skill_id'] ?? null;
+
+        unset($data['skill_ids'], $data['main_skill_id']);
 
         $quiz = Quiz::query()
             ->whereHas('course', function ($query) {
@@ -215,6 +251,8 @@ class QuestionController extends Controller
 
         $question->update($data);
 
+        $this->syncQuestionSkills($question, $skillIds, $mainSkillId);
+
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions'])
             ->with(
@@ -236,7 +274,7 @@ class QuestionController extends Controller
         }
 
         abort_if(
-            !in_array($question->status, ['draft', 'rejected'], true),
+            ! in_array($question->status, ['draft', 'rejected'], true),
             403,
             'Question ini tidak bisa disubmit.'
         );
@@ -266,5 +304,24 @@ class QuestionController extends Controller
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions'])
             ->with('success', 'Question deleted successfully.');
+    }
+
+    private function syncQuestionSkills(Question $question, array $skillIds, mixed $mainSkillId = null): void
+    {
+        $skillIds = array_map('intval', $skillIds);
+
+        if ($mainSkillId && ! in_array((int) $mainSkillId, $skillIds, true)) {
+            $skillIds[] = (int) $mainSkillId;
+        }
+
+        $syncData = [];
+
+        foreach ($skillIds as $skillId) {
+            $syncData[$skillId] = [
+                'weight' => 1.00,
+            ];
+        }
+
+        $question->skills()->sync($syncData);
     }
 }

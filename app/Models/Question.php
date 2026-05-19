@@ -44,4 +44,11 @@ class Question extends Model
     {
         return $this->question_type === 'multiple_choice';
     }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class, 'question_skills')
+            ->withPivot('weight')
+            ->withTimestamps();
+    }
 }

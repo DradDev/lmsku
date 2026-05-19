@@ -9,6 +9,8 @@ use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Models\Skill;
+
 
 class DashboardController extends Controller
 {
@@ -37,11 +39,26 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
+        $mainSkills = Skill::with(['children' => function ($query) {
+            $query->orderBy('name');
+        }])
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->get();
+
+        $mainSkills = Skill::with(['children' => function ($query) {
+            $query->orderBy('name');
+        }])
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->get();
+
         return view('lecturer.dashboard', compact(
             'tab',
             'materials',
             'questions',
-            'quizzes'
+            'quizzes',
+            'mainSkills'
         ));
     }
 }

@@ -10,55 +10,58 @@ class Course extends Model
         'name',
         'description',
         'user_id',
+        'level',
+        'progress',
+        'duration_weeks',
     ];
-
-    /**
-     * =========================================================
-     * Course dimiliki oleh dosen (user)
-     * =========================================================
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * =========================================================
-     * Course memiliki banyak materi
-     * =========================================================
-     */
     public function materials()
     {
         return $this->hasMany(Material::class);
     }
 
-    /**
-     * =========================================================
-     * Course memiliki banyak assignment
-     * =========================================================
-     */
     public function assignments()
     {
         return $this->hasMany(Assignment::class);
     }
 
-    /**
-     * =========================================================
-     * Course memiliki quiz
-     * =========================================================
-     */
     public function quizzes()
     {
         return $this->hasMany(Quiz::class);
     }
 
-    /**
-     * =========================================================
-     * RELASI ENROLLMENT (Mahasiswa join course)
-     * =========================================================
-     */
     public function students()
     {
-        return $this->belongsToMany(User::class, 'enrollments');
+        return $this->belongsToMany(User::class, 'enrollments')
+            ->withTimestamps();
     }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class, 'course_skills')
+            ->withPivot('weight', 'is_main')
+            ->withTimestamps();
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'course_tags')
+            ->withPivot('weight')
+            ->withTimestamps();
+    }
+
+    public function enrollments()
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function materialProgresses()
+    {
+        return $this->hasMany(MaterialProgress::class);
+    }
+    
 }
