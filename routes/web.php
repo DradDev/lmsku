@@ -297,6 +297,8 @@ Route::middleware(['auth', 'role:admin'])
             ->name('questions.destroy');
 
         // Users, Skills, Tags
+        Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');
+
         Route::resource('users', AdminUserController::class);
         Route::resource('skills', AdminSkillController::class)->except(['show']);
         Route::resource('tags', AdminTagController::class)->except(['show']);

@@ -12,6 +12,15 @@ class QuizAttempt extends Model
         'score',
         'is_verified',
         'blockchain_hash',
+        'blockchain_id',
+        'tx_id',
+        'completed_at',
+    ];
+
+    protected $casts = [
+        'is_verified' => 'boolean',
+        'score'       => 'float',
+        'completed_at'=> 'datetime',
     ];
 
     public function quiz()

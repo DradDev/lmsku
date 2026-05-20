@@ -40,4 +40,9 @@ return [
         'token' => env('AI_SERVICE_TOKEN', 'lms_ai_secret_token'),
     ],
 
+    'blockchain' => [
+        'url'     => env('BLOCKCHAIN_API_URL', 'http://localhost:3001'),
+        'api_key' => env('BLOCKCHAIN_API_KEY', ''),
+    ],
+
 ];
