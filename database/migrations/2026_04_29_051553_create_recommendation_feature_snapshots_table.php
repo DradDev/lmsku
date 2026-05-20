@@ -33,17 +33,21 @@ return new class extends Migration
 
             $table->decimal('user_recent_activity_score', 8, 2)->default(0);
 
-            $table->foreignId('user_top_interest_tag_id')
-                ->nullable()
-                ->constrained('tags')
-                ->nullOnDelete();
+            $table->unsignedBigInteger('user_top_interest_tag_id')->nullable();
+
+            $table->foreign(
+                'user_top_interest_tag_id',
+                'rf_interest_tag_fk'
+            )->references('id')->on('tags')->nullOnDelete();
 
             $table->unsignedTinyInteger('item_difficulty_level')->default(1);
 
-            $table->foreignId('item_main_skill_id')
-                ->nullable()
-                ->constrained('skills')
-                ->nullOnDelete();
+            $table->unsignedBigInteger('item_main_skill_id')->nullable();
+
+            $table->foreign(
+                'item_main_skill_id',
+                'rf_main_skill_fk'
+            )->references('id')->on('skills')->nullOnDelete();
 
             $table->decimal('item_popularity_score', 10, 2)->default(0);
             $table->decimal('item_completion_rate', 8, 2)->default(0);
