@@ -61,7 +61,8 @@ class ResultController extends Controller
             ksort($rawData);
 
             $response = Http::timeout(30)
-             ->post(config('services.blockchain.url') . '/api/hash/store', [
+                ->withHeaders(['X-Api-Key' => config('services.blockchain.api_key')])
+                ->post(config('services.blockchain.url') . '/api/hash/store', [
                 'id'        => (string) $result->id,
                 'type'      => 'quiz_attempt',
                 'userId'    => (string) $result->user_id,
@@ -129,6 +130,7 @@ class ResultController extends Controller
             ksort($rawData);
 
             $response = Http::timeout(30)
+                ->withHeaders(['X-Api-Key' => config('services.blockchain.api_key')])
                 ->post(config('services.blockchain.url') . '/api/hash/verify', [
                     'id'      => (string) $result->id,
                     'type'    => 'quiz_attempt',
