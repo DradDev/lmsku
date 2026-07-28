@@ -11,12 +11,7 @@ class BlockchainVerificationController extends Controller
 {
     public function index(): View
     {
-        return view('public.blockchain-verify', [
-            'hash' => null,
-            'certificate' => null,
-            'status' => null,
-            'message' => null,
-        ]);
+        return view('public.blockchain-verify', $this->viewData());
     }
 
     public function verify(Request $request): View
@@ -27,61 +22,104 @@ class BlockchainVerificationController extends Controller
 
         $hash = trim($validated['hash']);
 
-        if (! Schema::hasTable('certificates')) {
-            return view('public.blockchain-verify', [
-                'hash' => $hash,
-                'certificate' => null,
-                'status' => 'error',
-                'message' => 'Tabel certificates belum tersedia.',
-            ]);
-        }
-
-        $hasBlockchainHash = Schema::hasColumn('certificates', 'blockchain_hash');
-        $hasCertificateHash = Schema::hasColumn('certificates', 'certificate_hash');
-        $hasHash = Schema::hasColumn('certificates', 'hash');
-
-        if (! $hasBlockchainHash && ! $hasCertificateHash && ! $hasHash) {
-            return view('public.blockchain-verify', [
-                'hash' => $hash,
-                'certificate' => null,
-                'status' => 'error',
-                'message' => 'Kolom hash certificate belum tersedia di tabel certificates.',
-            ]);
-        }
-
-        $query = DB::table('certificates')
-            ->leftJoin('users', 'certificates.user_id', '=', 'users.id')
-            ->leftJoin('courses', 'certificates.course_id', '=', 'courses.id')
-            ->select(
-                'certificates.*',
-                'users.name as student_name',
-                'users.email as student_email',
-                'courses.name as course_name'
+        // Validasi tabel
+        if (! Schema::hasTable('quiz_attempts')) {
+            return $this->responseView(
+                $hash,
+                null,
+                'error',
+                'Tabel quiz_attempts belum tersedia.'
             );
+        }
 
-        $query->where(function ($q) use ($hash, $hasBlockchainHash, $hasCertificateHash, $hasHash) {
-            if ($hasBlockchainHash) {
-                $q->orWhere('certificates.blockchain_hash', $hash);
-            }
+        if (! Schema::hasColumn('quiz_attempts', 'blockchain_hash')) {
+            return $this->responseView(
+                $hash,
+                null,
+                'error',
+                'Kolom blockchain_hash belum tersedia di tabel quiz_attempts.'
+            );
+        }
 
-            if ($hasCertificateHash) {
-                $q->orWhere('certificates.certificate_hash', $hash);
-            }
+        if (! Schema::hasTable('users') || ! Schema::hasTable('quizzes')) {
+            return $this->responseView(
+                $hash,
+                null,
+                'error',
+                'Tabel users atau quizzes belum tersedia.'
+            );
+        }
 
-            if ($hasHash) {
-                $q->orWhere('certificates.hash', $hash);
-            }
-        });
+        // Tentukan kolom title quiz
+        $quizTitleColumn = DB::raw("'-' as quiz_title");
 
-        $certificate = $query->first();
+        if (Schema::hasColumn('quizzes', 'title')) {
+            $quizTitleColumn = 'quizzes.title as quiz_title';
+        } elseif (Schema::hasColumn('quizzes', 'name')) {
+            $quizTitleColumn = 'quizzes.name as quiz_title';
+        }
 
-        return view('public.blockchain-verify', [
+        // Query data
+        $query = DB::table('quiz_attempts')
+            ->leftJoin('users', 'quiz_attempts.user_id', '=', 'users.id')
+            ->leftJoin('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
+            ->select(
+                'users.name as student_name',
+                $quizTitleColumn,
+                'quiz_attempts.blockchain_hash'
+            )
+            ->where('quiz_attempts.blockchain_hash', $hash);
+
+        // Cek verifikasi jika kolom tersedia
+        if (Schema::hasColumn('quiz_attempts', 'is_verified')) {
+            $query->where('quiz_attempts.is_verified', true);
+        }
+
+        $result = $query->first();
+
+        return $this->responseView(
+            $hash,
+            $result,
+            $result ? 'valid' : 'invalid',
+            $result
+                ? 'Hash valid. Data hasil quiz ditemukan.'
+                : 'Hash tidak ditemukan atau hasil quiz belum diverifikasi.'
+        );
+    }
+
+    /**
+     * Helper untuk return view response
+     */
+    private function responseView(
+        ?string $hash,
+        mixed $result,
+        string $status,
+        string $message
+    ): View {
+        return view(
+            'public.blockchain-verify',
+            $this->viewData($hash, $result, $status, $message)
+        );
+    }
+
+    /**
+     * Data yang dikirim ke view
+     */
+    private function viewData(
+        ?string $hash = null,
+        mixed $result = null,
+        ?string $status = null,
+        ?string $message = null
+    ): array {
+        return [
             'hash' => $hash,
-            'certificate' => $certificate,
-            'status' => $certificate ? 'valid' : 'invalid',
-            'message' => $certificate
-                ? 'Hash valid. Certificate ditemukan dan cocok dengan data sistem.'
-                : 'Hash tidak ditemukan. Certificate tidak valid atau belum tercatat di sistem.',
-        ]);
+            'result' => $result,
+
+            // Tetap dikirim supaya view lama tidak error
+            'certificate' => null,
+
+            'status' => $status,
+            'message' => $message,
+        ];
     }
 }
