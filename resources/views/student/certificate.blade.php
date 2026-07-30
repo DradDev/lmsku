@@ -41,8 +41,12 @@
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-xs uppercase tracking-wider text-slate-400">Verified</p>
-                        <p class="mt-2 text-3xl font-bold text-emerald-600">Yes</p>
+                        <p class="text-xs uppercase tracking-wider text-slate-400">Blockchain Status</p>
+                        @if(!empty($attempt->blockchain_hash))
+                            <p class="mt-2 text-xl font-bold text-emerald-600">Verified on Blockchain</p>
+                        @else
+                            <p class="mt-2 text-xl font-bold text-amber-600">Pending Verification</p>
+                        @endif
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -50,6 +54,21 @@
                         <p class="mt-2 text-xl font-bold text-slate-900">{{ now()->format('d M Y') }}</p>
                     </div>
                 </div>
+
+                @if(!empty($attempt->blockchain_hash))
+                    <div class="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700 mb-1">Blockchain Record</p>
+                        <p class="text-xs font-mono text-emerald-800 break-all">TX: {{ $attempt->tx_id }}</p>
+                        <p class="mt-1 text-xs font-mono text-emerald-800 break-all">Hash: {{ $attempt->blockchain_hash }}</p>
+                    </div>
+                @else
+                    <div class="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-left">
+                        <p class="text-sm text-amber-700">
+                            Sertifikat ini masih menunggu approval admin untuk dicatat ke blockchain.
+                            Status akan otomatis berubah menjadi "Verified on Blockchain" setelah diproses.
+                        </p>
+                    </div>
+                @endif
 
                 <div class="mt-12 pt-8 border-t border-slate-200">
                     <p class="text-sm text-slate-500">

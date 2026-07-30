@@ -98,6 +98,13 @@ class DashboardController extends Controller
             ->where('is_verified', true)
             ->latest()
             ->first();
+        
+        $latestQuizResults = QuizAttempt::with(['quiz.course'])
+            ->where('user_id', $user->id)
+            ->where('is_verified', true)
+            ->latest()
+            ->take(3)
+            ->get();
 
         $pendingQuiz = QuizAttempt::with(['quiz.course'])
             ->where('user_id', $user->id)
@@ -123,6 +130,7 @@ class DashboardController extends Controller
             'completed',
             'lastSubmission',
             'latestQuiz',
+            'latestQuizResults',
             'pendingQuiz',
             'latestEssayAnswer'
         ));

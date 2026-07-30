@@ -19,6 +19,8 @@ class User extends Authenticatable
         'password',
         'role',
         'avatar',
+        'registration_status',
+        'registration_note',
     ];
 
     protected $hidden = [
@@ -46,9 +48,19 @@ class User extends Authenticatable
         return $this->role === 'lecturer';
     }
 
-    public function isStudent()
+    public function isRegistrationPending()
     {
-        return $this->role === 'student';
+        return $this->registration_status === 'pending';
+    }
+
+    public function isRegistrationApproved()
+    {
+        return $this->registration_status === 'approved';
+    }
+
+    public function isRegistrationRejected()
+    {
+        return $this->registration_status === 'rejected';
     }
 
     public function getAvatarUrlAttribute(): ?string

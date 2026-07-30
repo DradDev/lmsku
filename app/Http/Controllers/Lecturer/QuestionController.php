@@ -120,7 +120,7 @@ class QuestionController extends Controller
                 'option_c' => $item['option_c'] ?? null,
                 'option_d' => $item['option_d'] ?? null,
                 'correct_answer' => $item['correct_answer'] ?? null,
-                'status' => $item['question_type'] === 'essay' ? 'approved' : 'draft',
+                'status' => 'approved',
             ]);
 
             $this->syncQuestionSkills(
@@ -139,16 +139,16 @@ class QuestionController extends Controller
         $messageParts = [];
 
         if ($createdEssay > 0) {
-            $messageParts[] = $createdEssay . ' essay question langsung aktif';
+            $messageParts[] = $createdEssay . ' essay question';
         }
 
         if ($createdMultipleChoice > 0) {
-            $messageParts[] = $createdMultipleChoice . ' multiple choice disimpan sebagai draft';
+            $messageParts[] = $createdMultipleChoice . ' multiple choice question';
         }
 
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', implode(' dan ', $messageParts) . '.');
+            ->with('success', implode(' dan ', $messageParts) . ' berhasil dibuat dan langsung aktif.');
     }
 
     public function show(Question $question): RedirectResponse
@@ -159,13 +159,6 @@ class QuestionController extends Controller
     public function edit(Question $question): View
     {
         abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
-
-        abort_if(
-            $question->question_type === 'multiple_choice'
-            && in_array($question->status, ['pending', 'approved'], true),
-            403,
-            'Question dengan status ini tidak dapat diedit.'
-        );
 
         $quizzes = Quiz::query()
             ->whereHas('course', function ($query) {
@@ -191,12 +184,6 @@ class QuestionController extends Controller
     {
         abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
 
-        abort_if(
-            $question->question_type === 'multiple_choice'
-            && in_array($question->status, ['pending', 'approved'], true),
-            403,
-            'Question dengan status ini tidak dapat diperbarui.'
-        );
 
         $type = $request->input('question_type');
 
@@ -234,19 +221,15 @@ class QuestionController extends Controller
             })
             ->findOrFail($data['quiz_id']);
 
-        if ($type === 'essay') {
+         if ($type === 'essay') {
             $data['option_a'] = null;
             $data['option_b'] = null;
             $data['option_c'] = null;
             $data['option_d'] = null;
             $data['correct_answer'] = null;
-            $data['status'] = 'approved';
-        } else {
-            if ($question->status === 'rejected' || $question->question_type === 'essay') {
-                $data['status'] = 'draft';
-            }
         }
 
+        $data['status'] = 'approved';
         $data['quiz_id'] = $quiz->id;
 
         $question->update($data);
@@ -255,49 +238,12 @@ class QuestionController extends Controller
 
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with(
-                'success',
-                $type === 'essay'
-                    ? 'Essay question berhasil diperbarui dan tetap aktif untuk student.'
-                    : 'Question berhasil diperbarui.'
-            );
-    }
-
-    public function submit(Question $question): RedirectResponse
-    {
-        abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
-
-        if ($question->question_type === 'essay') {
-            return redirect()
-                ->route('lecturer.dashboard', ['tab' => 'questions'])
-                ->with('success', 'Essay question tidak perlu submit ke admin dan sudah langsung aktif.');
-        }
-
-        abort_if(
-            ! in_array($question->status, ['draft', 'rejected'], true),
-            403,
-            'Question ini tidak bisa disubmit.'
-        );
-
-        $question->update([
-            'status' => 'pending',
-        ]);
-
-        return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', 'Question submitted for admin review.');
+            ->with('success', 'Question berhasil diperbarui dan tetap aktif untuk student.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
         abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
-
-        abort_if(
-            $question->question_type === 'multiple_choice'
-            && in_array($question->status, ['pending', 'approved'], true),
-            403,
-            'Question dengan status ini tidak dapat dihapus.'
-        );
 
         $question->delete();
 

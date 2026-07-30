@@ -5,7 +5,7 @@
                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
                     Admin Panel
                 </p>
-                <h1 class="text-3xl font-bold text-slate-900">Quiz Results</h1>
+                <h1 class="text-3xl font-bold text-slate-900">Final Quiz Results</h1>
                 <p class="mt-2 text-slate-500">
                     Pantau hasil quiz mahasiswa, status verifikasi, dan detail attempt.
                 </p>
@@ -41,7 +41,10 @@
 
             <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div class="border-b border-slate-200 px-6 py-5">
-                    <h2 class="text-xl font-semibold text-slate-900">All Quiz Attempts</h2>
+                    <h2 class="text-xl font-semibold text-slate-900">Final Quiz Attempts</h2>
+                    <p class="mt-1 text-sm text-slate-500">
+                        Hanya hasil Final Quiz yang tampil ditampilkan — dasar penerbitan sertifikat & pencatatan blockchain.
+                    </p>
                     <p class="mt-1 text-sm text-slate-500">
                         Daftar seluruh hasil quiz mahasiswa.
                     </p>

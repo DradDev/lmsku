@@ -11,43 +11,21 @@ use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
-    public function index()
+    public function create(Course $course)
     {
-        $materials = Material::with('course')
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
-            })
-            ->latest()
-            ->get();
+        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
 
-        return view('lecturer.materials.index', compact('materials'));
+        return view('lecturer.materials.create', compact('course'));
     }
 
-    public function create()
+    public function store(Request $request, Course $course)
     {
-        $courses = Course::where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
 
-        if ($courses->isEmpty()) {
-            return redirect()
-                ->route('lecturer.courses.create')
-                ->with('success', 'Buat course terlebih dahulu sebelum upload materi.');
-        }
-
-        return view('lecturer.materials.create', compact('courses'));
-    }
-
-    public function store(Request $request)
-    {
         $validated = $request->validate([
-            'course_id' => ['required', 'exists:courses,id'],
             'title' => ['required', 'string', 'max:255'],
             'file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx', 'max:20480'],
         ]);
-
-        $course = Course::where('user_id', Auth::id())
-            ->findOrFail($validated['course_id']);
 
         $filePath = $request->file('file')->store('materials', 'public');
 
@@ -58,7 +36,7 @@ class MaterialController extends Controller
         ]);
 
         return redirect()
-            ->route('lecturer.materials.index')
+            ->route('lecturer.courses.show', $course->id)
             ->with('success', 'Materi berhasil diupload.');
     }
 
@@ -79,11 +57,7 @@ class MaterialController extends Controller
             403
         );
 
-        $courses = Course::where('user_id', Auth::id())
-            ->latest()
-            ->get();
-
-        return view('lecturer.materials.edit', compact('material', 'courses'));
+        return view('lecturer.materials.edit', compact('material'));
     }
 
     public function update(Request $request, Material $material)
@@ -94,16 +68,11 @@ class MaterialController extends Controller
         );
 
         $validated = $request->validate([
-            'course_id' => ['required', 'exists:courses,id'],
             'title' => ['required', 'string', 'max:255'],
             'file' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx', 'max:20480'],
         ]);
 
-        $course = Course::where('user_id', Auth::id())
-            ->findOrFail($validated['course_id']);
-
         $updateData = [
-            'course_id' => $course->id,
             'title' => $validated['title'],
         ];
 
@@ -118,7 +87,7 @@ class MaterialController extends Controller
         $material->update($updateData);
 
         return redirect()
-            ->route('lecturer.materials.index')
+            ->route('lecturer.courses.show', $material->course_id)
             ->with('success', 'Materi berhasil diperbarui.');
     }
 
@@ -129,6 +98,8 @@ class MaterialController extends Controller
             403
         );
 
+        $courseId = $material->course_id;
+
         if (!empty($material->file_path) && Storage::disk('public')->exists($material->file_path)) {
             Storage::disk('public')->delete($material->file_path);
         }
@@ -136,7 +107,7 @@ class MaterialController extends Controller
         $material->delete();
 
         return redirect()
-            ->route('lecturer.materials.index')
+            ->route('lecturer.courses.show', $courseId)
             ->with('success', 'Materi berhasil dihapus.');
     }
 }

@@ -347,6 +347,11 @@
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
+                                        <a href="{{ route('lecturer.courses.quizzes.results.index', [$course->id, $quiz->id]) }}"
+                                            class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                                            Lihat Hasil
+                                        </a>
+
                                         @if ($quiz->questions->where('question_type', 'essay')->count() > 0)
                                         <a href="{{ route('lecturer.courses.quizzes.answers.index', [$course->id, $quiz->id]) }}"
                                             class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600">
@@ -390,14 +395,21 @@
                     </div>
 
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div class="mb-6">
-                            <h2 class="text-2xl font-semibold text-slate-900">
-                                Learning Materials
-                            </h2>
+                        <div class="mb-6 flex items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900">
+                                    Learning Materials
+                                </h2>
 
-                            <p class="mt-1 text-sm text-slate-500">
-                                Materi pembelajaran yang tersedia di course ini.
-                            </p>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    Materi pembelajaran yang tersedia di course ini.
+                                </p>
+                            </div>
+
+                            <a href="{{ route('lecturer.materials.create', $course->id) }}"
+                                class="inline-flex items-center rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 whitespace-nowrap">
+                                + Add Material
+                            </a>
                         </div>
 
                         @if ($materials->count())
@@ -412,16 +424,34 @@
                                     Uploaded {{ optional($material->created_at)->format('d M Y') ?: '-' }}
                                 </p>
 
-                                <a href="{{ route('lecturer.materials.show', $material->id) }}"
-                                    class="mt-4 inline-flex rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700">
-                                    View Material
-                                </a>
+                                <div class="mt-4 flex flex-wrap gap-2">
+                                    <a href="{{ route('lecturer.materials.show', $material->id) }}"
+                                        class="inline-flex rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700">
+                                        View
+                                    </a>
+
+                                    <a href="{{ route('lecturer.materials.edit', $material->id) }}"
+                                        class="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                                        Edit
+                                    </a>
+
+                                    <form action="{{ route('lecturer.materials.destroy', $material->id) }}"
+                                          method="POST"
+                                          onsubmit="return confirm('Yakin hapus materi ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="inline-flex rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
+                                            Delete
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                             @endforeach
                         </div>
                         @else
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-                            Belum ada materi untuk course ini.
+                            Belum ada materi untuk course ini. Klik "+ Add Material" untuk mulai upload.
                         </div>
                         @endif
                     </div>

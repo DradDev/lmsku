@@ -26,11 +26,12 @@ use App\Http\Controllers\Lecturer\QuizController as LecturerQuizController;
 use App\Http\Controllers\Lecturer\QuestionController as LecturerQuestionController;
 use App\Http\Controllers\Lecturer\AssignmentController as LecturerAssignmentController;
 use App\Http\Controllers\Lecturer\QuizAnswerController as LecturerQuizAnswerController;
+use App\Http\Controllers\Lecturer\ResultController as LecturerResultController;
 use App\Http\Controllers\Lecturer\ProjectController as LecturerProjectController;
 
 // Admin Controllers
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\QuestionController as AdminQuestionController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\SkillController as AdminSkillController;
@@ -213,8 +214,30 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::patch('/courses/{course}/quizzes/{quiz}/essay-answers/{quizAnswer}/grade', [LecturerQuizAnswerController::class, 'grade'])
             ->name('courses.quizzes.answers.grade');
 
-        // Materials
-        Route::resource('materials', LecturerMaterialController::class);
+        Route::get('/courses/{course}/quizzes/{quiz}/results', [LecturerResultController::class, 'index'])
+            ->name('courses.quizzes.results.index');
+
+        Route::get('/courses/{course}/quizzes/{quiz}/results/{result}', [LecturerResultController::class, 'show'])
+            ->name('courses.quizzes.results.show');
+
+        // Materials — hanya bisa dikelola dari dalam Course (nested)
+        Route::get('/courses/{course}/materials/create', [LecturerMaterialController::class, 'create'])
+            ->name('materials.create');
+
+        Route::post('/courses/{course}/materials', [LecturerMaterialController::class, 'store'])
+            ->name('materials.store');
+
+        Route::get('/materials/{material}', [LecturerMaterialController::class, 'show'])
+            ->name('materials.show');
+
+        Route::get('/materials/{material}/edit', [LecturerMaterialController::class, 'edit'])
+            ->name('materials.edit');
+
+        Route::put('/materials/{material}', [LecturerMaterialController::class, 'update'])
+            ->name('materials.update');
+
+        Route::delete('/materials/{material}', [LecturerMaterialController::class, 'destroy'])
+            ->name('materials.destroy');
 
         // Assignments
         Route::resource('assignments', LecturerAssignmentController::class);
@@ -241,11 +264,8 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::put('/questions/{question}', [LecturerQuestionController::class, 'update'])
             ->name('questions.update');
 
-        Route::delete('/questions/{question}', [LecturerQuestionController::class, 'destroy'])
+         Route::delete('/questions/{question}', [LecturerQuestionController::class, 'destroy'])
             ->name('questions.destroy');
-
-        Route::post('/questions/{question}/submit', [LecturerQuestionController::class, 'submit'])
-            ->name('questions.submit');
 
         // Projects
         Route::resource('projects', LecturerProjectController::class);
@@ -274,32 +294,19 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/results/{result}/verify', [AdminResultController::class, 'verify'])
             ->name('results.verify');
 
-        // Questions
-        Route::get('/questions', [AdminQuestionController::class, 'index'])
-            ->name('questions.index');
-
-        Route::get('/questions/{question}', [AdminQuestionController::class, 'show'])
-            ->name('questions.show');
-
-        Route::get('/questions/{question}/edit', [AdminQuestionController::class, 'edit'])
-            ->name('questions.edit');
-
-        Route::put('/questions/{question}', [AdminQuestionController::class, 'update'])
-            ->name('questions.update');
-
-        Route::post('/questions/{question}/approve', [AdminQuestionController::class, 'approve'])
-            ->name('questions.approve');
-
-        Route::post('/questions/{question}/reject', [AdminQuestionController::class, 'reject'])
-            ->name('questions.reject');
-
-        Route::delete('/questions/{question}', [AdminQuestionController::class, 'destroy'])
-            ->name('questions.destroy');
-
         // Users, Skills, Tags
         Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');
 
         Route::resource('users', AdminUserController::class);
+
+        Route::resource('categories', AdminCategoryController::class)
+            ->except(['show']);
+
+        Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])
+            ->name('users.approve');
+
+        Route::post('/users/{user}/reject', [AdminUserController::class, 'reject'])
+            ->name('users.reject');
         Route::resource('skills', AdminSkillController::class)->except(['show']);
         Route::resource('tags', AdminTagController::class)->except(['show']);
     });

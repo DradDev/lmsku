@@ -12,19 +12,21 @@ class ResultController extends Controller
     {
         $results = QuizAttempt::with(['quiz.course'])
             ->where('user_id', Auth::id())
-            ->where('is_verified', true)
             ->latest()
             ->get();
 
-        return view('student.results.index', compact('results'));
+        $resultsByCourse = $results->groupBy(function ($result) {
+            return $result->quiz->course->name ?? 'Tanpa Course';
+        });
+
+        return view('student.results.index', compact('results', 'resultsByCourse'));
     }
 
     public function show(QuizAttempt $result)
     {
         abort_unless($result->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke hasil ini.');
-        abort_unless($result->is_verified, 403, 'Hasil quiz ini belum diverifikasi admin.');
 
-        $result->load(['quiz.course']);
+        $result->load(['quiz.course', 'answers.question']);
 
         return view('student.results.show', compact('result'));
     }

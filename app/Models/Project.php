@@ -83,4 +83,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectComment::class);
     }
+    
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

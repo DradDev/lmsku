@@ -660,14 +660,14 @@ textarea.form-control { resize: vertical; }
                     <div class="stat-sub">Questions created</div>
                 </div>
                 <div class="stat-card sc3">
-                    <div class="stat-label">Pending Review</div>
-                    <div class="stat-value">{{ $questions->where('status', 'pending')->count() }}</div>
-                    <div class="stat-sub">Awaiting admin review</div>
+                    <div class="stat-label">Multiple Choice</div>
+                    <div class="stat-value">{{ $questions->where('question_type', 'multiple_choice')->count() }}</div>
+                    <div class="stat-sub">MC questions</div>
                 </div>
                 <div class="stat-card sc4">
-                    <div class="stat-label">Approved</div>
-                    <div class="stat-value">{{ $questions->where('status', 'approved')->count() }}</div>
-                    <div class="stat-sub">Questions approved</div>
+                    <div class="stat-label">Essay</div>
+                    <div class="stat-value">{{ $questions->where('question_type', 'essay')->count() }}</div>
+                    <div class="stat-sub">Essay questions</div>
                 </div>
             </div>
 
@@ -681,7 +681,7 @@ textarea.form-control { resize: vertical; }
                         </a>
                         <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}" class="quick-item">
                             <div class="quick-item-cat">Questions</div>
-                            <div class="quick-item-label">Create & Submit Questions</div>
+                            <div class="quick-item-label">Create Questions</div>
                         </a>
                         <a href="{{ route('lecturer.courses.index') }}" class="quick-item">
                             <div class="quick-item-cat">Courses</div>
@@ -702,11 +702,11 @@ textarea.form-control { resize: vertical; }
 
                     @forelse($questions->take(5) as $question)
                         <div class="q-preview">
-                            <div class="badge-row">
-                                <span class="badge badge-gray">{{ ucfirst($question->status) }}</span>
+                             <div class="badge-row">
                                 <span class="badge badge-purple">
                                     {{ $question->question_type === 'essay' ? 'Essay' : 'Multiple Choice' }}
                                 </span>
+                                <span class="badge badge-amber">{{ ucfirst($question->difficulty) }}</span>
                             </div>
                             <p class="q-preview-text" style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
                                 {{ $question->question }}
@@ -932,10 +932,8 @@ textarea.form-control { resize: vertical; }
             @forelse($groupedQuestions as $quizId => $quizQuestions)
                 @php
                     $quizRef = $quizQuestions->first()?->quiz;
-                    $draftCount = $quizQuestions->where('status', 'draft')->count();
-                    $pendingCountPerQuiz = $quizQuestions->where('status', 'pending')->count();
-                    $approvedCountPerQuiz = $quizQuestions->where('status', 'approved')->count();
-                    $rejectedCountPerQuiz = $quizQuestions->where('status', 'rejected')->count();
+                    $mcCountPerQuiz = $quizQuestions->where('question_type', 'multiple_choice')->count();
+                    $essayCountPerQuiz = $quizQuestions->where('question_type', 'essay')->count();
                 @endphp
 
                 <div class="panel" style="margin-bottom:1rem;">
@@ -953,17 +951,11 @@ textarea.form-control { resize: vertical; }
                         </div>
 
                         <div class="badge-row" style="margin-bottom:0;">
-                            @if($draftCount > 0)
-                                <span class="badge badge-draft">{{ $draftCount }} Draft</span>
+                            @if($mcCountPerQuiz > 0)
+                                <span class="badge badge-purple">{{ $mcCountPerQuiz }} Multiple Choice</span>
                             @endif
-                            @if($pendingCountPerQuiz > 0)
-                                <span class="badge badge-blue">{{ $pendingCountPerQuiz }} Pending</span>
-                            @endif
-                            @if($approvedCountPerQuiz > 0)
-                                <span class="badge badge-green">{{ $approvedCountPerQuiz }} Approved</span>
-                            @endif
-                            @if($rejectedCountPerQuiz > 0)
-                                <span class="badge badge-red">{{ $rejectedCountPerQuiz }} Rejected</span>
+                            @if($essayCountPerQuiz > 0)
+                                <span class="badge badge-green">{{ $essayCountPerQuiz }} Essay</span>
                             @endif
                         </div>
                     </div>
@@ -974,16 +966,6 @@ textarea.form-control { resize: vertical; }
                                 <div class="q-list-body">
                                     <div class="badge-row" style="margin-bottom:10px;">
                                         <span class="badge badge-gray">No. {{ $index + 1 }}</span>
-
-                                        @if($question->status === 'approved')
-                                            <span class="badge badge-green">Approved</span>
-                                        @elseif($question->status === 'rejected')
-                                            <span class="badge badge-red">Rejected</span>
-                                        @elseif($question->status === 'pending')
-                                            <span class="badge badge-blue">Pending Review</span>
-                                        @else
-                                            <span class="badge badge-draft">Draft</span>
-                                        @endif
 
                                         <span class="badge badge-purple">
                                             {{ $question->question_type === 'essay' ? 'Essay' : 'Multiple Choice' }}
@@ -996,32 +978,15 @@ textarea.form-control { resize: vertical; }
                                 </div>
 
                                 <div class="q-list-actions">
-                                    @if($question->status === 'draft')
-                                        <form method="POST" action="{{ route('lecturer.questions.submit', $question->id) }}">
-                                            @csrf
-                                            <button type="submit" class="btn btn-green">Submit</button>
-                                        </form>
-                                    @endif
+                                    <a href="{{ route('lecturer.questions.edit', $question->id) }}" class="btn btn-blue">Edit</a>
 
-                                    @if(
-                                        $question->question_type === 'essay' ||
-                                        ($question->question_type === 'multiple_choice' && in_array($question->status, ['draft', 'rejected']))
-                                    )
-                                        <a href="{{ route('lecturer.questions.edit', $question->id) }}" class="btn btn-blue">Edit</a>
-                                    @endif
-
-                                    @if(
-                                        $question->question_type === 'essay' ||
-                                        ($question->question_type === 'multiple_choice' && in_array($question->status, ['draft', 'rejected']))
-                                    )
-                                        <form method="POST"
-                                              action="{{ route('lecturer.questions.destroy', $question->id) }}"
-                                              onsubmit="return confirm('Yakin ingin menghapus soal ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-red">Delete</button>
-                                        </form>
-                                    @endif
+                                    <form method="POST"
+                                          action="{{ route('lecturer.questions.destroy', $question->id) }}"
+                                          onsubmit="return confirm('Yakin ingin menghapus soal ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-red">Delete</button>
+                                    </form>
                                 </div>
                             </div>
 

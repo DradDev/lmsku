@@ -33,47 +33,36 @@
     </div>
 
     {{-- Score / Status card --}}
+    @php
+        $mcQuestionCount = $quiz->questions()->where('question_type', 'multiple_choice')->count();
+        $isFullyGraded = isset($attempt) && $attempt->is_verified;
+    @endphp
+
     <div class="result-card">
-        @if(isset($attempt) && $attempt->is_verified)
-            <p class="result-label">Your Score</p>
+        @if($mcQuestionCount > 0)
+            <p class="result-label">
+                {{ $hasEssay && !$isFullyGraded ? 'Nilai Sementara (Pilihan Ganda)' : 'Nilai Akhir' }}
+            </p>
             <h2 class="result-score">{{ $score }}</h2>
+        @endif
 
-            @if($hasEssay)
-                <div class="result-badge result-badge--success">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
-                    Quiz telah dinilai oleh lecturer
-                </div>
-            @elseif(!empty($attempt->blockchain_hash))
-                <div class="result-badge result-badge--success">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
-                    Verified by admin
-                </div>
-            @else
-                <div class="result-badge result-badge--success">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
-                    Quiz telah diverifikasi
-                </div>
-            @endif
+        @if($isFullyGraded)
+            <div class="result-badge result-badge--success">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+                {{ $hasEssay ? 'Quiz telah dinilai oleh lecturer' : 'Quiz telah diverifikasi' }}
+            </div>
+        @elseif($hasEssay)
+            <div class="result-badge result-badge--pending">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                Menunggu Penilaian Essay
+            </div>
+        @endif
 
-        @else
-            @if($hasEssay)
-                <div class="result-pending-icon result-pending-icon--amber">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                </div>
-                <p class="result-pending-title">Menunggu Penilaian Lecturer</p>
-                <p class="result-pending-desc">
-                    Jawaban essay kamu berhasil dikumpulkan dan sedang menunggu penilaian dari lecturer.
-                </p>
-            @else
-                <div class="result-pending-icon result-pending-icon--amber">
-                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                </div>
-                <p class="result-pending-title">Menunggu Verifikasi Admin</p>
-                <p class="result-pending-desc">
-                    Quiz berhasil dikumpulkan. Nilai kamu sudah dihitung oleh sistem,
-                    tetapi belum ditampilkan karena masih menunggu approval admin.
-                </p>
-            @endif
+        @if($hasEssay && !$isFullyGraded)
+            <p class="result-pending-desc" style="margin-top: 6px;">
+                Nilai pilihan ganda kamu sudah keluar. Jawaban essay sedang menunggu penilaian dari lecturer,
+                nilai akhir akan diperbarui setelah essay dinilai.
+            </p>
         @endif
     </div>
 
@@ -213,6 +202,11 @@
     background: #ECFDF5;
     color: #065F46;
     border: 1px solid #A7F3D0;
+}
+.result-badge--pending {
+    background: #FFFBEB;
+    color: #92400E;
+    border: 1px solid #FDE68A;
 }
 
 /* ── Pending state ── */

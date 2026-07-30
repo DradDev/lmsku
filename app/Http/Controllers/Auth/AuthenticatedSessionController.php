@@ -40,6 +40,23 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
+        // Cek status registrasi user
+        if ($user->registration_status === 'pending') {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Akun kamu masih menunggu persetujuan admin.',
+            ]);
+        }
+
+        if ($user->registration_status === 'rejected') {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Registrasi akun kamu ditolak oleh admin. Hubungi admin untuk informasi lebih lanjut.',
+            ]);
+        }
+
         // Redirect sesuai role
         if ($user->role === 'admin') {
             return redirect()->route('admin.dashboard');

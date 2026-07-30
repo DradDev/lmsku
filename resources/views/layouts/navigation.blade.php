@@ -111,17 +111,6 @@ default => route('student.dashboard'),
                 Courses
             </a>
 
-            <a href="{{ route('lecturer.materials.index') }}"
-                class="lms-nav-link {{ request()->routeIs('lecturer.materials.*') ? 'active' : '' }}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14,2 14,8 20,8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-                Materials
-            </a>
-
             <a href="{{ route('lecturer.projects.index') }}"
                 class="lms-nav-link {{ request()->routeIs('lecturer.projects.*') ? 'active' : '' }}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -138,6 +127,17 @@ default => route('student.dashboard'),
                     <path d="M3 13h8V3H3zM13 21h8v-6h-8zM13 10h8V3h-8zM3 21h8v-6H3z" />
                 </svg>
                 Dashboard
+            </a>
+
+            <a href="{{ route('admin.users.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                Users
             </a>
 
             <a href="{{ route('admin.results.index') }}"
@@ -172,6 +172,17 @@ default => route('student.dashboard'),
                     <circle cx="7.5" cy="7.5" r="1.5" />
                 </svg>
                 Tags
+            </a>
+
+            <a href="{{ route('admin.categories.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Categories
             </a>
             @endif
         </div>

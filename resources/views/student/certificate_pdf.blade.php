@@ -44,6 +44,32 @@
             font-weight: bold;
             margin-top: 16px;
         }
+        .blockchain-status {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 8px 20px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .blockchain-status--verified {
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1.5px solid #a7f3d0;
+        }
+        .blockchain-status--pending {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1.5px solid #fde68a;
+        }
+        .blockchain-hash {
+            margin-top: 10px;
+            font-size: 10px;
+            color: #94a3b8;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -54,8 +80,22 @@
         <div class="course">{{ $course->name }}</div>
         <p>Final Quiz: {{ $finalQuiz->title }}</p>
         <div class="score">Final Score: {{ $attempt->score }}</div>
+
+        @if(!empty($attempt->blockchain_hash))
+            <div class="blockchain-status blockchain-status--verified">
+                ✓ Verified on Blockchain
+            </div>
+            <div class="blockchain-hash">
+                TX: {{ $attempt->tx_id ?? '-' }}<br>
+                Hash: {{ $attempt->blockchain_hash }}
+            </div>
+        @else
+            <div class="blockchain-status blockchain-status--pending">
+                Pending Verification
+            </div>
+        @endif
+
         <div class="meta">
-            Verified by Admin<br>
             Issued on {{ now()->format('d M Y') }}<br>
             Instructor: {{ $course->user->name ?? 'Lecturer' }}
         </div>

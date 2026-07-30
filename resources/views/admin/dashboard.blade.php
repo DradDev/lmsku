@@ -5,22 +5,11 @@
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight text-slate-900">Admin Dashboard</h1>
                     <p class="mt-2 text-sm text-slate-500">
-                        Monitor hasil mahasiswa dan kelola bank soal dari lecturer.
+                        Monitor hasil Asesmen Mahasiswa.
                     </p>
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <a href="{{ route('admin.dashboard', ['tab' => 'results']) }}"
-                        class="rounded-xl px-4 py-2 text-sm font-medium transition
-                        {{ $tab === 'results' ? 'bg-blue-700 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                        Student Results
-                    </a>
-
-                    <a href="{{ route('admin.dashboard', ['tab' => 'bank']) }}"
-                        class="rounded-xl px-4 py-2 text-sm font-medium transition
-                        {{ $tab === 'bank' ? 'bg-blue-700 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                        Question Bank
-                    </a>
                 </div>
             </div>
 
@@ -31,13 +20,7 @@
             @endif
 
             <form method="GET" action="{{ route('admin.dashboard') }}" class="mb-6">
-                <input type="hidden" name="tab" value="{{ $tab }}">
-
-                @if ($tab === 'results')
-                    <input type="hidden" name="result_status" value="{{ $resultStatus }}">
-                @else
-                    <input type="hidden" name="question_status" value="{{ $questionStatus }}">
-                @endif
+                <input type="hidden" name="result_status" value="{{ $resultStatus }}">
 
                 <div class="flex flex-col gap-3 md:flex-row">
                     <div class="flex-1">
@@ -45,7 +28,7 @@
                             type="text"
                             name="search"
                             value="{{ $search }}"
-                            placeholder="{{ $tab === 'results' ? 'Cari nama mahasiswa, email, course...' : 'Cari soal, course, quiz, author...' }}"
+                            placeholder="Cari nama mahasiswa, email, course..."
                             class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
                         >
                     </div>
@@ -59,7 +42,6 @@
                 </div>
             </form>
 
-            @if ($tab === 'results')
                 <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <p class="text-sm text-slate-500">Total Results</p>
@@ -83,19 +65,19 @@
                 </div>
 
                 <div class="mb-6 flex flex-wrap gap-3">
-                    <a href="{{ route('admin.dashboard', ['tab' => 'results', 'result_status' => 'all', 'search' => $search]) }}"
+                    <a href="{{ route('admin.dashboard', ['result_status' => 'all', 'search' => $search]) }}"
                         class="rounded-full px-4 py-2 text-sm font-medium transition
                         {{ $resultStatus === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
                         All Results
                     </a>
 
-                    <a href="{{ route('admin.dashboard', ['tab' => 'results', 'result_status' => 'verified', 'search' => $search]) }}"
+                    <a href="{{ route('admin.dashboard', ['result_status' => 'verified', 'search' => $search]) }}"
                         class="rounded-full px-4 py-2 text-sm font-medium transition
                         {{ $resultStatus === 'verified' ? 'bg-emerald-500 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
                         Verified
                     </a>
 
-                    <a href="{{ route('admin.dashboard', ['tab' => 'results', 'result_status' => 'unverified', 'search' => $search]) }}"
+                    <a href="{{ route('admin.dashboard', ['result_status' => 'unverified', 'search' => $search]) }}"
                         class="rounded-full px-4 py-2 text-sm font-medium transition
                         {{ $resultStatus === 'unverified' ? 'bg-amber-500 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
                         Unverified
@@ -175,149 +157,11 @@
                         </table>
                     </div>
                 </div>
-            @endif
 
-            @if ($tab === 'bank')
-                <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p class="text-sm text-slate-500">Total Questions</p>
-                        <h3 class="mt-3 text-3xl font-bold text-slate-900">{{ $questionStats['total'] }}</h3>
-                    </div>
-
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-                        <p class="text-sm text-emerald-700">Approved</p>
-                        <h3 class="mt-3 text-3xl font-bold text-emerald-900">{{ $questionStats['approved'] }}</h3>
-                    </div>
-
-                    <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-                        <p class="text-sm text-blue-700">Pending Review</p>
-                        <h3 class="mt-3 text-3xl font-bold text-blue-900">{{ $questionStats['pending'] }}</h3>
-                    </div>
-
-                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-5">
-                        <p class="text-sm text-rose-700">Rejected</p>
-                        <h3 class="mt-3 text-3xl font-bold text-rose-900">{{ $questionStats['rejected'] }}</h3>
-                    </div>
-                </div>
-
-                <div class="mb-6 flex flex-wrap gap-3">
-                    <a href="{{ route('admin.dashboard', ['tab' => 'bank', 'question_status' => 'all', 'search' => $search]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition
-                        {{ $questionStatus === 'all' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                        All
-                    </a>
-
-                    <a href="{{ route('admin.dashboard', ['tab' => 'bank', 'question_status' => 'approved', 'search' => $search]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition
-                        {{ $questionStatus === 'approved' ? 'bg-emerald-500 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                        Approved
-                    </a>
-
-                    <a href="{{ route('admin.dashboard', ['tab' => 'bank', 'question_status' => 'pending', 'search' => $search]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition
-                        {{ $questionStatus === 'pending' ? 'bg-blue-700 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                        Pending
-                    </a>
-
-                    <a href="{{ route('admin.dashboard', ['tab' => 'bank', 'question_status' => 'rejected', 'search' => $search]) }}"
-                        class="rounded-full px-4 py-2 text-sm font-medium transition
-                        {{ $questionStatus === 'rejected' ? 'bg-rose-500 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100' }}">
-                        Rejected
-                    </a>
-                </div>
-
-                <div class="space-y-4">
-                    @forelse ($questions as $question)
-                        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                            <div class="mb-4 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                                <div class="max-w-3xl">
-                                    <div class="mb-3 flex flex-wrap gap-2">
-                                        @if ($question->status === 'approved')
-                                            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Approved</span>
-                                        @elseif ($question->status === 'rejected')
-                                            <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Rejected</span>
-                                        @else
-                                            <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">Pending Review</span>
-                                        @endif
-
-                                        @if ($question->difficulty === 'easy')
-                                            <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">Easy</span>
-                                        @elseif ($question->difficulty === 'hard')
-                                            <span class="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">Hard</span>
-                                        @else
-                                            <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">Medium</span>
-                                        @endif
-                                    </div>
-
-                                    <h3 class="text-lg font-semibold leading-relaxed text-slate-900">
-                                        {{ $question->question }}
-                                    </h3>
-
-                                    <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500">
-                                        <span><span class="text-slate-400">Course:</span> {{ $question->quiz->course->name ?? '-' }}</span>
-                                        <span><span class="text-slate-400">Quiz:</span> {{ $question->quiz->title ?? '-' }}</span>
-                                        <span><span class="text-slate-400">Author:</span> {{ $question->user->name ?? 'Unknown' }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="flex flex-wrap gap-2">
-                                    <form method="POST" action="{{ route('admin.questions.approve', $question->id) }}">
-                                        @csrf
-                                        <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
-                                            Approve
-                                        </button>
-                                    </form>
-
-                                    <form method="POST" action="{{ route('admin.questions.reject', $question->id) }}">
-                                        @csrf
-                                        <button type="submit" class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600">
-                                            Reject
-                                        </button>
-                                    </form>
-
-                                    <a href="{{ route('admin.questions.edit', $question->id) }}"
-                                        class="rounded-xl bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800">
-                                        Edit
-                                    </a>
-
-                                    <form method="POST" action="{{ route('admin.questions.destroy', $question->id) }}"
-                                        onsubmit="return confirm('Yakin ingin menghapus soal ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">
-                                            Delete
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <div class="grid gap-3 md:grid-cols-2">
-                                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-sm text-slate-600">
-                                    <span class="font-semibold text-slate-800">A.</span> {{ $question->option_a }}
-                                </div>
-                                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-sm text-slate-600">
-                                    <span class="font-semibold text-slate-800">B.</span> {{ $question->option_b }}
-                                </div>
-                                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-sm text-slate-600">
-                                    <span class="font-semibold text-slate-800">C.</span> {{ $question->option_c }}
-                                </div>
-                                <div class="rounded-2xl bg-slate-50 border border-slate-100 p-3 text-sm text-slate-600">
-                                    <span class="font-semibold text-slate-800">D.</span> {{ $question->option_d }}
-                                </div>
-                            </div>
-
-                            <div class="mt-4 text-sm text-slate-500">
-                                Jawaban benar:
-                                <span class="font-semibold text-emerald-600">{{ $question->correct_answer }}</span>
-                            </div>
                         </div>
-                    @empty
-                        <div class="rounded-3xl border border-slate-200 bg-white p-8 text-center text-slate-400">
-                            Belum ada soal yang masuk ke bank soal.
-                        </div>
-                    @endforelse
+
                 </div>
-            @endif
+
         </div>
     </div>
 </x-app-layout>

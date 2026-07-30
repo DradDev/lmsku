@@ -3,9 +3,9 @@
         <div class="max-w-6xl mx-auto px-6">
 
             <div class="mb-8">
-                <a href="{{ route('lecturer.materials.index') }}"
+                <a href="{{ route('lecturer.courses.show', $course->id) }}"
                    class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
-                    ← Kembali ke Materials
+                    ← Kembali ke Course
                 </a>
 
                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
@@ -13,7 +13,7 @@
                 </p>
                 <h1 class="text-3xl font-bold text-slate-900">Upload Learning Material</h1>
                 <p class="text-slate-500 mt-2">
-                    Tambahkan materi pembelajaran ke course yang Anda kelola.
+                    Menambahkan materi ke course: <span class="font-semibold text-slate-700">{{ $course->name }}</span>
                 </p>
             </div>
 
@@ -29,25 +29,11 @@
 
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div class="xl:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <form action="{{ route('lecturer.materials.store') }}"
+                    <form action="{{ route('lecturer.courses.materials.store', $course->id) }}"
                           method="POST"
                           enctype="multipart/form-data"
                           class="space-y-6">
                         @csrf
-
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-slate-700">Course</label>
-                            <select name="course_id"
-                                    class="w-full rounded-2xl border border-slate-300 bg-slate-50 p-3 text-slate-900 focus:border-violet-500 focus:outline-none"
-                                    required>
-                                <option value="">Pilih course</option>
-                                @foreach($courses as $course)
-                                    <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
-                                        {{ $course->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
 
                         <div>
                             <label class="block mb-2 text-sm font-medium text-slate-700">Judul Materi</label>
@@ -73,7 +59,7 @@
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
-                            <a href="{{ route('lecturer.materials.index') }}"
+                            <a href="{{ route('lecturer.courses.show', $course->id) }}"
                                class="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                                 Cancel
                             </a>
@@ -96,17 +82,7 @@
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                                 Format file yang paling nyaman untuk preview biasanya PDF.
                             </div>
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                Pastikan Anda memilih course yang benar sebelum upload materi.
-                            </div>
                         </div>
-                    </div>
-
-                    <div class="rounded-3xl border border-indigo-200 bg-indigo-50 p-6 shadow-sm">
-                        <h2 class="text-xl font-semibold text-indigo-900 mb-3">Info</h2>
-                        <p class="text-sm leading-6 text-indigo-700">
-                            Setelah materi berhasil diupload, Anda bisa langsung membuka detail materi, mengunduh file, atau memperbarui file kapan saja.
-                        </p>
                     </div>
                 </div>
             </div>

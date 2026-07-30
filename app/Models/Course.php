@@ -13,6 +13,8 @@ class Course extends Model
         'level',
         'progress',
         'duration_weeks',
+        'category_id',
+        'thumbnail',
     ];
     public function user()
     {
@@ -63,5 +65,8 @@ class Course extends Model
     {
         return $this->hasMany(MaterialProgress::class);
     }
-    
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

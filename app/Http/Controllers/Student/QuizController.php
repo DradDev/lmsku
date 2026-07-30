@@ -152,11 +152,20 @@ class QuizController extends Controller
             ],
             'occurred_at' => now(),
         ]);
+        $hasEssay = $questions->contains(function ($q) {
+            return $q->question_type === 'essay';
+        });
+
+        // Kalau pure multiple choice, langsung auto-verify
+        if (!$hasEssay) {
+            $attempt->update(['is_verified' => true]);
+        }
 
         return view('student.quiz.result', [
-            'score' => $finalScore,
-            'quiz' => $quiz,
-            'attempt' => $attempt,
+            'score'    => $finalScore,
+            'quiz'     => $quiz,
+            'attempt'  => $attempt,
+            'hasEssay' => $hasEssay,
         ]);
     }
 }

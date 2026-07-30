@@ -13,15 +13,19 @@ class ResultController extends Controller
 {
     public function index(): View
     {
-        $results = QuizAttempt::query()
+        $baseQuery = QuizAttempt::whereHas('quiz', function ($query) {
+            $query->where('is_final', true);
+        });
+
+        $results = (clone $baseQuery)
             ->with(['user', 'quiz.course'])
             ->latest()
             ->get();
 
-        $totalResults  = QuizAttempt::count();
-        $verifiedCount = QuizAttempt::where('is_verified', true)->count();
-        $pendingCount  = QuizAttempt::where('is_verified', false)->count();
-        $averageScore  = round((float) QuizAttempt::avg('score'), 2);
+        $totalResults  = (clone $baseQuery)->count();
+        $verifiedCount = (clone $baseQuery)->where('is_verified', true)->count();
+        $pendingCount  = (clone $baseQuery)->where('is_verified', false)->count();
+        $averageScore  = round((float) (clone $baseQuery)->avg('score'), 2);
 
         return view('admin.results.index', compact(
             'results', 'totalResults', 'verifiedCount', 'pendingCount', 'averageScore'
@@ -30,16 +34,29 @@ class ResultController extends Controller
 
     public function show(QuizAttempt $result): View
     {
-        $result->load(['user', 'quiz.course', 'answers.question']);
+        abort_unless(
+            $result->quiz && $result->quiz->is_final,
+            403,
+            'Hanya hasil Final Quiz yang diproses untuk sertifikat & blockchain.'
+        );
+
+        $result->load(['user', 'quiz.course']);
         return view('admin.results.show', compact('result'));
     }
 
     /**
      * Approve = kirim ke blockchain.
      * Hashing terjadi di chaincode — Laravel hanya kirim raw data.
+     * Hanya berlaku untuk attempt dari Final Quiz (dasar sertifikat).
      */
     public function verify(QuizAttempt $result): RedirectResponse
     {
+        abort_unless(
+            $result->quiz && $result->quiz->is_final,
+            403,
+            'Hanya Final Quiz yang boleh dicatat ke blockchain.'
+        );
+
         if ($result->is_verified) {
             return redirect()
                 ->route('admin.results.show', $result->id)
@@ -47,7 +64,6 @@ class ResultController extends Controller
         }
 
         try {
-            // Gunakan completed_at yang sudah ada, atau created_at sebagai fallback
             $completedAt = $result->completed_at
                 ? $result->completed_at->toISOString()
                 : $result->created_at->toISOString();
@@ -84,7 +100,6 @@ class ResultController extends Controller
 
             $payload = $response->json();
 
-            // Simpan completed_at yang dipakai — ini yang akan dipakai saat verify
             $result->update([
                 'is_verified'     => true,
                 'completed_at'    => $completedAt,
@@ -95,7 +110,7 @@ class ResultController extends Controller
 
             return redirect()
                 ->route('admin.results.show', $result->id)
-                ->with('success', 'Berhasil tercatat di blockchain. TX: ' . $payload['txId']);
+                ->with('success', 'Sertifikat berhasil tercatat di blockchain. TX: ' . $payload['txId']);
 
         } catch (\Exception $e) {
             return redirect()
@@ -109,6 +124,12 @@ class ResultController extends Controller
      */
     public function checkIntegrity(QuizAttempt $result): RedirectResponse
     {
+        abort_unless(
+            $result->quiz && $result->quiz->is_final,
+            403,
+            'Hanya Final Quiz yang diproses untuk blockchain.'
+        );
+
         if (! $result->is_verified || ! $result->blockchain_id) {
             return redirect()
                 ->route('admin.results.show', $result->id)
@@ -116,7 +137,6 @@ class ResultController extends Controller
         }
 
         try {
-            // Pakai completed_at yang disimpan saat approve — TIDAK pakai updated_at
             $completedAt = $result->completed_at
                 ? $result->completed_at->toISOString()
                 : $result->created_at->toISOString();

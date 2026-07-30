@@ -30,6 +30,7 @@
                                     <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Name</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Email</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Role</th>
+                                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
                                     <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Created</th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
                                 </tr>
@@ -53,11 +54,46 @@
                                                 {{ ucfirst($user->role) }}
                                             </span>
                                         </td>
+                                        <td class="px-6 py-4">
+                                            @php
+                                                $statusClass = match($user->registration_status) {
+                                                    'approved' => 'bg-green-100 text-green-700',
+                                                    'rejected' => 'bg-red-100 text-red-700',
+                                                    default => 'bg-amber-100 text-amber-700',
+                                                };
+                                            @endphp
+                                            <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
+                                                {{ ucfirst($user->registration_status) }}
+                                            </span>
+                                            @if($user->registration_note)
+                                                <p class="mt-1 text-xs text-slate-400">{{ Str::limit($user->registration_note, 40) }}</p>
+                                            @endif
+                                        </td>
                                         <td class="px-6 py-4 text-slate-500">
                                             {{ optional($user->created_at)->format('d M Y') ?? '-' }}
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center justify-end gap-2">
+                                                @if($user->registration_status === 'pending')
+                                                    <form action="{{ route('admin.users.approve', $user->id) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="rounded-lg bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700">
+                                                            Approve
+                                                        </button>
+                                                    </form>
+
+                                                    <form action="{{ route('admin.users.reject', $user->id) }}" method="POST"
+                                                          onsubmit="const r = prompt('Alasan menolak registrasi {{ $user->name }}:'); if (!r) { return false; } this.querySelector('input[name=reason]').value = r;">
+                                                        @csrf
+                                                        <input type="hidden" name="reason" value="">
+                                                        <button type="submit"
+                                                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700">
+                                                            Reject
+                                                        </button>
+                                                    </form>
+                                                @endif
+
                                                 <a href="{{ route('admin.users.show', $user->id) }}"
                                                    class="rounded-lg bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">
                                                     View

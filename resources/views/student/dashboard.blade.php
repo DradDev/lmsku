@@ -418,6 +418,26 @@
     .result-grid,
     .info-kpi { grid-template-columns: 1fr; }
 }
+
+.dashboard-two-column{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 2rem;
+}
+
+.dashboard-two-column .card{
+    height: 100%;
+}
+
+@media (max-width:768px){
+
+    .dashboard-two-column{
+        grid-template-columns:1fr;
+    }
+
+}
+
 </style>
 
 <div class="dash-wrap">
@@ -615,28 +635,7 @@
             </div>
         </div>
 
-        <div class="two-col">
-            <div class="card">
-                <div class="section-header">
-                    <h2 class="section-title">Available Assignments</h2>
-                </div>
-
-                @if(($assignments ?? collect())->count() > 0)
-                    @foreach(($assignments ?? collect())->take(3) as $assignment)
-                        <div class="list-card-item">
-                            <div class="item-tag">{{ $assignment->course->name ?? 'Course' }}</div>
-                            <div class="item-title">{{ $assignment->title }}</div>
-                            <div class="item-sub">Deadline: {{ $assignment->deadline ?? 'Tidak ada deadline' }}</div>
-                            <a href="{{ route('student.submissions.create', $assignment->id) }}" class="btn btn-primary">
-                                Kerjakan Assignment
-                            </a>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="empty-text">Belum ada assignment tersedia.</div>
-                @endif
-            </div>
-
+        <div class="dashboard-two-column">
             <div class="card">
                 <div class="section-header">
                     <h2 class="section-title">Available Quizzes</h2>
@@ -664,24 +663,9 @@
                     <div class="empty-text">Belum ada quiz tersedia.</div>
                 @endif
             </div>
-        </div>
 
-        <div class="result-grid">
-            <div class="card">
-                <div class="section-header">
-                    <h2 class="section-title">Latest Assignment Result</h2>
-                </div>
 
-                @if($lastSubmission)
-                    <div class="result-score">{{ $lastSubmission->grade ?? $lastSubmission->score ?? '-' }}</div>
-                    <div class="muted-box">
-                        <span class="muted-label">Feedback Lecturer</span>
-                        {{ !empty($lastSubmission->feedback) ? $lastSubmission->feedback : 'Belum ada feedback dari lecturer.' }}
-                    </div>
-                @else
-                    <div class="empty-text">Belum ada hasil assignment.</div>
-                @endif
-            </div>
+        
 
             <div class="card">
                 <div class="section-header">
@@ -689,12 +673,27 @@
                     <a href="{{ route('student.results.index') }}" class="section-meta">View all →</a>
                 </div>
 
-                @if($latestQuiz)
-                    <div class="result-score">{{ $latestQuiz->score }}</div>
-                    <div class="muted-box">
-                        <span class="muted-label">Status</span>
-                        Quiz result sudah diverifikasi admin.
-                    </div>
+                @if(($latestQuizResults ?? collect())->count() > 0)
+
+                    @foreach($latestQuizResults as $quiz)
+
+                        <div class="result-score">
+                            {{ $quiz->score }}
+                        </div>
+
+                        <div class="muted-box">
+                            <span class="muted-label">
+                                Status
+                            </span>
+
+                            Quiz result sudah diverifikasi admin.
+                        </div>
+
+                        @if(!$loop->last)
+                            <hr style="margin:15px 0;">
+                        @endif
+
+                    @endforeach
                 @elseif(!empty($pendingQuiz))
                     <div class="result-score" style="font-size:24px; color:#f59e0b;">Pending</div>
                     <div class="muted-box">

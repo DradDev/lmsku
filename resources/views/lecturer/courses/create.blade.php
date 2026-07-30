@@ -24,7 +24,7 @@
             @endif
 
             <div class="bg-white shadow rounded p-6">
-                <form action="{{ route('lecturer.courses.store') }}" method="POST">
+                <form action="{{ route('lecturer.courses.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-5">
@@ -49,6 +49,44 @@
                             class="border rounded w-full p-2"
                             rows="4"
                             placeholder="Jelaskan tujuan dan isi course...">{{ old('description') }}</textarea>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="block font-semibold mb-2">
+                            Kategori
+                        </label>
+
+                        <select name="category_id" class="border rounded w-full p-2">
+                            <option value="">Pilih Kategori (opsional)</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                        @error('category_id')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="block font-semibold mb-2">
+                            Thumbnail Course
+                        </label>
+
+                        <input type="file"
+                            name="thumbnail"
+                            accept=".jpg,.jpeg,.png,.webp"
+                            class="border rounded w-full p-2">
+
+                        <p class="text-sm text-gray-500 mt-1">
+                            Opsional. Format JPG/PNG/WEBP, maksimal 2MB.
+                        </p>
+
+                        @error('thumbnail')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
