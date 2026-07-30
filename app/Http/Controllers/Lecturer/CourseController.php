@@ -133,13 +133,23 @@ class CourseController extends Controller
         ));
     }
 
-    public function edit(Course $course): RedirectResponse
+    public function edit(Course $course): View
     {
         abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
 
-        // Edit sekarang dilakukan langsung dari tab "Informasi Course"
-        // di halaman detail course, supaya lecturer tidak perlu pindah halaman.
-        return redirect()->route('lecturer.courses.show', $course->id);
+        $course->load(['skills', 'tags', 'category']);
+
+        $mainSkills = Skill::with(['children' => function ($query) {
+            $query->orderBy('name');
+        }])
+            ->whereNull('parent_id')
+            ->orderBy('name')
+            ->get();
+
+        $tags = Tag::orderBy('name')->get();
+        $categories = Category::orderBy('name')->get();
+
+        return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
     }
 
     public function update(Request $request, Course $course): RedirectResponse

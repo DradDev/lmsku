@@ -122,7 +122,9 @@ class QuestionController extends Controller
 
     public function edit(Question $question): View
     {
-        abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
+        $isOwner = $question->user_id === Auth::id() || 
+            ($question->quiz && $question->quiz->course && $question->quiz->course->user_id === Auth::id());
+        abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $quizzes = Quiz::query()
             ->whereHas('course', function ($query) {
@@ -147,7 +149,9 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question): RedirectResponse
     {
-        abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
+        $isOwner = $question->user_id === Auth::id() || 
+            ($question->quiz && $question->quiz->course && $question->quiz->course->user_id === Auth::id());
+        abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $rules = [
             'quiz_id' => ['required', 'exists:quizzes,id'],

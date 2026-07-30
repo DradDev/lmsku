@@ -5,7 +5,7 @@
                 Edit Mata Kuliah
             </h2>
             <p class="text-sm text-gray-500 mt-1">
-                Perbarui informasi course, skill, dan tag pembelajaran.
+                Perbarui informasi course, durasi, nilai sertifikat, skill, dan tag pembelajaran.
             </p>
         </div>
     </x-slot>
@@ -42,7 +42,7 @@
                     </p>
                 </div>
 
-                <form action="{{ route('lecturer.courses.update', $course->id) }}" method="POST" class="p-5 md:p-6 space-y-5">
+                <form action="{{ route('lecturer.courses.update', $course->id) }}" method="POST" enctype="multipart/form-data" class="p-5 md:p-6 space-y-5">
                     @csrf
                     @method('PUT')
 
@@ -69,13 +69,89 @@
                         </label>
 
                         <textarea name="description"
-                            rows="5"
+                            rows="4"
                             placeholder="Tulis deskripsi singkat course..."
                             class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">{{ old('description', $course->description) }}</textarea>
 
                         @error('description')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Level
+                            </label>
+                            <select name="level" class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm" required>
+                                <option value="Beginner" @selected(old('level', $course->level) === 'Beginner')>Beginner</option>
+                                <option value="Intermediate" @selected(old('level', $course->level) === 'Intermediate')>Intermediate</option>
+                                <option value="Advanced" @selected(old('level', $course->level) === 'Advanced')>Advanced</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Durasi (Minggu)
+                            </label>
+                            <input type="number" name="duration_weeks" min="1" value="{{ old('duration_weeks', $course->duration_weeks) }}" required
+                                class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Kategori
+                            </label>
+                            <select name="category_id" class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                <option value="">Tanpa Kategori</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}" @selected((int) old('category_id', $course->category_id) === (int) $category->id)>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-gray-100">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tanggal Mulai (Start Date)
+                            </label>
+                            <input type="date" name="start_date" value="{{ old('start_date', optional($course->start_date)->format('Y-m-d')) }}"
+                                class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Tanggal Selesai (End Date)
+                            </label>
+                            <input type="date" name="end_date" value="{{ old('end_date', optional($course->end_date)->format('Y-m-d')) }}"
+                                class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                            <p class="text-xs text-gray-400 mt-1">Lewat tanggal ini course otomatis masuk Bank.</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nilai Minimal Sertifikat
+                            </label>
+                            <input type="number" name="certificate_threshold" min="0" max="100" value="{{ old('certificate_threshold', $course->certificate_threshold ?? 60) }}"
+                                class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Thumbnail Course (Opsional)
+                        </label>
+                        @if ($course->thumbnail)
+                            <div class="mb-2 flex items-center gap-3">
+                                <img src="{{ asset('storage/' . $course->thumbnail) }}" class="h-16 w-24 object-cover rounded-lg border">
+                                <span class="text-xs text-gray-500">Thumbnail saat ini</span>
+                            </div>
+                        @endif
+                        <input type="file" name="thumbnail" accept="image/*"
+                            class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                     </div>
 
                     @php
@@ -245,10 +321,6 @@
                         hasSelectedGroup = true;
                     } else {
                         group.classList.add('hidden');
-
-                        group.querySelectorAll('input[type="checkbox"]').forEach(function(checkbox) {
-                            checkbox.checked = false;
-                        });
                     }
                 });
 
