@@ -129,6 +129,7 @@ class QuestionController extends Controller
                 $query->where('user_id', Auth::id());
             })
             ->with('course')
+            ->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [$question->quiz_id])
             ->latest()
             ->get();
 
@@ -147,7 +148,6 @@ class QuestionController extends Controller
     public function update(Request $request, Question $question): RedirectResponse
     {
         abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
-
 
         $rules = [
             'quiz_id' => ['required', 'exists:quizzes,id'],
@@ -186,7 +186,7 @@ class QuestionController extends Controller
         $this->syncQuestionSkills($question, $skillIds, $mainSkillId);
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions'])
+            ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
             ->with('success', 'Question berhasil diperbarui dan tetap aktif untuk student.');
     }
 
