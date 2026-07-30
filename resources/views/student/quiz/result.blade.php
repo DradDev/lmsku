@@ -33,7 +33,18 @@
             <span>Benar: <strong style="color: #059669;">{{ $correctCount }}</strong></span>
             <span>Total: <strong style="color: #374151;">{{ $totalQuestions }}</strong></span>
         </div>
-    </div>
+    {{-- Certificate status banner for Final Quiz --}}
+    @if($quiz->isFinal())
+        <div style="max-width: 400px; width: 100%; margin-bottom: 1.5rem; padding: 1rem; border-radius: 12px; font-size: 13px; text-align: center; {{ isset($certificate) && $certificate ? 'background: #FEF3C7; border: 1px solid #FCD34D; color: #92400E;' : 'background: #F3F4F6; border: 1px solid #E5E7EB; color: #4B5563;' }}">
+            @if(isset($certificate) && $certificate)
+                <div style="font-weight: 700; margin-bottom: 4px;">📜 Pengajuan Sertifikat Berhasil!</div>
+                <div>Nilai Anda (<strong>{{ $score }}</strong>) mencapai batas minimal (<strong>{{ $quiz->course->certificate_threshold ?? 60 }}</strong>). Sertifikat sedang dalam proses verifikasi Admin.</div>
+            @else
+                <div style="font-weight: 600;">Syarat Sertifikat: Nilai Minimal {{ $quiz->course->certificate_threshold ?? 60 }}</div>
+                <div style="margin-top: 2px;">Nilai Anda belum memenuhi batas minimal sertifikat. Silakan coba kembali jika ada sisa attempts.</div>
+            @endif
+        </div>
+    @endif
 
     {{-- CTA --}}
     <a href="{{ route('student.dashboard') }}" class="result-cta">

@@ -163,10 +163,36 @@ class QuizController extends Controller
             'occurred_at' => now(),
         ]);
 
+        // Handles Certificate creation for Final Quiz if score >= threshold
+        $certificate = null;
+        if ($quiz->isFinal()) {
+            $threshold = $quiz->course->certificate_threshold ?? 60;
+
+            if ($finalScore >= $threshold) {
+                $certificate = \App\Models\Certificate::firstOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'course_id' => $quiz->course_id,
+                    ],
+                    [
+                        'score' => $finalScore,
+                        'status' => 'pending',
+                        'is_verified' => false,
+                        'completed_at' => now(),
+                    ]
+                );
+
+                if ($finalScore > $certificate->score) {
+                    $certificate->update(['score' => $finalScore]);
+                }
+            }
+        }
+
         return view('student.quiz.result', [
             'score' => $finalScore,
             'quiz' => $quiz,
             'attempt' => $attempt,
+            'certificate' => $certificate,
             'correctCount' => $correctCount,
             'totalQuestions' => $questions->count(),
         ]);

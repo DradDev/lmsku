@@ -76,41 +76,67 @@ class ResultController extends Controller
             ];
             ksort($rawData);
 
-            $response = Http::timeout(30)
-                ->withHeaders(['X-Api-Key' => config('services.blockchain.api_key')])
-                ->post(config('services.blockchain.url') . '/api/hash/store', [
-                'id'        => (string) $result->id,
-                'type'      => 'quiz_attempt',
-                'userId'    => (string) $result->user_id,
-                'score'     => (float) $result->score,
-                'timestamp' => $completedAt,
-                'rawData'   => $rawData,
-            ]);
+            $blockchainSuccess = false;
+            $payload = [];
 
-            if ($response->status() === 409) {
-                $result->update(['is_verified' => true]);
-                return redirect()
-                    ->route('admin.results.show', $result->id)
-                    ->with('info', 'Data sudah tercatat di blockchain sebelumnya.');
+            try {
+                $response = Http::timeout(5)
+                    ->withHeaders(['X-Api-Key' => config('services.blockchain.api_key')])
+                    ->post(config('services.blockchain.url') . '/api/hash/store', [
+                    'id'        => (string) $result->id,
+                    'type'      => 'quiz_attempt',
+                    'userId'    => (string) $result->user_id,
+                    'score'     => (float) $result->score,
+                    'timestamp' => $completedAt,
+                    'rawData'   => $rawData,
+                ]);
+
+                if ($response->successful() || $response->status() === 409) {
+                    $blockchainSuccess = true;
+                    $payload = $response->json() ?? [];
+                }
+            } catch (\Exception $e) {
+                Log::warning('Blockchain network offline during certificate verification: ' . $e->getMessage());
             }
-
-            if (! $response->successful()) {
-                throw new \Exception('Node API error: ' . $response->body());
-            }
-
-            $payload = $response->json();
 
             $result->update([
                 'is_verified'     => true,
                 'completed_at'    => $completedAt,
-                'blockchain_id'   => $payload['blockchainId'],
-                'blockchain_hash' => $payload['hash'],
-                'tx_id'           => $payload['txId'],
+                'blockchain_id'   => $payload['blockchainId'] ?? $result->blockchain_id,
+                'blockchain_hash' => $payload['hash'] ?? $result->blockchain_hash,
+                'tx_id'           => $payload['txId'] ?? $result->tx_id,
             ]);
+
+            // Sync Certificate record
+            $certificate = \App\Models\Certificate::firstOrCreate(
+                [
+                    'user_id' => $result->user_id,
+                    'course_id' => $result->quiz->course_id,
+                ],
+                [
+                    'score' => $result->score,
+                    'completed_at' => $result->completed_at ?? now(),
+                ]
+            );
+
+            $certificate->update([
+                'score' => max($certificate->score ?? 0, (int) $result->score),
+                'is_verified' => true,
+                'status' => 'verified',
+                'verified_at' => now(),
+                'verified_by' => \Illuminate\Support\Facades\Auth::id(),
+                'blockchain_id' => $payload['blockchainId'] ?? $certificate->blockchain_id,
+                'blockchain_hash' => $payload['hash'] ?? $certificate->blockchain_hash,
+                'tx_id' => $payload['txId'] ?? $certificate->tx_id,
+            ]);
+
+            $message = $blockchainSuccess
+                ? 'Sertifikat berhasil diverifikasi & tercatat di blockchain. TX: ' . ($payload['txId'] ?? '-')
+                : 'Sertifikat berhasil diverifikasi admin (Status: Verified).';
 
             return redirect()
                 ->route('admin.results.show', $result->id)
-                ->with('success', 'Sertifikat berhasil tercatat di blockchain. TX: ' . $payload['txId']);
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             return redirect()

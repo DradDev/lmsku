@@ -46,17 +46,28 @@ class CertificateController extends Controller
                     ->orderByDesc('score')
                     ->first();
 
-                $course->verified_final_attempt = $verifiedAttempt;
+                $certificateRecord = \App\Models\Certificate::where('user_id', $student->id)
+                    ->where('course_id', $course->id)
+                    ->first();
 
-                if (!$onlyMultipleChoice) {
+                $course->verified_final_attempt = $verifiedAttempt;
+                $course->certificate_record = $certificateRecord;
+
+                $threshold = $course->certificate_threshold ?? 60;
+
+                if (! $onlyMultipleChoice) {
                     $course->certificate_status_text = 'Final quiz untuk certificate harus berisi multiple choice saja.';
-                } elseif (!$verifiedAttempt) {
-                    $course->certificate_status_text = 'Kerjakan final quiz dan tunggu verifikasi admin.';
-                } elseif ($verifiedAttempt->score < 70) {
-                    $course->certificate_status_text = 'Nilai final quiz minimal 70 untuk membuka certificate.';
-                } else {
+                } elseif ($certificateRecord && $certificateRecord->status === 'verified') {
                     $course->can_get_certificate = true;
-                    $course->certificate_status_text = 'Certificate siap dibuka dan diunduh.';
+                    $course->certificate_status_text = 'Certificate sudah diverifikasi Admin dan siap diunduh.';
+                } elseif ($certificateRecord && $certificateRecord->status === 'pending') {
+                    $course->certificate_status_text = 'Sertifikat sedang dalam proses verifikasi oleh Admin.';
+                } elseif (! $verifiedAttempt) {
+                    $course->certificate_status_text = 'Kerjakan final quiz dan capai nilai minimal ' . $threshold . '.';
+                } elseif ($verifiedAttempt->score < $threshold) {
+                    $course->certificate_status_text = 'Nilai final quiz minimal ' . $threshold . ' untuk membuka certificate (Nilai Anda: ' . $verifiedAttempt->score . ').';
+                } else {
+                    $course->certificate_status_text = 'Sertifikat sedang disiapkan untuk verifikasi Admin.';
                 }
             }
         }
@@ -104,20 +115,26 @@ class CertificateController extends Controller
 
         abort_if($approvedQuestions->count() === 0, 403, 'Certificate belum tersedia karena final quiz belum memiliki soal yang disetujui.');
 
-        $hasEssay = $approvedQuestions->contains(function ($question) {
-            return $question->question_type !== 'multiple_choice';
-        });
-
-        abort_if($hasEssay, 403, 'Final quiz untuk certificate harus berisi soal multiple choice saja.');
-
         $attempt = QuizAttempt::where('user_id', $student->id)
             ->where('quiz_id', $finalQuiz->id)
-            ->where('is_verified', true)
             ->orderByDesc('score')
             ->first();
 
-        abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz dan tunggu verifikasi admin.');
-        abort_if($attempt->score < 70, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah 70.');
+        $threshold = $course->certificate_threshold ?? 60;
+
+        abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
+        abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '.');
+
+        // Check if verified by admin or certificate record is verified
+        $certificateRecord = \App\Models\Certificate::where('user_id', $student->id)
+            ->where('course_id', $course->id)
+            ->first();
+
+        abort_if(
+            !$attempt->is_verified && (!$certificateRecord || $certificateRecord->status !== 'verified'),
+            403,
+            'Sertifikat sedang dalam proses verifikasi Admin. Harap tunggu persetujuan Admin.'
+        );
 
         return [$student, $finalQuiz, $attempt];
     }

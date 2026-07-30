@@ -20,10 +20,14 @@
 
                             @if($course->can_get_certificate)
                                 <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                    Ready
+                                    Verified
+                                </span>
+                            @elseif(isset($course->certificate_record) && $course->certificate_record?->status === 'pending')
+                                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                    Pending Review
                                 </span>
                             @else
-                                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                                     Locked
                                 </span>
                             @endif
