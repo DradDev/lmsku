@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Skill;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,10 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        // Ambil 6 skill utama (tanpa parent) untuk dropdown peminatan
+        $skills = Skill::whereNull('parent_id')->orderBy('name')->get();
+
+        return view('auth.register', compact('skills'));
     }
 
     /**
@@ -28,34 +32,32 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required','string','max:255'],
-            'email' => ['required','string','email','max:255','unique:users'],
-            'password' => ['required','confirmed', Rules\Password::defaults()],
-            'role' => ['required','in:student,lecturer,admin']
-        ]);
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:student,lecturer'],
+        ];
+
+        // Peminatan wajib diisi jika role = student
+        if ($request->role === 'student') {
+            $rules['peminatan'] = ['required', 'string', 'max:255'];
+        }
+
+        $request->validate($rules);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+            'peminatan' => $request->role === 'student' ? $request->peminatan : null,
             'registration_status' => 'pending',
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        // Redirect sesuai role
-        if ($user->role === 'admin') {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($user->role === 'lecturer') {
-            return redirect()->route('lecturer.dashboard');
-        }
-
-        return redirect()->route('student.dashboard');
+        // Redirect ke halaman login setelah register
+        return redirect()->route('login')->with('status', 'Registrasi berhasil! Silakan tunggu approval admin untuk login.');
     }
 }

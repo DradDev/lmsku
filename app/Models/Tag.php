@@ -9,7 +9,13 @@ class Tag extends Model
 {
     protected $fillable = [
         'name',
+        'skill_id',
     ];
+
+    public function skill()
+    {
+        return $this->belongsTo(Skill::class);
+    }
 
     public function courses()
     {

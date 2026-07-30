@@ -17,30 +17,44 @@ class SkillSeeder extends Seeder
 
         $mainSkills = [
             [
-                'name' => 'Jaringan / Network',
-                'description' => 'Bidang kemampuan yang berhubungan dengan jaringan komputer, komunikasi data, routing, dan keamanan jaringan.',
-            ],
-            [
-                'name' => 'Embedded System',
-                'description' => 'Bidang kemampuan yang berhubungan dengan sistem tertanam, microcontroller, sensor, IoT, dan perangkat keras terprogram.',
-            ],
-            [
-                'name' => 'Software',
-                'description' => 'Bidang kemampuan yang berhubungan dengan pengembangan aplikasi, web, backend, frontend, database, dan software engineering.',
-            ],
-            [
-                'name' => 'Multimedia',
-                'description' => 'Bidang kemampuan yang berhubungan dengan desain, UI/UX, animasi, video, audio, grafis, dan konten digital.',
-            ],
-            [
-                'name' => 'ML / AI',
+                'name' => 'AI/ML',
                 'description' => 'Bidang kemampuan yang berhubungan dengan machine learning, artificial intelligence, data science, dan pemrosesan data.',
             ],
             [
                 'name' => 'Blockchain',
                 'description' => 'Bidang kemampuan yang berhubungan dengan blockchain, smart contract, Web3, cryptocurrency, dan decentralized application.',
             ],
+            [
+                'name' => 'Embedded System',
+                'description' => 'Bidang kemampuan yang berhubungan dengan sistem tertanam, microcontroller, sensor, IoT, dan perangkat keras terprogram.',
+            ],
+            [
+                'name' => 'Network',
+                'description' => 'Bidang kemampuan yang berhubungan dengan jaringan komputer, komunikasi data, routing, dan keamanan jaringan.',
+            ],
+            [
+                'name' => 'Multimedia',
+                'description' => 'Bidang kemampuan yang berhubungan dengan desain, UI/UX, animasi, video, audio, grafis, dan konten digital.',
+            ],
+            [
+                'name' => 'Software Development',
+                'description' => 'Bidang kemampuan yang berhubungan dengan pengembangan aplikasi, web, backend, frontend, database, dan software engineering.',
+            ],
         ];
+
+        // Rename existing skills if they exist (backward compatibility)
+        $renames = [
+            'ML / AI' => 'AI/ML',
+            'Jaringan / Network' => 'Network',
+            'Software' => 'Software Development',
+        ];
+
+        foreach ($renames as $oldName => $newName) {
+            $skill = Skill::where('name', $oldName)->first();
+            if ($skill) {
+                $skill->update(['name' => $newName]);
+            }
+        }
 
         foreach ($mainSkills as $mainSkill) {
             Skill::updateOrCreate(
@@ -59,7 +73,7 @@ class SkillSeeder extends Seeder
         */
 
         $childSkills = [
-            'Jaringan / Network' => [
+            'Network' => [
                 ['name' => 'TCP/IP', 'description' => 'Dasar komunikasi jaringan menggunakan protokol TCP/IP.'],
                 ['name' => 'Routing', 'description' => 'Kemampuan memahami dan mengatur routing jaringan.'],
                 ['name' => 'Network Security', 'description' => 'Kemampuan memahami keamanan jaringan komputer.'],
@@ -73,7 +87,7 @@ class SkillSeeder extends Seeder
                 ['name' => 'Sensor Integration', 'description' => 'Kemampuan menghubungkan sensor dengan sistem embedded.'],
             ],
 
-            'Software' => [
+            'Software Development' => [
                 ['name' => 'Laravel', 'description' => 'Kemampuan membangun aplikasi web menggunakan Laravel.'],
                 ['name' => 'PHP', 'description' => 'Kemampuan pemrograman PHP.'],
                 ['name' => 'MySQL', 'description' => 'Kemampuan mengelola database MySQL.'],
@@ -92,7 +106,7 @@ class SkillSeeder extends Seeder
                 ['name' => '3D Design', 'description' => 'Kemampuan membuat model atau aset 3D.'],
             ],
 
-            'ML / AI' => [
+            'AI/ML' => [
                 ['name' => 'Python', 'description' => 'Kemampuan pemrograman Python.'],
                 ['name' => 'Machine Learning', 'description' => 'Kemampuan membangun model machine learning.'],
                 ['name' => 'Data Preprocessing', 'description' => 'Kemampuan membersihkan dan menyiapkan data.'],

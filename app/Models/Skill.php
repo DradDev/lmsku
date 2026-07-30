@@ -47,4 +47,9 @@ class Skill extends Model
     {
         return $this->hasMany(UserSkillProfile::class);
     }
+
+    public function tags()
+    {
+        return $this->hasMany(Tag::class);
+    }
 }
