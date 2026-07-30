@@ -790,20 +790,21 @@ textarea.form-control { resize: vertical; }
                     @csrf
 
                     <div class="form-group">
-                        <label class="form-label">Quiz</label>
-                        <select name="quiz_id" class="form-control" required>
-                            <option value="">Select quiz</option>
+                        <label class="form-label">Quiz Target</label>
+                        <select name="quiz_id" id="quiz_id_select" class="form-control" required>
+                            <option value="">-- Pilih Quiz --</option>
                             @forelse($quizzes as $quiz)
                                 <option value="{{ $quiz->id }}" {{ (string) old('quiz_id', request('quiz_id')) === (string) $quiz->id ? 'selected' : '' }}>
-                                    {{ $quiz->title }} — {{ $quiz->course->name }}
+                                    {{ $quiz->title }} — {{ $quiz->course->name ?? 'Course' }}
                                     @if($quiz->quiz_type === 'final')
                                         (Final Quiz)
                                     @endif
                                 </option>
                             @empty
-                                <option value="">No quiz available</option>
+                                <option value="">Belum ada quiz tersedia</option>
                             @endforelse
                         </select>
+                        <p class="skill-help" style="margin-top:4px;">Pilih Quiz untuk mengelola atau menambah soal pada Quiz tersebut.</p>
                     </div>
 
                     <div id="questions-wrapper">
@@ -931,14 +932,20 @@ textarea.form-control { resize: vertical; }
                 @php
                     $quizRef = $quizQuestions->first()?->quiz;
                     $mcCountPerQuiz = $quizQuestions->count();
+                    $isSelectedQuiz = (string) request('quiz_id') === (string) $quizId;
                 @endphp
 
-                <div class="panel" style="margin-bottom:1rem;">
+                <div class="panel" style="margin-bottom:1.5rem; {{ $isSelectedQuiz ? 'border: 2px solid #8b5cf6; background: #faf5ff;' : '' }}">
                     <div class="section-header" style="margin-bottom:1rem;">
                         <div>
-                            <h3 style="font-size:16px;font-weight:600;color:#1e2435;">
-                                {{ $quizRef->title ?? 'Quiz' }}
-                            </h3>
+                            <div class="flex items-center gap-2">
+                                <h3 style="font-size:16px;font-weight:600;color:#1e2435;">
+                                    {{ $quizRef->title ?? 'Quiz' }}
+                                </h3>
+                                @if($isSelectedQuiz)
+                                    <span class="badge badge-purple" style="background:#8b5cf6; color:#fff;">★ Quiz Terpilih</span>
+                                @endif
+                            </div>
                             <p style="font-size:12px;color:#9399b0;margin-top:4px;">
                                 {{ $quizRef->course->name ?? '-' }} • {{ $quizQuestions->count() }} question(s)
                                 @if($quizRef->quiz_type === 'final')
@@ -1137,6 +1144,15 @@ textarea.form-control { resize: vertical; }
 
                     if (addBtnBottom) {
                         addBtnBottom.addEventListener('click', addQuestion);
+                    }
+
+                    const quizSelect = document.getElementById('quiz_id_select');
+                    if (quizSelect) {
+                        quizSelect.addEventListener('change', function () {
+                            if (this.value) {
+                                window.location.href = "{{ route('lecturer.dashboard') }}?tab=questions&quiz_id=" + this.value;
+                            }
+                        });
                     }
 
                     document.querySelectorAll('.question-card').forEach(setupCard);
