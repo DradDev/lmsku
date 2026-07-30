@@ -796,7 +796,7 @@ textarea.form-control { resize: vertical; }
                             @forelse($quizzes as $quiz)
                                 <option value="{{ $quiz->id }}">
                                     {{ $quiz->title }} — {{ $quiz->course->name }}
-                                    @if($quiz->is_final ?? false)
+                                    @if($quiz->quiz_type === 'final')
                                         (Final Quiz)
                                     @endif
                                 </option>
@@ -944,7 +944,7 @@ textarea.form-control { resize: vertical; }
                             </h3>
                             <p style="font-size:12px;color:#9399b0;margin-top:4px;">
                                 {{ $quizRef->course->name ?? '-' }} • {{ $quizQuestions->count() }} question(s)
-                                @if($quizRef->is_final ?? false)
+                                @if($quizRef->quiz_type === 'final')
                                     • Final Quiz
                                 @endif
                             </p>

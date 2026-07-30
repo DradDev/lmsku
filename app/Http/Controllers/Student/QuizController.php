@@ -25,9 +25,28 @@ class QuizController extends Controller
 
         abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke quiz ini.');
 
+        // Cek apakah quiz masih dalam waktu yang tersedia
+        if (! $quiz->isAvailable()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Quiz ini tidak tersedia. ' . 
+                    ($quiz->start_date && now()->lt($quiz->start_date) 
+                        ? 'Quiz belum dibuka (mulai: ' . $quiz->start_date->format('d M Y H:i') . ').' 
+                        : 'Quiz sudah ditutup (berakhir: ' . $quiz->end_date->format('d M Y H:i') . ').'));
+        }
+
+        // Cek apakah masih ada sisa attempts
+        if (! $quiz->canAttempt($user->id)) {
+            return redirect()
+                ->back()
+                ->with('error', 'Kamu sudah mencapai batas maksimal percobaan (' . $quiz->max_attempts . 'x) untuk quiz ini.');
+        }
+
         $quiz->load(['questions' => function ($query) {
             $query->where('status', 'approved');
         }]);
+
+        $remainingAttempts = $quiz->remainingAttempts($user->id);
 
         LearningActivityLog::create([
             'user_id' => $user->id,
@@ -38,7 +57,7 @@ class QuizController extends Controller
             'occurred_at' => now(),
         ]);
 
-        return view('student.quiz.show', compact('quiz'));
+        return view('student.quiz.show', compact('quiz', 'remainingAttempts'));
     }
 
     public function submit(Request $request, Quiz $quiz)
@@ -52,6 +71,19 @@ class QuizController extends Controller
 
         abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke quiz ini.');
 
+        // Re-check availability and attempts
+        if (! $quiz->isAvailable()) {
+            return redirect()
+                ->back()
+                ->with('error', 'Quiz ini sudah tidak tersedia.');
+        }
+
+        if (! $quiz->canAttempt($user->id)) {
+            return redirect()
+                ->back()
+                ->with('error', 'Kamu sudah mencapai batas maksimal percobaan untuk quiz ini.');
+        }
+
         $questions = $quiz->questions()
             ->where('status', 'approved')
             ->get();
@@ -59,28 +91,18 @@ class QuizController extends Controller
         if ($questions->count() === 0) {
             return redirect()
                 ->back()
-                ->with('error', 'Quiz belum memiliki soal yang disetujui admin.');
+                ->with('error', 'Quiz belum memiliki soal.');
         }
 
+        // Validate MC answers
         $validationRules = [];
-        $validationMessages = [];
-
         foreach ($questions as $question) {
-            if ($question->question_type === 'essay') {
-                $validationRules["answers.{$question->id}"] = ['required', 'string'];
-                $validationMessages["answers.{$question->id}.required"] = 'Jawaban essay wajib diisi.';
-            } elseif ($question->question_type === 'multiple_choice') {
-                $validationRules["answers.{$question->id}"] = ['nullable', 'in:A,B,C,D,E'];
-            }
+            $validationRules["answers.{$question->id}"] = ['nullable', 'in:A,B,C,D'];
         }
 
         if (! empty($validationRules)) {
-            $request->validate($validationRules, $validationMessages);
+            $request->validate($validationRules);
         }
-
-        $multipleChoiceQuestions = $questions->filter(function ($question) {
-            return $question->question_type === 'multiple_choice';
-        });
 
         $correctCount = 0;
 
@@ -89,48 +111,37 @@ class QuizController extends Controller
             'user_id' => $user->id,
             'score' => 0,
             'is_verified' => false,
+            'completed_at' => now(),
         ]);
 
         foreach ($questions as $question) {
             $answer = $request->input("answers.{$question->id}");
+            $isCorrect = $answer === $question->correct_answer;
 
-            if ($question->question_type === 'multiple_choice') {
-                $isCorrect = $answer === $question->correct_answer;
-
-                if ($isCorrect) {
-                    $correctCount++;
-                }
-
-                QuizAnswer::create([
-                    'quiz_attempt_id' => $attempt->id,
-                    'question_id' => $question->id,
-                    'user_id' => $user->id,
-                    'selected_option' => $answer,
-                    'answer_text' => null,
-                    'is_correct' => $isCorrect,
-                    'score' => $isCorrect ? 1 : 0,
-                    'feedback' => null,
-                ]);
-            } else {
-                QuizAnswer::create([
-                    'quiz_attempt_id' => $attempt->id,
-                    'question_id' => $question->id,
-                    'user_id' => $user->id,
-                    'selected_option' => null,
-                    'answer_text' => $answer,
-                    'is_correct' => null,
-                    'score' => null,
-                    'feedback' => null,
-                ]);
+            if ($isCorrect) {
+                $correctCount++;
             }
+
+            QuizAnswer::create([
+                'quiz_attempt_id' => $attempt->id,
+                'question_id' => $question->id,
+                'user_id' => $user->id,
+                'selected_option' => $answer,
+                'answer_text' => null,
+                'is_correct' => $isCorrect,
+                'score' => $isCorrect ? 1 : 0,
+                'feedback' => null,
+            ]);
         }
 
-        $finalScore = $multipleChoiceQuestions->count() > 0
-            ? round(($correctCount / $multipleChoiceQuestions->count()) * 100, 2)
+        $finalScore = $questions->count() > 0
+            ? round(($correctCount / $questions->count()) * 100, 2)
             : 0;
 
+        // Full MC = auto-verified
         $attempt->update([
             'score' => $finalScore,
+            'is_verified' => true,
         ]);
 
         app(CourseProgressService::class)->recalculate(
@@ -147,25 +158,17 @@ class QuizController extends Controller
             'metadata' => [
                 'quiz_attempt_id' => $attempt->id,
                 'total_questions' => $questions->count(),
-                'multiple_choice_count' => $multipleChoiceQuestions->count(),
                 'correct_count' => $correctCount,
             ],
             'occurred_at' => now(),
         ]);
-        $hasEssay = $questions->contains(function ($q) {
-            return $q->question_type === 'essay';
-        });
-
-        // Kalau pure multiple choice, langsung auto-verify
-        if (!$hasEssay) {
-            $attempt->update(['is_verified' => true]);
-        }
 
         return view('student.quiz.result', [
-            'score'    => $finalScore,
-            'quiz'     => $quiz,
-            'attempt'  => $attempt,
-            'hasEssay' => $hasEssay,
+            'score' => $finalScore,
+            'quiz' => $quiz,
+            'attempt' => $attempt,
+            'correctCount' => $correctCount,
+            'totalQuestions' => $questions->count(),
         ]);
     }
 }

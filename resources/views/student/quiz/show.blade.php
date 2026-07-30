@@ -18,15 +18,32 @@
                             </p>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4 w-full lg:w-auto">
-                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[140px]">
-                                <p class="text-sm text-slate-500">Total Questions</p>
-                                <p class="text-2xl font-bold text-slate-900">{{ $quiz->questions->count() }}</p>
+                        <div class="flex flex-wrap gap-4 w-full lg:w-auto mt-4 lg:mt-0 justify-end">
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[120px]">
+                                <p class="text-sm text-slate-500">Quiz Type</p>
+                                <div class="mt-1">
+                                    <span class="inline-flex items-center rounded-full border {{ $quiz->quiz_type_badge_class }} px-2 py-0.5 text-xs font-semibold">
+                                        {{ $quiz->quiz_type_label }}
+                                    </span>
+                                </div>
                             </div>
-
-                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[140px]">
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[120px]">
+                                <p class="text-sm text-slate-500">Total Questions</p>
+                                <p class="text-xl font-bold text-slate-900 mt-1">{{ $quiz->questions->count() }}</p>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[120px]">
+                                <p class="text-sm text-slate-500">Attempts Left</p>
+                                <p class="text-xl font-bold text-indigo-600 mt-1">{{ $remainingAttempts }}</p>
+                            </div>
+                            @if($quiz->end_date)
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[120px]">
+                                <p class="text-sm text-slate-500">Deadline</p>
+                                <p class="text-sm font-bold text-rose-600 mt-1">{{ \Carbon\Carbon::parse($quiz->end_date)->format('d M, H:i') }}</p>
+                            </div>
+                            @endif
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 text-center min-w-[120px]">
                                 <p class="text-sm text-slate-500">Status</p>
-                                <p class="text-lg font-bold text-indigo-600">In Progress</p>
+                                <p class="text-lg font-bold text-indigo-600 mt-1">In Progress</p>
                             </div>
                         </div>
                     </div>
@@ -109,19 +126,8 @@
                                                 @enderror
                                             </div>
                                         @else
-                                            <div>
-                                                <label class="block text-sm font-medium text-slate-700 mb-2">
-                                                    Your Answer
-                                                </label>
-                                                <textarea
-                                                    name="answers[{{ $question->id }}]"
-                                                    rows="6"
-                                                    class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                                                    placeholder="Write your answer here...">{{ old("answers.{$question->id}") }}</textarea>
-
-                                                @error("answers.{$question->id}")
-                                                    <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                                @enderror
+                                            <div class="text-sm text-slate-500 italic">
+                                                Essay questions are no longer supported.
                                             </div>
                                         @endif
                                     </div>

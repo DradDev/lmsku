@@ -647,7 +647,7 @@
                             <div class="item-tag">{{ $quiz->course->name ?? 'Course' }}</div>
                             <div class="item-title">
                                 {{ $quiz->title }}
-                                @if($quiz->is_final ?? false)
+                                @if($quiz->quiz_type === 'final')
                                     <span style="margin-left:8px; font-size:11px; color:#10b981; font-weight:700;">
                                         Final Quiz
                                     </span>

@@ -202,8 +202,6 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/courses/{course}/quizzes', [LecturerQuizController::class, 'store'])
             ->name('courses.quizzes.store');
 
-        Route::patch('/courses/{course}/quizzes/{quiz}/make-final', [LecturerQuizController::class, 'makeFinal'])
-            ->name('courses.quizzes.make-final');
 
         Route::delete('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'destroy'])
             ->name('courses.quizzes.destroy');

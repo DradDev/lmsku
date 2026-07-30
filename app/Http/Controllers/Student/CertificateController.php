@@ -30,7 +30,7 @@ class CertificateController extends Controller
             $course->can_get_certificate = false;
             $course->certificate_status_text = 'Certificate belum tersedia karena final quiz belum ditentukan.';
             $course->verified_final_attempt = null;
-            $course->final_quiz = $course->quizzes->firstWhere('is_final', true);
+            $course->final_quiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
             if ($course->final_quiz) {
                 $approvedQuestions = $course->final_quiz->questions->where('status', 'approved');
@@ -96,7 +96,7 @@ class CertificateController extends Controller
 
         $course->load(['user', 'quizzes.questions']);
 
-        $finalQuiz = $course->quizzes->firstWhere('is_final', true);
+        $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
         abort_if(!$finalQuiz, 403, 'Certificate belum tersedia karena final quiz belum ditentukan.');
 

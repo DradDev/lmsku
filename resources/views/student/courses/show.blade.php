@@ -212,7 +212,7 @@
                                             {{ $quiz->title }}
                                         </h3>
 
-                                        @if ($quiz->is_final)
+                                        @if ($quiz->quiz_type === 'final')
                                         <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                                             Final Quiz
                                         </span>
@@ -223,7 +223,7 @@
                                         {{ $quiz->questions->count() ?? 0 }} questions
                                     </p>
 
-                                    @if ($quiz->is_final)
+                                    @if ($quiz->quiz_type === 'final')
                                     <p class="text-xs text-emerald-600 font-medium mt-2">
                                         Quiz ini digunakan untuk menentukan certificate.
                                     </p>

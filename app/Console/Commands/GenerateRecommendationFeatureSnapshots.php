@@ -214,7 +214,7 @@ class GenerateRecommendationFeatureSnapshots extends Command
 
         $finalQuiz = DB::table('quizzes')
             ->where('course_id', $courseId)
-            ->where('is_final', true)
+            ->where('quiz_type', 'final')
             ->first();
 
         if ($finalQuiz) {
@@ -322,7 +322,7 @@ class GenerateRecommendationFeatureSnapshots extends Command
     private function getCompletedCourseCount(int $userId): int
     {
         $finalQuizzes = DB::table('quizzes')
-            ->where('is_final', true)
+            ->where('quiz_type', 'final')
             ->get();
 
         $completedCourseIds = [];

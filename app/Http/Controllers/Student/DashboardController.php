@@ -60,7 +60,7 @@ class DashboardController extends Controller
             $course->is_completed = $course->progress >= 100;
             $course->can_get_certificate = false;
 
-            $finalQuiz = $course->quizzes->firstWhere('is_final', true);
+            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
             if ($finalQuiz) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');

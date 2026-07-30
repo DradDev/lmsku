@@ -37,7 +37,7 @@ class CourseController extends Controller
             $course->enrollment_status = $enrollment?->status;
             $course->can_get_certificate = false;
 
-            $finalQuiz = $course->quizzes->firstWhere('is_final', true);
+            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
             if ($finalQuiz && in_array($course->id, $enrolledCourseIds)) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
@@ -83,7 +83,7 @@ class CourseController extends Controller
             courseId: $course->id
         );
 
-        $finalQuiz = $course->quizzes->firstWhere('is_final', true);
+        $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
         $verifiedFinalAttempt = null;
         $canDownloadCertificate = false;
         $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';

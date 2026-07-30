@@ -14,7 +14,7 @@ class ResultController extends Controller
     public function index(): View
     {
         $baseQuery = QuizAttempt::whereHas('quiz', function ($query) {
-            $query->where('is_final', true);
+            $query->where('quiz_type', 'final');
         });
 
         $results = (clone $baseQuery)
@@ -35,7 +35,7 @@ class ResultController extends Controller
     public function show(QuizAttempt $result): View
     {
         abort_unless(
-            $result->quiz && $result->quiz->is_final,
+            $result->quiz && $result->quiz->isFinal(),
             403,
             'Hanya hasil Final Quiz yang diproses untuk sertifikat & blockchain.'
         );
@@ -52,7 +52,7 @@ class ResultController extends Controller
     public function verify(QuizAttempt $result): RedirectResponse
     {
         abort_unless(
-            $result->quiz && $result->quiz->is_final,
+            $result->quiz && $result->quiz->isFinal(),
             403,
             'Hanya Final Quiz yang boleh dicatat ke blockchain.'
         );
@@ -125,7 +125,7 @@ class ResultController extends Controller
     public function checkIntegrity(QuizAttempt $result): RedirectResponse
     {
         abort_unless(
-            $result->quiz && $result->quiz->is_final,
+            $result->quiz && $result->quiz->isFinal(),
             403,
             'Hanya Final Quiz yang diproses untuk blockchain.'
         );

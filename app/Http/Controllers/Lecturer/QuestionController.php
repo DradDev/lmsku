@@ -34,13 +34,13 @@ class QuestionController extends Controller
             $validated = $request->validate(array_merge($quizRules, [
                 'questions' => ['required', 'array', 'min:1'],
                 'questions.*.question' => ['required', 'string'],
-                'questions.*.question_type' => ['required', Rule::in(['essay', 'multiple_choice'])],
+                'questions.*.question_type' => ['required', Rule::in(['multiple_choice'])],
                 'questions.*.difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
-                'questions.*.option_a' => ['nullable', 'string'],
-                'questions.*.option_b' => ['nullable', 'string'],
-                'questions.*.option_c' => ['nullable', 'string'],
-                'questions.*.option_d' => ['nullable', 'string'],
-                'questions.*.correct_answer' => ['nullable', Rule::in(['A', 'B', 'C', 'D'])],
+                'questions.*.option_a' => ['required', 'string'],
+                'questions.*.option_b' => ['required', 'string'],
+                'questions.*.option_c' => ['required', 'string'],
+                'questions.*.option_d' => ['required', 'string'],
+                'questions.*.correct_answer' => ['required', Rule::in(['A', 'B', 'C', 'D'])],
 
                 'questions.*.skill_ids' => ['nullable', 'array'],
                 'questions.*.skill_ids.*' => ['exists:skills,id'],
@@ -49,13 +49,13 @@ class QuestionController extends Controller
         } else {
             $validated = $request->validate(array_merge($quizRules, [
                 'question' => ['required', 'string'],
-                'question_type' => ['required', Rule::in(['essay', 'multiple_choice'])],
+                'question_type' => ['required', Rule::in(['multiple_choice'])],
                 'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
-                'option_a' => ['nullable', 'string'],
-                'option_b' => ['nullable', 'string'],
-                'option_c' => ['nullable', 'string'],
-                'option_d' => ['nullable', 'string'],
-                'correct_answer' => ['nullable', Rule::in(['A', 'B', 'C', 'D'])],
+                'option_a' => ['required', 'string'],
+                'option_b' => ['required', 'string'],
+                'option_c' => ['required', 'string'],
+                'option_d' => ['required', 'string'],
+                'correct_answer' => ['required', Rule::in(['A', 'B', 'C', 'D'])],
 
                 'skill_ids' => ['nullable', 'array'],
                 'skill_ids.*' => ['exists:skills,id'],
@@ -66,11 +66,11 @@ class QuestionController extends Controller
                 'question' => $validated['question'],
                 'question_type' => $validated['question_type'],
                 'difficulty' => $validated['difficulty'],
-                'option_a' => $validated['option_a'] ?? null,
-                'option_b' => $validated['option_b'] ?? null,
-                'option_c' => $validated['option_c'] ?? null,
-                'option_d' => $validated['option_d'] ?? null,
-                'correct_answer' => $validated['correct_answer'] ?? null,
+                'option_a' => $validated['option_a'],
+                'option_b' => $validated['option_b'],
+                'option_c' => $validated['option_c'],
+                'option_d' => $validated['option_d'],
+                'correct_answer' => $validated['correct_answer'],
 
                 'skill_ids' => $validated['skill_ids'] ?? [],
                 'main_skill_id' => $validated['main_skill_id'] ?? null,
@@ -83,31 +83,9 @@ class QuestionController extends Controller
             })
             ->findOrFail($validated['quiz_id']);
 
-        $createdEssay = 0;
         $createdMultipleChoice = 0;
 
         foreach ($validated['questions'] as $item) {
-            if (($item['question_type'] ?? null) === 'multiple_choice') {
-                if (
-                    empty($item['option_a']) ||
-                    empty($item['option_b']) ||
-                    empty($item['option_c']) ||
-                    empty($item['option_d']) ||
-                    empty($item['correct_answer'])
-                ) {
-                    return back()
-                        ->withErrors(['questions' => 'Semua option dan correct answer wajib diisi untuk multiple choice.'])
-                        ->withInput();
-                }
-            }
-
-            if (($item['question_type'] ?? null) === 'essay') {
-                $item['option_a'] = null;
-                $item['option_b'] = null;
-                $item['option_c'] = null;
-                $item['option_d'] = null;
-                $item['correct_answer'] = null;
-            }
 
             $question = Question::create([
                 'quiz_id' => $quiz->id,
@@ -129,26 +107,12 @@ class QuestionController extends Controller
                 $item['main_skill_id'] ?? null
             );
 
-            if ($item['question_type'] === 'essay') {
-                $createdEssay++;
-            } else {
-                $createdMultipleChoice++;
-            }
-        }
-
-        $messageParts = [];
-
-        if ($createdEssay > 0) {
-            $messageParts[] = $createdEssay . ' essay question';
-        }
-
-        if ($createdMultipleChoice > 0) {
-            $messageParts[] = $createdMultipleChoice . ' multiple choice question';
+            $createdMultipleChoice++;
         }
 
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', implode(' dan ', $messageParts) . ' berhasil dibuat dan langsung aktif.');
+            ->with('success', $createdMultipleChoice . ' multiple choice question berhasil dibuat dan langsung aktif.');
     }
 
     public function show(Question $question): RedirectResponse
@@ -185,28 +149,21 @@ class QuestionController extends Controller
         abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
 
 
-        $type = $request->input('question_type');
-
         $rules = [
             'quiz_id' => ['required', 'exists:quizzes,id'],
             'question' => ['required', 'string'],
-            'question_type' => ['required', Rule::in(['essay', 'multiple_choice'])],
+            'question_type' => ['required', Rule::in(['multiple_choice'])],
             'difficulty' => ['required', Rule::in(['easy', 'medium', 'hard'])],
+            'option_a' => ['required', 'string'],
+            'option_b' => ['required', 'string'],
+            'option_c' => ['required', 'string'],
+            'option_d' => ['required', 'string'],
+            'correct_answer' => ['required', Rule::in(['A', 'B', 'C', 'D'])],
 
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
             'main_skill_id' => ['nullable', 'exists:skills,id'],
         ];
-
-        if ($type === 'multiple_choice') {
-            $rules = array_merge($rules, [
-                'option_a' => ['required', 'string'],
-                'option_b' => ['required', 'string'],
-                'option_c' => ['required', 'string'],
-                'option_d' => ['required', 'string'],
-                'correct_answer' => ['required', Rule::in(['A', 'B', 'C', 'D'])],
-            ]);
-        }
 
         $data = $request->validate($rules);
 
@@ -220,14 +177,6 @@ class QuestionController extends Controller
                 $query->where('user_id', Auth::id());
             })
             ->findOrFail($data['quiz_id']);
-
-         if ($type === 'essay') {
-            $data['option_a'] = null;
-            $data['option_b'] = null;
-            $data['option_c'] = null;
-            $data['option_d'] = null;
-            $data['correct_answer'] = null;
-        }
 
         $data['status'] = 'approved';
         $data['quiz_id'] = $quiz->id;

@@ -2,23 +2,6 @@
 
 <div class="min-h-screen bg-white p-10 text-center">
 
-    @php
-        $hasEssay = $quiz->questions()->where('question_type', 'essay')->exists();
-
-        $essayAnswers = isset($attempt)
-            ? $attempt->answers()
-                ->with('question')
-                ->whereHas('question', function ($query) {
-                    $query->where('question_type', 'essay');
-                })
-                ->get()
-            : collect();
-
-        $gradedEssayAnswers = $essayAnswers->filter(function ($answer) {
-            return !is_null($answer->score);
-        });
-    @endphp
-
     {{-- Header section --}}
     <div class="result-hero">
         <div class="result-icon-wrap">
@@ -30,78 +13,27 @@
 
         <h1 class="result-title">Quiz Completed</h1>
         <p class="result-subtitle">{{ $quiz->title }}</p>
+
+        <span class="inline-flex items-center rounded-full border {{ $quiz->quiz_type_badge_class }} px-3 py-1 text-xs font-semibold mt-2">
+            {{ $quiz->quiz_type_label }}
+        </span>
     </div>
 
-    {{-- Score / Status card --}}
-    @php
-        $mcQuestionCount = $quiz->questions()->where('question_type', 'multiple_choice')->count();
-        $isFullyGraded = isset($attempt) && $attempt->is_verified;
-    @endphp
-
+    {{-- Score card --}}
     <div class="result-card">
-        @if($mcQuestionCount > 0)
-            <p class="result-label">
-                {{ $hasEssay && !$isFullyGraded ? 'Nilai Sementara (Pilihan Ganda)' : 'Nilai Akhir' }}
-            </p>
-            <h2 class="result-score">{{ $score }}</h2>
-        @endif
+        <p class="result-label">Nilai Akhir</p>
+        <h2 class="result-score">{{ $score }}</h2>
 
-        @if($isFullyGraded)
-            <div class="result-badge result-badge--success">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
-                {{ $hasEssay ? 'Quiz telah dinilai oleh lecturer' : 'Quiz telah diverifikasi' }}
-            </div>
-        @elseif($hasEssay)
-            <div class="result-badge result-badge--pending">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-                Menunggu Penilaian Essay
-            </div>
-        @endif
-
-        @if($hasEssay && !$isFullyGraded)
-            <p class="result-pending-desc" style="margin-top: 6px;">
-                Nilai pilihan ganda kamu sudah keluar. Jawaban essay sedang menunggu penilaian dari lecturer,
-                nilai akhir akan diperbarui setelah essay dinilai.
-            </p>
-        @endif
-    </div>
-
-    {{-- Essay grading results --}}
-    @if(isset($attempt) && $attempt->is_verified && $gradedEssayAnswers->count() > 0)
-        <div class="essay-section">
-            <h3 class="essay-section-title">Hasil Penilaian Essay</h3>
-
-            <div class="essay-list">
-                @foreach($gradedEssayAnswers as $answer)
-                    <div class="essay-card">
-                        <div class="essay-card-header">
-                            <span class="essay-card-badge">Essay</span>
-                            <span class="essay-score-pill">{{ $answer->score }} pts</span>
-                        </div>
-
-                        <div class="essay-field">
-                            <p class="essay-field-label">Pertanyaan</p>
-                            <p class="essay-field-value">{{ $answer->question->question ?? '-' }}</p>
-                        </div>
-
-                        <div class="essay-divider"></div>
-
-                        <div class="essay-field">
-                            <p class="essay-field-label">Jawaban Kamu</p>
-                            <p class="essay-field-value essay-answer">{{ $answer->answer_text ?? '-' }}</p>
-                        </div>
-
-                        <div class="essay-divider"></div>
-
-                        <div class="essay-feedback">
-                            <p class="essay-field-label">Feedback Lecturer</p>
-                            <p class="essay-feedback-text">{{ $answer->feedback ?: 'Belum ada feedback dari lecturer.' }}</p>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+        <div class="result-badge result-badge--success">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+            Quiz telah diverifikasi otomatis
         </div>
-    @endif
+
+        <div style="margin-top: 12px; display: flex; gap: 16px; font-size: 13px; color: #6B7280;">
+            <span>Benar: <strong style="color: #059669;">{{ $correctCount }}</strong></span>
+            <span>Total: <strong style="color: #374151;">{{ $totalQuestions }}</strong></span>
+        </div>
+    </div>
 
     {{-- CTA --}}
     <a href="{{ route('student.dashboard') }}" class="result-cta">
@@ -112,7 +44,6 @@
 </div>
 
 <style>
-/* ── Page wrapper ── */
 .min-h-screen.bg-white.p-10 {
     background: #F9FAFB !important;
     padding: 3rem 1.5rem !important;
@@ -120,8 +51,6 @@
     flex-direction: column;
     align-items: center;
 }
-
-/* ── Hero ── */
 .result-hero {
     display: flex;
     flex-direction: column;
@@ -155,8 +84,6 @@
     font-family: 'Inter', 'Figtree', system-ui, sans-serif;
     margin: 0;
 }
-
-/* ── Score card ── */
 .result-card {
     background: #FFFFFF;
     border: 1px solid #E5E7EB;
@@ -203,139 +130,6 @@
     color: #065F46;
     border: 1px solid #A7F3D0;
 }
-.result-badge--pending {
-    background: #FFFBEB;
-    color: #92400E;
-    border: 1px solid #FDE68A;
-}
-
-/* ── Pending state ── */
-.result-pending-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.result-pending-icon--amber {
-    background: #FFFBEB;
-    color: #D97706;
-    border: 1.5px solid #FDE68A;
-}
-.result-pending-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #92400E;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-    margin: 0;
-}
-.result-pending-desc {
-    font-size: 13px;
-    color: #6B7280;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-    line-height: 1.65;
-    margin: 0;
-    text-align: center;
-    max-width: 290px;
-}
-
-/* ── Essay section ── */
-.essay-section {
-    width: 100%;
-    max-width: 640px;
-    margin-bottom: 1.75rem;
-    text-align: left;
-}
-.essay-section-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #374151;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-    margin: 0 0 12px 2px;
-}
-.essay-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.essay-card {
-    background: #FFFFFF;
-    border: 1px solid #E5E7EB;
-    border-radius: 14px;
-    padding: 1.25rem 1.5rem;
-}
-.essay-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-}
-.essay-card-badge {
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    color: #4338CA;
-    background: #EEF2FF;
-    border: 1px solid #C7D2FE;
-    padding: 3px 10px;
-    border-radius: 100px;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-}
-.essay-score-pill {
-    font-size: 12px;
-    font-weight: 700;
-    color: #065F46;
-    background: #ECFDF5;
-    border: 1px solid #A7F3D0;
-    padding: 3px 11px;
-    border-radius: 100px;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-}
-.essay-field {
-    margin-bottom: 10px;
-}
-.essay-field-label {
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    color: #9CA3AF;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-    margin: 0 0 5px 0;
-}
-.essay-field-value {
-    font-size: 13.5px;
-    color: #111827;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-}
-.essay-answer {
-    color: #374151;
-    white-space: pre-line;
-}
-.essay-divider {
-    height: 1px;
-    background: #F3F4F6;
-    margin: 11px 0;
-}
-.essay-feedback {
-    background: #F9FAFB;
-    border: 1px solid #E5E7EB;
-    border-radius: 9px;
-    padding: 11px 13px;
-}
-.essay-feedback-text {
-    font-size: 12.5px;
-    color: #6B7280;
-    font-family: 'Inter', 'Figtree', system-ui, sans-serif;
-    line-height: 1.65;
-    margin: 5px 0 0 0;
-}
-
-/* ── CTA button ── */
 .result-cta {
     display: inline-flex;
     align-items: center;

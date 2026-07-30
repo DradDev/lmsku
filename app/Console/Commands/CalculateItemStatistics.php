@@ -39,13 +39,13 @@ class CalculateItemStatistics extends Command
 
             /*
              * Untuk sementara completed course dihitung dari final quiz:
-             * - quiz is_final = true
+             * - quiz quiz_type = 'final'
              * - attempt is_verified = true
              * - score >= 70
              */
             $finalQuiz = DB::table('quizzes')
                 ->where('course_id', $course->id)
-                ->where('is_final', true)
+                ->where('quiz_type', 'final')
                 ->first();
 
             $completedCount = 0;

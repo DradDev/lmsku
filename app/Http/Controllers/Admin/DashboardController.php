@@ -16,7 +16,7 @@ class DashboardController extends Controller
 
         // Query to get results — hanya Final Quiz (dasar sertifikat & blockchain)
         $resultsQuery = QuizAttempt::whereHas('quiz', function ($query) {
-                $query->where('is_final', true);
+                $query->where('quiz_type', 'final');
             })
             ->with(['user', 'quiz.course'])
             ->latest();
@@ -42,7 +42,7 @@ class DashboardController extends Controller
 
         // Stats for results — hanya Final Quiz
         $finalQuizAttempts = QuizAttempt::whereHas('quiz', function ($query) {
-            $query->where('is_final', true);
+            $query->where('quiz_type', 'final');
         });
 
         $resultStats = [

@@ -132,8 +132,7 @@
 
                     <p class="mt-1 text-sm text-slate-500">
                         Lecturer bisa langsung membuat quiz tanpa harus upload material terlebih dahulu.
-                        Tandai satu quiz sebagai <span class="font-semibold text-violet-700">Final Quiz</span>
-                        untuk certificate.
+                        Pilih jenis quiz yang sesuai.
                     </p>
                 </div>
 
@@ -168,20 +167,36 @@
                             placeholder="Optional">
                     </div>
 
-                    <div class="md:col-span-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3">
-                        <label class="flex items-center gap-3 text-sm font-medium text-slate-700">
-                            <input type="checkbox"
-                                name="is_final"
-                                value="1"
-                                {{ old('is_final') ? 'checked' : '' }}
-                                class="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500">
-
-                            <span>
-                                Jadikan quiz ini sebagai
-                                <span class="font-semibold text-violet-700">Final Quiz</span>
-                                untuk certificate
-                            </span>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            Quiz Type
                         </label>
+                        <select name="quiz_type" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none" required>
+                            <option value="daily" {{ old('quiz_type') === 'daily' ? 'selected' : '' }}>Daily Quiz</option>
+                            <option value="weekly" {{ old('quiz_type') === 'weekly' ? 'selected' : '' }}>Weekly Quiz</option>
+                            <option value="final" {{ old('quiz_type') === 'final' ? 'selected' : '' }}>Final Quiz</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            Max Attempts
+                        </label>
+                        <input type="number" name="max_attempts" value="{{ old('max_attempts', 1) }}" min="1" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none" required>
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            Start Date (Optional)
+                        </label>
+                        <input type="datetime-local" name="start_date" value="{{ old('start_date') }}" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none">
+                    </div>
+
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-slate-700">
+                            End Date (Optional)
+                        </label>
+                        <input type="datetime-local" name="end_date" value="{{ old('end_date') }}" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none">
                     </div>
 
                     <div class="md:col-span-3 flex justify-end">
@@ -318,11 +333,9 @@
                                                 {{ $quiz->title }}
                                             </h3>
 
-                                            @if ($quiz->is_final)
-                                            <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                                Final Quiz
+                                            <span class="inline-flex items-center rounded-full border {{ $quiz->quiz_type_badge_class }} px-3 py-1 text-xs font-semibold">
+                                                {{ $quiz->quiz_type_label }}
                                             </span>
-                                            @endif
                                         </div>
 
                                         <p class="mt-2 text-sm text-slate-500">
@@ -339,7 +352,24 @@
                                             </span>
                                         </p>
 
-                                        @if ($quiz->is_final)
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Attempts Allowed:
+                                            <span class="text-slate-700">
+                                                {{ $quiz->max_attempts }}
+                                            </span>
+                                        </p>
+
+                                        @if ($quiz->start_date || $quiz->end_date)
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            Schedule:
+                                            <span class="text-slate-700">
+                                                {{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('d M Y, H:i') : 'Now' }} -
+                                                {{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('d M Y, H:i') : 'No End' }}
+                                            </span>
+                                        </p>
+                                        @endif
+
+                                        @if ($quiz->isFinal())
                                         <p class="mt-2 text-xs font-medium text-emerald-700">
                                             Quiz ini dipakai untuk penentuan certificate student.
                                         </p>
@@ -352,25 +382,7 @@
                                             Lihat Hasil
                                         </a>
 
-                                        @if ($quiz->questions->where('question_type', 'essay')->count() > 0)
-                                        <a href="{{ route('lecturer.courses.quizzes.answers.index', [$course->id, $quiz->id]) }}"
-                                            class="rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-600">
-                                            Nilai Essay
-                                        </a>
-                                        @endif
 
-                                        @if (! $quiz->is_final)
-                                        <form method="POST"
-                                            action="{{ route('lecturer.courses.quizzes.make-final', [$course->id, $quiz->id]) }}">
-                                            @csrf
-                                            @method('PATCH')
-
-                                            <button type="submit"
-                                                class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
-                                                Set Final
-                                            </button>
-                                        </form>
-                                        @endif
 
                                         <form method="POST"
                                             action="{{ route('lecturer.courses.quizzes.destroy', [$course->id, $quiz->id]) }}"
