@@ -198,6 +198,9 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::delete('/courses/{course}', [LecturerCourseController::class, 'destroy'])
             ->name('courses.destroy');
 
+        Route::post('/courses/{course}/archive', [LecturerCourseController::class, 'archive'])->name('courses.archive');
+        Route::post('/courses/{course}/duplicate', [LecturerCourseController::class, 'duplicate'])->name('courses.duplicate');
+
         // Course Quiz Management
         Route::post('/courses/{course}/quizzes', [LecturerQuizController::class, 'store'])
             ->name('courses.quizzes.store');

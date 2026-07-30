@@ -25,6 +25,13 @@
 
     <div class="min-h-screen bg-slate-50">
         <div class="max-w-7xl mx-auto px-6 py-8">
+            
+            @if(isset($isReadOnly) && $isReadOnly)
+            <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800 shadow-sm flex items-center gap-2">
+                <span>ℹ️</span>
+                <span>Course Ini Sudah Berakhir (Expired) — Anda mengakses dalam mode Read-Only untuk riwayat belajar & data AI.</span>
+            </div>
+            @endif
 
             <div class="mb-6">
                 <a href="{{ route('student.courses.index') }}"

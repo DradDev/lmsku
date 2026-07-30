@@ -89,6 +89,41 @@
                         @enderror
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                        <div>
+                            <label class="block font-semibold mb-2">
+                                Start Date
+                            </label>
+                            <input type="date"
+                                name="start_date"
+                                value="{{ old('start_date') }}"
+                                class="border rounded w-full p-2">
+                            <p class="text-sm text-gray-500 mt-1">Opsional</p>
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-2">
+                                End Date
+                            </label>
+                            <input type="date"
+                                name="end_date"
+                                value="{{ old('end_date') }}"
+                                class="border rounded w-full p-2">
+                            <p class="text-sm text-gray-500 mt-1">Jika diisi, course otomatis masuk Bank saat lewat tanggal ini</p>
+                        </div>
+                        <div>
+                            <label class="block font-semibold mb-2">
+                                Nilai Minimal Sertifikat
+                            </label>
+                            <input type="number"
+                                name="certificate_threshold"
+                                value="{{ old('certificate_threshold', 60) }}"
+                                min="0"
+                                max="100"
+                                class="border rounded w-full p-2"
+                                required>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                         <div>
                             <label class="block font-semibold mb-2">

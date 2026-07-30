@@ -816,10 +816,8 @@ textarea.form-control { resize: vertical; }
                             <div class="form-grid-2">
                                 <div class="form-group" style="margin-bottom:0">
                                     <label class="form-label">Question Type</label>
-                                    <select name="questions[0][question_type]" class="question-type form-control">
-                                        <option value="essay">Essay</option>
-                                        <option value="multiple_choice">Multiple Choice</option>
-                                    </select>
+                                    <input type="hidden" name="questions[0][question_type]" class="question-type" value="multiple_choice">
+                                    <div class="form-control" style="background:#f1f5f9; cursor:default;">Multiple Choice</div>
                                 </div>
                                 <div class="form-group" style="margin-bottom:0">
                                     <label class="form-label">Difficulty</label>
@@ -881,7 +879,7 @@ textarea.form-control { resize: vertical; }
                                 <textarea name="questions[0][question]" rows="3" class="form-control" placeholder="Write your question here..." required></textarea>
                             </div>
 
-                            <div class="mc-fields hidden">
+                            <div class="mc-fields">
                                 <span class="mc-fields-label">Answer Options</span>
                                 <div class="mc-options-grid">
                                     @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $key => $label)
@@ -932,8 +930,7 @@ textarea.form-control { resize: vertical; }
             @forelse($groupedQuestions as $quizId => $quizQuestions)
                 @php
                     $quizRef = $quizQuestions->first()?->quiz;
-                    $mcCountPerQuiz = $quizQuestions->where('question_type', 'multiple_choice')->count();
-                    $essayCountPerQuiz = $quizQuestions->where('question_type', 'essay')->count();
+                    $mcCountPerQuiz = $quizQuestions->count();
                 @endphp
 
                 <div class="panel" style="margin-bottom:1rem;">
@@ -951,12 +948,7 @@ textarea.form-control { resize: vertical; }
                         </div>
 
                         <div class="badge-row" style="margin-bottom:0;">
-                            @if($mcCountPerQuiz > 0)
-                                <span class="badge badge-purple">{{ $mcCountPerQuiz }} Multiple Choice</span>
-                            @endif
-                            @if($essayCountPerQuiz > 0)
-                                <span class="badge badge-green">{{ $essayCountPerQuiz }} Essay</span>
-                            @endif
+                            <span class="badge badge-purple">{{ $mcCountPerQuiz }} Multiple Choice</span>
                         </div>
                     </div>
 
@@ -1051,15 +1043,10 @@ textarea.form-control { resize: vertical; }
                         const removeBtn = card.querySelector('.remove-question');
                         const mainSkillSelect = card.querySelector('.question-main-skill');
 
-                        function toggleMc() {
-                            const isMc = typeSelect.value === 'multiple_choice';
-                            mcFields.classList.toggle('hidden', !isMc);
-                            optionInputs.forEach(input => { input.required = isMc; });
-                            correctAnswer.required = isMc;
-                        }
-
-                        typeSelect.addEventListener('change', toggleMc);
-                        toggleMc();
+                        // MC is always visible (essay removed)
+                        mcFields.classList.remove('hidden');
+                        optionInputs.forEach(input => { input.required = true; });
+                        correctAnswer.required = true;
 
                         if (mainSkillSelect) {
                             mainSkillSelect.addEventListener('change', function () {
@@ -1116,16 +1103,15 @@ textarea.form-control { resize: vertical; }
                         });
 
                         newCard.querySelectorAll('select').forEach(select => {
-                            if (select.classList.contains('question-type')) {
-                                select.value = 'essay';
-                            } else if (select.classList.contains('correct-answer')) {
+                            if (select.classList.contains('correct-answer')) {
                                 select.value = '';
                             } else {
                                 select.selectedIndex = 0;
                             }
                         });
 
-                        newCard.querySelector('.mc-fields').classList.add('hidden');
+                        // MC fields always visible
+                        newCard.querySelector('.mc-fields').classList.remove('hidden');
                         newCard.querySelectorAll('.question-skill-detail-group').forEach(group => {
                             group.classList.add('hidden');
                         });

@@ -19,6 +19,7 @@ class CourseController extends Controller
         $user = Auth::user();
 
         $courses = Course::with(['materials', 'quizzes.questions', 'user'])
+            ->active()
             ->withCount('students')
             ->latest()
             ->get();
@@ -114,13 +115,16 @@ class CourseController extends Controller
             }
         }
 
+        $isReadOnly = $course->isExpired() || $course->is_archived;
+
         return view('student.courses.show', compact(
             'course',
             'enrollment',
             'finalQuiz',
             'verifiedFinalAttempt',
             'canDownloadCertificate',
-            'certificateStatusText'
+            'certificateStatusText',
+            'isReadOnly'
         ));
     }
 
@@ -136,6 +140,10 @@ class CourseController extends Controller
             return redirect()
                 ->route('student.courses.show', $course)
                 ->with('success', 'Kamu sudah terdaftar di course ini.');
+        }
+
+        if ($course->isExpired() || $course->is_archived) {
+            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk pendaftaran baru karena sudah ditutup atau diarsipkan.');
         }
 
         Enrollment::create([
