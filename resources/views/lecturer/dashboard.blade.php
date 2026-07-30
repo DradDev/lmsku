@@ -610,7 +610,7 @@ textarea.form-control { resize: vertical; }
 
             <div class="header-actions">
                 <a href="{{ route('lecturer.courses.create') }}" class="btn btn-green">+ New Course</a>
-                <a href="{{ route('lecturer.materials.index') }}" class="btn btn-ghost">Manage Materials</a>
+                <a href="{{ route('lecturer.courses.index') }}" class="btn btn-ghost">Manage Courses</a>
             </div>
         </div>
 
@@ -675,9 +675,9 @@ textarea.form-control { resize: vertical; }
                 <div class="panel">
                     <div class="panel-title">Quick Actions</div>
                     <div class="quick-grid">
-                        <a href="{{ route('lecturer.materials.index') }}" class="quick-item">
-                            <div class="quick-item-cat">Materials</div>
-                            <div class="quick-item-label">Manage Learning Materials</div>
+                        <a href="{{ route('lecturer.courses.index') }}" class="quick-item">
+                            <div class="quick-item-cat">Courses</div>
+                            <div class="quick-item-label">Manage Courses & Materials</div>
                         </a>
                         <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}" class="quick-item">
                             <div class="quick-item-cat">Questions</div>
