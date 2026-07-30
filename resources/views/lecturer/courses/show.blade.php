@@ -404,9 +404,9 @@
                                             Lihat Hasil
                                         </a>
 
-                                        <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}"
+                                        <a href="{{ route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id]) }}"
                                             class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
-                                            Manage Questions
+                                            + Tambah / Kelola Soal
                                         </a>
                                         <form method="POST"
                                             action="{{ route('lecturer.courses.quizzes.destroy', [$course->id, $quiz->id]) }}"

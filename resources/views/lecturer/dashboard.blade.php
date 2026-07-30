@@ -794,7 +794,7 @@ textarea.form-control { resize: vertical; }
                         <select name="quiz_id" class="form-control" required>
                             <option value="">Select quiz</option>
                             @forelse($quizzes as $quiz)
-                                <option value="{{ $quiz->id }}">
+                                <option value="{{ $quiz->id }}" {{ (string) old('quiz_id', request('quiz_id')) === (string) $quiz->id ? 'selected' : '' }}>
                                     {{ $quiz->title }} — {{ $quiz->course->name }}
                                     @if($quiz->quiz_type === 'final')
                                         (Final Quiz)
@@ -1097,6 +1097,8 @@ textarea.form-control { resize: vertical; }
                         newCard.querySelectorAll('input').forEach(input => {
                             if (input.type === 'checkbox' || input.type === 'radio') {
                                 input.checked = false;
+                            } else if (input.classList.contains('question-type')) {
+                                input.value = 'multiple_choice';
                             } else {
                                 input.value = '';
                             }

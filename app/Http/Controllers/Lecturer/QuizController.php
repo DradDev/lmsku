@@ -39,7 +39,7 @@ class QuizController extends Controller
             }
         }
 
-        Quiz::create([
+        $quiz = Quiz::create([
             'course_id' => $course->id,
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
@@ -56,8 +56,8 @@ class QuizController extends Controller
         };
 
         return redirect()
-            ->back()
-            ->with('success', "{$typeLabel} berhasil dibuat.");
+            ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
+            ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat! Silakan buat soal-soal untuk quiz ini di bawah ini.");
     }
 
     public function destroy(Course $course, Quiz $quiz): RedirectResponse

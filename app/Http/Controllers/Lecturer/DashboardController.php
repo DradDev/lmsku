@@ -31,11 +31,16 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
+        $selectedQuizId = $request->input('quiz_id');
+
         $quizzes = Quiz::query()
             ->whereHas('course', function ($query) {
                 $query->where('user_id', Auth::id());
             })
             ->with(['course'])
+            ->when($selectedQuizId, function ($query) use ($selectedQuizId) {
+                $query->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [(int) $selectedQuizId]);
+            })
             ->latest()
             ->get();
 
