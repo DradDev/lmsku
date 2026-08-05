@@ -18,7 +18,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2">
-                    @if(!$result->is_verified)
+                    @if(empty($result->blockchain_hash))
                         <form method="POST" action="{{ route('admin.results.verify', $result->id) }}">
                             @csrf
                             <button type="submit"
@@ -64,7 +64,7 @@
                             <h2 class="text-xl font-semibold text-slate-900">Attempt Overview</h2>
                             <p class="mt-1 text-sm text-slate-500">Informasi utama dari hasil quiz yang dipilih.</p>
                         </div>
-                        @if($result->is_verified)
+                        @if(!empty($result->blockchain_hash))
                             <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                                 ✓ Verified
                             </span>
@@ -114,8 +114,8 @@
                     <div class="space-y-4">
                         <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
                             <p class="text-sm text-slate-400">Status</p>
-                            <p class="mt-1 text-lg font-semibold {{ $result->is_verified ? 'text-emerald-600' : 'text-amber-600' }}">
-                                {{ $result->is_verified ? '✓ Verified on Blockchain' : 'Pending' }}
+                            <p class="mt-1 text-lg font-semibold {{ !empty($result->blockchain_hash) ? 'text-emerald-600' : 'text-amber-600' }}">
+                                {{ !empty($result->blockchain_hash) ? '✓ Verified on Blockchain' : 'Pending' }}
                             </p>
                         </div>
 
@@ -140,7 +140,7 @@
                             </p>
                         </div>
 
-                        @if(!$result->is_verified)
+                        @if(empty($result->blockchain_hash))
                             <form method="POST" action="{{ route('admin.results.verify', $result->id) }}">
                                 @csrf
                                 <button type="submit"

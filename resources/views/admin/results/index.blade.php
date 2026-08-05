@@ -61,7 +61,7 @@
                                                 {{ $result->quiz->title ?? 'Quiz' }}
                                             </h3>
 
-                                            @if($result->is_verified)
+                                            @if(!empty($result->blockchain_hash))
                                                 <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                                                     Verified
                                                 </span>
@@ -104,7 +104,7 @@
                                                 View Details
                                             </a>
 
-                                            @if(!$result->is_verified)
+                                            @if(empty($result->blockchain_hash))
                                                 <form method="POST" action="{{ route('admin.results.verify', $result->id) }}">
                                                     @csrf
                                                     <button

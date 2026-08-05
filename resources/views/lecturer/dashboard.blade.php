@@ -620,10 +620,6 @@ textarea.form-control { resize: vertical; }
                class="tab-link {{ $tab === 'overview' ? 'tab-active-overview' : '' }}">
                 Overview
             </a>
-            <a href="{{ route('lecturer.dashboard', ['tab' => 'materials']) }}"
-               class="tab-link {{ $tab === 'materials' ? 'tab-active-materials' : '' }}">
-                Learning Materials
-            </a>
             <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}"
                class="tab-link {{ $tab === 'questions' ? 'tab-active-questions' : '' }}">
                 Questions
@@ -660,14 +656,14 @@ textarea.form-control { resize: vertical; }
                     <div class="stat-sub">Questions created</div>
                 </div>
                 <div class="stat-card sc3">
-                    <div class="stat-label">Multiple Choice</div>
-                    <div class="stat-value">{{ $questions->where('question_type', 'multiple_choice')->count() }}</div>
-                    <div class="stat-sub">MC questions</div>
+                    <div class="stat-label">Total Courses</div>
+                    <div class="stat-value">{{ $totalCourses }}</div>
+                    <div class="stat-sub">Courses you manage</div>
                 </div>
                 <div class="stat-card sc4">
-                    <div class="stat-label">Essay</div>
-                    <div class="stat-value">{{ $questions->where('question_type', 'essay')->count() }}</div>
-                    <div class="stat-sub">Essay questions</div>
+                    <div class="stat-label">Total Students</div>
+                    <div class="stat-value">{{ $totalStudents }}</div>
+                    <div class="stat-sub">Students enrolled</div>
                 </div>
             </div>
 
@@ -687,9 +683,14 @@ textarea.form-control { resize: vertical; }
                             <div class="quick-item-cat">Courses</div>
                             <div class="quick-item-label">View My Courses</div>
                         </a>
-                        <a href="{{ route('lecturer.assignments.index') }}" class="quick-item">
-                            <div class="quick-item-cat">Assignments</div>
-                            <div class="quick-item-label">Manage Assignments</div>
+                        <a href="{{ route('lecturer.projects.index') }}" class="quick-item">
+                            <div class="quick-item-cat">Projects</div>
+                            <div class="quick-item-label">Kelola Project</div>
+                        </a>
+
+                        <a href="{{ route('profile.edit') }}" class="quick-item">
+                            <div class="quick-item-cat">Account</div>
+                            <div class="quick-item-label">Edit Profil</div>
                         </a>
                     </div>
                 </div>
@@ -719,42 +720,6 @@ textarea.form-control { resize: vertical; }
                     @endforelse
                 </div>
             </div>
-        @endif
-
-        {{-- ==================== MATERIALS TAB ==================== --}}
-        @if($tab === 'materials')
-            <div class="section-header" style="margin-bottom:1.5rem;">
-                <div>
-                    <h2 class="section-title bar-blue" style="font-size:16px;">Learning Materials</h2>
-                    <p style="font-size:13px;color:#9399b0;margin-top:4px;padding-left:12px;">Kelola materi yang digunakan untuk pembelajaran.</p>
-                </div>
-                <a href="{{ route('lecturer.materials.create') }}" class="btn btn-blue">+ Add Material</a>
-            </div>
-
-            @forelse($materials as $material)
-                <div class="material-row">
-                    <div class="material-info">
-                        <div class="material-name">{{ $material->title ?? 'Untitled Material' }}</div>
-                        @if(!empty($material->description))
-                            <div class="material-desc">{{ $material->description }}</div>
-                        @endif
-                    </div>
-                    <div class="material-actions">
-                        <a href="{{ route('lecturer.materials.show', $material->id) }}" class="btn btn-ghost">View</a>
-                        <a href="{{ route('lecturer.materials.edit', $material->id) }}" class="btn btn-blue">Edit</a>
-                        <form method="POST" action="{{ route('lecturer.materials.destroy', $material->id) }}"
-                              onsubmit="return confirm('Yakin ingin menghapus materi ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-red">Delete</button>
-                        </form>
-                    </div>
-                </div>
-            @empty
-                <div class="empty-box">
-                    <p>Belum ada learning material.</p>
-                </div>
-            @endforelse
         @endif
 
         {{-- ==================== QUESTIONS TAB ==================== --}}

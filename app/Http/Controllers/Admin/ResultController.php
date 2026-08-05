@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\QuizAttempt;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class ResultController extends Controller
@@ -23,8 +22,8 @@ class ResultController extends Controller
             ->get();
 
         $totalResults  = (clone $baseQuery)->count();
-        $verifiedCount = (clone $baseQuery)->where('is_verified', true)->count();
-        $pendingCount  = (clone $baseQuery)->where('is_verified', false)->count();
+        $verifiedCount = (clone $baseQuery)->whereNotNull('blockchain_hash')->count();
+        $pendingCount  = (clone $baseQuery)->whereNull('blockchain_hash')->count();
         $averageScore  = round((float) (clone $baseQuery)->avg('score'), 2);
 
         return view('admin.results.index', compact(
@@ -35,7 +34,7 @@ class ResultController extends Controller
     public function show(QuizAttempt $result): View
     {
         abort_unless(
-            $result->quiz && $result->quiz->isFinal(),
+            $result->quiz && $result->quiz->quiz_type === 'final',
             403,
             'Hanya hasil Final Quiz yang diproses untuk sertifikat & blockchain.'
         );
@@ -46,21 +45,22 @@ class ResultController extends Controller
 
     /**
      * Approve = kirim ke blockchain.
-     * Hashing terjadi di chaincode — Laravel hanya kirim raw data.
-     * Hanya berlaku untuk attempt dari Final Quiz (dasar sertifikat).
+     * Status "sudah dicatat ke blockchain" ditentukan dari ada/tidaknya blockchain_hash,
+     * BUKAN dari is_verified — karena is_verified sudah otomatis true begitu student
+     * submit quiz MC-only (final quiz wajib MC-only), jauh sebelum admin approve.
      */
     public function verify(QuizAttempt $result): RedirectResponse
     {
         abort_unless(
-            $result->quiz && $result->quiz->isFinal(),
+            $result->quiz && $result->quiz->quiz_type === 'final',
             403,
             'Hanya Final Quiz yang boleh dicatat ke blockchain.'
         );
 
-        if ($result->is_verified) {
+        if (!empty($result->blockchain_hash)) {
             return redirect()
                 ->route('admin.results.show', $result->id)
-                ->with('info', 'Result ini sudah diverifikasi sebelumnya.');
+                ->with('info', 'Result ini sudah tercatat di blockchain sebelumnya.');
         }
 
         try {
@@ -88,10 +88,9 @@ class ResultController extends Controller
             ]);
 
             if ($response->status() === 409) {
-                $result->update(['is_verified' => true]);
                 return redirect()
                     ->route('admin.results.show', $result->id)
-                    ->with('info', 'Data sudah tercatat di blockchain sebelumnya.');
+                    ->with('info', 'Data sudah tercatat di blockchain sebelumnya, tapi hash belum tersinkron. Hubungi developer.');
             }
 
             if (! $response->successful()) {
@@ -110,7 +109,7 @@ class ResultController extends Controller
 
             return redirect()
                 ->route('admin.results.show', $result->id)
-                ->with('success', 'Sertifikat berhasil tercatat di blockchain. TX: ' . $payload['txId']);
+                ->with('success', 'Berhasil tercatat di blockchain. TX: ' . $payload['txId']);
 
         } catch (\Exception $e) {
             return redirect()
@@ -125,12 +124,12 @@ class ResultController extends Controller
     public function checkIntegrity(QuizAttempt $result): RedirectResponse
     {
         abort_unless(
-            $result->quiz && $result->quiz->isFinal(),
+            $result->quiz && $result->quiz->quiz_type === 'final',
             403,
             'Hanya Final Quiz yang diproses untuk blockchain.'
         );
 
-        if (! $result->is_verified || ! $result->blockchain_id) {
+        if (empty($result->blockchain_hash) || empty($result->blockchain_id)) {
             return redirect()
                 ->route('admin.results.show', $result->id)
                 ->with('error', 'Result belum diverifikasi ke blockchain.');

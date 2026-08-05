@@ -22,9 +22,9 @@ class DashboardController extends Controller
             ->latest();
 
         if ($resultStatus === 'verified') {
-            $resultsQuery->where('is_verified', true);
+            $resultsQuery->whereNotNull('blockchain_hash');
         } elseif ($resultStatus === 'unverified') {
-            $resultsQuery->where('is_verified', false);
+            $resultsQuery->whereNull('blockchain_hash');
         }
 
         if ($search !== '') {
@@ -47,8 +47,8 @@ class DashboardController extends Controller
 
         $resultStats = [
             'total' => (clone $finalQuizAttempts)->count(),
-            'verified' => (clone $finalQuizAttempts)->where('is_verified', true)->count(),
-            'unverified' => (clone $finalQuizAttempts)->where('is_verified', false)->count(),
+            'verified' => (clone $finalQuizAttempts)->whereNotNull('blockchain_hash')->count(),
+            'unverified' => (clone $finalQuizAttempts)->whereNull('blockchain_hash')->count(),
             'average_score' => round((float) (clone $finalQuizAttempts)->avg('score')),
         ];
 

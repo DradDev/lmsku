@@ -53,12 +53,22 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
+        $totalCourses = \App\Models\Course::where('user_id', Auth::id())->count();
+
+        $totalStudents = \App\Models\Enrollment::whereHas('course', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->distinct('user_id')
+            ->count('user_id');
+
         return view('lecturer.dashboard', compact(
             'tab',
             'materials',
             'questions',
             'quizzes',
-            'mainSkills'
+            'mainSkills',
+            'totalCourses',
+            'totalStudents'
         ));
     }
 }

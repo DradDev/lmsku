@@ -120,7 +120,7 @@
                                             {{ $result->blockchain_hash ?? 'Belum tercatat' }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            @if ($result->is_verified)
+                                            @if (!empty($result->blockchain_hash))
                                                 <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
                                                     Verified
                                                 </span>
@@ -131,7 +131,7 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-4">
-                                            @if (!$result->is_verified)
+                                            @if (empty($result->blockchain_hash))
                                                 <form method="POST" action="{{ route('admin.results.verify', $result->id) }}">
                                                     @csrf
                                                     <button

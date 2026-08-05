@@ -300,7 +300,7 @@
             $totalCourses = $courses->count();
             $totalMaterials = $courses->sum(fn($course) => $course->materials->count());
             $totalQuizzes = $courses->sum(fn($course) => $course->quizzes->count());
-            $totalStudents = $courses->sum(fn($course) => $course->students->count());
+            $totalStudents = $courses->flatMap(fn($course) => $course->students)->unique('id')->count();
         @endphp
 
         <div class="page-header">
