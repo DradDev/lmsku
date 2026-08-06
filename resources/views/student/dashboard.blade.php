@@ -447,10 +447,18 @@
             $certificateReadyCount = $courses->where('can_get_certificate', true)->count();
         @endphp
 
-        <div class="dash-header">
-            <p class="dash-eyebrow">Student Portal</p>
-            <h1 class="dash-title">Dashboard Mahasiswa</h1>
-            <p class="dash-sub">Semua yang penting sekarang tampil lebih ringkas dan mudah dipantau.</p>
+        <div class="dash-header flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <p class="dash-eyebrow">Student Portal</p>
+                <h1 class="dash-title">Student Dashboard</h1>
+            </div>
+            @if(auth()->user()->peminatan)
+            <div class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 shadow-xs max-w-md">
+                <span class="font-bold text-amber-950 block">Initial Registered Interest:</span>
+                <span class="font-medium text-amber-800">{{ auth()->user()->peminatan }}</span>
+                <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 inline-block">Competency Pending</span>
+            </div>
+            @endif
         </div>
 
         @if(session('success'))
@@ -540,7 +548,7 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="empty-text">Kamu belum join course apapun.</div>
+                    <div class="empty-text">You haven't enrolled in any courses yet.</div>
                 @endif
             </div>
 
@@ -565,9 +573,9 @@
                     <div class="muted-box">
                         <span class="muted-label">Status</span>
                         @if($certificateReadyCount > 0)
-                            Kamu sudah punya certificate yang siap dibuka atau diunduh.
+                            You have certificates ready to be viewed or downloaded.
                         @else
-                            Belum ada certificate yang siap. Selesaikan final quiz dan tunggu verifikasi admin.
+                            No certificates ready yet. Complete the final quiz and wait for admin verification.
                         @endif
                     </div>
                 </div>
@@ -578,15 +586,6 @@
                     </div>
 
                     <ul class="activity-list">
-                        @if($lastSubmission)
-                            <li class="activity-item">
-                                <div class="activity-left">
-                                    <span class="activity-dot" style="background:#6366f1;"></span>
-                                    <div class="activity-text">Submitted assignment</div>
-                                </div>
-                                <div class="activity-meta">Recent</div>
-                            </li>
-                        @endif
 
                         @if($latestQuiz)
                             <li class="activity-item">
@@ -655,12 +654,12 @@
                             </div>
                             <div class="item-sub">{{ $quiz->approved_questions_count ?? 0 }} approved question(s)</div>
                             <a href="{{ route('student.quiz.show', $quiz->id) }}" class="btn btn-primary">
-                                Kerjakan Quiz
+                                Take Quiz
                             </a>
                         </div>
                     @endforeach
                 @else
-                    <div class="empty-text">Belum ada quiz tersedia.</div>
+                    <div class="empty-text">No quizzes available yet.</div>
                 @endif
             </div>
 
@@ -686,7 +685,7 @@
                                 Status
                             </span>
 
-                            Quiz result sudah diverifikasi admin.
+                            Quiz result verified by admin.
                         </div>
 
                         @if(!$loop->last)
@@ -698,10 +697,10 @@
                     <div class="result-score" style="font-size:24px; color:#f59e0b;">Pending</div>
                     <div class="muted-box">
                         <span class="muted-label">Status</span>
-                        Quiz sudah dikerjakan, tetapi nilainya masih menunggu verifikasi admin.
+                        Quiz submitted, waiting for admin verification.
                     </div>
                 @else
-                    <div class="empty-text">Belum ada quiz yang dikerjakan.</div>
+                    <div class="empty-text">No quizzes taken yet.</div>
                 @endif
             </div>
         </div>

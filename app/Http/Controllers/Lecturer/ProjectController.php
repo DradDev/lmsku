@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Course;
 use App\Models\Project;
 use App\Models\Skill;
 use App\Models\Tag;
@@ -15,26 +16,65 @@ class ProjectController extends Controller
 {
     public function index(): View
     {
-        $projects = Project::with(['skills', 'tags'])
+        $allProjects = Project::with(['skills', 'tags', 'participations'])
             ->where('created_by', Auth::id())
             ->latest()
             ->get();
 
-        return view('lecturer.projects.index', compact('projects'));
+        $activeProjects = $allProjects->where('is_published', true)->values();
+        $bankProjects = $allProjects->where('is_published', false)->values();
+
+        $skillsWithoutCourses = [];
+        $mainSkills = Skill::whereNull('parent_id')->get();
+        foreach ($mainSkills as $skill) {
+            if (!$this->checkSkillHasCourse($skill->id)) {
+                $skillsWithoutCourses[] = $skill->id;
+            }
+        }
+
+        return view('lecturer.projects.index', compact('allProjects', 'activeProjects', 'bankProjects', 'skillsWithoutCourses'));
+    }
+
+    public function togglePublish(Project $project): RedirectResponse
+    {
+        abort_unless(
+            $project->created_by === Auth::id(),
+            403,
+            'Kamu tidak memiliki akses ke project ini.'
+        );
+
+        $newStatus = !$project->is_published;
+        $project->update([
+            'is_published' => $newStatus,
+        ]);
+
+        $msg = $newStatus
+            ? 'Project berhasil dipublikasikan ke Active Projects.'
+            : 'Project dipindahkan ke Project Bank.';
+
+        return redirect()
+            ->route('lecturer.projects.index')
+            ->with('success', $msg);
     }
 
     public function create(): View
     {
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::whereNull('parent_id')
             ->orderBy('name')
             ->get();
 
-        $tags = Tag::orderBy('name')->get();
+        $tags = Tag::with('skill')
+            ->orderBy('name')
+            ->get();
 
-        return view('lecturer.projects.create', compact('mainSkills', 'tags'));
+        $skillsWithoutCourses = [];
+        foreach ($mainSkills as $skill) {
+            if (!$this->checkSkillHasCourse($skill->id)) {
+                $skillsWithoutCourses[] = $skill->id;
+            }
+        }
+
+        return view('lecturer.projects.create', compact('mainSkills', 'tags', 'skillsWithoutCourses'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -67,9 +107,18 @@ class ProjectController extends Controller
 
         $this->syncProjectSkillsAndTags($project, $request);
 
+        $mainSkillId = $request->input('main_skill_id');
+        if ($mainSkillId && !$this->checkSkillHasCourse((int) $mainSkillId)) {
+            $skillName = Skill::find($mainSkillId)?->name ?? 'Main Skill';
+            return redirect()
+                ->route('lecturer.projects.index')
+                ->with('success', 'Project successfully created.')
+                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill '{$skillName}'. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk '{$skillName}'!");
+        }
+
         return redirect()
             ->route('lecturer.projects.index')
-            ->with('success', 'Project berhasil dibuat.');
+            ->with('success', 'Project successfully created.');
     }
 
     public function edit(Project $project): View
@@ -77,21 +126,27 @@ class ProjectController extends Controller
         abort_unless(
             $project->created_by === Auth::id(),
             403,
-            'Kamu tidak memiliki akses ke project ini.'
+            'You do not have access to this project.'
         );
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::whereNull('parent_id')
             ->orderBy('name')
             ->get();
 
-        $tags = Tag::orderBy('name')->get();
+        $tags = Tag::with('skill')
+            ->orderBy('name')
+            ->get();
 
         $project->load(['skills', 'tags']);
 
-        return view('lecturer.projects.edit', compact('project', 'mainSkills', 'tags'));
+        $skillsWithoutCourses = [];
+        foreach ($mainSkills as $skill) {
+            if (!$this->checkSkillHasCourse($skill->id)) {
+                $skillsWithoutCourses[] = $skill->id;
+            }
+        }
+
+        return view('lecturer.projects.edit', compact('project', 'mainSkills', 'tags', 'skillsWithoutCourses'));
     }
 
     public function update(Request $request, Project $project): RedirectResponse
@@ -123,11 +178,20 @@ class ProjectController extends Controller
             'description' => $validated['description'] ?? null,
             'difficulty_level' => $validated['difficulty_level'],
             'duration_days' => $validated['duration_days'],
-            'max_students' => ['required', 'integer', 'min:1'],
+            'max_students' => $validated['max_students'],
             'is_published' => $request->boolean('is_published'),
         ]);
 
         $this->syncProjectSkillsAndTags($project, $request);
+
+        $mainSkillId = $request->input('main_skill_id');
+        if ($mainSkillId && !$this->checkSkillHasCourse((int) $mainSkillId)) {
+            $skillName = Skill::find($mainSkillId)?->name ?? 'Main Skill';
+            return redirect()
+                ->route('lecturer.projects.index')
+                ->with('success', 'Project berhasil diperbarui.')
+                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill '{$skillName}'. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk '{$skillName}'!");
+        }
 
         return redirect()
             ->route('lecturer.projects.index')
@@ -147,6 +211,55 @@ class ProjectController extends Controller
         return redirect()
             ->route('lecturer.projects.index')
             ->with('success', 'Project berhasil dihapus.');
+    }
+
+    private function checkSkillHasCourse(?int $skillId): bool
+    {
+        if (!$skillId) {
+            return true;
+        }
+
+        $hasCourse = Course::where('is_archived', false)
+            ->where(function ($query) use ($skillId) {
+                $query->whereHas('skills', function ($q) use ($skillId) {
+                    $q->where('skills.id', $skillId)
+                      ->orWhere('skills.parent_id', $skillId);
+                })
+                ->orWhereHas('tags', function ($q) use ($skillId) {
+                    $q->where('tags.skill_id', $skillId);
+                })
+                ->orWhereHas('quizzes.questions.skills', function ($q) use ($skillId) {
+                    $q->where('skills.id', $skillId)
+                      ->orWhere('skills.parent_id', $skillId);
+                });
+            })
+            ->exists();
+
+        if ($hasCourse) {
+            return true;
+        }
+
+        // Fallback: If any active course matches by skill name or main terms
+        $skill = Skill::find($skillId);
+        if ($skill) {
+            $skillWords = explode(' ', str_replace('&', '', $skill->name));
+            $firstWord = trim($skillWords[0] ?? '');
+            if (!empty($firstWord) && strlen($firstWord) >= 3) {
+                $hasNamedCourse = Course::where('is_archived', false)
+                    ->where(function ($q) use ($skill, $firstWord) {
+                        $q->where('name', 'LIKE', "%{$skill->name}%")
+                          ->orWhere('name', 'LIKE', "%{$firstWord}%")
+                          ->orWhere('description', 'LIKE', "%{$skill->name}%");
+                    })
+                    ->exists();
+
+                if ($hasNamedCourse) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private function syncProjectSkillsAndTags(Project $project, Request $request): void
@@ -198,6 +311,73 @@ class ProjectController extends Controller
             'comments.user'
         ]);
 
-        return view('lecturer.projects.show', compact('project'));
+        $mainSkill = $project->skills->firstWhere('pivot.is_main', true) ?? $project->skills->first();
+        $hasCourseForSkill = $mainSkill ? $this->checkSkillHasCourse($mainSkill->id) : true;
+
+        return view('lecturer.projects.show', compact('project', 'hasCourseForSkill', 'mainSkill'));
+    }
+
+    public function talentPool(Request $request, Project $project): View
+    {
+        abort_unless(
+            $project->created_by === Auth::id(),
+            403,
+            'Kamu tidak memiliki akses ke project ini.'
+        );
+
+        $project->load(['skills', 'tags', 'participations']);
+
+        $existingParticipantUserIds = $project->participations->pluck('user_id')->toArray();
+
+        $students = \App\Models\User::where('role', 'student')
+            ->with(['skillProfiles.skill', 'interestProfiles.tag', 'completedProjects'])
+            ->get()
+            ->map(function ($student) use ($project, $existingParticipantUserIds) {
+                $student->match_score = $student->calculateTalentMatchScore($project);
+                $student->is_already_invited = in_array($student->id, $existingParticipantUserIds, true);
+                return $student;
+            })
+            ->sortByDesc('match_score')
+            ->values();
+
+        return view('lecturer.projects.talent_pool', compact('project', 'students'));
+    }
+
+    public function studentPortfolio(\App\Models\User $student): View
+    {
+        $student->load([
+            'skillProfiles.skill',
+            'interestProfiles.tag',
+            'joinedProjects' => function ($query) {
+                $query->with(['skills', 'creator']);
+            }
+        ]);
+
+        return view('lecturer.projects.student_portfolio', compact('student'));
+    }
+
+    public function inviteTalent(Project $project, \App\Models\User $user): RedirectResponse
+    {
+        abort_unless(
+            $project->created_by === Auth::id(),
+            403,
+            'Kamu tidak memiliki akses ke project ini.'
+        );
+
+        $participation = \App\Models\ProjectParticipation::firstOrCreate(
+            [
+                'project_id' => $project->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'status' => 'in_progress',
+                'progress_percent' => 0,
+                'started_at' => now(),
+            ]
+        );
+
+        return redirect()
+            ->route('lecturer.projects.talent-pool', $project)
+            ->with('success', "Berhasil mengundang {$user->name} ke dalam proyek!");
     }
 }

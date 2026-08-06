@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Course Certificate - {{ $course->name }}</title>
+    <title>Project Certificate - {{ $project->title }}</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
@@ -12,7 +12,7 @@
             color: #0f172a;
         }
         .certificate {
-            border: 8px solid #4f46e5;
+            border: 8px solid #9333ea;
             background: white;
             padding: 40px;
             text-align: center;
@@ -23,9 +23,9 @@
             font-family: monospace;
             font-size: 13px;
             font-weight: bold;
-            color: #4f46e5;
-            background: #eef2ff;
-            border: 1px solid #c7d2fe;
+            color: #9333ea;
+            background: #faf5ff;
+            border: 1px solid #e9d5ff;
             padding: 6px 16px;
             border-radius: 20px;
             margin-bottom: 15px;
@@ -49,13 +49,13 @@
             color: #475569;
             margin-bottom: 15px;
         }
-        .course {
+        .project {
             font-size: 28px;
             font-weight: bold;
-            color: #4f46e5;
+            color: #9333ea;
             margin: 15px 0;
         }
-        .quiz-title {
+        .author-title {
             font-size: 14px;
             color: #64748b;
             margin-bottom: 25px;
@@ -72,7 +72,7 @@
         .meta-box-val {
             font-size: 18px;
             font-weight: bold;
-            color: #4f46e5;
+            color: #9333ea;
             margin-top: 4px;
         }
         .footer-grid {
@@ -98,20 +98,20 @@
 <body>
     <div class="certificate">
         <div class="credential-code">KEY: {{ $credentialCode }}</div>
-        <div class="eyebrow">Certificate of Course Completion</div>
+        <div class="eyebrow">Certificate of Project Completion</div>
         <div class="name">{{ $student->name }}</div>
-        <div class="subtext">has successfully completed the competency evaluation and final quiz for</div>
-        <div class="course">{{ $course->name }}</div>
-        <div class="quiz-title">Final Quiz: {{ $finalQuiz->title }}</div>
+        <div class="subtext">has successfully participated in, completed, and achieved verified completion for</div>
+        <div class="project">{{ $project->title }}</div>
+        <div class="author-title">Author / Vendor: {{ $project->user->name ?? 'Vendor' }}</div>
 
         <div style="margin-bottom: 25px;">
             <div class="meta-box">
-                <div>FINAL SCORE</div>
-                <div class="meta-box-val">{{ $attempt->score }} / 100</div>
+                <div>DIFFICULTY LEVEL</div>
+                <div class="meta-box-val">{{ ucfirst($project->difficulty_level) }}</div>
             </div>
             <div class="meta-box">
                 <div>STATUS</div>
-                <div class="meta-box-val" style="color: #059669;">Verified</div>
+                <div class="meta-box-val" style="color: #059669;">Verified & Accepted</div>
             </div>
             <div class="meta-box">
                 <div>ISSUED DATE</div>
@@ -121,8 +121,8 @@
 
         <div class="footer-grid">
             <div class="footer-left">
-                <strong>Instructor / Author</strong><br>
-                {{ $course->user->name ?? 'Lecturer' }}
+                <strong>Project Publisher / Vendor</strong><br>
+                {{ $project->user->name ?? 'Vendor' }}
             </div>
             <div class="footer-right">
                 <strong>Credential ID</strong><br>

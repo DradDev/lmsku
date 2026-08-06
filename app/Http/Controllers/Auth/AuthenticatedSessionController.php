@@ -36,7 +36,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'email' => 'Role yang dipilih tidak sesuai dengan akun ini.',
+                'email' => 'The selected role does not match this account.',
             ]);
         }
 
@@ -45,7 +45,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'email' => 'Akun kamu masih menunggu persetujuan admin.',
+                'email' => 'Your account registration is currently pending administrator approval.',
             ]);
         }
 
@@ -53,7 +53,7 @@ class AuthenticatedSessionController extends Controller
             Auth::logout();
 
             return back()->withErrors([
-                'email' => 'Registrasi akun kamu ditolak oleh admin. Hubungi admin untuk informasi lebih lanjut.',
+                'email' => 'Your account registration has been rejected by the administrator.',
             ]);
         }
 

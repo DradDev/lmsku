@@ -10,93 +10,67 @@ class TagSeeder extends Seeder
 {
     public function run(): void
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Tags per Skill (10 tags per skill utama)
-        |--------------------------------------------------------------------------
-        */
-
-        $skillTagMapping = [
-            'AI/ML' => [
-                'Python',
+        $mapping = [
+            'Embedded Systems & Robotics' => [
+                'Microcontrollers',
+                'Internet of Things (IoT)',
+                'Robotics',
+                'Control Systems',
+                'Digital Electronics',
+                'Computer Vision',
+                'Autonomous Systems',
+                'Edge Computing',
+            ],
+            'Networking & Security' => [
+                'Network Administration',
+                'Server Administration',
+                'Cloud Computing',
+                'Virtualization',
+                'Network Security',
+                'Cybersecurity',
+                'Digital Forensics',
+                'Cryptography',
+                'DevSecOps',
+                'Wireless Networking',
+            ],
+            'Software Engineering' => [
+                'Web Development',
+                'Mobile Development',
+                'Desktop Application Development',
+                'Cloud Computing',
+                'Software Architecture',
+                'DevOps',
+                'Database Engineering',
+                'Software Testing',
+                'UI/UX Design',
+            ],
+            'Machine Learning & Artificial Intelligence' => [
                 'Machine Learning',
                 'Deep Learning',
-                'Tensorflow',
-                'Pytorch',
-                'OpenCV',
                 'Computer Vision',
-                'NLP',
-                'Data Science',
+                'Natural Language Processing (NLP)',
+                'Reinforcement Learning',
+                'Generative AI',
                 'Data Mining',
+                'Predictive Analytics',
+                'MLOps',
             ],
-
-            'Blockchain' => [
-                'Solidity',
-                'Ethereum',
-                'Web3',
-                'Smart Contract',
-                'Metamask',
-                'Cryptography',
-                'Consensus',
-                'NFT',
-                'DeFi',
-                'Hyperledger',
-            ],
-
-            'Embedded System' => [
-                'Arduino',
-                'ESP32',
-                'Microcontroller',
-                'Raspberry Pi',
-                'IoT',
-                'Sensor',
-                'C Programming',
-                'RTOS',
-                'PCB Design',
-                'Embedded Linux',
-            ],
-
-            'Network' => [
-                'TCP/IP',
-                'Routing',
-                'Switching',
-                'Mikrotik',
-                'Cisco',
-                'Linux Server',
-                'Cyber Security',
-                'Firewall',
-                'VPN',
-                'Wireshark',
-            ],
-
             'Multimedia' => [
-                'UI',
-                'UX',
-                'Figma',
-                'Adobe XD',
+                'Digital Image Processing',
+                'Computer Graphics',
                 'Animation',
-                'Video Editing',
-                'Graphic Design',
-                '3D Modeling',
-                'Photoshop',
-                'Illustrator',
-            ],
-
-            'Software Development' => [
-                'PHP',
-                'Laravel',
-                'React',
-                'NodeJS',
-                'API',
-                'Database',
-                'Java',
-                'Spring Boot',
-                'Flutter',
-                'Docker',
+                'Audio Processing',
+                'Video Processing',
+                'Augmented Reality (AR)',
+                'Virtual Reality (VR)',
+                'Mixed Reality (MR)',
+                'Game Development',
+                'Human–Computer Interaction (HCI)',
+                'Interactive Media',
             ],
         ];
 
-        foreach ($skillTagMapping as $skillName => $tags) {
+        foreach ($mapping as $skillName => $tags) {
             $skill = Skill::where('name', $skillName)->whereNull('parent_id')->first();
 
             if (! $skill) {

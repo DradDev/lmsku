@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Daftar Project
+                Project Catalog
             </h2>
             <p class="text-sm text-gray-500 mt-1">
-                Pilih project yang sesuai dengan minat dan kemampuan kamu.
+                Select projects aligned with your skills and career specialization.
             </p>
         </div>
     </x-slot>
@@ -25,13 +25,35 @@
                 </div>
             @endif
 
+            <!-- SSO UNDIP Style Instructor/Author Selector Dropdown Card for Projects -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
+                <label class="block text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-600">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Daftar Author / Instructor</span>
+                </label>
+
+                <select id="author-project-filter" onchange="filterProjectsByAuthor()" class="w-full md:w-1/2 rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm font-semibold text-gray-800 py-3 px-4 shadow-sm cursor-pointer">
+                    <option value="all">-- Semua Author / Instructor --</option>
+                    @foreach($authors as $author)
+                        <option value="{{ $author->id }}">{{ $author->name }}</option>
+                    @endforeach
+                </select>
+
+                <p class="text-xs text-gray-500 mt-2">
+                    Pilih Author / Instructor untuk mengfilter dan menampilkan daftar project industri yang diunggah.
+                </p>
+            </div>
+
             <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800">
-                        Project Tersedia
+                        Available Projects
                     </h3>
                     <p class="text-sm text-gray-500 mt-1">
-                        Lihat daftar project yang dapat kamu ambil.
+                        Browse projects you can apply for.
                     </p>
                 </div>
 
@@ -52,7 +74,7 @@
                     </p>
                 </div>
             @else
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="projects-grid">
                     @foreach ($projects as $project)
                         @php
                             $joinedCount = $project->participations_count ?? 0;
@@ -61,72 +83,82 @@
                             $alreadyJoined = in_array($project->id, $joinedProjectIds);
                         @endphp
 
-                        <div class="bg-white border border-gray-100 shadow-sm hover:shadow-md transition rounded-2xl overflow-hidden flex flex-col">
+                        <div class="project-card bg-white border border-gray-100 shadow-sm hover:shadow-md transition rounded-2xl overflow-hidden flex flex-col" data-author-id="{{ $project->created_by }}">
                             <div class="p-5 flex-1">
-                                <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start justify-between gap-3 mb-2">
                                     <div>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-2">
+                                            Author: {{ $project->user->name ?? 'Vendor' }}
+                                        </span>
                                         <h3 class="font-semibold text-lg text-gray-800 leading-snug">
                                             {{ $project->title }}
                                         </h3>
-
-                                        <p class="text-sm text-gray-500 mt-1">
-                                            Project pembelajaran
-                                        </p>
                                     </div>
 
                                     @if ($alreadyJoined)
                                         <span class="shrink-0 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
                                             Diambil
                                         </span>
-                                    @elseif ($isFull)
-                                        <span class="shrink-0 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full">
-                                            Penuh
-                                        </span>
-                                    @else
-                                        <span class="shrink-0 px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">
-                                            Tersedia
-                                        </span>
                                     @endif
                                 </div>
 
-                                <p class="text-sm text-gray-600 leading-relaxed mt-4">
-                                    {{ \Illuminate\Support\Str::limit($project->description, 120) }}
+                                <p class="text-sm text-gray-600 line-clamp-3 mb-4">
+                                    {{ $project->description }}
                                 </p>
 
-                                <div class="mt-5 space-y-3 text-sm">
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-gray-500">Level</span>
-                                        <span class="font-medium text-gray-800">
-                                            {{ $project->difficulty_level }}
-                                        </span>
+                                <div class="space-y-2 text-xs text-gray-500">
+                                    <div class="flex items-center justify-between">
+                                        <span>Level:</span>
+                                        <span class="font-medium text-gray-700 capitalize">{{ $project->difficulty_level }}</span>
                                     </div>
 
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-gray-500">Durasi</span>
-                                        <span class="font-medium text-gray-800">
-                                            {{ $project->duration_days }} hari
-                                        </span>
+                                    <div class="flex items-center justify-between">
+                                        <span>Durasi:</span>
+                                        <span class="font-medium text-gray-700">{{ $project->duration_days }} Hari</span>
                                     </div>
 
-                                    <div class="flex justify-between gap-4">
-                                        <span class="text-gray-500">Kuota</span>
-                                        <span class="font-medium {{ $isFull ? 'text-red-600' : 'text-gray-800' }}">
-                                            {{ $joinedCount }}/{{ $maxStudents }} student
-                                        </span>
+                                    <div class="flex items-center justify-between">
+                                        <span>Kuota:</span>
+                                        <span class="font-medium text-gray-700">{{ $joinedCount }} / {{ $maxStudents }} Pendaftar</span>
                                     </div>
                                 </div>
+
+                                @if ($project->skills->count() > 0)
+                                    <div class="mt-4 pt-3 border-t border-gray-100">
+                                        <p class="text-xs font-medium text-gray-500 mb-2">Required Skills:</p>
+                                        <div class="flex flex-wrap gap-1.5">
+                                            @foreach ($project->skills as $skill)
+                                                <span class="px-2 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-md font-medium">
+                                                    {{ $skill->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if ($project->tags->count() > 0)
+                                    <div class="mt-3">
+                                        <div class="flex flex-wrap gap-1">
+                                            @foreach ($project->tags as $tag)
+                                                <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-md">
+                                                    #{{ $tag->name }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
-                            <div class="px-5 py-4 border-t border-gray-100 bg-gray-50">
-                                <div class="flex flex-wrap gap-2">
-                                    <a href="{{ route('student.projects.show', $project) }}"
-                                       class="inline-flex items-center justify-center px-3 py-2 bg-white hover:bg-gray-100 text-gray-700 border border-gray-200 text-sm font-medium rounded-lg transition">
-                                        Detail
-                                    </a>
+                            <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+                                <a href="{{ route('student.projects.show', $project) }}"
+                                   class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                    Detail Project →
+                                </a>
 
+                                <div>
                                     @if ($alreadyJoined)
-                                        <span class="inline-flex items-center justify-center px-3 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg">
-                                            Sudah Diambil
+                                        <span class="text-xs font-medium text-gray-500">
+                                            Sudah Bergabung
                                         </span>
                                     @elseif ($isFull)
                                         <button type="button"
@@ -153,4 +185,20 @@
 
         </div>
     </div>
+
+    <script>
+        function filterProjectsByAuthor() {
+            const selectedAuthorId = document.getElementById('author-project-filter').value;
+            const cards = document.querySelectorAll('.project-card');
+
+            cards.forEach(card => {
+                const cardAuthorId = card.getAttribute('data-author-id');
+                if (selectedAuthorId === 'all' || cardAuthorId === selectedAuthorId) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
 </x-app-layout>

@@ -1,21 +1,42 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Tambah Course
-        </h2>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        Add New Course
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Create a new competency course, assign skills, and configure tags.
+                    </p>
+                </div>
+            </div>
+
+            <a href="{{ route('lecturer.courses.index') }}"
+               class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl shadow-sm transition">
+                ← Back to Courses
+            </a>
+        </div>
     </x-slot>
 
     @php
-    $skillGroups = $mainSkills ?? collect();
-    $flatSkills = $skills ?? collect();
+    $selectedTagIds = array_map('intval', (array) old('tag_ids', []));
+    $mainSkillId = old('main_skill_id');
     @endphp
 
     <div class="py-6">
-        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
             @if ($errors->any())
-            <div class="mb-4 p-4 bg-red-100 text-red-700 rounded">
-                <ul class="list-disc list-inside">
+            <div class="mb-5 p-4 bg-red-100 text-red-700 rounded-2xl border border-red-200">
+                <ul class="list-disc list-inside text-sm">
                     @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                     @endforeach
@@ -23,258 +44,310 @@
             </div>
             @endif
 
-            <div class="bg-white shadow rounded p-6">
-                <form action="{{ route('lecturer.courses.store') }}" method="POST" enctype="multipart/form-data">
+            <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+                <div class="p-5 border-b border-gray-100">
+                    <h3 class="text-lg font-bold text-gray-800">
+                        Course Information
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Fill in course details accurately to help students learn and achieve competency.
+                    </p>
+                </div>
+
+                <form action="{{ route('lecturer.courses.store') }}" method="POST" enctype="multipart/form-data" class="p-5 md:p-6 space-y-5">
                     @csrf
 
-                    <div class="mb-5">
-                        <label class="block font-semibold mb-2">
-                            Nama Course
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Course Name
                         </label>
 
                         <input type="text"
                             name="name"
                             value="{{ old('name') }}"
-                            class="border rounded w-full p-2"
-                            placeholder="Contoh: Web Programming with Laravel"
+                            class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                            placeholder="Example: Web Development with Laravel & Vue"
                             required>
+
+                        @error('name')
+                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block font-semibold mb-2">
-                            Deskripsi
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Description
                         </label>
 
                         <textarea name="description"
-                            class="border rounded w-full p-2"
+                            class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                             rows="4"
-                            placeholder="Jelaskan tujuan dan isi course...">{{ old('description') }}</textarea>
-                    </div>
+                            placeholder="Explain the objectives and content of this course...">{{ old('description') }}</textarea>
 
-                    <div class="mb-5">
-                        <label class="block font-semibold mb-2">
-                            Kategori
-                        </label>
-
-                        <select name="category_id" class="border rounded w-full p-2">
-                            <option value="">Pilih Kategori (opsional)</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-
-                        @error('category_id')
+                        @error('description')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block font-semibold mb-2">
-                            Thumbnail Course
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Learning Materials <span class="text-red-500">*</span>
                         </label>
 
                         <input type="file"
-                            name="thumbnail"
-                            accept=".jpg,.jpeg,.png,.webp"
-                            class="border rounded w-full p-2">
+                            name="material_file"
+                            required
+                            accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.rar"
+                            class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
 
-                        <p class="text-sm text-gray-500 mt-1">
-                            Opsional. Format JPG/PNG/WEBP, maksimal 2MB.
+                        <p class="text-xs text-gray-400 mt-1">
+                            Required. Upload course learning material document (PDF, PPT, DOCX, ZIP up to 20MB).
                         </p>
 
-                        @error('thumbnail')
+                        @error('material_file')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
-                            <label class="block font-semibold mb-2">
-                                Start Date
-                            </label>
-                            <input type="date"
-                                name="start_date"
-                                value="{{ old('start_date') }}"
-                                class="border rounded w-full p-2">
-                            <p class="text-sm text-gray-500 mt-1">Opsional</p>
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-2">
-                                End Date
-                            </label>
-                            <input type="date"
-                                name="end_date"
-                                value="{{ old('end_date') }}"
-                                class="border rounded w-full p-2">
-                            <p class="text-sm text-gray-500 mt-1">Jika diisi, course otomatis masuk Bank saat lewat tanggal ini</p>
-                        </div>
-                        <div>
-                            <label class="block font-semibold mb-2">
-                                Nilai Minimal Sertifikat
-                            </label>
-                            <input type="number"
-                                name="certificate_threshold"
-                                value="{{ old('certificate_threshold', 60) }}"
-                                min="0"
-                                max="100"
-                                class="border rounded w-full p-2"
-                                required>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-                        <div>
-                            <label class="block font-semibold mb-2">
-                                Level
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Difficulty Level
                             </label>
 
-                            <select name="level"
-                                class="border rounded w-full p-2"
-                                required>
-                                <option value="">Pilih Level</option>
-                                <option value="Beginner" @selected(old('level')==='Beginner' )>
-                                    Beginner
-                                </option>
-                                <option value="Intermediate" @selected(old('level')==='Intermediate' )>
-                                    Intermediate
-                                </option>
-                                <option value="Advanced" @selected(old('level')==='Advanced' )>
-                                    Advanced
-                                </option>
+                            <select name="level" class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm" required>
+                                <option value="">Select Level</option>
+                                <option value="Beginner" @selected(old('level') === 'Beginner')>Beginner</option>
+                                <option value="Intermediate" @selected(old('level') === 'Intermediate')>Intermediate</option>
+                                <option value="Advanced" @selected(old('level') === 'Advanced')>Advanced</option>
                             </select>
                         </div>
 
                         <div>
-                            <label class="block font-semibold mb-2">
-                                Durasi Minggu
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Duration (Weeks)
                             </label>
 
                             <input type="number"
                                 name="duration_weeks"
                                 value="{{ old('duration_weeks', 4) }}"
                                 min="1"
-                                class="border rounded w-full p-2"
+                                class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                                required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Certificate Passing Score (%)
+                            </label>
+
+                            <input type="number"
+                                name="certificate_threshold"
+                                value="{{ old('certificate_threshold', 60) }}"
+                                min="0"
+                                max="100"
+                                class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                                 required>
                         </div>
                     </div>
 
-                    <div class="mb-6">
-                        <label class="block font-semibold mb-2">
-                            Skill Course
+                    <div class="border-t border-gray-100 pt-5">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Primary Skill Requirement (Main Skill)
                         </label>
 
-                        <p class="text-sm text-gray-500 mb-3">
-                            Pilih skill yang berkaitan dengan course ini, lalu tentukan satu skill utama.
-                        </p>
+                        <div class="relative">
+                            <select id="main_skill_select"
+                                    name="main_skill_id"
+                                    class="w-full appearance-none rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm pr-10"
+                                    required>
+                                <option value="">-- Select Primary Skill --</option>
 
-                        @if ($skillGroups->isNotEmpty())
-                        <div class="space-y-4">
-                            @foreach ($skillGroups as $parentSkill)
-                            <div class="border rounded p-4 bg-gray-50">
-                                <h4 class="font-semibold text-gray-800 mb-3">
-                                    {{ $parentSkill->name }}
-                                </h4>
+                                @foreach ($mainSkills as $mainSkill)
+                                    <option value="{{ $mainSkill->id }}" @selected((int) $mainSkillId === (int) $mainSkill->id)>
+                                        {{ $mainSkill->name }}
+                                    </option>
+                                @endforeach
+                            </select>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    @forelse ($parentSkill->children as $skill)
-                                    <div class="flex items-center justify-between gap-3 bg-white border rounded p-2">
-                                        <label class="flex items-center gap-2">
-                                            <input type="checkbox"
-                                                name="skill_ids[]"
-                                                value="{{ $skill->id }}"
-                                                @checked(in_array($skill->id, old('skill_ids', [])))>
-
-                                            <span>{{ $skill->name }}</span>
-                                        </label>
-
-                                        <label class="flex items-center gap-1 text-xs text-gray-600">
-                                            <input type="radio"
-                                                name="main_skill_id"
-                                                value="{{ $skill->id }}"
-                                                @checked((int) old('main_skill_id')===(int) $skill->id)>
-
-                                            Main
-                                        </label>
-                                    </div>
-                                    @empty
-                                    <p class="text-sm text-gray-500">
-                                        Belum ada detail skill pada kategori ini.
-                                    </p>
-                                    @endforelse
-                                </div>
+                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
                             </div>
+                        </div>
+
+                        <p class="text-xs text-gray-400 mt-1">
+                            Select the primary skill of this course. Students who pass the final quiz in this skill earn competency certification.
+                        </p>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-semibold text-gray-700">
+                                Course Specialty Tags
+                            </label>
+
+                            <span id="selected_tags_count" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
+                                {{ count($selectedTagIds) }} tags selected
+                            </span>
+                        </div>
+
+                        <!-- Search Filter Input Box -->
+                        <div class="relative mb-3">
+                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="m21 21-4.3-4.3"/>
+                                </svg>
+                            </div>
+
+                            <input type="text"
+                                   id="custom_tag_search"
+                                   autocomplete="off"
+                                   placeholder="Search tags (e.g. Computer Vision, Cybersecurity, Web Development, Microcontrollers, Animation)..."
+                                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm transition">
+                        </div>
+
+                        <!-- Hidden Native Inputs for Form Submission -->
+                        <div id="hidden_tags_container">
+                            @foreach($selectedTagIds as $tagId)
+                                <input type="hidden" name="tag_ids[]" value="{{ $tagId }}" id="hidden_tag_{{ $tagId }}">
                             @endforeach
                         </div>
-                        @else
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                            @forelse ($flatSkills as $skill)
-                            <div class="flex items-center justify-between gap-3 border rounded p-2">
-                                <label class="flex items-center gap-2">
-                                    <input type="checkbox"
-                                        name="skill_ids[]"
-                                        value="{{ $skill->id }}"
-                                        @checked(in_array($skill->id, old('skill_ids', [])))>
 
-                                    <span>{{ $skill->name }}</span>
-                                </label>
+                        <!-- Custom Tag Picker Container -->
+                        <div class="border border-gray-200 rounded-2xl bg-gray-50/50 p-4 max-h-[260px] overflow-y-auto space-y-4 shadow-inner">
+                            @foreach ($tags->groupBy(fn($t) => $t->skill->name ?? 'General') as $skillName => $skillTags)
+                                <div class="tag-group-wrapper" data-skill-id="{{ $skillTags->first()->skill_id ?? '' }}">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100/60">
+                                            Skill: {{ $skillName }}
+                                        </span>
+                                        <span class="h-px bg-gray-200 flex-1"></span>
+                                    </div>
 
-                                <label class="flex items-center gap-1 text-xs text-gray-600">
-                                    <input type="radio"
-                                        name="main_skill_id"
-                                        value="{{ $skill->id }}"
-                                        @checked((int) old('main_skill_id')===(int) $skill->id)>
-
-                                    Main
-                                </label>
-                            </div>
-                            @empty
-                            <p class="text-sm text-gray-500">
-                                Belum ada data skill.
-                            </p>
-                            @endforelse
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($skillTags as $tag)
+                                            @php $isSelected = in_array($tag->id, $selectedTagIds); @endphp
+                                            <button type="button"
+                                                    data-tag-id="{{ $tag->id }}"
+                                                    data-tag-name="{{ strtolower($tag->name) }}"
+                                                    data-skill-id="{{ $tag->skill_id }}"
+                                                    onclick="toggleTagChip(this)"
+                                                    class="tag-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer select-none {{ $isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50' }}">
+                                                <span class="chip-icon">{{ $isSelected ? '✓' : '+' }}</span>
+                                                <span>{{ $tag->name }}</span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        @endif
-                    </div>
 
-                    <div class="mb-6">
-                        <label class="block font-semibold mb-2">
-                            Tags
-                        </label>
-
-                        <p class="text-sm text-gray-500 mb-3">
-                            Pilih tag/minat yang sesuai dengan course.
+                        <p class="text-xs text-gray-400 mt-2">
+                            Click tag badges to select or deselect them. Type in the search box to filter tags.
                         </p>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                            @forelse ($tags as $tag)
-                            <label class="flex items-center gap-2 border rounded p-2">
-                                <input type="checkbox"
-                                    name="tag_ids[]"
-                                    value="{{ $tag->id }}"
-                                    @checked(in_array($tag->id, old('tag_ids', [])))>
-
-                                <span>{{ $tag->name }}</span>
-                            </label>
-                            @empty
-                            <p class="text-sm text-gray-500">
-                                Belum ada data tag.
-                            </p>
-                            @endforelse
-                        </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <button type="submit"
-                            class="px-4 py-2 bg-blue-600 text-white rounded">
-                            Simpan Course
-                        </button>
+                    <script>
+                        function toggleTagChip(btn) {
+                            const tagId = btn.getAttribute('data-tag-id');
+                            const container = document.getElementById('hidden_tags_container');
+                            const existingHidden = document.getElementById('hidden_tag_' + tagId);
 
+                            if (existingHidden) {
+                                existingHidden.remove();
+                                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
+                                btn.classList.add('bg-white', 'text-gray-700', 'border-gray-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
+                                btn.querySelector('.chip-icon').textContent = '+';
+                            } else {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'tag_ids[]';
+                                input.value = tagId;
+                                input.id = 'hidden_tag_' + tagId;
+                                container.appendChild(input);
+
+                                btn.classList.remove('bg-white', 'text-gray-700', 'border-gray-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
+                                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
+                                btn.querySelector('.chip-icon').textContent = '✓';
+                            }
+
+                            updateTagCount();
+                        }
+
+                        function updateTagCount() {
+                            const container = document.getElementById('hidden_tags_container');
+                            const count = container ? container.querySelectorAll('input').length : 0;
+                            const countSpan = document.getElementById('selected_tags_count');
+                            if (countSpan) {
+                                countSpan.textContent = count + ' tags selected';
+                            }
+                        }
+
+                        document.addEventListener('DOMContentLoaded', function () {
+                            const mainSkillSelect = document.getElementById('main_skill_select');
+                            const searchInput = document.getElementById('custom_tag_search');
+
+                            function filterCustomTags() {
+                                const selectedSkillId = mainSkillSelect ? mainSkillSelect.value : '';
+                                const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+                                const groupWrappers = document.querySelectorAll('.tag-group-wrapper');
+
+                                groupWrappers.forEach(group => {
+                                    const groupSkillId = group.getAttribute('data-skill-id');
+                                    const chips = group.querySelectorAll('.tag-chip');
+                                    let visibleChipCount = 0;
+
+                                    const matchesMainSkill = query ? true : (!selectedSkillId || groupSkillId === selectedSkillId);
+
+                                    chips.forEach(chip => {
+                                        const tagName = chip.getAttribute('data-tag-name');
+                                        const matchesQuery = !query || tagName.includes(query);
+
+                                        if (matchesMainSkill && matchesQuery) {
+                                            chip.style.display = 'inline-flex';
+                                            visibleChipCount++;
+                                        } else {
+                                            chip.style.display = 'none';
+                                        }
+                                    });
+
+                                    group.style.display = visibleChipCount > 0 ? 'block' : 'none';
+                                });
+                            }
+
+                            if (mainSkillSelect) {
+                                mainSkillSelect.addEventListener('change', filterCustomTags);
+                            }
+                            if (searchInput) {
+                                searchInput.addEventListener('input', filterCustomTags);
+                            }
+
+                            filterCustomTags();
+                        });
+                    </script>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-5 border-t border-gray-100">
                         <a href="{{ route('lecturer.courses.index') }}"
-                            class="px-4 py-2 bg-gray-100 text-gray-700 rounded">
-                            Batal
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5"/>
+                                <path d="M12 19l-7-7 7-7"/>
+                            </svg>
+                            Cancel
                         </a>
+
+                        <button type="submit"
+                            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                            Save Course
+                        </button>
                     </div>
                 </form>
             </div>

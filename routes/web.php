@@ -12,7 +12,6 @@ use App\Http\Controllers\Student\DashboardController as StudentDashboardControll
 use App\Http\Controllers\Student\CourseController as StudentCourseController;
 use App\Http\Controllers\Student\MaterialController as StudentMaterialController;
 use App\Http\Controllers\Student\QuizController as StudentQuizController;
-use App\Http\Controllers\Student\SubmissionController as StudentSubmissionController;
 use App\Http\Controllers\Student\ResultController as StudentResultController;
 use App\Http\Controllers\Student\CertificateController as StudentCertificateController;
 use App\Http\Controllers\Student\ProjectController as StudentProjectController;
@@ -24,7 +23,6 @@ use App\Http\Controllers\Lecturer\CourseController as LecturerCourseController;
 use App\Http\Controllers\Lecturer\MaterialController as LecturerMaterialController;
 use App\Http\Controllers\Lecturer\QuizController as LecturerQuizController;
 use App\Http\Controllers\Lecturer\QuestionController as LecturerQuestionController;
-use App\Http\Controllers\Lecturer\AssignmentController as LecturerAssignmentController;
 use App\Http\Controllers\Lecturer\QuizAnswerController as LecturerQuizAnswerController;
 use App\Http\Controllers\Lecturer\ResultController as LecturerResultController;
 use App\Http\Controllers\Lecturer\ProjectController as LecturerProjectController;
@@ -109,18 +107,8 @@ Route::middleware(['auth', 'role:student'])
         Route::post('/quiz/{quiz}/submit', [StudentQuizController::class, 'submit'])
             ->name('quiz.submit');
 
-        // Submissions
-        Route::get('/submissions', [StudentSubmissionController::class, 'index'])
-            ->name('submissions.index');
-
-        Route::get('/assignments/{assignment}/submit', [StudentSubmissionController::class, 'create'])
-            ->name('submissions.create');
-
-        Route::post('/submissions', [StudentSubmissionController::class, 'store'])
-            ->name('submissions.store');
-
-        Route::get('/submissions/{submission}', [StudentSubmissionController::class, 'show'])
-            ->name('submissions.show');
+        Route::post('/quiz/{quiz}/request-retake', [StudentQuizController::class, 'requestRetake'])
+            ->name('quiz.request-retake');
 
         // Results
         Route::get('/results', [StudentResultController::class, 'index'])
@@ -139,7 +127,16 @@ Route::middleware(['auth', 'role:student'])
         Route::get('/certificate/{course}/download', [StudentCertificateController::class, 'download'])
             ->name('certificate.download');
 
-        // Projects
+        Route::get('/certificate/project/{project}', [StudentCertificateController::class, 'showProject'])
+            ->name('certificate.project.show');
+
+        Route::get('/certificate/project/{project}/download', [StudentCertificateController::class, 'downloadProject'])
+            ->name('certificate.project.download');
+
+        // Projects & Digital Portfolio
+        Route::get('/portfolio', [StudentProjectController::class, 'portfolio'])
+            ->name('portfolio');
+
         Route::get('/projects', [StudentProjectController::class, 'index'])
             ->name('projects.index');
 
@@ -205,6 +202,8 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/courses/{course}/quizzes', [LecturerQuizController::class, 'store'])
             ->name('courses.quizzes.store');
 
+        Route::put('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'update'])
+            ->name('courses.quizzes.update');
 
         Route::delete('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'destroy'])
             ->name('courses.quizzes.destroy');
@@ -220,6 +219,13 @@ Route::middleware(['auth', 'role:lecturer'])
 
         Route::get('/courses/{course}/quizzes/{quiz}/results/{result}', [LecturerResultController::class, 'show'])
             ->name('courses.quizzes.results.show');
+
+        // Retake Requests Approval
+        Route::post('/retake-requests/{retakeRequest}/approve', [LecturerQuizController::class, 'approveRetake'])
+            ->name('quizzes.retake.approve');
+
+        Route::post('/retake-requests/{retakeRequest}/reject', [LecturerQuizController::class, 'rejectRetake'])
+            ->name('quizzes.retake.reject');
 
         // Materials — hanya bisa dikelola dari dalam Course (nested)
         Route::get('/courses/{course}/materials/create', [LecturerMaterialController::class, 'create'])
@@ -239,12 +245,6 @@ Route::middleware(['auth', 'role:lecturer'])
 
         Route::delete('/materials/{material}', [LecturerMaterialController::class, 'destroy'])
             ->name('materials.destroy');
-
-        // Assignments
-        Route::resource('assignments', LecturerAssignmentController::class);
-
-        Route::patch('/assignments/{assignment}/submissions/{submission}/grade', [LecturerAssignmentController::class, 'gradeSubmission'])
-            ->name('assignments.submissions.grade');
 
         // Questions
         Route::get('/questions', [LecturerQuestionController::class, 'index'])
@@ -269,6 +269,18 @@ Route::middleware(['auth', 'role:lecturer'])
             ->name('questions.destroy');
 
         // Projects
+        Route::get('/projects/{project}/talent-pool', [LecturerProjectController::class, 'talentPool'])
+            ->name('projects.talent-pool');
+
+        Route::get('/students/{student}/portfolio', [LecturerProjectController::class, 'studentPortfolio'])
+            ->name('students.portfolio');
+
+        Route::match(['get', 'post'], '/projects/{project}/invite/{user}', [LecturerProjectController::class, 'inviteTalent'])
+            ->name('projects.invite');
+
+        Route::post('/projects/{project}/toggle-publish', [LecturerProjectController::class, 'togglePublish'])
+            ->name('projects.toggle-publish');
+
         Route::resource('projects', LecturerProjectController::class);
     });
 
@@ -294,6 +306,9 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::post('/results/{result}/verify', [AdminResultController::class, 'verify'])
             ->name('results.verify');
+
+        Route::post('/results/project/{participation}/verify', [AdminResultController::class, 'verifyProject'])
+            ->name('results.project.verify');
 
         // Users, Skills, Tags
         Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');

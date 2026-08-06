@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Detail Project
+            Project Details
         </h2>
     </x-slot>
 
@@ -34,19 +34,19 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             @if (session('success'))
-                <div class="p-4 bg-green-100 text-green-700 rounded">
+                <div class="p-4 bg-green-100 text-green-700 rounded-xl">
                     {{ session('success') }}
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="p-4 bg-red-100 text-red-700 rounded">
+                <div class="p-4 bg-red-100 text-red-700 rounded-xl">
                     {{ session('error') }}
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="p-4 bg-red-100 text-red-700 rounded">
+                <div class="p-4 bg-red-100 text-red-700 rounded-xl">
                     <ul class="list-disc list-inside">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -55,7 +55,7 @@
                 </div>
             @endif
 
-            <div class="bg-white shadow rounded p-6">
+            <div class="bg-white shadow rounded-2xl p-6">
                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div>
                         <h3 class="font-bold text-2xl text-gray-900">
@@ -68,11 +68,11 @@
                             </span>
 
                             <span class="px-3 py-1 rounded-full bg-gray-100 text-gray-700">
-                                Durasi: {{ $project->duration_days }} hari
+                                Duration: {{ $project->duration_days }} days
                             </span>
 
                             <span class="px-3 py-1 rounded-full {{ $isFull ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700' }}">
-                                Kuota: {{ $joinedCount }}/{{ $maxStudents }} student
+                                Quota: {{ $joinedCount }}/{{ $maxStudents }} students
                             </span>
 
                             @if ($participation)
@@ -83,16 +83,17 @@
                         </div>
                     </div>
 
-                    <div class="flex gap-2">
+                    <div class="flex items-center gap-2">
                         <a href="{{ route('student.projects.index') }}"
-                           class="px-4 py-2 bg-gray-100 text-gray-700 rounded text-sm">
-                            Kembali
+                           class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            Back to Projects
                         </a>
 
                         @if ($participation)
                             <a href="{{ route('student.projects.my') }}"
-                               class="px-4 py-2 bg-gray-700 text-white rounded text-sm">
-                                Project Saya
+                               class="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-xl text-sm transition">
+                                My Projects
                             </a>
                         @endif
                     </div>
@@ -100,7 +101,7 @@
 
                 <div class="mt-6">
                     <h4 class="font-semibold text-gray-900 mb-2">
-                        Deskripsi Project
+                        Project Description
                     </h4>
 
                     <p class="text-gray-700 whitespace-pre-line leading-relaxed">
@@ -111,32 +112,32 @@
                 <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <h4 class="font-semibold text-gray-900 mb-2">
-                            Skill Project
+                            Primary Skill Requirement
                         </h4>
 
                         @forelse ($project->skills as $skill)
-                            <span class="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm mr-1 mb-2">
+                            <span class="inline-block px-3 py-1 bg-blue-50 text-blue-700 font-medium rounded-full text-sm mr-1 mb-2">
                                 {{ $skill->name }}
                             </span>
                         @empty
                             <p class="text-sm text-gray-500">
-                                Belum ada skill.
+                                No skill specified.
                             </p>
                         @endforelse
                     </div>
 
                     <div>
                         <h4 class="font-semibold text-gray-900 mb-2">
-                            Tag Project
+                            Specialty Tags
                         </h4>
 
                         @forelse ($project->tags as $tag)
-                            <span class="inline-block px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm mr-1 mb-2">
+                            <span class="inline-block px-3 py-1 bg-green-50 text-green-700 font-medium rounded-full text-sm mr-1 mb-2">
                                 {{ $tag->name }}
                             </span>
                         @empty
                             <p class="text-sm text-gray-500">
-                                Belum ada tag.
+                                No tags specified.
                             </p>
                         @endforelse
                     </div>
@@ -144,21 +145,21 @@
             </div>
 
             @if ($participation)
-                <div class="bg-white shadow rounded p-6">
+                <div class="bg-white shadow rounded-2xl p-6">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                         <div>
                             <h4 class="font-semibold text-lg text-gray-900">
-                                Progress Project Kamu
+                                Your Project Progress
                             </h4>
 
                             <p class="text-sm text-gray-500 mt-1">
-                                Update status pengerjaan project sesuai tahap yang sedang kamu kerjakan.
+                                Update project execution status according to your current phase.
                             </p>
                         </div>
 
                         <div class="text-left md:text-right">
                             <p class="text-sm text-gray-500">
-                                Status sekarang
+                                Current Status
                             </p>
 
                             <span class="inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold {{ $statusColors[$currentStatus] ?? 'bg-gray-100 text-gray-700' }}">
@@ -186,12 +187,12 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block font-semibold mb-2">
+                                <label class="block font-semibold mb-2 text-sm text-gray-700">
                                     Update Status
                                 </label>
 
                                 <select name="status"
-                                        class="border rounded w-full p-2"
+                                        class="border border-gray-300 rounded-xl w-full p-2.5 text-sm"
                                         required>
                                     <option value="in_progress" @selected($currentStatus === 'in_progress')>
                                         In Progress
@@ -210,75 +211,74 @@
                                     </option>
                                 </select>
 
-                                <p class="text-xs text-gray-500 mt-1">
-                                    Pilih Done jika project sudah selesai.
+                                <p class="text-xs text-gray-400 mt-1">
+                                    Select Done when project is completed.
                                 </p>
                             </div>
 
                             <div>
-                                <label class="block font-semibold mb-2">
-                                    Catatan Progress
+                                <label class="block font-semibold mb-2 text-sm text-gray-700">
+                                    Progress Notes
                                 </label>
 
                                 <textarea name="note"
-                                          class="border rounded w-full p-2"
+                                          class="border border-gray-300 rounded-xl w-full p-2.5 text-sm"
                                           rows="3"
-                                          placeholder="Contoh: fitur utama sudah selesai, sedang menunggu review..."></textarea>
+                                          placeholder="Example: core features completed, waiting for review..."></textarea>
                             </div>
                         </div>
 
                         <div class="mt-5">
                             <button type="submit"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded">
+                                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition">
                                 Update Progress
                             </button>
                         </div>
                     </form>
                 </div>
             @else
-                <div class="bg-white shadow rounded p-6">
+                <div class="bg-white shadow rounded-2xl p-6">
                     <h4 class="font-semibold text-lg text-gray-900 mb-2">
-                        Ambil Project Ini
+                        Join This Project
                     </h4>
 
                     <p class="text-gray-600 text-sm mb-4">
-                        Setelah mengambil project, kamu bisa mengupdate progress pengerjaan melalui status
-                        In Progress, Development, Review, sampai Done.
+                        After joining this project, you can update execution progress through In Progress, Development, Review, to Done.
                     </p>
 
                     <div class="mb-4">
                         <p class="text-sm {{ $isFull ? 'text-red-600' : 'text-green-600' }}">
-                            <strong>Kuota:</strong>
-                            {{ $joinedCount }}/{{ $maxStudents }} student
+                            <strong>Quota:</strong>
+                            {{ $joinedCount }}/{{ $maxStudents }} students
                         </p>
                     </div>
 
                     @if ($isFull)
                         <button type="button"
-                                class="px-4 py-2 bg-gray-400 text-white rounded cursor-not-allowed"
+                                class="px-5 py-2.5 bg-gray-400 text-white font-semibold text-sm rounded-xl cursor-not-allowed"
                                 disabled>
-                            Kuota Penuh
+                            Quota Full
                         </button>
                     @else
                         <form action="{{ route('student.projects.join', $project) }}" method="POST">
                             @csrf
 
                             <button type="submit"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded">
-                                Ambil Project
+                                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition">
+                                Join Project
                             </button>
                         </form>
                     @endif
                 </div>
             @endif
 
-            <div class="bg-white shadow rounded p-6">
+            <div class="bg-white shadow rounded-2xl p-6">
                 <h4 class="font-semibold text-lg text-gray-900 mb-2">
-                    Komentar & Feedback
+                    Comments & Feedback
                 </h4>
 
                 <p class="text-sm text-gray-500 mb-4">
-                    Gunakan kolom ini untuk berdiskusi dengan pembuat project.
+                    Use this section to discuss with Author / Vendor and submit project links (GitHub / Drive).
                 </p>
 
                 @if ($participation)
@@ -288,9 +288,9 @@
                         <input type="hidden" name="comment_type" value="comment">
 
                         <textarea name="comment"
-                                  class="border rounded w-full p-3"
+                                  class="border border-gray-300 rounded-xl w-full p-3 text-sm"
                                   rows="3"
-                                  placeholder="Tulis komentar atau pertanyaan tentang project ini..."
+                                  placeholder="Write a comment or question about this project..."
                                   required>{{ old('comment') }}</textarea>
 
                         @error('comment')
@@ -300,19 +300,19 @@
                         @enderror
 
                         <button type="submit"
-                                class="mt-3 px-4 py-2 bg-blue-600 text-white rounded">
-                            Kirim Komentar
+                                class="mt-3 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition">
+                            Post Comment
                         </button>
                     </form>
                 @else
-                    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded">
-                        Kamu harus mengambil project ini terlebih dahulu untuk mengirim komentar.
+                    <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl text-sm">
+                        You must join this project first to submit comments.
                     </div>
                 @endif
 
                 <div class="space-y-3">
                     @forelse ($comments->sortByDesc('created_at') as $comment)
-                        <div class="border rounded p-4 bg-gray-50">
+                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
                             <div class="flex justify-between gap-3">
                                 <div>
                                     <p class="font-semibold text-gray-900">
@@ -327,13 +327,13 @@
                                 </div>
                             </div>
 
-                            <p class="text-gray-700 mt-3 whitespace-pre-line">
+                            <p class="text-gray-700 mt-3 whitespace-pre-line text-sm">
                                 {{ $comment->comment }}
                             </p>
                         </div>
                     @empty
                         <p class="text-sm text-gray-500">
-                            Belum ada komentar pada project ini.
+                            No comments on this project yet.
                         </p>
                     @endforelse
                 </div>

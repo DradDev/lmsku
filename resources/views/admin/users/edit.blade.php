@@ -7,8 +7,8 @@
                     ← Back to Users
                 </a>
 
-                <h1 class="text-3xl font-bold text-slate-900">Edit User</h1>
-                <p class="text-slate-500 mt-2">Update account information and role.</p>
+                <h1 class="text-3xl font-bold text-slate-900">Change User Role</h1>
+                <p class="text-slate-500 mt-2">Perbarui peran (role) dan hak akses untuk pengguna ini. Demi etika profesi & privasi data, nama, email, dan password hanya dapat dikelola secara mandiri oleh pemilik akun.</p>
             </div>
 
             @if($errors->any())
@@ -27,46 +27,39 @@
                     @method('PUT')
 
                     <div>
-                        <label for="name" class="block text-sm font-medium text-slate-700 mb-2">Name</label>
-                        <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}"
-                               class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                               required>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Name <span class="text-xs text-slate-400 font-normal">(Read-only / Privasi Pengguna)</span></label>
+                        <input type="text" value="{{ $user->name }}"
+                               class="w-full rounded-xl border-slate-200 bg-slate-100 text-slate-600 cursor-not-allowed font-medium"
+                               disabled readonly>
                     </div>
 
                     <div>
-                        <label for="email" class="block text-sm font-medium text-slate-700 mb-2">Email</label>
-                        <input type="email" name="email" id="email" value="{{ old('email', $user->email) }}"
-                               class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
-                               required>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Email <span class="text-xs text-slate-400 font-normal">(Read-only / Privasi Pengguna)</span></label>
+                        <input type="email" value="{{ $user->email }}"
+                               class="w-full rounded-xl border-slate-200 bg-slate-100 text-slate-600 cursor-not-allowed font-medium"
+                               disabled readonly>
                     </div>
 
                     <div>
-                        <label for="role" class="block text-sm font-medium text-slate-700 mb-2">Role</label>
+                        <label for="role" class="block text-sm font-semibold text-slate-800 mb-2">User Role / Peran Pengguna</label>
                         <select name="role" id="role"
-                                class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500"
+                                class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 font-medium"
                                 required>
-                            <option value="admin" @selected(old('role', $user->role) === 'admin')>Admin</option>
-                            <option value="lecturer" @selected(old('role', $user->role) === 'lecturer')>Lecturer</option>
-                            <option value="student" @selected(old('role', $user->role) === 'student')>Student</option>
+                            <option value="student" @selected(old('role', $user->role) === 'student')>Student (Mahasiswa)</option>
+                            <option value="lecturer" @selected(old('role', $user->role) === 'lecturer')>Author / Instructor (Dosen / Vendor)</option>
+                            <option value="admin" @selected(old('role', $user->role) === 'admin')>Admin (Administrator System)</option>
                         </select>
-                    </div>
-
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-slate-700 mb-2">
-                            New Password <span class="text-slate-400">(optional)</span>
-                        </label>
-                        <input type="password" name="password" id="password"
-                               class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <p class="mt-1.5 text-xs text-slate-500">Mengubah role akan secara otomatis menyesuaikan hak akses menu dan portal pengguna.</p>
                     </div>
 
                     <div class="pt-2 flex gap-3">
                         <button type="submit"
-                                class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700">
-                            Update User
+                                class="rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white hover:bg-indigo-700 transition">
+                            Update Role
                         </button>
 
-                        <a href="{{ route('admin.users.show', $user->id) }}"
-                           class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                        <a href="{{ route('admin.users.index') }}"
+                           class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
                             Cancel
                         </a>
                     </div>

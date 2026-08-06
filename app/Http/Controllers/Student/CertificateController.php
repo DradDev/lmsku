@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Project;
 use App\Models\QuizAttempt;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
@@ -31,6 +32,7 @@ class CertificateController extends Controller
             $course->certificate_status_text = 'Certificate belum tersedia karena final quiz belum ditentukan.';
             $course->verified_final_attempt = null;
             $course->final_quiz = $course->quizzes->firstWhere('quiz_type', 'final');
+            $course->credential_code = 'CERT-CRS-' . date('Ym') . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
 
             if ($course->final_quiz) {
                 $approvedQuestions = $course->final_quiz->questions->where('status', 'approved');
@@ -72,24 +74,82 @@ class CertificateController extends Controller
             }
         }
 
-        return view('student.certificates.index', compact('courses'));
+        // Fetch Joined Accepted Projects for Project Certificates
+        $projects = $student->joinedProjects()
+            ->with(['user', 'skills'])
+            ->wherePivot('status', 'accepted')
+            ->latest()
+            ->get();
+
+        foreach ($projects as $project) {
+            $project->credential_code = 'CERT-PRJ-' . ($project->created_at ? $project->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $project->id) . '-' . sprintf('%04d', $student->id);
+        }
+
+        return view('student.certificates.index', compact('courses', 'projects'));
     }
 
     public function show(Course $course): View
     {
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
-        return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt'));
+        $credentialCode = 'CERT-CRS-' . ($attempt->created_at ? $attempt->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
+
+        return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'));
     }
 
     public function download(Course $course): Response
     {
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
-        $pdf = Pdf::loadView('student.certificate_pdf', compact('course', 'student', 'finalQuiz', 'attempt'))
+        $credentialCode = 'CERT-CRS-' . ($attempt->created_at ? $attempt->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
+
+        $pdf = Pdf::loadView('student.certificate_pdf', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'))
             ->setPaper('a4', 'landscape');
 
-        $filename = 'certificate-' . $course->id . '-' . $student->id . '.pdf';
+        $filename = 'certificate-course-' . $course->id . '-' . $student->id . '.pdf';
+
+        return $pdf->download($filename);
+    }
+
+    public function showProject(Project $project): View
+    {
+        $student = Auth::user();
+
+        $isJoined = DB::table('project_participations')
+            ->where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->where('status', 'accepted')
+            ->exists();
+
+        abort_unless($isJoined, 403, 'Kamu belum diterima atau tidak terdaftar di project ini.');
+
+        $project->load(['user', 'skills']);
+
+        $credentialCode = 'CERT-PRJ-' . ($project->created_at ? $project->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $project->id) . '-' . sprintf('%04d', $student->id);
+
+        return view('student.certificate_project', compact('project', 'student', 'credentialCode'));
+    }
+
+    public function downloadProject(Project $project): Response
+    {
+        $student = Auth::user();
+
+        $isJoined = DB::table('project_participations')
+            ->where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->where('status', 'accepted')
+            ->exists();
+
+        abort_unless($isJoined, 403, 'Kamu belum diterima atau tidak terdaftar di project ini.');
+
+        $project->load(['user', 'skills']);
+
+        $credentialCode = 'CERT-PRJ-' . ($project->created_at ? $project->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $project->id) . '-' . sprintf('%04d', $student->id);
+
+        $pdf = Pdf::loadView('student.certificate_project_pdf', compact('project', 'student', 'credentialCode'))
+            ->setPaper('a4', 'landscape');
+
+        $filename = 'certificate-project-' . $project->id . '-' . $student->id . '.pdf';
 
         return $pdf->download($filename);
     }
@@ -125,7 +185,6 @@ class CertificateController extends Controller
         abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
         abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '.');
 
-        // Check if verified by admin or certificate record is verified
         $certificateRecord = \App\Models\Certificate::where('user_id', $student->id)
             ->where('course_id', $course->id)
             ->first();

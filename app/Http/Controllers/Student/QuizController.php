@@ -188,6 +188,28 @@ class QuizController extends Controller
             }
         }
 
+        // Akumulasi otomatis profil kompetensi skill mahasiswa dari hasil kuis
+        if ($quiz->course && $quiz->course->skills) {
+            foreach ($quiz->course->skills as $skill) {
+                \App\Models\UserSkillProfile::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'skill_id' => $skill->id,
+                    ],
+                    [
+                        'avg_score' => $finalScore,
+                        'highest_score' => $finalScore,
+                        'last_activity_at' => now(),
+                        'last_calculated_at' => now(),
+                    ]
+                );
+            }
+        }
+
+        \Illuminate\Support\Facades\Artisan::call('ai:calculate-user-skill-profiles', [
+            '--user_id' => $user->id,
+        ]);
+
         return view('student.quiz.result', [
             'score' => $finalScore,
             'quiz' => $quiz,
@@ -196,5 +218,42 @@ class QuizController extends Controller
             'correctCount' => $correctCount,
             'totalQuestions' => $questions->count(),
         ]);
+    }
+
+    public function requestRetake(Quiz $quiz)
+    {
+        $user = Auth::user();
+
+        $bestAttempt = QuizAttempt::where('user_id', $user->id)
+            ->where('quiz_id', $quiz->id)
+            ->orderByDesc('score')
+            ->first();
+
+        if (!$bestAttempt || $bestAttempt->score >= 70) {
+            return redirect()->back()->with('error', 'Permintaan retake hanya berlaku jika Anda sudah mengikuti quiz dan nilai Anda di bawah 70.');
+        }
+
+        if ($quiz->canAttempt($user->id)) {
+            return redirect()->back()->with('error', 'Anda masih memiliki sisa kesempatan untuk mengerjakan kuis ini.');
+        }
+
+        $existingRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
+            ->where('quiz_id', $quiz->id)
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($existingRequest) {
+            return redirect()->back()->with('error', 'Permintaan retake Anda sudah terkirim dan sedang menunggu persetujuan Author.');
+        }
+
+        \App\Models\QuizRetakeRequest::create([
+            'user_id' => $user->id,
+            'quiz_id' => $quiz->id,
+            'course_id' => $quiz->course_id,
+            'status' => 'pending',
+            'reason' => 'Pengajuan ulang ujian karena nilai di bawah passing threshold (70).',
+        ]);
+
+        return redirect()->back()->with('success', 'Permintaan retake kuis berhasil dikirim ke Author. Mohon menunggu persetujuan.');
     }
 }

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>UNDIP LMS</title>
+  <title>COMPRO TEKKOM</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -527,8 +527,8 @@
         </svg>
       </div>
       <div>
-        <div class="nav-title">UNDIP LMS</div>
-        <div class="nav-sub">Computer Engineering</div>
+        <div class="nav-title">COMPRO</div>
+        <div class="nav-sub">TEKKOM</div>
       </div>
     </div>
 
@@ -555,38 +555,37 @@
     <div class="hero-grid"></div>
     <div class="hero-badge">
       <span class="hero-badge-dot"></span>
-      Platform Pembelajaran Digital Universitas Diponegoro
+      COMPRO • Computer Engineering Digital Platform
     </div>
-    <h1>Sistem Manajemen <span>Pembelajaran</span> Terintegrasi</h1>
+    <h1>COMPRO<br><span>Competency & Talent Platform</span></h1>
     <p class="hero-desc">
-      Platform LMS resmi Teknik Komputer UNDIP. Akses materi, tugas, dan penilaian
-      dalam satu sistem yang aman dan terpusat.
+      Official Computer Engineering platform for competency courses, evaluation quizzes, real-world industry projects, and verified digital credentials.
     </p>
     <div class="hero-cta">
-      <a href="{{ route('login') }}" class="btn-hero-primary">Mulai Belajar Sekarang</a>
-      <a href="#" class="btn-hero-ghost">Pelajari Lebih Lanjut</a>
+      <a href="{{ route('login') }}" class="btn-hero-primary">Start Learning Now</a>
+      <a href="{{ route('login') }}" class="btn-hero-ghost">Explore Platform</a>
     </div>
     <div class="hero-checklist">
-      <span class="check-item"><span class="check-dot"></span>Jalur pembelajaran personal</span>
-      <span class="check-item"><span class="check-dot"></span>Pantau progres real-time</span>
-      <span class="check-item"><span class="check-dot"></span>Asesmen interaktif</span>
+      <span class="check-item"><span class="check-dot"></span>Personalized skill pathways</span>
+      <span class="check-item"><span class="check-dot"></span>Real-time progress analytics</span>
+      <span class="check-item"><span class="check-dot"></span>Interactive skill assessments</span>
     </div>
     <div class="hero-strip">
       <div style="text-align:center">
         <div class="strip-num">500+</div>
-        <div class="strip-label">Mahasiswa Aktif</div>
+        <div class="strip-label">Active Students</div>
       </div>
       <div style="text-align:center">
         <div class="strip-num">50+</div>
-        <div class="strip-label">Mata Kuliah</div>
+        <div class="strip-label">Competency Courses</div>
       </div>
       <div style="text-align:center">
         <div class="strip-num">30+</div>
-        <div class="strip-label">Dosen Pengampu</div>
+        <div class="strip-label">Authors / Instructors</div>
       </div>
       <div style="text-align:center">
         <div class="strip-num">95%</div>
-        <div class="strip-label">Tingkat Kelulusan</div>
+        <div class="strip-label">Completion Rate</div>
       </div>
     </div>
   </section>
@@ -635,15 +634,15 @@
     </div>
     <div class="roles-grid">
       <a href="{{ route('login') }}" class="role-card">
-        <div class="role-num">01 — Mahasiswa</div>
+        <div class="role-num">01 — Student</div>
         <div class="role-icon">
           <svg width="26" height="26" fill="#1E4D96" viewBox="0 0 24 24">
             <path d="M12 14l9-5-9-5-9 5 9 5z" />
             <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
           </svg>
         </div>
-        <div class="role-name">Mahasiswa</div>
-        <div class="role-desc">Akses materi kuliah, kumpulkan tugas, dan pantau nilai semester Anda.</div>
+        <div class="role-name">Student</div>
+        <div class="role-desc">Akses materi kuliah, kumpulkan tugas, ikuti project industri, dan pantau sertifikat Anda.</div>
         <div class="role-arrow">
           Masuk Portal
           <svg width="14" height="14" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round">
@@ -690,14 +689,14 @@
 
 
       <a href="{{ route('login') }}" class="role-card">
-        <div class="role-num">02 — Dosen</div>
+        <div class="role-num">02 — Author / Instructor</div>
         <div class="role-icon">
           <svg width="26" height="26" fill="none" stroke="#1E4D96" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round">
             <path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </div>
-        <div class="role-name">Dosen</div>
-        <div class="role-desc">Kelola materi, buat kuis, dan berikan penilaian kepada mahasiswa.</div>
+        <div class="role-name">Author / Instructor</div>
+        <div class="role-desc">Kelola course, susun kuis evaluasi, buat project industri, dan berikan penilaian.</div>
         <div class="role-arrow">
           Masuk Portal
           <svg width="14" height="14" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round">
@@ -715,7 +714,7 @@
           </svg>
         </div>
         <div class="role-name">Admin</div>
-        <div class="role-desc">Kelola pengguna, mata kuliah, dan konfigurasi sistem secara menyeluruh.</div>
+        <div class="role-desc">Kelola pengguna, verifikasi sertifikat, dan konfigurasi sistem secara menyeluruh.</div>
         <div class="role-arrow">
           Masuk Portal
           <svg width="14" height="14" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round">
@@ -728,7 +727,7 @@
 
   {{-- FOOTER --}}
   <footer>
-    <p>© {{ date('Y') }} UNDIP LMS — Teknik Komputer, Universitas Diponegoro</p>
+    <p>© {{ date('Y') }} COMPRO — Teknik Komputer, Universitas Diponegoro</p>
     <span>v2.0.0</span>
   </footer>
 

@@ -39,19 +39,28 @@ class RegisteredUserController extends Controller
             'role' => ['required', 'in:student,lecturer'],
         ];
 
-        // Peminatan wajib diisi jika role = student
+        // Peminatan wajib diisi jika role = student (bisa 1 atau banyak pilihan)
         if ($request->role === 'student') {
-            $rules['peminatan'] = ['required', 'string', 'max:255'];
+            $rules['peminatan'] = ['required'];
         }
 
         $request->validate($rules);
+
+        $peminatanString = null;
+        if ($request->role === 'student' && !empty($request->peminatan)) {
+            if (is_array($request->peminatan)) {
+                $peminatanString = implode(', ', array_filter($request->peminatan));
+            } else {
+                $peminatanString = (string) $request->peminatan;
+            }
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'peminatan' => $request->role === 'student' ? $request->peminatan : null,
+            'peminatan' => $peminatanString,
             'registration_status' => 'pending',
         ]);
 

@@ -9,10 +9,16 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 class ResultController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $activeTab = $request->query('tab', 'quiz');
+
+        // Tab 1: Final Quiz Results
         $baseQuery = QuizAttempt::whereHas('quiz', function ($query) {
             $query->where('quiz_type', 'final');
         });
@@ -22,14 +28,66 @@ class ResultController extends Controller
             ->latest()
             ->get();
 
-        $totalResults  = (clone $baseQuery)->count();
-        $verifiedCount = (clone $baseQuery)->where('is_verified', true)->count();
-        $pendingCount  = (clone $baseQuery)->where('is_verified', false)->count();
-        $averageScore  = round((float) (clone $baseQuery)->avg('score'), 2);
+        $totalQuizResults  = (clone $baseQuery)->count();
+        $verifiedQuizCount = (clone $baseQuery)->where('is_verified', true)->count();
+        $pendingQuizCount  = (clone $baseQuery)->where('is_verified', false)->count();
+        $averageQuizScore  = round((float) (clone $baseQuery)->avg('score'), 2);
+
+        // Tab 2: Project Results
+        $projectParticipations = \App\Models\ProjectParticipation::with(['user', 'project.creator', 'project.skills'])
+            ->latest()
+            ->get();
+
+        foreach ($projectParticipations as $part) {
+            $cert = \App\Models\Certificate::where('user_id', $part->user_id)
+                ->where('project_id', $part->project_id)
+                ->first();
+            $part->certificate_record = $cert;
+            $part->is_verified = $cert ? $cert->is_verified : ($part->status === 'completed');
+        }
+
+        $totalProjectResults  = $projectParticipations->count();
+        $verifiedProjectCount = $projectParticipations->filter(fn($p) => $p->is_verified)->count();
+        $pendingProjectCount  = $projectParticipations->filter(fn($p) => !$p->is_verified)->count();
+
+        $totalResults  = $activeTab === 'project' ? $totalProjectResults : $totalQuizResults;
+        $verifiedCount = $activeTab === 'project' ? $verifiedProjectCount : $verifiedQuizCount;
+        $pendingCount  = $activeTab === 'project' ? $pendingProjectCount : $pendingQuizCount;
+        $averageScore  = $averageQuizScore;
 
         return view('admin.results.index', compact(
-            'results', 'totalResults', 'verifiedCount', 'pendingCount', 'averageScore'
+            'results', 'totalResults', 'verifiedCount', 'pendingCount', 'averageScore',
+            'activeTab', 'projectParticipations',
+            'totalQuizResults', 'verifiedQuizCount', 'pendingQuizCount',
+            'totalProjectResults', 'verifiedProjectCount', 'pendingProjectCount'
         ));
+    }
+
+    public function verifyProject(\App\Models\ProjectParticipation $participation): RedirectResponse
+    {
+        $participation->update(['status' => 'completed']);
+
+        $certificate = \App\Models\Certificate::firstOrCreate(
+            [
+                'user_id' => $participation->user_id,
+                'project_id' => $participation->project_id,
+            ],
+            [
+                'score' => 100,
+                'completed_at' => $participation->updated_at ?? now(),
+            ]
+        );
+
+        $certificate->update([
+            'is_verified' => true,
+            'status' => 'verified',
+            'verified_at' => now(),
+            'verified_by' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('admin.results.index', ['tab' => 'project'])
+            ->with('success', "Project Certificate untuk {$participation->user->name} berhasil diverifikasi (Verified)!");
     }
 
     public function show(QuizAttempt $result): View

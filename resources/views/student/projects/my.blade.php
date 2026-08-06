@@ -1,8 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Project Saya
-        </h2>
+        <div>
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                My Active Projects
+            </h2>
+        </div>
     </x-slot>
 
     @php
@@ -40,17 +42,17 @@
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h3 class="text-2xl font-bold text-gray-900">
-                            Project yang Kamu Ambil
+                            Project COMPRO yang Kamu Ikuti
                         </h3>
 
                         <p class="text-sm text-gray-500 mt-1">
-                            Pantau progress project yang sedang kamu kerjakan.
+                            Pantau progress dan pengumpulan tautan pengerjaan project kamu.
                         </p>
                     </div>
 
                     <a href="{{ route('student.projects.index') }}"
-                        class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
-                        Cari Project Baru
+                        class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition shadow-sm">
+                        + Cari Project Baru
                     </a>
                 </div>
             </div>

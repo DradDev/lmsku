@@ -18,7 +18,6 @@ class Course extends Model
         'is_archived',
         'certificate_threshold',
         'category_id',
-        'thumbnail',
     ];
 
     protected $casts = [
@@ -75,11 +74,6 @@ class Course extends Model
     public function materials()
     {
         return $this->hasMany(Material::class);
-    }
-
-    public function assignments()
-    {
-        return $this->hasMany(Assignment::class);
     }
 
     public function quizzes()

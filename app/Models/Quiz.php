@@ -77,7 +77,14 @@ class Quiz extends Model
             ->where('user_id', $userId)
             ->count();
 
-        return $attemptCount < $this->max_attempts;
+        $approvedRetakes = \App\Models\QuizRetakeRequest::where('user_id', $userId)
+            ->where('quiz_id', $this->id)
+            ->where('status', 'approved')
+            ->count();
+
+        $allowedAttempts = $this->max_attempts + $approvedRetakes;
+
+        return $attemptCount < $allowedAttempts;
     }
 
     public function remainingAttempts(int $userId): int
@@ -86,7 +93,14 @@ class Quiz extends Model
             ->where('user_id', $userId)
             ->count();
 
-        return max(0, $this->max_attempts - $attemptCount);
+        $approvedRetakes = \App\Models\QuizRetakeRequest::where('user_id', $userId)
+            ->where('quiz_id', $this->id)
+            ->where('status', 'approved')
+            ->count();
+
+        $allowedAttempts = $this->max_attempts + $approvedRetakes;
+
+        return max(0, $allowedAttempts - $allowedAttempts < $attemptCount ? 0 : ($allowedAttempts - $attemptCount));
     }
 
     public function getQuizTypeLabelAttribute(): string

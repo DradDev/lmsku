@@ -237,11 +237,26 @@
                                     @endif
                                 </div>
 
-                                <div class="flex gap-3">
-                                    <a href="{{ route('student.quiz.show', $quiz) }}"
-                                        class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                        Start Quiz
-                                    </a>
+                                <div class="flex items-center gap-3">
+                                    @if ($quiz->quiz_type === 'final' && $verifiedFinalAttempt && $verifiedFinalAttempt->score < 70 && !$quiz->canAttempt(Auth::id()))
+                                        @if ($retakeRequest && $retakeRequest->status === 'pending')
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold rounded-xl">
+                                                ⏳ Request Retake Pending
+                                            </span>
+                                        @else
+                                            <form method="POST" action="{{ route('student.quiz.request-retake', $quiz) }}">
+                                                @csrf
+                                                <button type="submit" onclick="return confirm('Kirim permintaan retake Final Quiz ke Author?')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-sm transition">
+                                                    📩 Request Retake Final Quiz
+                                                </button>
+                                            </form>
+                                        @endif
+                                    @else
+                                        <a href="{{ route('student.quiz.show', $quiz) }}"
+                                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                                            Start Quiz
+                                        </a>
+                                    @endif
                                 </div>
                             </div>
                             @endforeach
@@ -347,6 +362,21 @@
                         @else
                         <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-700">
                             {{ $certificateStatusText }}
+                            @if ($verifiedFinalAttempt && $verifiedFinalAttempt->score < 70 && $finalQuiz && !$finalQuiz->canAttempt(Auth::id()))
+                                <div class="mt-3 pt-3 border-t border-amber-200">
+                                    <p class="text-xs font-bold text-amber-900 mb-2">Nilai Terakhir Anda: {{ $verifiedFinalAttempt->score }} (Dibawah passing threshold 70)</p>
+                                    @if ($retakeRequest && $retakeRequest->status === 'pending')
+                                        <p class="text-xs font-semibold text-blue-700">⏳ Permintaan retake Anda sudah terkirim & menunggu persetujuan Author.</p>
+                                    @else
+                                        <form method="POST" action="{{ route('student.quiz.request-retake', $finalQuiz) }}">
+                                            @csrf
+                                            <button type="submit" onclick="return confirm('Kirim permintaan retake Final Quiz ke Author?')" class="w-full text-center px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-sm">
+                                                📩 Request Retake Final Quiz
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                         @endif
                     </div>

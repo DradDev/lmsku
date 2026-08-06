@@ -5,7 +5,7 @@
             <div class="mb-8">
                 <a href="{{ route('lecturer.courses.show', $material->course_id) }}"
                    class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
-                    ← Kembali ke Course
+                    ← Back to Course
                 </a>
 
                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">

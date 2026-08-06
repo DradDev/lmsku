@@ -1,23 +1,26 @@
 <x-app-layout>
     <div class="min-h-screen bg-slate-50">
         <div class="max-w-7xl mx-auto px-6 py-8">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h1 class="text-3xl font-bold text-slate-900">User Management</h1>
-                    <p class="text-slate-500 mt-2">
-                        Manage admin, lecturer, and student accounts.
-                    </p>
+            <div class="mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900">User Management</h1>
+                        <p class="text-slate-500 mt-2">
+                            Manage user account roles, approval status, and system permissions.
+                        </p>
+                    </div>
                 </div>
-
-                <a href="{{ route('admin.users.create') }}"
-                   class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">
-                    + Add User
-                </a>
             </div>
 
             @if(session('success'))
                 <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-700">
                     {{ session('success') }}
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-blue-700">
+                    {{ session('info') }}
                 </div>
             @endif
 
@@ -83,10 +86,8 @@
                                                         </button>
                                                     </form>
 
-                                                    <form action="{{ route('admin.users.reject', $user->id) }}" method="POST"
-                                                          onsubmit="const r = prompt('Alasan menolak registrasi {{ $user->name }}:'); if (!r) { return false; } this.querySelector('input[name=reason]').value = r;">
+                                                    <form action="{{ route('admin.users.reject', $user->id) }}" method="POST">
                                                         @csrf
-                                                        <input type="hidden" name="reason" value="">
                                                         <button type="submit"
                                                                 class="rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700">
                                                             Reject
@@ -101,7 +102,7 @@
 
                                                 <a href="{{ route('admin.users.edit', $user->id) }}"
                                                    class="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                                    Edit
+                                                    Change Role
                                                 </a>
 
                                                 <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Hapus user ini?')">

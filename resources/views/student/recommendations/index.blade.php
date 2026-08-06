@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Rekomendasi Untuk Kamu
+            Recommendations for You
         </h2>
     </x-slot>
 
@@ -24,47 +24,47 @@
             </div>
             @endif
 
-            <div class="bg-white shadow rounded p-6">
+            <div class="bg-white shadow rounded-2xl p-6">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div>
                         <h3 class="text-2xl font-bold text-gray-900">
-                            Rekomendasi AI
+                            🤖 AI Skill Development Recommendations
                         </h3>
 
                         <p class="text-sm text-gray-500 mt-1">
-                            Rekomendasi ini dibuat berdasarkan aktivitas belajar, skill, minat, progress, dan model Machine Learning.
+                            These recommendations are analyzed by AI (Random Forest) based on your quiz results and skill gap to assist in your <strong>Talent Development</strong> process.
                         </p>
                     </div>
 
                     <span class="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
-                        {{ $recommendations->count() }} Rekomendasi
+                        {{ $recommendations->count() }} Recommendations
                     </span>
                 </div>
             </div>
 
             @if ($recommendations->isEmpty())
-            <div class="bg-white shadow rounded p-8 text-center">
+            <div class="bg-white shadow rounded-2xl p-8 text-center">
                 <div class="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
                     <span class="text-2xl">🤖</span>
                 </div>
 
                 <h3 class="text-lg font-semibold text-gray-900">
-                    Belum ada rekomendasi untuk kamu saat ini.
+                    No recommendations available for you at the moment.
                 </h3>
 
                 <p class="text-sm text-gray-500 mt-2">
-                    Rekomendasi akan muncul setelah sistem AI menjalankan batch prediksi.
+                    Recommendations will appear after the AI model runs a prediction batch.
                 </p>
 
                 <div class="mt-5 flex justify-center gap-2">
                     <a href="{{ route('student.courses.index') }}"
-                        class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
-                        Lihat Course
+                        class="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold">
+                        View Courses
                     </a>
 
                     <a href="{{ route('student.projects.index') }}"
-                        class="px-4 py-2 bg-gray-700 text-white rounded text-sm">
-                        Lihat Project
+                        class="px-4 py-2 bg-gray-700 text-white rounded-xl text-sm font-semibold">
+                        View Projects
                     </a>
                 </div>
             </div>
@@ -85,8 +85,8 @@
                 $scorePercent = round(($result->prediction_score ?? 0) * 100, 2);
 
                 $title = $isCourse
-                ? ($item->name ?? 'Course tanpa nama')
-                : ($item->title ?? 'Project tanpa judul');
+                ? ($item->name ?? 'Untitled Course')
+                : ($item->title ?? 'Untitled Project');
 
                 $description = $item->description ?? '-';
 
@@ -119,7 +119,7 @@
                 }
                 @endphp
 
-                <div class="bg-white shadow rounded p-5 flex flex-col justify-between">
+                <div class="bg-white shadow rounded-2xl p-5 flex flex-col justify-between">
                     <div>
                         <div class="flex justify-between items-start gap-3 mb-3">
                             <div>
@@ -128,32 +128,32 @@
                                 </h3>
 
                                 <div class="flex flex-wrap gap-2 mt-2">
-                                    <span class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-700">
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-gray-100 text-gray-700 font-semibold">
                                         Rank #{{ $result->rank }}
                                     </span>
 
-                                    <span class="px-2 py-1 text-xs rounded {{ $isCourse ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
+                                    <span class="px-2 py-1 text-xs rounded-lg font-semibold {{ $isCourse ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
                                         {{ ucfirst($result->item_type) }}
                                     </span>
 
                                     @if ($isCourse && $alreadyEnrolled)
-                                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
-                                        Sudah Diambil
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-green-100 text-green-700 font-semibold">
+                                        Enrolled
                                     </span>
                                     @endif
 
                                     @if ($isProject)
                                     @if ($alreadyJoined)
-                                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">
-                                        Sudah Diambil
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-green-100 text-green-700 font-semibold">
+                                        Enrolled
                                     </span>
                                     @elseif ($isFull)
-                                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-700">
-                                        Penuh
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-red-100 text-red-700 font-semibold">
+                                        Quota Full
                                     </span>
                                     @else
-                                    <span class="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700">
-                                        Tersedia
+                                    <span class="px-2 py-1 text-xs rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                                        Available
                                     </span>
                                     @endif
                                     @endif
@@ -196,8 +196,8 @@
                             </p>
 
                             <p>
-                                <strong>Durasi:</strong>
-                                {{ $item->duration_weeks ?? '-' }} minggu
+                                <strong>Duration:</strong>
+                                {{ $item->duration_weeks ?? '-' }} weeks
                             </p>
                             @else
                             <p>
@@ -206,13 +206,13 @@
                             </p>
 
                             <p>
-                                <strong>Durasi:</strong>
-                                {{ $item->duration_days ?? '-' }} hari
+                                <strong>Duration:</strong>
+                                {{ $item->duration_days ?? '-' }} days
                             </p>
 
                             <p class="{{ $isFull ? 'text-red-600' : 'text-green-600' }}">
-                                <strong>Kuota:</strong>
-                                {{ $joinedCount }}/{{ $maxStudents }} student
+                                <strong>Quota:</strong>
+                                {{ $joinedCount }}/{{ $maxStudents }} students
                             </p>
                             @endif
 
@@ -227,42 +227,42 @@
                         @if ($isCourse)
                         @if ($alreadyEnrolled)
                         <a href="{{ route('student.courses.show', $item) }}"
-                            class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
-                            Lanjut Belajar
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition">
+                            Continue Learning
                         </a>
                         @else
                         <form action="{{ route('student.courses.enroll', $item) }}" method="POST">
                             @csrf
 
                             <button type="submit"
-                                class="px-4 py-2 bg-green-600 text-white rounded text-sm">
-                                Ambil Course
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm transition">
+                                Enroll Course
                             </button>
                         </form>
                         @endif
                         @else
                         <a href="{{ route('student.projects.show', $item) }}"
-                            class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
-                            Detail Project
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition">
+                            Project Details
                         </a>
 
                         @if ($alreadyJoined)
-                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded text-sm">
-                            Sudah Diambil
+                        <span class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold">
+                            Joined
                         </span>
                         @elseif ($isFull)
                         <button type="button"
-                            class="px-4 py-2 bg-gray-400 text-white rounded text-sm cursor-not-allowed"
+                            class="px-4 py-2 bg-gray-400 text-white rounded-xl text-sm font-semibold cursor-not-allowed"
                             disabled>
-                            Kuota Penuh
+                            Quota Full
                         </button>
                         @else
                         <form action="{{ route('student.projects.join', $item) }}" method="POST">
                             @csrf
 
                             <button type="submit"
-                                class="px-4 py-2 bg-green-600 text-white rounded text-sm">
-                                Ambil Project
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl text-sm transition">
+                                Join Project
                             </button>
                         </form>
                         @endif

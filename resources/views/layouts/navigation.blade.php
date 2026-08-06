@@ -21,8 +21,8 @@ default => route('student.dashboard'),
             </div>
 
             <div class="lms-brand-texts">
-                <span class="lms-brand-title">UNDIP LMS</span>
-                <span class="lms-brand-subtitle">Computer Engineering</span>
+                <span class="lms-brand-title">COMPRO</span>
+                <span class="lms-brand-subtitle">TEKKOM</span>
             </div>
         </a>
 
@@ -45,18 +45,7 @@ default => route('student.dashboard'),
                 My Courses
             </a>
 
-            <a href="{{ route('student.materials.index') }}"
-                class="lms-nav-link {{ request()->routeIs('student.materials.*') ? 'active' : '' }}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14,2 14,8 20,8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-                Materials
-            </a>
-
-            <a href="{{ route('student.results.index') }}"
+             <a href="{{ route('student.results.index') }}"
                 class="lms-nav-link {{ request()->routeIs('student.results.*') ? 'active' : '' }}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="20" x2="18" y2="10" />
@@ -83,13 +72,25 @@ default => route('student.dashboard'),
                 Projects
             </a>
 
+            <a href="{{ route('student.portfolio') }}"
+                class="lms-nav-link {{ request()->routeIs('student.portfolio') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                </svg>
+                My Portfolio
+            </a>
+
             <a href="{{ route('student.recommendations.index') }}"
                 class="lms-nav-link {{ request()->routeIs('student.recommendations.*') ? 'active' : '' }}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2l1.8 5.5L19 9.3l-5.2 1.8L12 17l-1.8-5.9L5 9.3l5.2-1.8z" />
                     <path d="M19 15l.9 2.7L22 18.6l-2.1.8L19 22l-.9-2.6-2.1-.8 2.1-.9z" />
                 </svg>
-                Rekomendasi AI
+                AI Recommendations
             </a>
             @endif
 
@@ -174,16 +175,6 @@ default => route('student.dashboard'),
                 Tags
             </a>
 
-            <a href="{{ route('admin.categories.index') }}"
-                class="lms-nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
-                Categories
-            </a>
             @endif
         </div>
 
@@ -191,8 +182,9 @@ default => route('student.dashboard'),
             <a href="{{ route('profile.edit') }}" class="lms-user-pill">
                 @if(auth()->user()->avatar_url)
                 <img src="{{ auth()->user()->avatar_url }}"
-                    alt="{{ auth()->user()->name }}"
-                    class="lms-avatar-image">
+                    alt=""
+                    class="lms-avatar-image"
+                    onerror="this.style.display='none';">
                 @else
                 <div class="lms-avatar">{{ $userInitial }}</div>
                 @endif

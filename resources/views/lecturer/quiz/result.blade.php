@@ -20,11 +20,9 @@ Quiz Completed
 
 </div>
 
-<a href="{{ route('student.dashboard') }}"
+<a href="{{ route('lecturer.courses.index') }}"
 class="mt-8 inline-block bg-purple-600 text-white px-6 py-3 rounded hover:bg-purple-700">
-
-Back to Dashboard
-
+Back to Courses
 </a>
 
 </div>

@@ -158,10 +158,11 @@
                         </h2>
 
                         <div class="flex flex-col items-center text-center">
-                            @if ($user->avatar)
-                            <img src="{{ asset('storage/' . $user->avatar) }}"
-                                alt="{{ $user->name }}"
-                                class="h-24 w-24 rounded-full object-cover border border-slate-200 shadow-sm">
+                            @if ($user->avatar_url)
+                            <img src="{{ $user->avatar_url }}"
+                                alt=""
+                                class="h-24 w-24 rounded-full object-cover border border-slate-200 shadow-sm"
+                                onerror="this.style.display='none';">
                             @else
                             <div class="h-24 w-24 rounded-full bg-indigo-600 text-white flex items-center justify-center text-3xl font-bold shadow-sm">
                                 {{ strtoupper(substr($user->name, 0, 1)) }}
@@ -179,6 +180,20 @@
                             <p class="mt-1 text-sm text-slate-500">
                                 {{ $user->email }}
                             </p>
+
+                            @if ($user->role === 'student')
+                            <div class="mt-4 w-full rounded-2xl border border-amber-200 bg-amber-50/80 p-3.5 text-left shadow-xs">
+                                <p class="text-[11px] font-bold uppercase tracking-wider text-amber-900 mb-1">
+                                    Initial Registered Interest
+                                </p>
+                                <p class="text-xs font-semibold text-amber-950 leading-relaxed">
+                                    {{ $user->peminatan ?? 'General' }}
+                                </p>
+                                <span class="inline-block mt-2 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-200 text-amber-900">
+                                    Competency Pending
+                                </span>
+                            </div>
+                            @endif
                         </div>
                     </div>
 

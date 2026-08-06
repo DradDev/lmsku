@@ -295,49 +295,56 @@
         .btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
-            padding: 8px 14px;
-            border-radius: 9px;
+            padding: 9px 18px;
+            border-radius: 12px;
             text-decoration: none;
-            transition: all 0.15s;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             border: none;
             font-family: 'Inter', sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
         }
 
         .btn-primary {
-            background: #1e3a5f;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
             color: #fff;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
         }
 
         .btn-primary:hover {
-            background: #162d4a;
+            background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+            box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35);
         }
 
         .btn-success {
-            background: #16a34a;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: #fff;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
         }
 
         .btn-success:hover {
-            background: #15803d;
-        }
-
-        .btn-muted {
-            background: #f3f4f6;
-            color: #4b5563;
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
         }
 
         .btn-cert {
-            background: #edfaf4;
-            color: #1a7a4a;
-            border: 1px solid #a7e9c8;
+            background: #ecfdf5;
+            color: #047857;
+            border: 1.5px solid #a7f3d0;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
         }
 
         .btn-cert:hover {
-            background: #d4f5e5;
+            background: #d1fae5;
+            border-color: #6ee7b7;
         }
 
         @media (max-width: 1024px) {
@@ -378,12 +385,31 @@
 
             <div class="page-top">
                 <div>
-                    <p class="page-eyebrow">Student Portal</p>
-                    <h1 class="page-title">Daftar Course</h1>
+                    <p class="page-eyebrow">COMPRO TEKKOM · Student Course</p>
+                    <h1 class="page-title">Competency Courses</h1>
                     <p class="page-sub">
-                        Lihat semua course yang tersedia, ambil course baru, atau lanjutkan course yang sudah kamu ikuti.
+                        Explore available courses, enroll in new topics, or continue your active learning.
                     </p>
                 </div>
+            </div>
+
+            <!-- SSO UNDIP Style Instructor/Author Selector Dropdown Card -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #1e2435; margin-bottom: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #2d5be3;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <span>Daftar Author / Instructor</span>
+                </label>
+
+                <select id="author-filter-select" onchange="applyFilters()" style="width: 100%; max-width: 480px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 14px; font-weight: 600; color: #1e2435; background-color: #ffffff; cursor: pointer; outline: none;">
+                    <option value="all">-- Semua Author / Instructor --</option>
+                    @foreach($authors as $author)
+                        <option value="{{ $author->id }}">{{ $author->name }}</option>
+                    @endforeach
+                </select>
+
+                <p style="font-size: 12px; color: #64748b; margin-top: 8px; margin-bottom: 0;">
+                    Pilih Author / Instructor untuk mengfilter dan menampilkan daftar mata kuliah / course yang diampu.
+                </p>
             </div>
 
             <div class="filter-tabs">
@@ -433,11 +459,11 @@
                 }
                 @endphp
 
-                <div class="course-card" data-status="{{ $status }}">
+                <div class="course-card" data-status="{{ $status }}" data-author-id="{{ $course->user_id }}">
                     <div class="badge-row">
                         @if($alreadyEnrolled)
                         <span class="course-badge badge-enrolled">
-                            Sudah Diambil
+                            Enrolled
                         </span>
                         @else
                         <span class="course-badge badge-available">
@@ -446,7 +472,7 @@
                         @endif
 
                         @if($isCompleted)
-                        <span class="course-badge badge-done">
+                        <span class="course-badge badge-completed">
                             Completed
                         </span>
                         @elseif($alreadyEnrolled && $progress > 0)
@@ -466,7 +492,7 @@
 
                     <div class="course-meta">
                         <div class="course-meta-item">
-                            <strong>Lecturer:</strong>
+                            <strong>Instructor:</strong>
                             <span>{{ $course->user->name ?? 'Unknown' }}</span>
                         </div>
 
@@ -476,13 +502,13 @@
                         </div>
 
                         <div class="course-meta-item">
-                            <strong>Durasi:</strong>
-                            <span>{{ $course->duration_weeks ?? '-' }} minggu</span>
+                            <strong>Duration:</strong>
+                            <span>{{ $course->duration_weeks ?? '-' }} weeks</span>
                         </div>
 
                         <div class="course-meta-item">
-                            <strong>Student:</strong>
-                            <span>{{ $course->students_count ?? 0 }} terdaftar</span>
+                            <strong>Students:</strong>
+                            <span>{{ $course->students_count ?? 0 }} enrolled</span>
                         </div>
                     </div>
 
@@ -561,24 +587,39 @@
     </div>
 
     <script>
+        let currentStatusFilter = 'all';
+
         function filterCourses(status, btn) {
             document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
             btn.classList.add('active');
+            currentStatusFilter = status;
+            applyFilters();
+        }
 
-            document.querySelectorAll('.course-card').forEach(card => {
-                if (status === 'all') {
+        function applyFilters() {
+            const selectedAuthorId = document.getElementById('author-filter-select').value;
+            const cards = document.querySelectorAll('.course-card');
+
+            cards.forEach(card => {
+                const cardStatus = card.dataset.status;
+                const cardAuthorId = card.dataset.authorId;
+
+                let matchesStatus = false;
+                if (currentStatusFilter === 'all') {
+                    matchesStatus = true;
+                } else if (currentStatusFilter === 'enrolled') {
+                    matchesStatus = ['enrolled', 'progress', 'completed'].includes(cardStatus);
+                } else {
+                    matchesStatus = (cardStatus === currentStatusFilter);
+                }
+
+                let matchesAuthor = (selectedAuthorId === 'all') || (cardAuthorId === selectedAuthorId);
+
+                if (matchesStatus && matchesAuthor) {
                     card.style.display = 'flex';
-                    return;
+                } else {
+                    card.style.display = 'none';
                 }
-
-                if (status === 'enrolled') {
-                    card.style.display = ['enrolled', 'progress', 'completed'].includes(card.dataset.status) ?
-                        'flex' :
-                        'none';
-                    return;
-                }
-
-                card.style.display = card.dataset.status === status ? 'flex' : 'none';
             });
         }
 

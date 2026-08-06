@@ -103,42 +103,44 @@
     gap: 6px;
     font-size: 13px;
     font-weight: 600;
-    padding: 10px 16px;
+    padding: 9px 16px;
     border-radius: 12px;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: 'Inter', sans-serif;
     white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
     color: #fff;
-    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.18);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
 }
-.btn-primary:hover { transform: translateY(-1px); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35); }
 
 .btn-solid {
-    background: #111827;
+    background: #1e293b;
     color: #fff;
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.15);
 }
-.btn-solid:hover { background: #0f172a; }
+.btn-solid:hover { background: #0f172a; transform: translateY(-1px); }
 
 .btn-outline {
     background: #fff;
-    color: #334155;
-    border: 1px solid #d0d5dd;
+    color: #475569;
+    border: 1.5px solid #e2e8f0;
 }
-.btn-outline:hover { background: #f8fafc; }
+.btn-outline:hover { background: #f8fafc; border-color: #cbd5e1; transform: translateY(-1px); }
 
 .btn-danger {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1.5px solid #fecaca;
 }
-.btn-danger:hover { background: #ffe4e6; }
+.btn-danger:hover { background: #fee2e2; border-color: #fca5a5; transform: translateY(-1px); }
 
 .stat-strip {
     display: grid;
@@ -336,18 +338,23 @@
 
         <div class="page-header">
             <div>
-                <p class="page-eyebrow">Lecturer Portal</p>
-                <h1 class="page-title">Daftar Mata Kuliah</h1>
-                <p class="page-sub">Kelola course yang Anda ajarkan, beserta materi, quiz, dan mahasiswa di dalamnya.</p>
+                <p class="page-eyebrow">Author / Instructor Portal</p>
+                <h1 class="page-title">Competency Courses Management</h1>
+                <p class="page-sub">Manage competency courses, learning modules, evaluation quizzes, and enrolled students.</p>
             </div>
 
             <a href="{{ route('lecturer.courses.create') }}" class="btn btn-primary">
-                + Tambah Mata Kuliah
+                + Add New Course
             </a>
         </div>
 
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}</div>
+            <div class="alert-success flex items-center gap-3">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs">✓</span>
+                <div>
+                    <strong>Berhasil!</strong> {{ session('success') }}
+                </div>
+            </div>
         @endif
 
         <div class="stat-strip">
@@ -491,15 +498,16 @@
                         <div class="card-actions mt-auto" style="display: flex; flex-direction: column; gap: 8px;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                                 <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-solid text-center w-full">View</a>
-                                <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Activate course ini?')" class="w-full">
+                                <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Aktifkan kembali course ini dengan start date hari ini? Seluruh riwayat mahasiswa, materi, dan soal akan tetap utuh.')" class="w-full">
                                     @csrf
-                                    <button type="submit" class="btn btn-outline w-full text-emerald-600 border-emerald-200 hover:bg-emerald-50">Activate</button>
+                                    <button type="submit" class="btn btn-primary w-full">Activate</button>
                                 </form>
                             </div>
                             <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
-                                <form action="{{ route('lecturer.courses.duplicate', $course->id) }}" method="POST" onsubmit="return confirm('Duplicate course ini ke Course Baru?')" class="w-full">
+                                <form action="{{ route('lecturer.courses.destroy', $course->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus permanent course ini?')" class="w-full">
                                     @csrf
-                                    <button type="submit" class="btn btn-primary w-full text-center">+ Duplicate ke Course Baru</button>
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline text-rose-600 border-rose-200 hover:bg-rose-50 w-full text-center">Delete Course</button>
                                 </form>
                             </div>
                         </div>

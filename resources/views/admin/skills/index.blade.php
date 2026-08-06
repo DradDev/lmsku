@@ -1,27 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2v6" />
-                    <path d="M12 16v6" />
-                    <path d="M4.93 4.93l4.24 4.24" />
-                    <path d="M14.83 14.83l4.24 4.24" />
-                    <path d="M2 12h6" />
-                    <path d="M16 12h6" />
-                    <path d="M4.93 19.07l4.24-4.24" />
-                    <path d="M14.83 9.17l4.24-4.24" />
-                </svg>
-            </div>
+        <div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2v6" />
+                        <path d="M12 16v6" />
+                        <path d="M4.93 4.93l4.24 4.24" />
+                        <path d="M14.83 14.83l4.24 4.24" />
+                        <path d="M2 12h6" />
+                        <path d="M16 12h6" />
+                        <path d="M4.93 19.07l4.24-4.24" />
+                        <path d="M14.83 9.17l4.24-4.24" />
+                    </svg>
+                </div>
 
-            <div>
-                <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                    Master Skill
-                </h2>
-                <p class="text-sm text-gray-500">
-                    Kelola skill utama dan detail skill untuk rekomendasi pembelajaran.
-                </p>
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        Master Primary Skills
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Manage primary skill competencies for courses and talent matching.
+                    </p>
+                </div>
             </div>
         </div>
     </x-slot>
@@ -85,17 +87,6 @@
                                             <h3 class="font-bold text-lg text-gray-800">
                                                 {{ $mainSkill->name }}
                                             </h3>
-
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                     stroke-linejoin="round">
-                                                    <path d="M4 6h16" />
-                                                    <path d="M4 12h16" />
-                                                    <path d="M4 18h16" />
-                                                </svg>
-                                                {{ $mainSkill->children->count() }} Detail
-                                            </span>
                                         </div>
 
                                         @if ($mainSkill->description)
@@ -145,110 +136,6 @@
                                 </div>
                             </div>
 
-                            <div class="mt-6 border-t border-gray-100 pt-5">
-                                <div class="flex items-center gap-2 mb-3">
-                                    <div class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center">
-                                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-                                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                             stroke-linejoin="round">
-                                            <path d="M9 11l3 3L22 4" />
-                                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                                        </svg>
-                                    </div>
-
-                                    <p class="font-semibold text-gray-800">
-                                        Detail Skill
-                                    </p>
-                                </div>
-
-                                <div class="space-y-3">
-                                    @forelse ($mainSkill->children as $childSkill)
-                                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl transition">
-                                            <div class="flex items-start gap-3">
-                                                <div class="w-9 h-9 rounded-lg bg-white text-gray-600 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                                                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
-                                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                         stroke-linejoin="round">
-                                                        <path d="M20 7h-9" />
-                                                        <path d="M14 17H5" />
-                                                        <circle cx="17" cy="17" r="3" />
-                                                        <circle cx="7" cy="7" r="3" />
-                                                    </svg>
-                                                </div>
-
-                                                <div>
-                                                    <p class="font-semibold text-gray-800">
-                                                        {{ $childSkill->name }}
-                                                    </p>
-
-                                                    @if ($childSkill->description)
-                                                        <p class="text-sm text-gray-500 mt-1 leading-relaxed">
-                                                            {{ $childSkill->description }}
-                                                        </p>
-                                                    @else
-                                                        <p class="text-sm text-gray-400 mt-1 italic">
-                                                            Belum ada deskripsi.
-                                                        </p>
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div class="flex items-center gap-2 md:flex-shrink-0">
-                                                <a href="{{ route('admin.skills.edit', $childSkill) }}"
-                                                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-blue-50 text-blue-700 border border-blue-100 text-sm font-semibold rounded-xl transition">
-                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                                         stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                         stroke-linejoin="round">
-                                                        <path d="M12 20h9" />
-                                                        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
-                                                    </svg>
-                                                    Edit
-                                                </a>
-
-                                                <form action="{{ route('admin.skills.destroy', $childSkill) }}"
-                                                      method="POST"
-                                                      onsubmit="return confirm('Yakin hapus skill ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-
-                                                    <button type="submit"
-                                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-red-50 text-red-700 border border-red-100 text-sm font-semibold rounded-xl transition">
-                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                                             stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                             stroke-linejoin="round">
-                                                            <path d="M3 6h18" />
-                                                            <path d="M8 6V4h8v2" />
-                                                            <path d="M19 6l-1 14H6L5 6" />
-                                                        </svg>
-                                                        Hapus
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    @empty
-                                        <div class="flex items-center gap-3 p-4 bg-gray-50 border border-dashed border-gray-300 rounded-xl">
-                                            <div class="w-10 h-10 rounded-xl bg-white text-gray-400 flex items-center justify-center">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                     stroke-linejoin="round">
-                                                    <circle cx="12" cy="12" r="10" />
-                                                    <path d="M12 8v4" />
-                                                    <path d="M12 16h.01" />
-                                                </svg>
-                                            </div>
-
-                                            <div>
-                                                <p class="font-semibold text-gray-600">
-                                                    Belum ada detail skill.
-                                                </p>
-                                                <p class="text-sm text-gray-400">
-                                                    Detail skill akan muncul di bagian ini.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    @endforelse
-                                </div>
-                            </div>
                         </div>
                     </div>
                 @empty

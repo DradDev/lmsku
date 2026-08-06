@@ -5,7 +5,7 @@
             <div class="mb-8">
                 <a href="{{ route('lecturer.courses.show', $course->id) }}"
                    class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
-                    ← Kembali ke Course
+                    ← Back to Course
                 </a>
 
                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
@@ -29,7 +29,7 @@
 
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div class="xl:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <form action="{{ route('lecturer.courses.materials.store', $course->id) }}"
+                    <form action="{{ route('lecturer.materials.store', $course->id) }}"
                           method="POST"
                           enctype="multipart/form-data"
                           class="space-y-6">

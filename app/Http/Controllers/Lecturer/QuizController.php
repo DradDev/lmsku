@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Quiz;
+use App\Models\QuizRetakeRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -58,6 +59,62 @@ class QuizController extends Controller
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
             ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat! Silakan buat soal-soal untuk quiz ini di bawah ini.");
+    }
+
+    public function update(Request $request, Course $course, Quiz $quiz): RedirectResponse
+    {
+        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
+        abort_unless($quiz->course_id === $course->id, 403, 'Quiz tidak valid.');
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'time_limit' => ['nullable', 'integer', 'min:1'],
+            'max_attempts' => ['required', 'integer', 'min:1', 'max:100'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $quiz->update([
+            'title' => $validated['title'],
+            'time_limit' => $validated['time_limit'] ?? null,
+            'max_attempts' => $validated['max_attempts'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', "Waktu dan pengaturan Quiz '{$quiz->title}' berhasil diperbarui!");
+    }
+
+    public function approveRetake(QuizRetakeRequest $retakeRequest): RedirectResponse
+    {
+        abort_unless($retakeRequest->course->user_id === Auth::id(), 403, 'Akses ditolak.');
+
+        $retakeRequest->update([
+            'status' => 'approved',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' berhasil disetujui!");
+    }
+
+    public function rejectRetake(QuizRetakeRequest $retakeRequest): RedirectResponse
+    {
+        abort_unless($retakeRequest->course->user_id === Auth::id(), 403, 'Akses ditolak.');
+
+        $retakeRequest->update([
+            'status' => 'rejected',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' ditolak.");
     }
 
     public function destroy(Course $course, Quiz $quiz): RedirectResponse

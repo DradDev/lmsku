@@ -7,6 +7,7 @@ use App\Models\LearningActivityLog;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
 use App\Models\ProjectStatusHistory;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,15 +18,34 @@ class ProjectController extends Controller
     public function index(): View
     {
         $projects = Project::where('is_published', true)
+            ->with(['user', 'skills', 'tags'])
             ->withCount('participations')
             ->latest()
+            ->get();
+
+        $authors = User::whereIn('id', $projects->pluck('created_by')->filter()->unique())
+            ->orderBy('name')
             ->get();
 
         $joinedProjectIds = ProjectParticipation::where('user_id', Auth::id())
             ->pluck('project_id')
             ->toArray();
 
-        return view('student.projects.index', compact('projects', 'joinedProjectIds'));
+        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors'));
+    }
+
+    public function portfolio(): View
+    {
+        $student = Auth::user();
+        $student->load([
+            'skillProfiles.skill',
+            'interestProfiles.tag',
+            'joinedProjects' => function ($query) {
+                $query->with(['skills']);
+            }
+        ]);
+
+        return view('lecturer.projects.student_portfolio', compact('student'));
     }
 
     public function show(Project $project): View
@@ -35,6 +55,7 @@ class ProjectController extends Controller
         $project->load([
             'skills',
             'tags',
+            'user',
             'comments' => function ($query) {
                 $query->with('user')->latest();
             },
@@ -81,7 +102,20 @@ class ProjectController extends Controller
         if ($joinedCount >= ($project->max_students ?? 1)) {
             return redirect()
                 ->route('student.projects.show', $project)
-                ->with('error', 'Kuota project sudah penuh.');
+                ->with('error', 'Project quota is full.');
+        }
+
+        // Check Required Skill Competency for Project
+        $requiredSkillIds = $project->skills->pluck('id')->toArray();
+        if (!empty($requiredSkillIds)) {
+            $userSkillIds = Auth::user()->skillProfiles->pluck('skill_id')->toArray();
+            $hasMatchingSkill = !empty(array_intersect($requiredSkillIds, $userSkillIds));
+
+            if (!$hasMatchingSkill) {
+                return redirect()
+                    ->route('student.projects.show', $project)
+                    ->with('error', 'You have not acquired the required skill competency for this project yet. Please complete the related Course & Final Quiz first to build your competency!');
+            }
         }
 
         $participation = ProjectParticipation::create([
@@ -106,7 +140,7 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('student.projects.show', $project)
-            ->with('success', 'Project berhasil diambil.');
+            ->with('success', 'Project successfully joined.');
     }
 
     public function myProjects(): View
@@ -115,6 +149,7 @@ class ProjectController extends Controller
             'project',
             'project.skills',
             'project.tags',
+            'project.user',
         ])
             ->where('user_id', Auth::id())
             ->latest()

@@ -7,10 +7,10 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\QuizAttempt;
+use App\Models\User;
 use App\Services\CourseProgressService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class CourseController extends Controller
 {
@@ -22,6 +22,10 @@ class CourseController extends Controller
             ->active()
             ->withCount('students')
             ->latest()
+            ->get();
+
+        $authors = User::whereIn('id', $courses->pluck('user_id')->unique())
+            ->orderBy('name')
             ->get();
 
         $enrollments = Enrollment::where('user_id', $user->id)
@@ -60,7 +64,7 @@ class CourseController extends Controller
             }
         }
 
-        return view('student.courses.index', compact('courses', 'enrolledCourseIds'));
+        return view('student.courses.index', compact('courses', 'enrolledCourseIds', 'authors'));
     }
 
     public function show(Course $course)
@@ -115,6 +119,14 @@ class CourseController extends Controller
             }
         }
 
+        $retakeRequest = null;
+        if ($finalQuiz) {
+            $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
+                ->where('quiz_id', $finalQuiz->id)
+                ->latest()
+                ->first();
+        }
+
         $isReadOnly = $course->isExpired() || $course->is_archived;
 
         return view('student.courses.show', compact(
@@ -124,7 +136,8 @@ class CourseController extends Controller
             'verifiedFinalAttempt',
             'canDownloadCertificate',
             'certificateStatusText',
-            'isReadOnly'
+            'isReadOnly',
+            'retakeRequest'
         ));
     }
 

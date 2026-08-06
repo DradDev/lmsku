@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
-use App\Models\Submission;
 use App\Models\QuizAttempt;
-use App\Models\Assignment;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 
@@ -22,16 +20,11 @@ class DashboardController extends Controller
                     ->from('enrollments')
                     ->where('user_id', $user->id);
             })
-            ->with(['materials', 'assignments', 'user', 'quizzes.questions'])
+            ->with(['materials', 'user', 'quizzes.questions'])
             ->latest()
             ->get();
 
         $courseIds = $courses->pluck('id');
-
-        $assignments = Assignment::with('course')
-            ->whereIn('course_id', $courseIds)
-            ->latest()
-            ->get();
 
         $availableQuizzes = Quiz::with(['course'])
             ->whereIn('course_id', $courseIds)
@@ -50,33 +43,21 @@ class DashboardController extends Controller
 
         foreach ($courses as $course) {
             $totalMaterials = $course->materials->count();
-            $totalAssignments = $course->assignments->count();
-            $totalItems = $totalMaterials + $totalAssignments;
 
-            $course->progress = $totalItems > 0
-                ? round(($totalMaterials / $totalItems) * 100)
-                : 0;
-
+            $course->progress = $totalMaterials > 0 ? 100 : 0;
             $course->is_completed = $course->progress >= 100;
             $course->can_get_certificate = false;
 
             $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
             if ($finalQuiz) {
-                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
-                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
-
                 $verifiedAttempt = QuizAttempt::where('user_id', $user->id)
                     ->where('quiz_id', $finalQuiz->id)
                     ->where('is_verified', true)
                     ->orderByDesc('score')
                     ->first();
 
-                if ($verifiedAttempt && $verifiedAttempt->score >= 70 && $onlyMultipleChoice) {
+                if ($verifiedAttempt && $verifiedAttempt->score >= 70) {
                     $course->can_get_certificate = true;
                 }
             }
@@ -88,10 +69,6 @@ class DashboardController extends Controller
 
         $totalCourses = $courses->count();
         $inProgress = max($totalCourses - $completed, 0);
-
-        $lastSubmission = Submission::where('user_id', $user->id)
-            ->latest()
-            ->first();
 
         $latestQuiz = QuizAttempt::with(['quiz.course'])
             ->where('user_id', $user->id)
@@ -112,27 +89,15 @@ class DashboardController extends Controller
             ->latest()
             ->first();
 
-        $latestEssayAnswer = QuizAnswer::with(['question.quiz.course', 'attempt'])
-            ->where('user_id', $user->id)
-            ->whereNotNull('score')
-            ->whereHas('question', function ($query) {
-                $query->where('question_type', 'essay');
-            })
-            ->latest('updated_at')
-            ->first();
-
         return view('student.dashboard', compact(
             'courses',
-            'assignments',
             'availableQuizzes',
             'totalCourses',
             'inProgress',
             'completed',
-            'lastSubmission',
             'latestQuiz',
             'latestQuizResults',
-            'pendingQuiz',
-            'latestEssayAnswer'
+            'pendingQuiz'
         ));
     }
 }

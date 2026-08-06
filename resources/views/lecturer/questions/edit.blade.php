@@ -8,9 +8,9 @@
         <div class="max-w-4xl mx-auto px-6">
 
             <div class="mb-6">
-                <a href="{{ route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $question->quiz_id]) }}"
-                    class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700">
-                    ← Kembali ke Daftar Soal
+                <a href="{{ route('lecturer.questions.index') }}"
+                    class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+                    ← Back to Questions
                 </a>
 
                 <h1 class="text-3xl font-bold tracking-tight text-slate-900 mt-2">

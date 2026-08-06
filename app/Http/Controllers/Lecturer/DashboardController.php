@@ -28,7 +28,7 @@ class DashboardController extends Controller
         $questions = Question::query()
             ->where('user_id', Auth::id())
             ->with(['quiz.course'])
-            ->latest()
+            ->orderBy('id', 'asc')
             ->get();
 
         $selectedQuizId = $request->input('quiz_id');
@@ -38,6 +38,7 @@ class DashboardController extends Controller
                 $query->where('user_id', Auth::id());
             })
             ->with(['course'])
+            ->withCount('questions')
             ->when($selectedQuizId, function ($query) use ($selectedQuizId) {
                 $query->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [(int) $selectedQuizId]);
             })
@@ -58,12 +59,20 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'course'])
+            ->whereHas('course', function ($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->latest()
+            ->get();
+
         return view('lecturer.dashboard', compact(
             'tab',
             'materials',
             'questions',
             'quizzes',
-            'mainSkills'
+            'mainSkills',
+            'retakeRequests'
         ));
     }
 }

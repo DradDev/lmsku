@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\Material;
 use App\Models\Skill;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
@@ -34,14 +35,11 @@ class CourseController extends Controller
 
     public function create(): View
     {
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::whereNull('parent_id')
             ->orderBy('name')
             ->get();
 
-        $tags = Tag::orderBy('name')->get();
+        $tags = Tag::with('skill')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
 
         return view('lecturer.courses.create', compact('mainSkills', 'tags', 'categories'));
@@ -58,7 +56,7 @@ class CourseController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'material_file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip,rar', 'max:20480'],
 
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
@@ -66,13 +64,9 @@ class CourseController extends Controller
 
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
+        ], [
+            'material_file.required' => 'Materi pembelajaran (Learning Material) wajib diunggah saat membuat course baru.',
         ]);
-
-        $thumbnailPath = null;
-
-        if ($request->hasFile('thumbnail')) {
-            $thumbnailPath = $request->file('thumbnail')->store('course-thumbnails', 'public');
-        }
 
         $course = Course::create([
             'name' => $validated['name'],
@@ -83,16 +77,24 @@ class CourseController extends Controller
             'end_date' => $validated['end_date'] ?? null,
             'certificate_threshold' => $validated['certificate_threshold'] ?? 60,
             'category_id' => $validated['category_id'] ?? null,
-            'thumbnail' => $thumbnailPath,
             'progress' => 0,
             'user_id' => Auth::id(),
         ]);
+
+        if ($request->hasFile('material_file')) {
+            $filePath = $request->file('material_file')->store('materials', 'public');
+            Material::create([
+                'course_id' => $course->id,
+                'title' => $course->name . ' - Learning Material',
+                'file_path' => $filePath,
+            ]);
+        }
 
         $this->syncCourseSkillsAndTags($course, $request);
 
         return redirect()
             ->route('lecturer.courses.show', $course->id)
-            ->with('success', 'Course berhasil dibuat. Sekarang tambahkan material dan quiz.');
+            ->with('success', 'Course berhasil disimpan dengan materi pembelajaran.');
     }
 
     public function show(Course $course): View
@@ -100,13 +102,12 @@ class CourseController extends Controller
         abort_unless(
             $course->user_id === Auth::id(),
             403,
-            'Kamu tidak memiliki akses ke course ini.'
+            'You do not have access to this course.'
         );
 
         $course->load([
             'materials',
             'quizzes.questions',
-            'assignments',
             'students',
             'user',
             'skills',
@@ -117,36 +118,36 @@ class CourseController extends Controller
 
         $materials = $course->materials;
         $quizzes = $course->quizzes;
-        $assignments = $course->assignments;
         $students = $course->students;
         $enrollments = $course->enrollments;
         $categories = Category::orderBy('name')->get();
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
+            ->where('course_id', $course->id)
+            ->latest()
+            ->get();
 
         return view('lecturer.courses.show', compact(
             'course',
             'materials',
             'quizzes',
-            'assignments',
             'students',
             'enrollments',
-            'categories'
+            'categories',
+            'retakeRequests'
         ));
     }
 
     public function edit(Course $course): View
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
+        abort_unless($course->user_id === Auth::id(), 403, 'You do not have access to this course.');
 
         $course->load(['skills', 'tags', 'category']);
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::whereNull('parent_id')
             ->orderBy('name')
             ->get();
 
-        $tags = Tag::orderBy('name')->get();
+        $tags = Tag::with('skill')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
 
         return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
@@ -165,7 +166,7 @@ class CourseController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
             'category_id' => ['nullable', 'exists:categories,id'],
-            'thumbnail' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'material_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip,rar', 'max:20480'],
 
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
@@ -186,15 +187,16 @@ class CourseController extends Controller
             'category_id' => $validated['category_id'] ?? null,
         ];
 
-        if ($request->hasFile('thumbnail')) {
-            if (!empty($course->thumbnail) && Storage::disk('public')->exists($course->thumbnail)) {
-                Storage::disk('public')->delete($course->thumbnail);
-            }
-
-            $updateData['thumbnail'] = $request->file('thumbnail')->store('course-thumbnails', 'public');
-        }
-
         $course->update($updateData);
+
+        if ($request->hasFile('material_file')) {
+            $filePath = $request->file('material_file')->store('materials', 'public');
+            Material::create([
+                'course_id' => $course->id,
+                'title' => $course->name . ' - Learning Material',
+                'file_path' => $filePath,
+            ]);
+        }
 
         $this->syncCourseSkillsAndTags($course, $request);
 
@@ -249,9 +251,23 @@ class CourseController extends Controller
     public function archive(Course $course): RedirectResponse
     {
         abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
-        $course->update(['is_archived' => !$course->is_archived]);
-        $status = $course->is_archived ? 'diarsipkan ke Course Bank' : 'diaktifkan kembali';
-        return redirect()->back()->with('success', "Course berhasil {$status}.");
+
+        $newIsArchived = !$course->is_archived;
+        $updateData = ['is_archived' => $newIsArchived];
+
+        if (!$newIsArchived) {
+            // Update start_date to today when reactivating from Course Bank
+            $updateData['start_date'] = now();
+            // Reset expired end_date if it was in the past so the course stays active
+            if ($course->end_date && \Carbon\Carbon::parse($course->end_date)->lt(now()->startOfDay())) {
+                $updateData['end_date'] = null;
+            }
+        }
+
+        $course->update($updateData);
+
+        $status = $newIsArchived ? 'diarsipkan ke Course Bank' : 'diaktifkan kembali dengan tanggal mulai hari ini';
+        return redirect()->back()->with('success', "Course \"{$course->name}\" berhasil {$status}. Seluruh data materi, soal, dan mahasiswa tetap tersimpan utuh.");
     }
 
     public function duplicate(Course $course): RedirectResponse

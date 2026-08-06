@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'UNDIP LMS') }}</title>
+        <title>{{ config('app.name', 'COMPRO TEKKOM') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -254,13 +254,13 @@
                             </div>
 
                             <div>
-                                <div class="lms-footer-brand-title">UNDIP LMS</div>
-                                <div class="lms-footer-brand-subtitle">Computer Engineering</div>
+                                <div class="lms-footer-brand-title">COMPRO</div>
+                                <div class="lms-footer-brand-subtitle">TEKKOM</div>
                             </div>
                         </div>
 
                         <p class="lms-footer-text">
-                            A modern learning management platform for courses, materials, quizzes, results, and certificates.
+                            COMPRO System for Student Talent Development and Talent Matching.
                         </p>
                     </div>
 
@@ -285,7 +285,7 @@
                 </div>
 
                 <div class="lms-footer-bottom">
-                    © {{ date('Y') }} UNDIP LMS — Computer Engineering. All rights reserved.
+                    © {{ date('Y') }} COMPRO — TEKKOM. All rights reserved.
                 </div>
             </footer>
         </div>

@@ -15,7 +15,7 @@
                 </h1>
 
                 <p class="text-gray-500 text-sm">
-                    Computer Engineering LMS
+                    COMPRO TEKKOM
                 </p>
 
             </div>
@@ -80,35 +80,35 @@
                         class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
 
                         <option value="student">Student</option>
-                        <option value="lecturer">Lecturer</option>
+                        <option value="lecturer">Author / Vendor</option>
 
                     </select>
 
                 </div>
 
 
-                <!-- PEMINATAN (hanya untuk Student) -->
+                <!-- PEMINATAN (Multi-Choice Choice untuk Student) -->
 
                 <div class="mt-4" x-show="role === 'student'" x-transition>
-                    <label class="block text-sm font-medium text-gray-700">
-                        Peminatan <span class="text-gray-400">(Skill Utama)</span>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Specialization / Interest <span class="text-xs text-indigo-600 font-semibold">(Choose 1 or more)</span>
                     </label>
 
-                    <select name="peminatan"
-                        class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                        x-bind:required="role === 'student'">
-
-                        <option value="">-- Pilih Peminatan --</option>
+                    <div class="space-y-2 max-h-52 overflow-y-auto p-3 border border-gray-300 rounded-lg bg-gray-50/80 shadow-inner">
                         @foreach ($skills as $skill)
-                            <option value="{{ $skill->name }}" {{ old('peminatan') === $skill->name ? 'selected' : '' }}>
-                                {{ $skill->name }}
-                            </option>
+                            <label class="flex items-center space-x-3 p-2.5 bg-white rounded-lg border border-gray-200 hover:border-indigo-400 cursor-pointer transition-all shadow-sm">
+                                <input type="checkbox"
+                                    name="peminatan[]"
+                                    value="{{ $skill->name }}"
+                                    class="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4 border-gray-300"
+                                    {{ (is_array(old('peminatan')) && in_array($skill->name, old('peminatan'))) || old('peminatan') === $skill->name ? 'checked' : '' }}>
+                                <span class="text-sm font-medium text-gray-800">{{ $skill->name }}</span>
+                            </label>
                         @endforeach
+                    </div>
 
-                    </select>
-
-                    <p class="mt-1 text-xs text-gray-400">
-                        Pilih bidang keahlian utama yang ingin Anda fokuskan.
+                    <p class="mt-1.5 text-xs text-gray-500">
+                        Select one or multiple initial interests. Saved as <span class="font-medium text-amber-700">(Competency Pending)</span> until verified.
                     </p>
 
                 </div>
