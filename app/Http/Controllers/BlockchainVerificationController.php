@@ -70,6 +70,12 @@ class BlockchainVerificationController extends Controller
             )
             ->where('quiz_attempts.blockchain_hash', $hash);
 
+        if (Schema::hasTable('course_offerings') && Schema::hasTable('master_courses')) {
+            $query->leftJoin('course_offerings', 'quiz_attempts.course_offering_id', '=', 'course_offerings.id')
+                ->leftJoin('master_courses', 'course_offerings.master_course_id', '=', 'master_courses.id')
+                ->addSelect('master_courses.name as master_course_name');
+        }
+
         // Cek verifikasi jika kolom tersedia
         if (Schema::hasColumn('quiz_attempts', 'is_verified')) {
             $query->where('quiz_attempts.is_verified', true);
