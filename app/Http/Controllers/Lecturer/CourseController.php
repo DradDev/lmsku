@@ -18,19 +18,28 @@ class CourseController extends Controller
 {
     public function index(): View
     {
-        $activeCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags', 'category'])
-            ->where('user_id', Auth::id())
-            ->active()
+        $lecturerId = Auth::id();
+
+        // 3NF CourseOfferings yang ditugaskan ke Dosen
+        $offerings = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'materials', 'quizzes', 'enrollments'])
+            ->where('lecturer_id', $lecturerId)
             ->latest()
             ->get();
 
-        $bankCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags', 'category'])
-            ->where('user_id', Auth::id())
-            ->archived()
+        // Fallback ke legacy Courses jika ada
+        $legacyCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags', 'category'])
+            ->where('user_id', $lecturerId)
             ->latest()
             ->get();
 
-        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses'));
+        // Pisahkan menjadi Active vs Bank (Archived/Expired)
+        $activeOfferings = $offerings->filter(fn($o) => $o->status !== 'expired' && $o->status !== 'cancelled' && !$o->is_archived);
+        $bankOfferings = $offerings->filter(fn($o) => $o->status === 'expired' || $o->status === 'cancelled' || $o->is_archived);
+
+        $activeCourses = $activeOfferings->count() > 0 ? $activeOfferings : $legacyCourses->filter(fn($c) => !$c->is_archived);
+        $bankCourses = $bankOfferings->count() > 0 ? $bankOfferings : $legacyCourses->filter(fn($c) => $c->is_archived);
+
+        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses', 'offerings'));
     }
 
     public function create(): View
@@ -85,6 +94,7 @@ class CourseController extends Controller
             $filePath = $request->file('material_file')->store('materials', 'public');
             Material::create([
                 'course_id' => $course->id,
+                'master_course_id' => $course->master_course_id ?? $course->id,
                 'title' => $course->name . ' - Learning Material',
                 'file_path' => $filePath,
             ]);
@@ -97,15 +107,47 @@ class CourseController extends Controller
             ->with('success', 'Course berhasil disimpan dengan materi pembelajaran.');
     }
 
-    public function show(Course $course): View
+    public function show(string $id): View
     {
-        abort_unless(
-            $course->user_id === Auth::id(),
-            403,
-            'You do not have access to this course.'
-        );
+        $lecturerId = Auth::id();
 
-        $course->load([
+        // 1. Coba cari di CourseOffering (3NF)
+        $offering = \App\Models\CourseOffering::with([
+            'masterCourse.category',
+            'academicTerm',
+            'materials',
+            'quizzes.questions',
+            'enrollments.user',
+            'certificates',
+        ])
+        ->where('lecturer_id', $lecturerId)
+        ->find($id);
+
+        if ($offering) {
+            $course = $offering; // Magic accessors handle backward compatibility!
+            $materials = $offering->materials;
+            $quizzes = $offering->quizzes;
+            $students = $offering->enrollments->map(fn($e) => $e->user)->filter();
+            $enrollments = $offering->enrollments;
+            $categories = Category::orderBy('name')->get();
+            $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
+                ->whereIn('quiz_id', $quizzes->pluck('id'))
+                ->latest()
+                ->get();
+
+            return view('lecturer.courses.show', compact(
+                'course',
+                'materials',
+                'quizzes',
+                'students',
+                'enrollments',
+                'categories',
+                'retakeRequests'
+            ));
+        }
+
+        // 2. Fallback ke legacy Course
+        $course = Course::with([
             'materials',
             'quizzes.questions',
             'students',
@@ -114,7 +156,9 @@ class CourseController extends Controller
             'tags',
             'category',
             'enrollments.user',
-        ]);
+        ])
+        ->where('user_id', $lecturerId)
+        ->findOrFail($id);
 
         $materials = $course->materials;
         $quizzes = $course->quizzes;

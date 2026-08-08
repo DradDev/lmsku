@@ -17,16 +17,28 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $tab = $request->input('tab', 'overview');
+        $lecturerId = Auth::id();
+
+        // Ambil master_course_id dari course_offerings milik Dosen
+        $masterCourseIds = \App\Models\CourseOffering::where('lecturer_id', $lecturerId)
+            ->pluck('master_course_id')
+            ->toArray();
+
+        // Ambil legacy course_id jika ada
+        $legacyCourseIds = \App\Models\Course::where('user_id', $lecturerId)
+            ->pluck('id')
+            ->toArray();
 
         $materials = Material::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->where(function ($query) use ($masterCourseIds, $legacyCourseIds) {
+                $query->whereIn('master_course_id', $masterCourseIds)
+                    ->orWhereIn('course_id', $legacyCourseIds);
             })
             ->latest()
             ->get();
 
         $questions = Question::query()
-            ->where('user_id', Auth::id())
+            ->where('user_id', $lecturerId)
             ->with(['quiz.course'])
             ->orderBy('id', 'asc')
             ->get();
@@ -34,8 +46,9 @@ class DashboardController extends Controller
         $selectedQuizId = $request->input('quiz_id');
 
         $quizzes = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->where(function ($query) use ($masterCourseIds, $legacyCourseIds) {
+                $query->whereIn('master_course_id', $masterCourseIds)
+                    ->orWhereIn('course_id', $legacyCourseIds);
             })
             ->with(['course'])
             ->withCount('questions')

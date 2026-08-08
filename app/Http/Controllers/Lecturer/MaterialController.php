@@ -18,9 +18,12 @@ class MaterialController extends Controller
         return view('lecturer.materials.create', compact('course'));
     }
 
-    public function store(Request $request, Course $course)
+    public function store(Request $request, $course)
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
+        // Handle both Course model and CourseOffering model
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            : $course;
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -30,14 +33,15 @@ class MaterialController extends Controller
         $filePath = $request->file('file')->store('materials', 'public');
 
         Material::create([
-            'course_id' => $course->id,
+            'course_id' => $courseObj->id,
+            'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
             'title' => $validated['title'],
             'file_path' => $filePath,
         ]);
 
         return redirect()
-            ->route('lecturer.courses.show', $course->id)
-            ->with('success', 'Materi berhasil diupload.');
+            ->route('lecturer.courses.show', $courseObj->id)
+            ->with('success', 'Materi berhasil diupload ke Pustaka Induk.');
     }
 
     public function show(Material $material)

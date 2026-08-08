@@ -13,9 +13,11 @@ use Illuminate\Validation\Rule;
 
 class QuizController extends Controller
 {
-    public function store(Request $request, Course $course): RedirectResponse
+    public function store(Request $request, $course): RedirectResponse
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            : $course;
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -26,22 +28,25 @@ class QuizController extends Controller
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
-        // Hanya boleh 1 quiz final per course
+        $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
+
+        // Hanya boleh 1 quiz final per course/master course
         if ($validated['quiz_type'] === 'final') {
-            $existingFinal = Quiz::where('course_id', $course->id)
+            $existingFinal = Quiz::where('master_course_id', $masterCourseId)
                 ->where('quiz_type', 'final')
                 ->exists();
 
             if ($existingFinal) {
                 return redirect()
                     ->back()
-                    ->withErrors(['quiz_type' => 'Course ini sudah memiliki Final Quiz. Hapus atau ubah yang lama terlebih dahulu.'])
+                    ->withErrors(['quiz_type' => 'Mata kuliah ini sudah memiliki Final Quiz. Hapus atau ubah yang lama terlebih dahulu.'])
                     ->withInput();
             }
         }
 
         $quiz = Quiz::create([
-            'course_id' => $course->id,
+            'course_id' => $courseObj->id,
+            'master_course_id' => $masterCourseId,
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
             'quiz_type' => $validated['quiz_type'],

@@ -8,6 +8,7 @@ class Quiz extends Model
 {
     protected $fillable = [
         'course_id',
+        'master_course_id',
         'title',
         'time_limit',
         'quiz_type',
@@ -22,9 +23,14 @@ class Quiz extends Model
         'max_attempts' => 'integer',
     ];
 
+    public function masterCourse()
+    {
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+    }
+
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function questions()
