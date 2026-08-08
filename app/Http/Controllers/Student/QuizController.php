@@ -20,7 +20,14 @@ class QuizController extends Controller
 
         $isEnrolled = DB::table('enrollments')
             ->where('user_id', $user->id)
-            ->where('course_id', $quiz->course_id)
+            ->where(function ($query) use ($quiz) {
+                $query->where('course_id', $quiz->course_id)
+                    ->orWhere('course_id', $quiz->master_course_id)
+                    ->orWhereIn('course_offering_id', function ($sub) use ($quiz) {
+                        $sub->select('id')->from('course_offerings')
+                            ->where('master_course_id', $quiz->master_course_id);
+                    });
+            })
             ->exists();
 
         abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke quiz ini.');
@@ -50,7 +57,7 @@ class QuizController extends Controller
 
         LearningActivityLog::create([
             'user_id' => $user->id,
-            'course_id' => $quiz->course_id,
+            'course_id' => $quiz->master_course_id ?? $quiz->course_id,
             'quiz_id' => $quiz->id,
             'activity_type' => 'start_quiz',
             'activity_value' => 1,
@@ -64,12 +71,19 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
-        $isEnrolled = DB::table('enrollments')
-            ->where('user_id', $user->id)
-            ->where('course_id', $quiz->course_id)
-            ->exists();
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->where(function ($query) use ($quiz) {
+                $query->where('course_id', $quiz->course_id)
+                    ->orWhere('course_id', $quiz->master_course_id)
+                    ->orWhereIn('course_offering_id', function ($sub) use ($quiz) {
+                        $sub->select('id')->from('course_offerings')
+                            ->where('master_course_id', $quiz->master_course_id);
+                    });
+            })
+            ->latest()
+            ->first();
 
-        abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke quiz ini.');
+        abort_unless($enrollment, 403, 'Kamu tidak memiliki akses ke quiz ini.');
 
         // Re-check availability and attempts
         if (! $quiz->isAvailable()) {
@@ -144,14 +158,16 @@ class QuizController extends Controller
             'is_verified' => true,
         ]);
 
-        app(CourseProgressService::class)->recalculate(
-            $user->id,
-            $quiz->course_id
-        );
+        if ($quiz->course_id) {
+            app(CourseProgressService::class)->recalculate(
+                $user->id,
+                $quiz->course_id
+            );
+        }
 
         LearningActivityLog::create([
             'user_id' => $user->id,
-            'course_id' => $quiz->course_id,
+            'course_id' => $quiz->master_course_id ?? $quiz->course_id,
             'quiz_id' => $quiz->id,
             'activity_type' => 'finish_quiz',
             'activity_value' => $finalScore,
@@ -166,13 +182,15 @@ class QuizController extends Controller
         // Handles Certificate creation for Final Quiz if score >= threshold
         $certificate = null;
         if ($quiz->isFinal()) {
-            $threshold = $quiz->course->certificate_threshold ?? 60;
+            $offering = $enrollment->courseOffering;
+            $threshold = $offering?->certificate_threshold ?? ($quiz->course->certificate_threshold ?? 60);
 
             if ($finalScore >= $threshold) {
                 $certificate = \App\Models\Certificate::firstOrCreate(
                     [
                         'user_id' => $user->id,
-                        'course_id' => $quiz->course_id,
+                        'course_offering_id' => $enrollment->course_offering_id,
+                        'course_id' => $quiz->master_course_id ?? $quiz->course_id,
                     ],
                     [
                         'score' => $finalScore,

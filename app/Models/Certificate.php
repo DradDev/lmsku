@@ -9,6 +9,7 @@ class Certificate extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'course_offering_id',
         'project_id',
         'score',
         'blockchain_hash',
@@ -33,9 +34,14 @@ class Certificate extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function courseOffering()
+    {
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
+    }
+
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function project()

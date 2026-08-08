@@ -18,24 +18,29 @@ class CertificateController extends Controller
     {
         $student = Auth::user();
 
-        $courses = Course::whereIn('id', function ($query) use ($student) {
-                $query->select('course_id')
-                    ->from('enrollments')
-                    ->where('user_id', $student->id);
-            })
-            ->with(['user', 'quizzes.questions'])
+        // 3NF Offerings where student is enrolled
+        $enrollments = Enrollment::with(['courseOffering.masterCourse.quizzes.questions', 'courseOffering.lecturer', 'course.quizzes.questions', 'course.user'])
+            ->where('user_id', $student->id)
             ->latest()
             ->get();
 
-        foreach ($courses as $course) {
-            $course->can_get_certificate = false;
-            $course->certificate_status_text = 'Certificate belum tersedia karena final quiz belum ditentukan.';
-            $course->verified_final_attempt = null;
-            $course->final_quiz = $course->quizzes->firstWhere('quiz_type', 'final');
-            $course->credential_code = 'CERT-CRS-' . date('Ym') . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
+        $courses = collect();
 
-            if ($course->final_quiz) {
-                $approvedQuestions = $course->final_quiz->questions->where('status', 'approved');
+        foreach ($enrollments as $enrollment) {
+            $offering = $enrollment->courseOffering;
+            $courseObj = $offering ?? $enrollment->course;
+
+            if (!$courseObj) continue;
+
+            $item = clone $courseObj;
+            $item->can_get_certificate = false;
+            $item->certificate_status_text = 'Certificate belum tersedia karena final quiz belum ditentukan.';
+            $item->verified_final_attempt = null;
+            $item->final_quiz = $courseObj->quizzes->firstWhere('quiz_type', 'final');
+            $item->credential_code = 'CERT-CRS-' . date('Ym') . '-' . sprintf('%04d', $item->id) . '-' . sprintf('%04d', $student->id);
+
+            if ($item->final_quiz) {
+                $approvedQuestions = $item->final_quiz->questions->where('status', 'approved');
 
                 $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
                     $approvedQuestions->every(function ($question) {
@@ -43,35 +48,43 @@ class CertificateController extends Controller
                     });
 
                 $verifiedAttempt = QuizAttempt::where('user_id', $student->id)
-                    ->where('quiz_id', $course->final_quiz->id)
+                    ->where('quiz_id', $item->final_quiz->id)
                     ->where('is_verified', true)
                     ->orderByDesc('score')
                     ->first();
 
                 $certificateRecord = \App\Models\Certificate::where('user_id', $student->id)
-                    ->where('course_id', $course->id)
+                    ->where(function ($q) use ($enrollment, $item) {
+                        if ($enrollment->course_offering_id) {
+                            $q->where('course_offering_id', $enrollment->course_offering_id);
+                        } else {
+                            $q->where('course_id', $item->id);
+                        }
+                    })
                     ->first();
 
-                $course->verified_final_attempt = $verifiedAttempt;
-                $course->certificate_record = $certificateRecord;
+                $item->verified_final_attempt = $verifiedAttempt;
+                $item->certificate_record = $certificateRecord;
 
-                $threshold = $course->certificate_threshold ?? 60;
+                $threshold = $offering?->certificate_threshold ?? ($item->certificate_threshold ?? 60);
 
                 if (! $onlyMultipleChoice) {
-                    $course->certificate_status_text = 'Final quiz untuk certificate harus berisi multiple choice saja.';
+                    $item->certificate_status_text = 'Final quiz untuk certificate harus berisi multiple choice saja.';
                 } elseif ($certificateRecord && $certificateRecord->status === 'verified') {
-                    $course->can_get_certificate = true;
-                    $course->certificate_status_text = 'Certificate sudah diverifikasi Admin dan siap diunduh.';
+                    $item->can_get_certificate = true;
+                    $item->certificate_status_text = 'Certificate sudah diverifikasi Admin dan siap diunduh.';
                 } elseif ($certificateRecord && $certificateRecord->status === 'pending') {
-                    $course->certificate_status_text = 'Sertifikat sedang dalam proses verifikasi oleh Admin.';
+                    $item->certificate_status_text = 'Sertifikat sedang dalam proses verifikasi oleh Admin.';
                 } elseif (! $verifiedAttempt) {
-                    $course->certificate_status_text = 'Kerjakan final quiz dan capai nilai minimal ' . $threshold . '.';
+                    $item->certificate_status_text = 'Kerjakan final quiz dan capai nilai minimal ' . $threshold . '.';
                 } elseif ($verifiedAttempt->score < $threshold) {
-                    $course->certificate_status_text = 'Nilai final quiz minimal ' . $threshold . ' untuk membuka certificate (Nilai Anda: ' . $verifiedAttempt->score . ').';
+                    $item->certificate_status_text = 'Nilai final quiz minimal ' . $threshold . ' untuk membuka certificate (Nilai Anda: ' . $verifiedAttempt->score . ').';
                 } else {
-                    $course->certificate_status_text = 'Sertifikat sedang disiapkan untuk verifikasi Admin.';
+                    $item->certificate_status_text = 'Sertifikat sedang disiapkan untuk verifikasi Admin.';
                 }
             }
+
+            $courses->push($item);
         }
 
         // Fetch Joined Accepted Projects for Project Certificates
@@ -88,8 +101,11 @@ class CertificateController extends Controller
         return view('student.certificates.index', compact('courses', 'projects'));
     }
 
-    public function show(Course $course): View
+    public function show(string $id): View
     {
+        $courseOffering = \App\Models\CourseOffering::find($id);
+        $course = $courseOffering ?? Course::findOrFail($id);
+
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
         $credentialCode = 'CERT-CRS-' . ($attempt->created_at ? $attempt->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
@@ -97,8 +113,11 @@ class CertificateController extends Controller
         return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'));
     }
 
-    public function download(Course $course): Response
+    public function download(string $id): Response
     {
+        $courseOffering = \App\Models\CourseOffering::find($id);
+        $course = $courseOffering ?? Course::findOrFail($id);
+
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
         $credentialCode = 'CERT-CRS-' . ($attempt->created_at ? $attempt->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
