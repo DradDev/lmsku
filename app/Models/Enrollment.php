@@ -11,6 +11,7 @@ class Enrollment extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'course_offering_id',
         'progress_percent',
         'completed_material_count',
         'completed_quiz_count',
@@ -33,8 +34,14 @@ class Enrollment extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function courseOffering()
+    {
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
+    }
+
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }
+

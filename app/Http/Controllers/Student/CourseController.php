@@ -18,33 +18,50 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
-        $courses = Course::with(['materials', 'quizzes.questions', 'user'])
+        // 3NF CourseOfferings yang dipublish di semester aktif
+        $offerings = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
+            ->where('status', 'published')
+            ->whereHas('academicTerm', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->withCount('enrollments')
+            ->latest()
+            ->get();
+
+        // Legacy courses fallback
+        $legacyCourses = Course::with(['materials', 'quizzes.questions', 'user'])
             ->active()
             ->withCount('students')
             ->latest()
             ->get();
 
-        $authors = User::whereIn('id', $courses->pluck('user_id')->unique())
+        $courses = $offerings->count() > 0 ? $offerings : $legacyCourses;
+
+        $authors = User::whereIn('id', $courses->map(fn($c) => $c->lecturer_id ?? $c->user_id)->filter()->unique())
             ->orderBy('name')
             ->get();
 
         $enrollments = Enrollment::where('user_id', $user->id)
-            ->get()
-            ->keyBy('course_id');
+            ->get();
 
-        $enrolledCourseIds = $enrollments->keys()->toArray();
+        $enrolledOfferingIds = $enrollments->pluck('course_offering_id')->filter()->toArray();
+        $enrolledCourseIds = $enrollments->pluck('course_id')->filter()->toArray();
 
         foreach ($courses as $course) {
-            $enrollment = $enrollments->get($course->id);
+            $isOffering = $course instanceof \App\Models\CourseOffering;
+            $enrollment = $isOffering
+                ? $enrollments->firstWhere('course_offering_id', $course->id)
+                : $enrollments->firstWhere('course_id', $course->id);
 
             $course->progress = $enrollment?->progress_percent ?? 0;
             $course->is_completed = $enrollment?->status === 'completed';
             $course->enrollment_status = $enrollment?->status;
+            $course->is_enrolled = (bool) $enrollment;
             $course->can_get_certificate = false;
 
             $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
-            if ($finalQuiz && in_array($course->id, $enrolledCourseIds)) {
+            if ($finalQuiz && $course->is_enrolled) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
                 $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
@@ -58,18 +75,94 @@ class CourseController extends Controller
                     ->orderByDesc('score')
                     ->first();
 
-                if ($verifiedAttempt && $verifiedAttempt->score >= 70 && $onlyMultipleChoice) {
+                if ($verifiedAttempt && $verifiedAttempt->score >= ($course->certificate_threshold ?? 70) && $onlyMultipleChoice) {
                     $course->can_get_certificate = true;
                 }
             }
         }
 
-        return view('student.courses.index', compact('courses', 'enrolledCourseIds', 'authors'));
+        return view('student.courses.index', compact('courses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors'));
     }
 
-    public function show(Course $course)
+    public function show(string $id)
     {
         $user = Auth::user();
+
+        // 1. Coba di CourseOffering (3NF)
+        $offering = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
+            ->find($id);
+
+        if ($offering) {
+            $enrollment = Enrollment::where('user_id', $user->id)
+                ->where('course_offering_id', $offering->id)
+                ->first();
+
+            abort_unless($enrollment, 403, 'Kamu tidak terdaftar di kelas penawaran ini.');
+
+            $course = $offering; // Magic accessors handle backward compatibility!
+
+            $this->logActivity(
+                activityType: 'view_course',
+                courseId: $offering->master_course_id
+            );
+
+            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
+            $verifiedFinalAttempt = null;
+            $canDownloadCertificate = false;
+            $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
+
+            if ($finalQuiz) {
+                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
+
+                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
+                    $approvedQuestions->every(function ($question) {
+                        return $question->question_type === 'multiple_choice';
+                    });
+
+                $verifiedFinalAttempt = QuizAttempt::where('user_id', $user->id)
+                    ->where('quiz_id', $finalQuiz->id)
+                    ->where('is_verified', true)
+                    ->orderByDesc('score')
+                    ->first();
+
+                $threshold = $offering->certificate_threshold ?? 60;
+
+                if (! $onlyMultipleChoice) {
+                    $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
+                } elseif (! $verifiedFinalAttempt) {
+                    $certificateStatusText = 'Kerjakan final quiz dan tunggu verifikasi admin untuk membuka certificate.';
+                } elseif ($verifiedFinalAttempt->score < $threshold) {
+                    $certificateStatusText = "Nilai final quiz minimal {$threshold} untuk membuka certificate.";
+                } else {
+                    $canDownloadCertificate = true;
+                    $certificateStatusText = 'Certificate sudah tersedia untuk diunduh.';
+                }
+            }
+
+            $retakeRequest = null;
+            if ($finalQuiz) {
+                $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
+                    ->where('quiz_id', $finalQuiz->id)
+                    ->latest()
+                    ->first();
+            }
+
+            $isReadOnly = $offering->isExpired() || $offering->status === 'cancelled';
+
+            return view('student.courses.show', compact(
+                'course',
+                'enrollment',
+                'finalQuiz',
+                'verifiedFinalAttempt',
+                'canDownloadCertificate',
+                'certificateStatusText',
+                'isReadOnly',
+                'retakeRequest'
+            ));
+        }
+
+        // 2. Fallback ke legacy Course
+        $course = Course::findOrFail($id);
 
         $enrollment = Enrollment::where('user_id', $user->id)
             ->where('course_id', $course->id)
@@ -141,9 +234,59 @@ class CourseController extends Controller
         ));
     }
 
-    public function enroll(Course $course): RedirectResponse
+    public function enroll(string $id): RedirectResponse
     {
         $user = Auth::user();
+
+        // 1. Coba enroll di CourseOffering (3NF)
+        $offering = \App\Models\CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
+
+        if ($offering) {
+            $alreadyEnrolled = Enrollment::where('user_id', $user->id)
+                ->where('course_offering_id', $offering->id)
+                ->exists();
+
+            if ($alreadyEnrolled) {
+                return redirect()
+                    ->route('student.courses.show', $offering->id)
+                    ->with('success', 'Kamu sudah terdaftar di kelas ini.');
+            }
+
+            // CAPACITY CHECK: Kuota Mahasiswa
+            if (! $offering->hasAvailableCapacity()) {
+                return redirect()->back()->with('error', 'Pendaftaran gagal: Kelas penawaran ini sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
+            }
+
+            if ($offering->isExpired() || $offering->status === 'cancelled') {
+                return redirect()->back()->with('error', 'Kelas ini tidak tersedia untuk pendaftaran baru karena sudah ditutup atau dibatalkan.');
+            }
+
+            Enrollment::create([
+                'user_id' => $user->id,
+                'course_offering_id' => $offering->id,
+                'course_id' => $offering->master_course_id,
+                'progress_percent' => 0,
+                'completed_material_count' => 0,
+                'completed_quiz_count' => 0,
+                'total_material_count' => $offering->materials->count(),
+                'total_quiz_count' => $offering->quizzes->count(),
+                'status' => 'not_started',
+                'started_at' => now(),
+                'last_activity_at' => now(),
+            ]);
+
+            $this->logActivity(
+                activityType: 'enroll_course',
+                courseId: $offering->master_course_id
+            );
+
+            return redirect()
+                ->route('student.courses.show', $offering->id)
+                ->with('success', "Berhasil mendaftar di kelas '{$offering->full_name}'. Selamat belajar!");
+        }
+
+        // 2. Fallback ke legacy Course
+        $course = Course::findOrFail($id);
 
         $alreadyEnrolled = Enrollment::where('user_id', $user->id)
             ->where('course_id', $course->id)
@@ -151,12 +294,12 @@ class CourseController extends Controller
 
         if ($alreadyEnrolled) {
             return redirect()
-                ->route('student.courses.show', $course)
+                ->route('student.courses.show', $course->id)
                 ->with('success', 'Kamu sudah terdaftar di course ini.');
         }
 
         if ($course->isExpired() || $course->is_archived) {
-            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk pendaftaran baru karena sudah ditutup atau diarsipkan.');
+            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk pendaftaran baru.');
         }
 
         Enrollment::create([
@@ -180,7 +323,7 @@ class CourseController extends Controller
         app(CourseProgressService::class)->recalculate($user->id, $course->id);
 
         return redirect()
-            ->route('student.courses.show', $course)
+            ->route('student.courses.show', $course->id)
             ->with('success', 'Course berhasil diambil.');
     }
 
