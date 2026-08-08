@@ -10,10 +10,13 @@ class CourseOffering extends Model
         'master_course_id',
         'academic_term_id',
         'lecturer_id',
+        'section_name',
+        'capacity',
         'start_date',
         'end_date',
         'is_archived',
         'certificate_threshold',
+        'status',
     ];
 
     protected $casts = [
@@ -21,6 +24,7 @@ class CourseOffering extends Model
         'end_date' => 'date',
         'is_archived' => 'boolean',
         'certificate_threshold' => 'integer',
+        'capacity' => 'integer',
     ];
 
     public function masterCourse()
@@ -34,6 +38,11 @@ class CourseOffering extends Model
     }
 
     public function user()
+    {
+        return $this->belongsTo(User::class, 'lecturer_id');
+    }
+
+    public function lecturer()
     {
         return $this->belongsTo(User::class, 'lecturer_id');
     }
@@ -79,6 +88,34 @@ class CourseOffering extends Model
         return $this->masterCourse->category_id ?? null;
     }
 
+    /**
+     * Nama tampilan lengkap: "Pemrograman Web - Kelas A"
+     */
+    public function getFullNameAttribute(): string
+    {
+        $name = $this->masterCourse->name ?? 'Course';
+        return $this->section_name ? "{$name} - {$this->section_name}" : $name;
+    }
+
+    /**
+     * Hitung jumlah mahasiswa yang terdaftar
+     */
+    public function getEnrolledCountAttribute(): int
+    {
+        return $this->enrollments()->count();
+    }
+
+    /**
+     * Cek apakah kuota masih tersedia
+     */
+    public function hasAvailableCapacity(): bool
+    {
+        if (is_null($this->capacity)) {
+            return true; // Unlimited
+        }
+        return $this->enrolled_count < $this->capacity;
+    }
+
     public function isExpired(): bool
     {
         return $this->end_date && $this->end_date->isPast();
@@ -88,4 +125,13 @@ class CourseOffering extends Model
     {
         return ! $this->is_archived && ! $this->isExpired();
     }
+
+    /**
+     * Scope: hanya kelas yang published
+     */
+    public function scopePublished($query)
+    {
+        return $query->where('status', 'published');
+    }
 }
+

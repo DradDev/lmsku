@@ -175,6 +175,36 @@ default => route('student.dashboard'),
                 Tags
             </a>
 
+            <a href="{{ route('admin.master-courses.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.master-courses.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+                Master Courses
+            </a>
+
+            <a href="{{ route('admin.academic-terms.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.academic-terms.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Semester
+            </a>
+
+            <a href="{{ route('admin.course-offerings.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.course-offerings.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18" />
+                    <path d="M9 21V9" />
+                </svg>
+                Penawaran Kelas
+            </a>
+
             @endif
         </div>
 

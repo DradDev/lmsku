@@ -34,6 +34,9 @@ use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\SkillController as AdminSkillController;
 use App\Http\Controllers\Admin\TagController as AdminTagController;
+use App\Http\Controllers\Admin\MasterCourseController as AdminMasterCourseController;
+use App\Http\Controllers\Admin\AcademicTermController as AdminAcademicTermController;
+use App\Http\Controllers\Admin\CourseOfferingController as AdminCourseOfferingController;
 
 Route::get('/', function () {
     if (! Auth::check()) {
@@ -325,6 +328,20 @@ Route::middleware(['auth', 'role:admin'])
             ->name('users.reject');
         Route::resource('skills', AdminSkillController::class)->except(['show']);
         Route::resource('tags', AdminTagController::class)->except(['show']);
+
+        // Master Courses
+        Route::resource('master-courses', AdminMasterCourseController::class)
+            ->except(['show']);
+
+        // Academic Terms
+        Route::resource('academic-terms', AdminAcademicTermController::class)
+            ->except(['show']);
+        Route::post('/academic-terms/{academicTerm}/toggle-active', [AdminAcademicTermController::class, 'toggleActive'])
+            ->name('academic-terms.toggle-active');
+
+        // Course Offerings
+        Route::resource('course-offerings', AdminCourseOfferingController::class)
+            ->except(['show']);
     });
 
 require __DIR__ . '/auth.php';

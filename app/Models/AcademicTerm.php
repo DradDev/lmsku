@@ -8,6 +8,8 @@ class AcademicTerm extends Model
 {
     protected $fillable = [
         'name',
+        'academic_year',
+        'term_type',
         'start_date',
         'end_date',
         'is_active',
@@ -23,4 +25,13 @@ class AcademicTerm extends Model
     {
         return $this->hasMany(CourseOffering::class, 'academic_term_id');
     }
+
+    /**
+     * Scope: hanya semester aktif
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
 }
+
