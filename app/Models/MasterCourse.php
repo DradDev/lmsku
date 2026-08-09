@@ -33,4 +33,17 @@ class MasterCourse extends Model
     {
         return $this->hasMany(CourseOffering::class, 'master_course_id');
     }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class, 'master_course_skills', 'master_course_id', 'skill_id')
+            ->withPivot('is_main')
+            ->withTimestamps();
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'master_course_tags', 'master_course_id', 'tag_id')
+            ->withTimestamps();
+    }
 }

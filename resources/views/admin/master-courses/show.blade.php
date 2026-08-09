@@ -1,7 +1,22 @@
 <x-app-layout>
     <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
-        <!-- TOP BANNER CARD matching TampilanAdmin.jpeg -->
+        <!-- ALERTS -->
+        @if (session('success'))
+            <div style="padding: 1rem 1.25rem; background: #ECFDF5; border: 1px solid #A7F3D0; color: #047857; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div style="padding: 1rem 1.25rem; background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        <!-- TOP BANNER CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display: flex; align-items: flex-start; gap: 1.25rem; flex: 1; min-width: 300px;">
                 <div style="width: 56px; height: 56px; border-radius: 14px; background: #F3E8FF; color: #7E22CE; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; flex-shrink: 0;">
@@ -13,7 +28,7 @@
                         <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->level }}</span>
                     </div>
                     <p style="font-size: 13px; color: #64748B; margin: 6px 0 0 0; line-height: 1.5; max-width: 650px;">
-                        {{ $masterCourse->description ?: 'Pusat kendali administrasi mata kuliah induk, penentuan semester, serta penawaran kelas paralel.' }}
+                        {{ $masterCourse->description ?: 'Pusat kendali administrasi mata kuliah induk, penentuan semester, penawaran kelas paralel, dan kompetensi target.' }}
                     </p>
                 </div>
             </div>
@@ -29,11 +44,6 @@
                     <div style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 2px;">{{ $totalOfferings }}</div>
                 </div>
 
-                <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Level</div>
-                    <div style="font-size: 15px; font-weight: 700; color: #0F172A; margin-top: 5px;">{{ $masterCourse->level }}</div>
-                </div>
-
                 <a href="#edit-master-course" 
                    onclick="document.getElementById('edit-master-course-section').scrollIntoView({behavior: 'smooth'}); return false;"
                    style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; color: #334155; font-size: 13px; font-weight: 600; text-decoration: none;">
@@ -43,14 +53,16 @@
             </div>
         </div>
 
-        <!-- NAVIGATION SUB-TABS matching TampilanAdmin.jpeg -->
+        <!-- NAVIGATION SUB-TABS -->
         <div style="display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; padding: 0 4px;">
             <span style="color: #2563EB; border-bottom: 2px solid #2563EB; padding-bottom: 4px;">Semester ({{ $totalSemesters }})</span>
             <span style="color: #94A3B8;">&rsaquo;</span>
             <span style="color: #64748B;">Penawaran Kelas</span>
+            <span style="color: #94A3B8;">&rsaquo;</span>
+            <span style="color: #64748B;">Skill & Tag Target</span>
         </div>
 
-        <!-- SECTION 1: DAFTAR SEMESTER TABLE CARD matching TampilanAdmin.jpeg -->
+        <!-- SECTION 1: DAFTAR SEMESTER TABLE CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F1F5F9;">
                 <div>
@@ -136,16 +148,9 @@
                     </tbody>
                 </table>
             </div>
-
-            <div style="padding: 0.75rem; text-align: center; background: #FAFAFA; border-top: 1px solid #F1F5F9;">
-                <span style="font-size: 12px; font-weight: 600; color: #64748B; background: #FFF; border: 1px solid #CBD5E1; padding: 5px 14px; border-radius: 100px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
-                    Tampilkan Semester Non-Aktif
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                </span>
-            </div>
         </div>
 
-        <!-- SECTION 2: PENAWARAN KELAS TABLE CARD matching TampilanAdmin.jpeg -->
+        <!-- SECTION 2: PENAWARAN KELAS TABLE CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F1F5F9; flex-wrap: wrap; gap: 1rem;">
                 <div>
@@ -156,7 +161,7 @@
                     <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">
                         Penawaran Kelas - {{ $selectedTerm->name ?? '2026/2027 Ganjil Cert' }}
                     </h2>
-                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Kelas paralel yang ditawarkan pada semester ini.</p>
+                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Buka dan kelola kelas paralel (Plotting Dosen, Kuota Mhs, & Threshold Awal Sertifikat).</p>
                 </div>
                 <a href="{{ route('admin.course-offerings.create', ['master_course_id' => $masterCourse->id, 'academic_term_id' => $selectedTerm->id ?? '']) }}" 
                    style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
@@ -171,8 +176,7 @@
                             <th style="padding: 12px 20px;">Nama Kelas</th>
                             <th style="padding: 12px 20px;">Dosen Pengampu</th>
                             <th style="padding: 12px 20px;">Kuota</th>
-                            <th style="padding: 12px 20px;">Threshold</th>
-                            <th style="padding: 12px 20px;">Periode Kelas</th>
+                            <th style="padding: 12px 20px;">Threshold Sertifikat</th>
                             <th style="padding: 12px 20px;">Status</th>
                             <th style="padding: 12px 20px; text-align: right;">Aksi</th>
                         </tr>
@@ -189,11 +193,11 @@
                                 <td style="padding: 14px 20px; color: #475569;">
                                     {{ $offering->capacity ?? 30 }} Mhs
                                 </td>
-                                <td style="padding: 14px 20px; color: #475569; font-weight: 600;">
-                                    {{ $offering->certificate_threshold ?? 75 }}
-                                </td>
-                                <td style="padding: 14px 20px; color: #64748B; font-size: 12px;">
-                                    {{ $selectedTerm->start_date ? \Carbon\Carbon::parse($selectedTerm->start_date)->format('d/m/Y') : '08/09/2026' }} - {{ $selectedTerm->end_date ? \Carbon\Carbon::parse($selectedTerm->end_date)->format('d/m/Y') : '22/12/2026' }}
+                                <td style="padding: 14px 20px;">
+                                    <span style="background: #EEF2FF; color: #4338CA; font-weight: 700; font-size: 12px; padding: 3px 10px; border-radius: 6px;">
+                                        Min Score: {{ $offering->certificate_threshold ?? 75 }}
+                                    </span>
+                                    <span style="display: block; font-size: 11px; color: #64748B; margin-top: 2px;">(Dapat dikelola oleh Dosen)</span>
                                 </td>
                                 <td style="padding: 14px 20px;">
                                     <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">
@@ -221,7 +225,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" style="padding: 2rem; text-align: center; color: #94A3B8;">Belum ada penawaran kelas untuk semester ini.</td>
+                                <td colspan="6" style="padding: 2rem; text-align: center; color: #94A3B8;">Belum ada penawaran kelas untuk semester ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -229,7 +233,77 @@
             </div>
         </div>
 
-        <!-- SECTION 3: EDIT MASTER COURSE FORM INLINE -->
+        <!-- SECTION 3: ⚡ TARGET SKILL & TAG KOMPETENSI CARD -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">⚡ Skill & Tag Target Kompetensi Matkul</h2>
+                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Tentukan skill & tag yang akan diperoleh mahasiswa saat lulus mata kuliah induk ini.</p>
+                </div>
+            </div>
+
+            <!-- ACTIVE SKILL & TAG PILLS DISPLAY -->
+            <div style="margin-bottom: 1.5rem; background: #FAFAFA; border: 1px solid #F1F5F9; border-radius: 12px; padding: 1rem;">
+                <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Target Skill & Tag Saat Ini:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    @forelse($masterCourse->skills as $s)
+                        <span style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px;">
+                            ⚡ {{ $s->name }}
+                        </span>
+                    @empty
+                    @endforelse
+
+                    @forelse($masterCourse->tags as $t)
+                        <span style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px;">
+                            🏷️ {{ $t->name }}
+                        </span>
+                    @empty
+                    @endforelse
+
+                    @if($masterCourse->skills->isEmpty() && $masterCourse->tags->isEmpty())
+                        <span style="font-size: 12.5px; color: #94A3B8; italic;">Belum ada Skill atau Tag yang dihubungkan ke Master Course ini. Gunakan form di bawah untuk menentukan target kompetensi.</span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- FORM SYNC SKILL & TAG -->
+            <form action="{{ route('admin.master-courses.competencies.sync', $masterCourse) }}" method="POST">
+                @csrf
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1.25rem;">
+                    <!-- SELECT SKILLS -->
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Pilih Skill Target (Bisa Banyak):</label>
+                        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #CBD5E1; border-radius: 10px; padding: 10px; background: #FFF; display: flex; flex-direction: column; gap: 6px;">
+                            @foreach($allSkills as $sk)
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #0F172A; cursor: pointer;">
+                                    <input type="checkbox" name="skill_ids[]" value="{{ $sk->id }}" {{ $masterCourse->skills->contains($sk->id) ? 'checked' : '' }}>
+                                    <span>⚡ {{ $sk->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- SELECT TAGS -->
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 8px;">Pilih Tag Sub-Topik Target:</label>
+                        <div style="max-height: 180px; overflow-y: auto; border: 1px solid #CBD5E1; border-radius: 10px; padding: 10px; background: #FFF; display: flex; flex-direction: column; gap: 6px;">
+                            @foreach($allTags as $tg)
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #0F172A; cursor: pointer;">
+                                    <input type="checkbox" name="tag_ids[]" value="{{ $tg->id }}" {{ $masterCourse->tags->contains($tg->id) ? 'checked' : '' }}>
+                                    <span>🏷️ {{ $tg->name }} <small style="color: #94A3B8;">({{ $tg->skill->name ?? 'Skill' }})</small></span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" style="padding: 9px 22px; background: #2563EB; color: #FFF; font-weight: 700; font-size: 13px; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
+                    Simpan Skill & Tag Kompetensi
+                </button>
+            </form>
+        </div>
+
+        <!-- SECTION 4: EDIT MASTER COURSE FORM INLINE -->
         <div id="edit-master-course-section" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem;">
                 <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Edit Metadata Master Course</h2>
@@ -284,14 +358,14 @@
             </form>
         </div>
 
-        <!-- BOTTOM CALLOUT INFO BOX matching TampilanAdmin.jpeg -->
+        <!-- BOTTOM CALLOUT INFO BOX -->
         <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px;">
             <div style="width: 28px; height: 28px; border-radius: 50%; background: #2563EB; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0;">
                 i
             </div>
             <div>
                 <strong style="color: #1E40AF; font-size: 13.5px;">Struktur: Master Course &rarr; Semester &rarr; Penawaran Kelas</strong>
-                <p style="color: #1E3A8A; font-size: 12.5px; margin: 2px 0 0 0;">Pastikan semester aktif sebelum membuat penawaran kelas.</p>
+                <p style="color: #1E3A8A; font-size: 12.5px; margin: 2px 0 0 0;">Threshold sertifikat awal diset saat buat kelas, dan Dosen Pengampu dapat menyesuaikannya dari Lecturer Portal.</p>
             </div>
         </div>
 

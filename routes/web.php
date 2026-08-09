@@ -330,6 +330,8 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('tags', AdminTagController::class)->except(['index', 'show', 'create', 'edit']);
 
         // Master Courses
+        Route::post('/master-courses/{masterCourse}/competencies', [AdminMasterCourseController::class, 'syncCompetencies'])
+            ->name('master-courses.competencies.sync');
         Route::resource('master-courses', AdminMasterCourseController::class);
 
         // Academic Terms

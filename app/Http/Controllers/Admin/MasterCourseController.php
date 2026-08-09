@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MasterCourse;
 use App\Models\Category;
+use App\Models\Skill;
+use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -63,13 +65,30 @@ class MasterCourseController extends Controller
         $masterCourse->update($validated);
 
         return redirect()
-            ->route('admin.master-courses.index')
+            ->route('admin.master-courses.show', $masterCourse)
             ->with('success', 'Master Course berhasil diperbarui.');
+    }
+
+    public function syncCompetencies(Request $request, MasterCourse $masterCourse): RedirectResponse
+    {
+        $validated = $request->validate([
+            'skill_ids' => ['nullable', 'array'],
+            'skill_ids.*' => ['exists:skills,id'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['exists:tags,id'],
+        ]);
+
+        $masterCourse->skills()->sync($validated['skill_ids'] ?? []);
+        $masterCourse->tags()->sync($validated['tag_ids'] ?? []);
+
+        return redirect()
+            ->route('admin.master-courses.show', $masterCourse)
+            ->with('success', 'Skill & Tag Target Kompetensi berhasil diperbarui.');
     }
 
     public function show(MasterCourse $masterCourse, Request $request): View
     {
-        $masterCourse->load(['category', 'materials', 'quizzes']);
+        $masterCourse->load(['category', 'materials', 'quizzes', 'skills', 'tags']);
 
         // Semesters (Academic Terms)
         $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')
@@ -92,6 +111,11 @@ class MasterCourseController extends Controller
         $materials = $masterCourse->materials;
         $quizzes = $masterCourse->quizzes;
         $categories = Category::orderBy('name')->get();
+
+        // All Skills and Tags for competency assignment
+        $allSkills = Skill::orderBy('name')->get();
+        $allTags = Tag::with('skill')->orderBy('name')->get();
+
         $activeTab = $request->query('tab', 'hierarchy');
 
         return view('admin.master-courses.show', compact(
@@ -105,6 +129,8 @@ class MasterCourseController extends Controller
             'materials',
             'quizzes',
             'categories',
+            'allSkills',
+            'allTags',
             'activeTab'
         ));
     }
