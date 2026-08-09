@@ -1,177 +1,142 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                </svg>
-            </div>
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
 
+        <!-- SUCCESS / ERROR ALERTS -->
+        @if (session('success'))
+            <div style="padding: 1rem 1.25rem; background: #ECFDF5; border: 1px solid #A7F3D0; color: #047857; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div style="padding: 1rem 1.25rem; background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        <!-- HERO HEADER CARD -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div>
-                <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                    Master Course Induk
-                </h2>
-                <p class="text-sm text-gray-500">
-                    Kelola katalog mata kuliah induk secara terpusat.
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <span style="background: #EFF6FF; color: #2563EB; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase;">Pusat Katalis Akademik</span>
+                </div>
+                <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">Katalog Master Course Induk</h1>
+                <p style="font-size: 13px; color: #64748B; margin: 4px 0 0 0;">
+                    Pilih mata kuliah di bawah untuk membuka <strong>Gerbang Administrasi 3NF</strong> (Semester, Penawaran Kelas, & Pengaturan Matkul).
                 </p>
             </div>
+
+            <a href="{{ route('admin.master-courses.create') }}" 
+               style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #2563EB; color: #FFFFFF; font-size: 13.5px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                Tambah Master Course Baru
+            </a>
         </div>
-    </x-slot>
 
-    <div class="py-6">
-        <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+        <!-- MASTER COURSE CATALOG TABLE CARD -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                    <thead>
+                        <tr style="background: #FAFAFA; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <th style="padding: 14px 20px;">Kode Matkul</th>
+                            <th style="padding: 14px 20px;">Nama Mata Kuliah</th>
+                            <th style="padding: 14px 20px;">Level</th>
+                            <th style="padding: 14px 20px;">Kategori</th>
+                            <th style="padding: 14px 20px;">Total Kelas</th>
+                            <th style="padding: 14px 20px; text-align: right;">Aksi Utama</th>
+                        </tr>
+                    </thead>
 
-            @if (session('success'))
-                <div class="mb-5 flex items-start gap-3 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl shadow-sm">
-                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                    <div>
-                        <p class="font-semibold">Berhasil</p>
-                        <p class="text-sm">{{ session('success') }}</p>
-                    </div>
-                </div>
-            @endif
+                    <tbody style="divide-y: 1px solid #F1F5F9;">
+                        @forelse ($masterCourses as $mc)
+                            <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
+                                <td style="padding: 16px 20px;">
+                                    <span style="background: #F1F5F9; color: #334155; font-size: 12px; font-weight: 700; font-family: monospace; padding: 4px 10px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                                        {{ $mc->code ?? 'MC-' . $mc->id }}
+                                    </span>
+                                </td>
 
-            @if (session('error'))
-                <div class="mb-5 flex items-start gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm">
-                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
-                    <div>
-                        <p class="font-semibold">Gagal</p>
-                        <p class="text-sm">{{ session('error') }}</p>
-                    </div>
-                </div>
-            @endif
-
-            <div class="mb-6 bg-white border border-gray-100 shadow-sm rounded-2xl p-5">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-800">Daftar Master Course</h3>
-                        <p class="text-sm text-gray-500 mt-1">
-                            Katalog mata kuliah induk yang dapat ditawarkan di berbagai semester.
-                        </p>
-                    </div>
-
-                    <a href="{{ route('admin.master-courses.create') }}"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 5v14" />
-                            <path d="M5 12h14" />
-                        </svg>
-                        Tambah Master Course
-                    </a>
-                </div>
-            </div>
-
-            <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-100">
-                                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kode</th>
-                                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Nama Mata Kuliah</th>
-                                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Level</th>
-                                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kategori</th>
-                                <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Jumlah Kelas</th>
-                                <th class="px-5 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse ($masterCourses as $mc)
-                                <tr class="hover:bg-gray-50 transition">
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-mono font-semibold rounded-lg">
-                                            {{ $mc->code ?? '-' }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <a href="{{ route('admin.master-courses.show', $mc) }}" class="font-semibold text-gray-800 hover:text-blue-600 transition">
-                                            {{ $mc->name }}
-                                        </a>
-                                        @if($mc->description)
-                                            <p class="text-sm text-gray-400">{{ Str::limit($mc->description, 60) }}</p>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        @php
-                                            $levelColors = [
-                                                'Beginner' => 'bg-green-50 text-green-700',
-                                                'Intermediate' => 'bg-yellow-50 text-yellow-700',
-                                                'Advanced' => 'bg-red-50 text-red-700',
-                                            ];
-                                        @endphp
-                                        <span class="inline-flex items-center px-3 py-1.5 text-sm font-semibold rounded-full {{ $levelColors[$mc->level] ?? 'bg-gray-50 text-gray-700' }}">
-                                            {{ $mc->level }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="text-sm text-gray-600">{{ $mc->category->name ?? '-' }}</span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-semibold rounded-full">
-                                            {{ $mc->offerings_count }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <div class="flex items-center justify-end gap-2">
-                                             <a href="{{ route('admin.master-courses.show', $mc) }}"
-                                                class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition">
-                                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                                                 Buka Gerbang Matkul
-                                             </a>
-
-                                            <a href="{{ route('admin.master-courses.edit', $mc) }}"
-                                               class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-sm font-semibold rounded-xl transition">
-                                                Edit
-                                            </a>
-
-                                            <form action="{{ route('admin.master-courses.destroy', $mc) }}"
-                                                  method="POST"
-                                                  onsubmit="return confirm('Yakin hapus master course ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-semibold rounded-xl transition">
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-5 py-12 text-center">
-                                        <h3 class="text-lg font-bold text-gray-800">Belum ada Master Course</h3>
-                                        <p class="text-sm text-gray-500 mt-2 mb-5">
-                                            Tambahkan katalog mata kuliah induk untuk mulai membuka penawaran kelas.
+                                <td style="padding: 16px 20px;">
+                                    <a href="{{ route('admin.master-courses.show', $mc) }}" style="font-size: 14.5px; font-weight: 800; color: #0F172A; text-decoration: none; display: block;" onmouseover="this.style.color='#2563EB'" onmouseout="this.style.color='#0F172A'">
+                                        {{ $mc->name }}
+                                    </a>
+                                    @if($mc->description)
+                                        <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0; line-height: 1.4;">
+                                            {{ Str::limit($mc->description, 70) }}
                                         </p>
-                                        <a href="{{ route('admin.master-courses.create') }}"
-                                           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
-                                            Tambah Master Course
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                    @endif
+                                </td>
 
+                                <td style="padding: 16px 20px;">
+                                    @php
+                                        $levelBadges = [
+                                            'Beginner' => ['bg' => '#DCFCE7', 'color' => '#15803D'],
+                                            'Intermediate' => ['bg' => '#FEF3C7', 'color' => '#B45309'],
+                                            'Advanced' => ['bg' => '#FFE4E6', 'color' => '#BE123C'],
+                                        ];
+                                        $badge = $levelBadges[$mc->level] ?? ['bg' => '#F1F5F9', 'color' => '#475569'];
+                                    @endphp
+                                    <span style="background: {{ $badge['bg'] }}; color: {{ $badge['color'] }}; font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
+                                        {{ $mc->level }}
+                                    </span>
+                                </td>
+
+                                <td style="padding: 16px 20px;">
+                                    <span style="background: #EEF2FF; color: #4338CA; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 8px;">
+                                        {{ $mc->category->name ?? 'Umum' }}
+                                    </span>
+                                </td>
+
+                                <td style="padding: 16px 20px;">
+                                    <span style="background: #E0F2FE; color: #0369A1; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                                        {{ $mc->offerings_count }} Kelas
+                                    </span>
+                                </td>
+
+                                <td style="padding: 16px 20px; text-align: right;">
+                                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                                        <!-- TOMBOL TUNGGAL UTAMA: BUKA GERBANG MATKUL -->
+                                        <a href="{{ route('admin.master-courses.show', $mc) }}" 
+                                           style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #2563EB; color: #FFFFFF; font-size: 12.5px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                                            Buka Gerbang Matkul
+                                        </a>
+
+                                        <!-- HAPUS HANYA JIKA BELUM ADA KELAS PENAWARAN -->
+                                        <form action="{{ route('admin.master-courses.destroy', $mc) }}" 
+                                              method="POST" 
+                                              onsubmit="return confirm('Yakin hapus Master Course ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" 
+                                                    title="Hapus Master Course"
+                                                    style="all: unset; cursor: pointer; width: 32px; height: 32px; border-radius: 8px; border: 1px solid #FCA5A5; background: #FEF2F2; display: flex; align-items: center; justify-content: center; color: #EF4444;">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" style="padding: 3rem; text-align: center;">
+                                    <h3 style="font-size: 16px; font-weight: 700; color: #0F172A; margin: 0;">Belum Ada Master Course</h3>
+                                    <p style="font-size: 13px; color: #64748B; margin: 4px 0 1.25rem 0;">Tambahkan katalog mata kuliah induk untuk mulai menentukan semester dan penawaran kelas.</p>
+                                    <a href="{{ route('admin.master-courses.create') }}" 
+                                       style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 18px; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 700; border-radius: 10px; text-decoration: none;">
+                                        Tambah Master Course
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 </x-app-layout>
