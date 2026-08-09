@@ -69,9 +69,9 @@ class MasterCourseController extends Controller
 
     public function show(MasterCourse $masterCourse, Request $request): View
     {
-        $masterCourse->load('category');
+        $masterCourse->load(['category', 'materials', 'quizzes']);
 
-        // Semesters (Academic Terms) linked to offerings or all terms
+        // Semesters (Academic Terms)
         $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')
             ->orderByDesc('id')
             ->get();
@@ -89,6 +89,10 @@ class MasterCourseController extends Controller
 
         $totalSemesters = $academicTerms->count();
         $totalOfferings = $courseOfferings->count();
+        $materials = $masterCourse->materials;
+        $quizzes = $masterCourse->quizzes;
+        $categories = Category::orderBy('name')->get();
+        $activeTab = $request->query('tab', 'hierarchy');
 
         return view('admin.master-courses.show', compact(
             'masterCourse',
@@ -97,7 +101,11 @@ class MasterCourseController extends Controller
             'selectedTerm',
             'selectedOfferings',
             'totalSemesters',
-            'totalOfferings'
+            'totalOfferings',
+            'materials',
+            'quizzes',
+            'categories',
+            'activeTab'
         ));
     }
 
