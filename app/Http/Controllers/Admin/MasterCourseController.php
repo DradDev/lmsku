@@ -67,6 +67,40 @@ class MasterCourseController extends Controller
             ->with('success', 'Master Course berhasil diperbarui.');
     }
 
+    public function show(MasterCourse $masterCourse, Request $request): View
+    {
+        $masterCourse->load('category');
+
+        // Semesters (Academic Terms) linked to offerings or all terms
+        $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')
+            ->orderByDesc('id')
+            ->get();
+
+        // Course Offerings for this Master Course
+        $courseOfferings = \App\Models\CourseOffering::with(['lecturer', 'academicTerm'])
+            ->where('master_course_id', $masterCourse->id)
+            ->get();
+
+        // Selected term for filtered offering section
+        $selectedTermId = $request->query('term_id', $academicTerms->firstWhere('is_active', true)?->id ?? $academicTerms->first()?->id);
+        $selectedTerm = $academicTerms->firstWhere('id', $selectedTermId);
+
+        $selectedOfferings = $courseOfferings->where('academic_term_id', $selectedTermId);
+
+        $totalSemesters = $academicTerms->count();
+        $totalOfferings = $courseOfferings->count();
+
+        return view('admin.master-courses.show', compact(
+            'masterCourse',
+            'academicTerms',
+            'courseOfferings',
+            'selectedTerm',
+            'selectedOfferings',
+            'totalSemesters',
+            'totalOfferings'
+        ));
+    }
+
     public function destroy(MasterCourse $masterCourse): RedirectResponse
     {
         if ($masterCourse->offerings()->count() > 0) {

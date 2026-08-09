@@ -330,8 +330,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('tags', AdminTagController::class)->except(['show']);
 
         // Master Courses
-        Route::resource('master-courses', AdminMasterCourseController::class)
-            ->except(['show']);
+        Route::resource('master-courses', AdminMasterCourseController::class);
 
         // Academic Terms
         Route::resource('academic-terms', AdminAcademicTermController::class)

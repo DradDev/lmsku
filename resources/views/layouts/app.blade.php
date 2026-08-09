@@ -227,67 +227,68 @@
         </style>
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-            @include('layouts.navigation')
+        @if(auth()->check() && auth()->user()->role === 'admin')
+            @include('layouts.admin-layout')
+        @else
+            <div class="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
+                @include('layouts.navigation')
 
-            @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endisset
+                @isset($header)
+                    <header class="bg-white dark:bg-gray-800 shadow">
+                        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
+                @endisset
 
-            <main class="flex-1">
-                {{ $slot }}
-            </main>
+                <main class="flex-1">
+                    {{ $slot }}
+                </main>
 
-            <footer class="lms-footer">
-                <div class="lms-footer-inner">
-                    <div>
-                        <div class="lms-footer-brand-wrap">
-                            <div class="lms-footer-brand-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-                                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-                                </svg>
+                <footer class="lms-footer">
+                    <div class="lms-footer-inner">
+                        <div>
+                            <div class="lms-footer-brand-wrap">
+                                <div class="lms-footer-brand-icon">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                                        <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                                    </svg>
+                                </div>
+
+                                <div>
+                                    <div class="lms-footer-brand-title">COMPRO</div>
+                                    <div class="lms-footer-brand-subtitle">TEKKOM</div>
+                                </div>
                             </div>
 
-                            <div>
-                                <div class="lms-footer-brand-title">COMPRO</div>
-                                <div class="lms-footer-brand-subtitle">TEKKOM</div>
-                            </div>
+                            <p class="lms-footer-text">
+                                COMPRO System for Student Talent Development and Talent Matching.
+                            </p>
                         </div>
 
-                        <p class="lms-footer-text">
-                            COMPRO System for Student Talent Development and Talent Matching.
-                        </p>
+                        <div class="lms-footer-links">
+                            @auth
+                                @if(auth()->user()->role === 'student')
+                                    <a href="{{ route('student.dashboard') }}" class="lms-footer-link">Dashboard</a>
+                                    <a href="{{ route('student.courses.index') }}" class="lms-footer-link">My Courses</a>
+                                    <a href="{{ route('student.materials.index') }}" class="lms-footer-link">Materials</a>
+                                    <a href="{{ route('student.results.index') }}" class="lms-footer-link">Results</a>
+                                    <a href="{{ route('student.certificate.index') }}" class="lms-footer-link">Certificates</a>
+                                @elseif(auth()->user()->role === 'lecturer')
+                                    <a href="{{ route('lecturer.dashboard') }}" class="lms-footer-link">Dashboard</a>
+                                    <a href="{{ route('lecturer.courses.index') }}" class="lms-footer-link">Courses</a>
+                                    <a href="{{ route('lecturer.projects.index') }}" class="lms-footer-link">Projects</a>
+                                @endif
+                            @endauth
+                        </div>
                     </div>
 
-                    <div class="lms-footer-links">
-                        @auth
-                            @if(auth()->user()->role === 'student')
-                                <a href="{{ route('student.dashboard') }}" class="lms-footer-link">Dashboard</a>
-                                <a href="{{ route('student.courses.index') }}" class="lms-footer-link">My Courses</a>
-                                <a href="{{ route('student.materials.index') }}" class="lms-footer-link">Materials</a>
-                                <a href="{{ route('student.results.index') }}" class="lms-footer-link">Results</a>
-                                <a href="{{ route('student.certificate.index') }}" class="lms-footer-link">Certificates</a>
-                            @elseif(auth()->user()->role === 'lecturer')
-                                <a href="{{ route('lecturer.dashboard') }}" class="lms-footer-link">Dashboard</a>
-                                <a href="{{ route('lecturer.courses.index') }}" class="lms-footer-link">Courses</a>
-                                <a href="{{ route('lecturer.projects.index') }}" class="lms-footer-link">Projects</a>
-                            @elseif(auth()->user()->role === 'admin')
-                                <a href="{{ route('admin.dashboard') }}" class="lms-footer-link">Dashboard</a>
-                                <a href="{{ route('admin.results.index') }}" class="lms-footer-link">Results</a>
-                            @endif
-                        @endauth
+                    <div class="lms-footer-bottom">
+                        © {{ date('Y') }} COMPRO — TEKKOM. All rights reserved.
                     </div>
-                </div>
-
-                <div class="lms-footer-bottom">
-                    © {{ date('Y') }} COMPRO — TEKKOM. All rights reserved.
-                </div>
-            </footer>
-        </div>
+                </footer>
+            </div>
+        @endif
     </body>
 </html>
