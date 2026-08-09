@@ -180,12 +180,6 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::get('/courses', [LecturerCourseController::class, 'index'])
             ->name('courses.index');
 
-        Route::get('/courses/create', [LecturerCourseController::class, 'create'])
-            ->name('courses.create');
-
-        Route::post('/courses', [LecturerCourseController::class, 'store'])
-            ->name('courses.store');
-
         Route::get('/courses/{course}', [LecturerCourseController::class, 'show'])
             ->name('courses.show');
 

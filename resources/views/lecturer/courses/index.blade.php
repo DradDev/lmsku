@@ -309,10 +309,64 @@
             <button class="tab-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
                 Arsip / Bank Kelas ({{ $bankCourses->count() }})
             </button>
-        </div>
-
-        <div x-show="tab === 'active'">
+        </div>        <div x-show="tab === 'active'">
             <div class="courses-grid">
+                @if(isset($groupedOfferings) && $groupedOfferings->isNotEmpty())
+                    @foreach($groupedOfferings as $masterCourseId => $offeringsGroup)
+                        @php
+                            $firstOffering = $offeringsGroup->first();
+                            $totalGroupStudents = $offeringsGroup->sum(fn($o) => $o->enrollments ? $o->enrollments->count() : 0);
+                        @endphp
+                        <div class="course-card">
+                            <div class="course-top">
+                                <span class="course-tag">{{ $firstOffering->academicTerm->name ?? 'Semester Aktif' }}</span>
+                                <span class="course-badge text-indigo-700 bg-indigo-50 border-indigo-200 font-bold">
+                                    {{ $offeringsGroup->count() }} Rombel Kelas
+                                </span>
+                            </div>
+
+                            <div class="course-name">{{ $firstOffering->name }}</div>
+
+                            <!-- List Pill Kelas Pararel (Kelas A, B, C) yang Diampu Dosen -->
+                            <div class="my-2 flex flex-wrap gap-1.5" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;">
+                                @foreach($offeringsGroup as $offeringItem)
+                                    <a href="{{ route('lecturer.courses.show', $offeringItem->id) }}" 
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition"
+                                       style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; text-decoration: none;">
+                                        <span>📌 {{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
+                                        <span style="font-size: 10px; background: #c7d2fe; color: #312e81; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
+                                            {{ $offeringItem->enrollments ? $offeringItem->enrollments->count() : 0 }} Mhs
+                                        </span>
+                                    </a>
+                                @endforeach
+                            </div>
+
+                            <p class="course-desc">{{ $firstOffering->description ?: 'Pengelolaan materi pembelajaran, bank kuis, dan kelulusan sertifikat.' }}</p>
+
+                            <div class="stats-row">
+                                <div class="stat-mini">
+                                    <div class="stat-mini-label">Materials</div>
+                                    <div class="stat-mini-value">{{ $firstOffering->materials ? $firstOffering->materials->count() : 0 }}</div>
+                                </div>
+                                <div class="stat-mini">
+                                    <div class="stat-mini-label">Quizzes</div>
+                                    <div class="stat-mini-value">{{ $firstOffering->quizzes ? $firstOffering->quizzes->count() : 0 }}</div>
+                                </div>
+                                <div class="stat-mini">
+                                    <div class="stat-mini-label">Total Mhs</div>
+                                    <div class="stat-mini-value">{{ $totalGroupStudents }}</div>
+                                </div>
+                            </div>
+
+                            <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
+                            <div style="margin-top: auto;">
+                                <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" class="btn btn-primary w-full text-center">
+                                    🚀 Buka Gerbang Kelas
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
                 @forelse($activeCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
@@ -357,8 +411,9 @@
                         <p style="font-size: 13px; color: #64748b;">Mata kuliah dan penawaran kelas akan disiapkan dan ditugaskan oleh Admin.</p>
                     </div>
                 @endforelse
+                @endif
             </div>
-        </div>
+        </div> </div>
 
         <div x-show="tab === 'bank'" style="display: none;">
             <div class="courses-grid">

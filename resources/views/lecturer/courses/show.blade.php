@@ -57,6 +57,32 @@
             @endif
 
             <div class="mb-8">
+                @if(isset($siblingOfferings) && $siblingOfferings->count() > 1)
+                    <div class="mb-6 p-4 bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-md text-white flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center font-bold text-indigo-300 text-lg">
+                                🎓
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-100">Beralih Kelola Kelas Pararel</h3>
+                                <p class="text-xs text-slate-400">Anda mengampu {{ $siblingOfferings->count() }} kelas untuk mata kuliah ini. Pilih kelas untuk melihat data & nilainya:</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center flex-wrap gap-2">
+                            @foreach($siblingOfferings as $sOffering)
+                                <a href="{{ route('lecturer.courses.show', $sOffering->id) }}"
+                                   class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 border text-decoration-none {{ $sOffering->id == $course->id ? 'bg-indigo-600 text-white border-indigo-500 shadow-md' : 'bg-white/10 text-slate-300 border-white/10 hover:bg-white/20' }}">
+                                    <span>📌 {{ $sOffering->section_name ?: 'Kelas ' . $loop->iteration }}</span>
+                                    <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold {{ $sOffering->id == $course->id ? 'bg-white/20 text-white' : 'bg-black/20 text-slate-300' }}">
+                                        {{ $sOffering->enrollments ? $sOffering->enrollments->count() : 0 }} Mhs
+                                    </span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="flex items-center justify-between mb-4">
                     <a href="{{ route('lecturer.courses.index') }}"
                         class="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-700">

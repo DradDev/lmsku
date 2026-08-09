@@ -37,75 +37,12 @@ class CourseController extends Controller
         $activeOfferings = $offerings->filter(fn($o) => $o->status !== 'expired' && $o->status !== 'cancelled' && !$o->is_archived);
         $bankOfferings = $offerings->filter(fn($o) => $o->status === 'expired' || $o->status === 'cancelled' || $o->is_archived);
 
+        $groupedOfferings = $activeOfferings->groupBy('master_course_id');
+
         $activeCourses = $activeOfferings->count() > 0 ? $activeOfferings : $legacyCourses->filter(fn($c) => !$c->is_archived);
         $bankCourses = $bankOfferings->count() > 0 ? $bankOfferings : $legacyCourses->filter(fn($c) => $c->is_archived);
 
-        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses', 'offerings'));
-    }
-
-    public function create(): View
-    {
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
-        $tags = Tag::with('skill')->orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
-
-        return view('lecturer.courses.create', compact('mainSkills', 'tags', 'categories'));
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
-            'duration_weeks' => ['required', 'integer', 'min:1'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'category_id' => ['nullable', 'exists:categories,id'],
-            'material_file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip,rar', 'max:20480'],
-
-            'skill_ids' => ['nullable', 'array'],
-            'skill_ids.*' => ['exists:skills,id'],
-            'main_skill_id' => ['nullable', 'exists:skills,id'],
-
-            'tag_ids' => ['nullable', 'array'],
-            'tag_ids.*' => ['exists:tags,id'],
-        ], [
-            'material_file.required' => 'Materi pembelajaran (Learning Material) wajib diunggah saat membuat course baru.',
-        ]);
-
-        $course = Course::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
-            'user_id' => Auth::id(),
-            'level' => $validated['level'],
-            'progress' => 0,
-            'duration_weeks' => $validated['duration_weeks'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'is_archived' => false,
-            'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
-            'category_id' => $validated['category_id'] ?? null,
-        ]);
-
-        if ($request->hasFile('material_file')) {
-            $filePath = $request->file('material_file')->store('materials', 'public');
-            Material::create([
-                'course_id' => $course->id,
-                'title' => $course->name . ' - Learning Material',
-                'file_path' => $filePath,
-            ]);
-        }
-
-        $this->syncCourseSkillsAndTags($course, $request);
-
-        return redirect()
-            ->route('lecturer.courses.show', $course->id)
-            ->with('success', 'Course baru berhasil dibuat.');
+        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses', 'offerings', 'groupedOfferings'));
     }
 
     public function show($id): View
@@ -125,6 +62,11 @@ class CourseController extends Controller
         ->find($id);
 
         if ($offering) {
+            $siblingOfferings = CourseOffering::with(['academicTerm', 'enrollments'])
+                ->where('lecturer_id', $lecturerId)
+                ->where('master_course_id', $offering->master_course_id)
+                ->get();
+
             $course = $offering;
             $materials = $offering->masterCourse->materials ?? collect();
             $quizzes = $offering->quizzes->count() > 0 ? $offering->quizzes : ($offering->masterCourse->quizzes ?? collect());
@@ -143,7 +85,8 @@ class CourseController extends Controller
                 'students',
                 'enrollments',
                 'categories',
-                'retakeRequests'
+                'retakeRequests',
+                'siblingOfferings'
             ));
         }
 
