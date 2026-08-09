@@ -31,13 +31,22 @@ class CourseOfferingController extends Controller
         return view('admin.course-offerings.index', compact('offerings', 'terms'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $masterCourses = MasterCourse::orderBy('name')->get();
         $terms = AcademicTerm::orderBy('created_at', 'desc')->get();
         $lecturers = User::where('role', 'lecturer')->orderBy('name')->get();
 
-        return view('admin.course-offerings.create', compact('masterCourses', 'terms', 'lecturers'));
+        $selectedMasterCourseId = $request->query('master_course_id');
+        $selectedAcademicTermId = $request->query('academic_term_id');
+
+        return view('admin.course-offerings.create', compact(
+            'masterCourses', 
+            'terms', 
+            'lecturers', 
+            'selectedMasterCourseId', 
+            'selectedAcademicTermId'
+        ));
     }
 
     public function store(Request $request): RedirectResponse

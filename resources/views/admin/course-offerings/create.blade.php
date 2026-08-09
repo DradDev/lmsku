@@ -16,7 +16,7 @@
                         <select name="master_course_id" class="border rounded w-full p-2" required>
                             <option value="">-- Pilih Mata Kuliah --</option>
                             @foreach($masterCourses as $mc)
-                                <option value="{{ $mc->id }}" {{ old('master_course_id') == $mc->id ? 'selected' : '' }}>
+                                <option value="{{ $mc->id }}" {{ old('master_course_id', $selectedMasterCourseId ?? '') == $mc->id ? 'selected' : '' }}>
                                     {{ $mc->name }} ({{ $mc->code }})
                                 </option>
                             @endforeach
@@ -32,7 +32,7 @@
                         <select name="academic_term_id" class="border rounded w-full p-2" required>
                             <option value="">-- Pilih Semester --</option>
                             @foreach($terms as $t)
-                                <option value="{{ $t->id }}" {{ old('academic_term_id') == $t->id ? 'selected' : '' }}>
+                                <option value="{{ $t->id }}" {{ old('academic_term_id', $selectedAcademicTermId ?? '') == $t->id ? 'selected' : '' }}>
                                     {{ $t->name }} {{ $t->is_active ? '(Aktif)' : '' }}
                                 </option>
                             @endforeach
