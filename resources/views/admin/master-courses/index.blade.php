@@ -96,7 +96,9 @@
                                     </td>
 
                                     <td class="px-5 py-4">
-                                        <p class="font-semibold text-gray-800">{{ $mc->name }}</p>
+                                        <a href="{{ route('admin.master-courses.show', $mc) }}" class="font-semibold text-gray-800 hover:text-blue-600 transition">
+                                            {{ $mc->name }}
+                                        </a>
                                         @if($mc->description)
                                             <p class="text-sm text-gray-400">{{ Str::limit($mc->description, 60) }}</p>
                                         @endif
