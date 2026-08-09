@@ -56,7 +56,7 @@
                 </div>
             @endif
 
-            @if($errors->any())
+            @if(isset($errors) && $errors->any())
                 <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm text-sm">
                     <div class="flex items-center gap-2 font-bold mb-1 text-rose-900">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

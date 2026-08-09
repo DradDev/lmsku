@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\Material;
 use App\Models\Skill;
 use App\Models\Tag;
@@ -21,7 +22,7 @@ class CourseController extends Controller
         $lecturerId = Auth::id();
 
         // 3NF CourseOfferings yang ditugaskan ke Dosen
-        $offerings = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'materials', 'quizzes', 'enrollments'])
+        $offerings = CourseOffering::with(['masterCourse', 'academicTerm', 'materials', 'quizzes', 'enrollments'])
             ->where('lecturer_id', $lecturerId)
             ->latest()
             ->get();
@@ -80,21 +81,21 @@ class CourseController extends Controller
         $course = Course::create([
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
+            'user_id' => Auth::id(),
             'level' => $validated['level'],
+            'progress' => 0,
             'duration_weeks' => $validated['duration_weeks'],
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
-            'certificate_threshold' => $validated['certificate_threshold'] ?? 60,
+            'is_archived' => false,
+            'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
             'category_id' => $validated['category_id'] ?? null,
-            'progress' => 0,
-            'user_id' => Auth::id(),
         ]);
 
         if ($request->hasFile('material_file')) {
             $filePath = $request->file('material_file')->store('materials', 'public');
             Material::create([
                 'course_id' => $course->id,
-                'master_course_id' => $course->master_course_id ?? $course->id,
                 'title' => $course->name . ' - Learning Material',
                 'file_path' => $filePath,
             ]);
@@ -104,29 +105,29 @@ class CourseController extends Controller
 
         return redirect()
             ->route('lecturer.courses.show', $course->id)
-            ->with('success', 'Course berhasil disimpan dengan materi pembelajaran.');
+            ->with('success', 'Course baru berhasil dibuat.');
     }
 
-    public function show(string $id): View
+    public function show($id): View
     {
         $lecturerId = Auth::id();
 
         // 1. Coba cari di CourseOffering (3NF)
-        $offering = \App\Models\CourseOffering::with([
+        $offering = CourseOffering::with([
+            'masterCourse.materials',
+            'masterCourse.quizzes.questions',
             'masterCourse.category',
             'academicTerm',
-            'materials',
-            'quizzes.questions',
             'enrollments.user',
-            'certificates',
+            'quizzes',
         ])
         ->where('lecturer_id', $lecturerId)
         ->find($id);
 
         if ($offering) {
-            $course = $offering; // Magic accessors handle backward compatibility!
-            $materials = $offering->materials;
-            $quizzes = $offering->quizzes;
+            $course = $offering;
+            $materials = $offering->masterCourse->materials ?? collect();
+            $quizzes = $offering->quizzes->count() > 0 ? $offering->quizzes : ($offering->masterCourse->quizzes ?? collect());
             $students = $offering->enrollments->map(fn($e) => $e->user)->filter();
             $enrollments = $offering->enrollments;
             $categories = Category::orderBy('name')->get();
@@ -181,25 +182,58 @@ class CourseController extends Controller
         ));
     }
 
-    public function edit(Course $course): View
+    public function edit($id): View
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'You do not have access to this course.');
+        $lecturerId = Auth::id();
 
+        // Check if CourseOffering 3NF
+        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        if ($offering) {
+            $course = $offering;
+            $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
+            $tags = Tag::with('skill')->orderBy('name')->get();
+            $categories = Category::orderBy('name')->get();
+
+            return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
+        }
+
+        // Fallback to legacy Course
+        $course = Course::where('user_id', $lecturerId)->findOrFail($id);
         $course->load(['skills', 'tags', 'category']);
 
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
+        $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
         $categories = Category::orderBy('name')->get();
 
         return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
     }
 
-    public function update(Request $request, Course $course): RedirectResponse
+    public function update(Request $request, $id): RedirectResponse
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
+        $lecturerId = Auth::id();
+
+        // 1. Coba update CourseOffering 3NF
+        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        if ($offering) {
+            $validated = $request->validate([
+                'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
+                'capacity' => ['nullable', 'integer', 'min:1'],
+                'section_name' => ['nullable', 'string', 'max:100'],
+            ]);
+
+            $offering->update([
+                'certificate_threshold' => $validated['certificate_threshold'] ?? $offering->certificate_threshold,
+                'capacity' => $validated['capacity'] ?? $offering->capacity,
+                'section_name' => $validated['section_name'] ?? $offering->section_name,
+            ]);
+
+            return redirect()
+                ->route('lecturer.courses.show', $offering->id)
+                ->with('success', 'Threshold Sertifikat & Pengaturan Kelas berhasil diperbarui.');
+        }
+
+        // 2. Fallback update legacy Course
+        $course = Course::where('user_id', $lecturerId)->findOrFail($id);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -227,7 +261,7 @@ class CourseController extends Controller
             'duration_weeks' => $validated['duration_weeks'],
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
-            'certificate_threshold' => $validated['certificate_threshold'] ?? 60,
+            'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
             'category_id' => $validated['category_id'] ?? null,
         ];
 
@@ -249,122 +283,101 @@ class CourseController extends Controller
             ->with('success', 'Informasi course berhasil diperbarui.');
     }
 
-    public function destroy(Course $course): RedirectResponse
+    public function archive($id): RedirectResponse
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
+        $lecturerId = Auth::id();
 
-        $course->delete();
+        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        if ($offering) {
+            $offering->update(['is_archived' => !$offering->is_archived]);
+            $statusMsg = $offering->is_archived ? 'diarsip' : 'diaktifkan kembali';
+            return back()->with('success', "Status penawaran kelas berhasil {$statusMsg}.");
+        }
 
-        return redirect()
-            ->route('lecturer.courses.index')
-            ->with('success', 'Course berhasil dihapus.');
+        $course = Course::where('user_id', $lecturerId)->findOrFail($id);
+        $course->update(['is_archived' => !$course->is_archived]);
+        $statusMsg = $course->is_archived ? 'diarsip' : 'diaktifkan kembali';
+
+        return back()->with('success', "Status course berhasil {$statusMsg}.");
     }
 
-    private function syncCourseSkillsAndTags(Course $course, Request $request): void
+    public function duplicate($id): RedirectResponse
     {
-        $skillIds = array_map('intval', $request->input('skill_ids', []));
-        $mainSkillId = $request->input('main_skill_id');
+        $lecturerId = Auth::id();
 
-        if ($mainSkillId && ! in_array((int) $mainSkillId, $skillIds, true)) {
-            $skillIds[] = (int) $mainSkillId;
+        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        if ($offering) {
+            $newOffering = $offering->replicate();
+            $newOffering->section_name = $offering->section_name . ' (Copy)';
+            $newOffering->created_at = now();
+            $newOffering->updated_at = now();
+            $newOffering->save();
+
+            return redirect()
+                ->route('lecturer.courses.index')
+                ->with('success', 'Penawaran kelas berhasil diduplikasi.');
         }
 
-        $skillSyncData = [];
+        $original = Course::with(['materials', 'quizzes.questions', 'skills', 'tags'])
+            ->where('user_id', $lecturerId)
+            ->findOrFail($id);
 
-        foreach ($skillIds as $skillId) {
-            $skillSyncData[$skillId] = [
-                'weight' => 1.00,
-                'is_main' => (int) $skillId === (int) $mainSkillId,
-            ];
-        }
-
-        $course->skills()->sync($skillSyncData);
-
-        $tagIds = array_map('intval', $request->input('tag_ids', []));
-        $tagSyncData = [];
-
-        foreach ($tagIds as $tagId) {
-            $tagSyncData[$tagId] = [
-                'weight' => 1.00,
-            ];
-        }
-
-        $course->tags()->sync($tagSyncData);
-    }
-
-    public function archive(Course $course): RedirectResponse
-    {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
-
-        $newIsArchived = !$course->is_archived;
-        $updateData = ['is_archived' => $newIsArchived];
-
-        if (!$newIsArchived) {
-            // Update start_date to today when reactivating from Course Bank
-            $updateData['start_date'] = now();
-            // Reset expired end_date if it was in the past so the course stays active
-            if ($course->end_date && \Carbon\Carbon::parse($course->end_date)->lt(now()->startOfDay())) {
-                $updateData['end_date'] = null;
-            }
-        }
-
-        $course->update($updateData);
-
-        $status = $newIsArchived ? 'diarsipkan ke Course Bank' : 'diaktifkan kembali dengan tanggal mulai hari ini';
-        return redirect()->back()->with('success', "Course \"{$course->name}\" berhasil {$status}. Seluruh data materi, soal, dan mahasiswa tetap tersimpan utuh.");
-    }
-
-    public function duplicate(Course $course): RedirectResponse
-    {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
-
-        $newCourse = $course->replicate([
-            'is_archived',
-            'start_date',
-            'end_date',
-        ]);
-        $newCourse->name = $course->name . ' (Copy)';
+        $newCourse = $original->replicate();
+        $newCourse->name = $original->name . ' (Copy)';
+        $newCourse->progress = 0;
         $newCourse->is_archived = false;
-        $newCourse->start_date = now();
-        $newCourse->end_date = null;
         $newCourse->save();
 
-        // Copy skills
-        foreach ($course->skills as $skill) {
-            $newCourse->skills()->attach($skill->id, [
-                'weight' => $skill->pivot->weight ?? 1.0,
-                'is_main' => $skill->pivot->is_main ?? false,
-            ]);
+        foreach ($original->materials as $mat) {
+            $newMat = $mat->replicate();
+            $newMat->course_id = $newCourse->id;
+            $newMat->save();
         }
 
-        // Copy tags
-        foreach ($course->tags as $tag) {
-            $newCourse->tags()->attach($tag->id, [
-                'weight' => $tag->pivot->weight ?? 1.0,
-            ]);
-        }
-
-        // Copy materials
-        foreach ($course->materials as $material) {
-            $newMaterial = $material->replicate();
-            $newMaterial->course_id = $newCourse->id;
-            $newMaterial->save();
-        }
-
-        // Copy quizzes and questions
-        foreach ($course->quizzes as $quiz) {
+        foreach ($original->quizzes as $quiz) {
             $newQuiz = $quiz->replicate();
             $newQuiz->course_id = $newCourse->id;
             $newQuiz->save();
 
-            foreach ($quiz->questions as $question) {
-                $newQuestion = $question->replicate();
-                $newQuestion->quiz_id = $newQuiz->id;
-                $newQuestion->save();
+            foreach ($quiz->questions as $q) {
+                $newQ = $q->replicate();
+                $newQ->quiz_id = $newQuiz->id;
+                $newQ->save();
             }
         }
 
-        return redirect()->route('lecturer.courses.show', $newCourse->id)
-            ->with('success', 'Course berhasil diduplikasi dari Bank.');
+        return redirect()
+            ->route('lecturer.courses.index')
+            ->with('success', 'Course berhasil diduplikasi beserta materi dan kuisnya.');
+    }
+
+    private function syncCourseSkillsAndTags(Course $course, Request $request): void
+    {
+        $skillIds = array_map('intval', (array) $request->input('skill_ids', []));
+        $mainSkillId = (int) $request->input('main_skill_id', 0);
+        $tagIds = array_map('intval', (array) $request->input('tag_ids', []));
+
+        if ($mainSkillId > 0 && !in_array($mainSkillId, $skillIds, true)) {
+            $skillIds[] = $mainSkillId;
+        }
+
+        $syncSkillsData = [];
+        foreach ($skillIds as $skId) {
+            $syncSkillsData[$skId] = [
+                'weight' => ($skId === $mainSkillId) ? 100 : 50,
+                'is_main' => ($skId === $mainSkillId),
+            ];
+        }
+
+        $course->skills()->sync($syncSkillsData);
+
+        $syncTagsData = [];
+        foreach ($tagIds as $tId) {
+            $syncTagsData[$tId] = [
+                'weight' => 50,
+            ];
+        }
+
+        $course->tags()->sync($syncTagsData);
     }
 }
