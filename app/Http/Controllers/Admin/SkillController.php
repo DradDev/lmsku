@@ -12,8 +12,8 @@ class SkillController extends Controller
 {
     public function index(): View
     {
-        $mainSkills = Skill::with(['children' => function ($query) {
-                $query->orderBy('name');
+        $mainSkills = Skill::with(['tags', 'children' => function ($query) {
+                $query->with('tags')->orderBy('name');
             }])
             ->whereNull('parent_id')
             ->orderBy('name')
@@ -21,10 +21,18 @@ class SkillController extends Controller
 
         $orphanSkills = Skill::whereNotNull('parent_id')
             ->whereDoesntHave('parent')
+            ->with('tags')
             ->orderBy('name')
             ->get();
 
         return view('admin.skills.index', compact('mainSkills', 'orphanSkills'));
+    }
+
+    public function show(Skill $skill): View
+    {
+        $skill->load(['tags', 'parent', 'children.tags']);
+
+        return view('admin.skills.show', compact('skill'));
     }
 
     public function create(): View

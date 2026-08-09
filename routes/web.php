@@ -326,8 +326,8 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::post('/users/{user}/reject', [AdminUserController::class, 'reject'])
             ->name('users.reject');
-        Route::resource('skills', AdminSkillController::class)->except(['show']);
-        Route::resource('tags', AdminTagController::class)->except(['show']);
+        Route::resource('skills', AdminSkillController::class);
+        Route::resource('tags', AdminTagController::class)->except(['index', 'show', 'create', 'edit']);
 
         // Master Courses
         Route::resource('master-courses', AdminMasterCourseController::class);
