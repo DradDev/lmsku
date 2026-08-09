@@ -27,8 +27,13 @@
     </x-slot>
 
     @php
-    $selectedTagIds = array_map('intval', (array) old('tag_ids', $course->tags->pluck('id')->toArray()));
-    $mainSkillId = old('main_skill_id', optional($course->skills->firstWhere('pivot.is_main', true))->id);
+    $courseTags = $course->tags ?? optional($course->masterCourse ?? null)->tags ?? collect();
+    $selectedTagIds = array_map('intval', (array) old('tag_ids', $courseTags->pluck('id')->toArray()));
+
+    $courseSkills = $course->skills ?? optional($course->masterCourse ?? null)->skills ?? collect();
+    $mainSkillId = old('main_skill_id', optional($courseSkills->firstWhere('pivot.is_main', true))->id ?? optional($courseSkills->first())->id);
+
+    $courseMaterials = $course->materials ?? optional($course->masterCourse ?? null)->materials ?? collect();
     @endphp
 
     <div class="py-6">
@@ -48,7 +53,7 @@
                 </div>
             @endif
 
-            @if ($errors->any())
+            @if (isset($errors) && $errors->any())
             <div class="mb-5 p-4 bg-red-100 text-red-700 rounded-2xl border border-red-200">
                 <ul class="list-disc list-inside text-sm">
                     @foreach ($errors->all() as $error)
@@ -109,10 +114,10 @@
                             Learning Materials
                         </label>
 
-                        @if ($course->materials->count() > 0)
+                        @if ($courseMaterials->count() > 0)
                             <div class="mb-2 flex flex-col gap-1">
-                                <span class="text-xs font-semibold text-indigo-600">Current Materials ({{ $course->materials->count() }} uploaded):</span>
-                                @foreach($course->materials as $mat)
+                                <span class="text-xs font-semibold text-indigo-600">Current Materials ({{ $courseMaterials->count() }} uploaded):</span>
+                                @foreach($courseMaterials as $mat)
                                     <span class="text-xs text-gray-600 truncate">• {{ $mat->title }}</span>
                                 @endforeach
                             </div>

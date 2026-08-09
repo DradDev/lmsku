@@ -187,7 +187,10 @@ class CourseController extends Controller
         $lecturerId = Auth::id();
 
         // Check if CourseOffering 3NF
-        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'materials'])
+            ->where('lecturer_id', $lecturerId)
+            ->find($id);
+
         if ($offering) {
             $course = $offering;
             $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
@@ -198,8 +201,7 @@ class CourseController extends Controller
         }
 
         // Fallback to legacy Course
-        $course = Course::where('user_id', $lecturerId)->findOrFail($id);
-        $course->load(['skills', 'tags', 'category']);
+        $course = Course::with(['skills', 'tags', 'materials'])->where('user_id', $lecturerId)->findOrFail($id);
 
         $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
