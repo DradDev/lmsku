@@ -40,23 +40,34 @@
                 </div>
             @endif
 
+            @if (isset($errors) && $errors->any())
+                <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm text-sm">
+                    <div class="flex items-center gap-2 font-bold mb-1 text-rose-900">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        Mohon periksa kembali kesalahan berikut:
+                    </div>
+                    <ul class="list-disc pl-6 space-y-1 text-rose-700 text-xs">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
                     <a href="{{ route('lecturer.courses.index') }}"
-                        class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700">
-                        ← Back to Courses
+                        class="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-700">
+                        ← Kembali ke Daftar Kelas
                     </a>
 
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('lecturer.courses.edit', $course->id) }}"
-                            class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
-                            ✏️ Edit Course
-                        </a>
-
-                        <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Change status course ini?')">
+                        <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Ubah status aktif kelas ini?')">
                             @csrf
-                            <button type="submit" class="rounded-xl border px-4 py-2 text-sm font-semibold transition {{ $course->status === 'active' ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' }}">
-                                {{ $course->status === 'active' ? 'Archive Course' : 'Activate Course' }}
+                            <button type="submit" class="rounded-xl border px-4 py-2 text-sm font-semibold transition {{ ($course->status ?? 'active') === 'active' ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' }}">
+                                {{ ($course->status ?? 'active') === 'active' ? 'Arsipkan Kelas' : 'Aktifkan Kelas' }}
                             </button>
                         </form>
                     </div>
@@ -65,7 +76,7 @@
                 <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
-                            Lecturer Portal
+                            Portal Dosen &bull; Manajemen Kelas Pembelajaran
                         </p>
 
                         <h1 class="text-3xl font-bold tracking-tight text-slate-900">
@@ -73,353 +84,198 @@
                         </h1>
 
                         <p class="mt-3 max-w-3xl text-slate-500 leading-7">
-                            {{ $course->description ?: 'No description available for this course.' }}
+                            {{ $course->description ?: 'Pengelolaan materi pembelajaran, bank kuis, serta penentuan threshold sertifikasi mahasiswa.' }}
                         </p>
 
                         <div class="mt-4 flex flex-wrap gap-2 text-sm">
                             <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                                Level: {{ $course->level ?? '-' }}
-                            </span>
-
-                            <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                                Durasi: {{ $course->duration_weeks ?? '-' }} minggu
+                                Level: {{ $course->level ?? 'Beginner' }}
                             </span>
 
                             <span class="rounded-full bg-indigo-50 px-3 py-1 font-semibold text-indigo-700">
                                 Avg Progress: {{ $averageProgress }}%
                             </span>
 
-                            <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                                Start: {{ $course->start_date ? \Carbon\Carbon::parse($course->start_date)->format('d M Y') : '-' }}
+                            <span class="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
+                                Threshold Sertifikat: {{ $course->certificate_threshold ?? 75 }}%
                             </span>
-                            <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
-                                End: {{ $course->end_date ? \Carbon\Carbon::parse($course->end_date)->format('d M Y') : '-' }}
-                            </span>
-                            <span class="rounded-full bg-indigo-50 px-3 py-1 font-semibold text-indigo-700">
-                                Threshold: {{ $course->certificate_threshold ?? 60 }}
-                            </span>
-                            <span class="rounded-full px-3 py-1 font-semibold border {{ $course->status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : ($course->status === 'expired' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-300') }}">
-                                Status: {{ ucfirst($course->status ?? 'Active') }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 min-w-full xl:min-w-[520px]">
-                        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Materials
-                            </p>
-                            <p class="mt-2 text-2xl font-bold text-slate-900">
-                                {{ $materials->count() }}
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Quizzes
-                            </p>
-                            <p class="mt-2 text-2xl font-bold text-slate-900">
-                                {{ $quizzes->count() }}
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Students
-                            </p>
-                            <p class="mt-2 text-2xl font-bold text-slate-900">
-                                {{ $courseEnrollments->count() }}
-                            </p>
-                        </div>
-
-                        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Completed
-                            </p>
-                            <p class="mt-2 text-2xl font-bold text-slate-900">
-                                {{ $completedStudentCount }}
-                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            @if (session('success'))
-            <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {{ session('success') }}
-            </div>
-            @endif
-
-            @if (session('error'))
-            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {{ session('error') }}
-            </div>
-            @endif
-
-            @if ($errors->any())
-            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                <ul class="list-disc pl-5 space-y-1">
-                    @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
-
-            @if (auth()->check() && auth()->user()->role === 'lecturer' && $course->user_id === auth()->id())
-            @if(isset($retakeRequests) && $retakeRequests->isNotEmpty())
-            <div class="mb-8 rounded-3xl border border-amber-200 bg-amber-50/60 p-6 shadow-sm">
-                <div class="mb-4 flex items-center justify-between">
+            <!-- CARD PENGATURAN THRESHOLD SANGAT PRAKTIS LANGSUNG DI VIEW -->
+            <div class="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/30 p-6 shadow-sm mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <span>📩 Permintaan Retake Final Quiz</span>
-                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">{{ $retakeRequests->where('status', 'pending')->count() }} Pending</span>
+                        <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>⚡ Threshold Kelulusan Sertifikat Kelas</span>
+                            <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2.5 py-0.5 rounded-full">Otonomi Dosen</span>
                         </h2>
-                        <p class="text-xs text-slate-500 mt-1">Daftar mahasiswa yang tidak memenuhi passing score (70) dan mengajukan retake kuis.</p>
-                    </div>
-                </div>
-
-                <div class="space-y-3">
-                    @foreach($retakeRequests as $req)
-                        <div class="p-4 bg-white border border-slate-200 rounded-2xl flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h4 class="font-bold text-sm text-slate-900">{{ $req->user->name ?? 'Mahasiswa' }}</h4>
-                                    <span class="px-2 py-0.5 text-[11px] font-bold rounded-full {{ $req->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($req->status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700') }}">
-                                        {{ ucfirst($req->status) }}
-                                    </span>
-                                </div>
-                                <p class="text-xs text-slate-500 mt-1">
-                                    Kuis: <strong class="text-slate-700">{{ $req->quiz->title ?? 'Quiz' }}</strong> • Diajukan: {{ $req->created_at->format('d M Y, H:i') }}
-                                </p>
-                            </div>
-
-                            @if($req->status === 'pending')
-                                <div class="flex items-center gap-2 self-end md:self-auto">
-                                    <form method="POST" action="{{ route('lecturer.quizzes.retake.approve', $req->id) }}">
-                                        @csrf
-                                        <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm">
-                                            ✅ Setujui Retake (+1 Attempt)
-                                        </button>
-                                    </form>
-
-                                    <form method="POST" action="{{ route('lecturer.quizzes.retake.reject', $req->id) }}">
-                                        @csrf
-                                        <button type="submit" class="px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold rounded-xl transition">
-                                            ❌ Tolak
-                                        </button>
-                                    </form>
-                                </div>
-                            @else
-                                <p class="text-xs font-semibold text-slate-400">
-                                    Ditinjau pada {{ $req->reviewed_at ? $req->reviewed_at->format('d M Y, H:i') : '-' }}
-                                </p>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-            @endif
-
-            <div class="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="mb-5">
-                    <h2 class="text-xl font-semibold text-slate-900">
-                        Quiz Management
-                    </h2>
-
-                    <p class="mt-1 text-sm text-slate-500">
-                        Lecturer bisa langsung membuat quiz tanpa harus upload material terlebih dahulu.
-                        Pilih jenis quiz yang sesuai.
-                    </p>
-                </div>
-
-                <form method="POST"
-                    action="{{ route('lecturer.courses.quizzes.store', $course->id) }}"
-                    class="grid gap-4 md:grid-cols-3">
-                    @csrf
-
-                    <div class="md:col-span-2">
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Quiz Title
-                        </label>
-
-                        <input type="text"
-                            name="title"
-                            value="{{ old('title') }}"
-                            class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none"
-                            placeholder="Contoh: Week 1 Quiz"
-                            required>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Time Limit (minutes)
-                        </label>
-
-                        <input type="number"
-                            name="time_limit"
-                            value="{{ old('time_limit') }}"
-                            min="1"
-                            class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none"
-                            placeholder="Optional">
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Quiz Type
-                        </label>
-                        <select name="quiz_type" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none" required>
-                            <option value="daily" {{ old('quiz_type') === 'daily' ? 'selected' : '' }}>Daily Quiz</option>
-                            <option value="weekly" {{ old('quiz_type') === 'weekly' ? 'selected' : '' }}>Weekly Quiz</option>
-                            <option value="final" {{ old('quiz_type') === 'final' ? 'selected' : '' }}>Final Quiz</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Max Attempts
-                        </label>
-                        <input type="number" name="max_attempts" value="{{ old('max_attempts', 1) }}" min="1" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none" required>
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            Start Date (Optional)
-                        </label>
-                        <input type="datetime-local" name="start_date" value="{{ old('start_date') }}" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none">
-                    </div>
-
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-slate-700">
-                            End Date (Optional)
-                        </label>
-                        <input type="datetime-local" name="end_date" value="{{ old('end_date') }}" class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:outline-none">
-                    </div>
-
-                    <div class="md:col-span-3 flex justify-end">
-                        <button type="submit"
-                            class="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700">
-                            + Create Quiz
-                        </button>
-                    </div>
-                </form>
-            </div>
-            @endif
-
-            <div class="mb-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-                    <div>
-                        <h2 class="text-2xl font-semibold text-slate-900">
-                            Student Progress
-                        </h2>
-
-                        <p class="mt-1 text-sm text-slate-500">
-                            Pantau progress mahasiswa berdasarkan material yang dibuka dan quiz yang dikerjakan.
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed max-w-2xl">
+                            Tentukan batas nilai minimal (%) pada Kuis Akhir yang harus dicapai mahasiswa agar Sertifikat Digital & Hash Blockchain otomatis diterbitkan.
                         </p>
                     </div>
 
-                    <span class="inline-flex w-fit rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                        {{ $courseEnrollments->count() }} Student Terdaftar
-                    </span>
+                    <div class="flex items-center gap-3">
+                        <form action="{{ route('lecturer.courses.update', $course->id) }}" method="POST" class="flex items-center gap-2">
+                            @csrf
+                            @method('PUT')
+                            <div class="relative">
+                                <input type="number" 
+                                       name="certificate_threshold" 
+                                       value="{{ old('certificate_threshold', $course->certificate_threshold ?? 75) }}" 
+                                       min="0" 
+                                       max="100" 
+                                       class="w-24 rounded-xl border-slate-300 text-sm font-extrabold text-indigo-900 text-center focus:border-indigo-500 focus:ring-indigo-500 py-2" 
+                                       required>
+                                <span class="absolute right-2 top-2.5 text-xs font-bold text-slate-400">%</span>
+                            </div>
+                            <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition whitespace-nowrap">
+                                Simpan Threshold
+                            </button>
+                        </form>
+                    </div>
                 </div>
-
-                @if ($courseEnrollments->isEmpty())
-                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-                    Belum ada mahasiswa yang mengambil course ini.
-                </div>
-                @else
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border border-slate-200 text-sm">
-                        <thead>
-                            <tr class="bg-slate-100 text-left text-slate-700">
-                                <th class="border border-slate-200 p-3">Student</th>
-                                <th class="border border-slate-200 p-3">Status</th>
-                                <th class="border border-slate-200 p-3">Progress</th>
-                                <th class="border border-slate-200 p-3">Material</th>
-                                <th class="border border-slate-200 p-3">Quiz</th>
-                                <th class="border border-slate-200 p-3">Started</th>
-                                <th class="border border-slate-200 p-3">Last Activity</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            @foreach ($courseEnrollments as $enrollment)
-                            @php
-                            $progress = $enrollment->progress_percent ?? 0;
-                            $status = $enrollment->status ?? 'not_started';
-                            @endphp
-
-                            <tr class="bg-white">
-                                <td class="border border-slate-200 p-3 align-top">
-                                    <div class="font-semibold text-slate-900">
-                                        {{ $enrollment->user->name ?? 'Unknown User' }}
-                                    </div>
-
-                                    <div class="text-xs text-slate-500">
-                                        {{ $enrollment->user->email ?? '-' }}
-                                    </div>
-                                </td>
-
-                                <td class="border border-slate-200 p-3 align-top">
-                                    <span class="inline-flex rounded-full border px-3 py-1 text-xs font-semibold {{ $statusClasses[$status] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
-                                        {{ $statusLabels[$status] ?? $status }}
-                                    </span>
-                                </td>
-
-                                <td class="border border-slate-200 p-3 align-top min-w-[190px]">
-                                    <div class="mb-2 flex justify-between text-xs text-slate-500">
-                                        <span>Progress</span>
-                                        <span class="font-semibold text-slate-700">{{ $progress }}%</span>
-                                    </div>
-
-                                    <div class="h-3 w-full overflow-hidden rounded-full bg-slate-200">
-                                        <div class="h-3 rounded-full {{ $progress >= 100 ? 'bg-emerald-600' : 'bg-indigo-600' }}"
-                                            style="width: {{ $progress }}%">
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td class="border border-slate-200 p-3 align-top">
-                                    {{ $enrollment->completed_material_count ?? 0 }}
-                                    /
-                                    {{ $enrollment->total_material_count ?? 0 }}
-                                </td>
-
-                                <td class="border border-slate-200 p-3 align-top">
-                                    {{ $enrollment->completed_quiz_count ?? 0 }}
-                                    /
-                                    {{ $enrollment->total_quiz_count ?? 0 }}
-                                </td>
-
-                                <td class="border border-slate-200 p-3 align-top text-slate-600">
-                                    {{ optional($enrollment->started_at)->format('d M Y H:i') ?? '-' }}
-                                </td>
-
-                                <td class="border border-slate-200 p-3 align-top text-slate-600">
-                                    {{ optional($enrollment->last_activity_at)->format('d M Y H:i') ?? '-' }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @endif
             </div>
+
+            <!-- STATISTIK KELAS -->
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Student</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ $courseEnrollments->count() }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Mahasiswa terdaftar</p>
+                </div>
+
+                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Lulus / Completed</p>
+                    <p class="mt-2 text-3xl font-bold text-emerald-600">{{ $completedStudentCount }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Mahasiswa telah selesai</p>
+                </div>
+
+                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Materials</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ $materials->count() }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Modul / file pembelajaran</p>
+                </div>
+
+                <div class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Quizzes</p>
+                    <p class="mt-2 text-3xl font-bold text-indigo-600">{{ $quizzes->count() }}</p>
+                    <p class="mt-1 text-xs text-slate-500">Kuis harian & kuis akhir</p>
+                </div>
+            </div>
+
+            <!-- PERINTAH RETAKE KUIS (JIKA ADA) -->
+            @if(isset($retakeRequests) && $retakeRequests->count() > 0)
+                <div class="mb-8 rounded-3xl border border-amber-200 bg-amber-50/60 p-6 shadow-sm">
+                    <h2 class="text-lg font-bold text-amber-900 mb-3 flex items-center gap-2">
+                        <span>⚠️ Permintaan Retake Kuis Mahasiswa ({{ $retakeRequests->where('status', 'pending')->count() }} Pending)</span>
+                    </h2>
+                    <div class="space-y-3">
+                        @foreach($retakeRequests as $req)
+                            <div class="flex items-center justify-between p-3.5 bg-white border border-amber-200 rounded-2xl">
+                                <div>
+                                    <span class="font-bold text-slate-900 text-sm">{{ $req->user->name ?? 'Student' }}</span>
+                                    <span class="text-xs text-slate-500 font-medium"> meminta retake kuis </span>
+                                    <span class="font-bold text-indigo-700 text-xs">'{{ $req->quiz->title ?? 'Quiz' }}'</span>
+                                    <p class="text-xs text-slate-400 mt-0.5">Alasan: {{ $req->reason ?: 'Tidak ada alasan' }}</p>
+                                </div>
+                                @if($req->status === 'pending')
+                                    <div class="flex items-center gap-2">
+                                        <form action="{{ route('lecturer.quizzes.retake.approve', $req->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm">Setujui</button>
+                                        </form>
+                                        <form action="{{ route('lecturer.quizzes.retake.reject', $req->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm">Tolak</button>
+                                        </form>
+                                    </div>
+                                @else
+                                    <span class="text-xs font-bold px-3 py-1 rounded-full {{ $req->status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
+                                        {{ ucfirst($req->status) }}
+                                    </span>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div class="xl:col-span-2 space-y-6">
 
+                    <!-- BANK KUIS DOSEN (KUIS BIASA VS KUIS AKHIR) -->
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div class="mb-6">
-                            <h2 class="text-2xl font-semibold text-slate-900">
-                                Course Quizzes
-                            </h2>
+                        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div>
+                                <h2 class="text-2xl font-semibold text-slate-900">
+                                    Bank Kuis Pembelajaran
+                                </h2>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    Kelola kuis harian/mingguan dan Kuis Akhir (penentu sertifikat).
+                                </p>
+                            </div>
 
-                            <p class="mt-1 text-sm text-slate-500">
-                                Semua quiz yang tersedia untuk course ini.
-                            </p>
+                            <button type="button" 
+                                    onclick="document.getElementById('create-quiz-form-container').classList.toggle('hidden')" 
+                                    class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 shadow-md transition whitespace-nowrap">
+                                + Buat Kuis Baru
+                            </button>
                         </div>
 
+                        <!-- FORM INLINE BUAT KUIS BARU (DENGAN PILIHAN KUIS BIASA VS KUIS AKHIR) -->
+                        <div id="create-quiz-form-container" class="hidden mb-6 p-5 bg-indigo-50/50 border border-indigo-200 rounded-2xl transition">
+                            <h3 class="text-sm font-extrabold text-indigo-900 mb-3 flex items-center gap-2">
+                                📝 Form Buat Kuis Pembelajaran Baru
+                            </h3>
+                            <form method="POST" action="{{ route('lecturer.courses.quizzes.store', $course->id) }}" class="space-y-4 text-xs">
+                                @csrf
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Judul Kuis</label>
+                                        <input type="text" name="title" placeholder="Contoh: Kuis Akhir - Final Certification Exam" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Tipe Kuis Pembelajaran</label>
+                                        <select name="quiz_type" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-bold text-indigo-900 bg-white" required>
+                                            <option value="daily">📝 Kuis Biasa / Harian (Section Quiz)</option>
+                                            <option value="weekly">📅 Kuis Mingguan / Evaluasi Bab</option>
+                                            <option value="final">🏆 Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Durasi Pengerjaan (Menit)</label>
+                                        <input type="number" name="time_limit" min="1" placeholder="Contoh: 60 (kosongkan jika tanpa batas)" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Maksimal Percobaan (Attempts)</label>
+                                        <input type="number" name="max_attempts" value="1" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold" required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Tanggal Rilis (Opsional)</label>
+                                        <input type="datetime-local" name="start_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Deadline Selesai (Opsional)</label>
+                                        <input type="datetime-local" name="end_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end gap-2 pt-2 border-t border-indigo-200">
+                                    <button type="button" onclick="document.getElementById('create-quiz-form-container').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Batal</button>
+                                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md">Simpan Kuis & Lanjut Buat Soal</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- DAFTAR KUIS -->
                         <div class="space-y-4">
                             @forelse ($quizzes as $quiz)
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -443,39 +299,22 @@
                                         </p>
 
                                         <p class="mt-1 text-sm text-slate-500">
-                                            Total Questions:
-                                            <span class="text-slate-700">
-                                                {{ $quiz->questions->count() }}
-                                            </span>
-                                        </p>
-
-                                        <p class="mt-1 text-sm text-slate-500">
                                             Attempts Allowed:
                                             <span class="text-slate-700">
                                                 {{ $quiz->max_attempts }}
                                             </span>
                                         </p>
 
-                                        @if ($quiz->start_date || $quiz->end_date)
-                                        <p class="mt-1 text-sm text-slate-500">
-                                            Schedule:
-                                            <span class="text-slate-700">
-                                                {{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('d M Y, H:i') : 'Now' }} -
-                                                {{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('d M Y, H:i') : 'No End' }}
-                                            </span>
-                                        </p>
-                                        @endif
-
                                         @if ($quiz->isFinal())
-                                        <p class="mt-2 text-xs font-medium text-emerald-700">
-                                            Quiz ini dipakai untuk penentuan certificate student.
+                                        <p class="mt-2 text-xs font-extrabold text-emerald-700 flex items-center gap-1">
+                                            <span>🏆 Kuis Akhir Penentu Kelulusan Sertifikat Digital & Hash Blockchain.</span>
                                         </p>
                                         @endif
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
                                         <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-700 px-3.5 py-2 text-xs font-semibold hover:bg-amber-100 transition">
-                                            ⚙️ Edit Waktu & Durasi
+                                            ⚙️ Waktu & Durasi
                                         </button>
 
                                         <a href="{{ route('lecturer.courses.quizzes.results.index', [$course->id, $quiz->id]) }}"
@@ -485,7 +324,7 @@
 
                                         <a href="{{ route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id]) }}"
                                             class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
-                                            + Tambah / Kelola Soal
+                                            + Kelola Soal ({{ $quiz->questions_count ?? $quiz->questions()->count() }})
                                         </a>
                                         <form method="POST"
                                             action="{{ route('lecturer.courses.quizzes.destroy', [$course->id, $quiz->id]) }}"
@@ -495,57 +334,58 @@
 
                                             <button type="submit"
                                                 class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">
-                                                Delete
+                                                Hapus
                                             </button>
                                         </form>
                                     </div>
+                                </div>
 
-                                    <div id="edit-quiz-form-{{ $quiz->id }}" class="hidden mt-4 pt-4 border-t border-slate-200">
-                                        <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                                            @csrf
-                                            @method('PUT')
+                                <div id="edit-quiz-form-{{ $quiz->id }}" class="hidden mt-4 pt-4 border-t border-slate-200">
+                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                        @csrf
+                                        @method('PUT')
 
-                                            <div>
-                                                <label class="block font-bold text-slate-700 mb-1">Judul Quiz</label>
-                                                <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
-                                            </div>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Judul Quiz</label>
+                                            <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
+                                        </div>
 
-                                            <div>
-                                                <label class="block font-bold text-slate-700 mb-1">Durasi (Menit)</label>
-                                                <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tidak ada batas" class="w-full rounded-xl border-slate-300 p-2 text-xs">
-                                            </div>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Durasi (Menit)</label>
+                                            <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tidak ada batas" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                        </div>
 
-                                            <div>
-                                                <label class="block font-bold text-slate-700 mb-1">Max Attempts</label>
-                                                <input type="number" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
-                                            </div>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Max Attempts</label>
+                                            <input type="number" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
+                                        </div>
 
-                                            <div>
-                                                <label class="block font-bold text-slate-700 mb-1">Start Date</label>
-                                                <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
-                                            </div>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Start Date</label>
+                                            <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                        </div>
 
-                                            <div class="md:col-span-2">
-                                                <label class="block font-bold text-slate-700 mb-1">End Date / Deadline</label>
-                                                <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
-                                            </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block font-bold text-slate-700 mb-1">End Date / Deadline</label>
+                                            <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                        </div>
 
-                                            <div class="md:col-span-2 flex justify-end gap-2 pt-2">
-                                                <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Batal</button>
-                                                <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
-                                            </div>
-                                        </form>
-                                    </div>
+                                        <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+                                            <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Batal</button>
+                                            <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                             @empty
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-                                Belum ada quiz untuk course ini.
+                                Belum ada kuis untuk course ini. Klik "+ Buat Kuis Baru" di atas untuk menambahkan.
                             </div>
                             @endforelse
                         </div>
                     </div>
 
+                    <!-- MATERI PEMBELAJARAN -->
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="mb-6 flex items-center justify-between gap-4">
                             <div>
@@ -609,10 +449,11 @@
                     </div>
                 </div>
 
+                <!-- DAFTAR MAHASISWA TERDAFTAR -->
                 <div class="space-y-6">
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                         <h2 class="text-xl font-semibold text-slate-900 mb-5">
-                            Students
+                            Mahasiswa Terdaftar
                         </h2>
 
                         @if ($courseEnrollments->count())
