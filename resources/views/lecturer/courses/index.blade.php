@@ -331,9 +331,13 @@
         @php
             $allCourses = $activeCourses->concat($bankCourses);
             $totalCourses = $allCourses->count();
-            $totalMaterials = $allCourses->sum(fn($course) => $course->materials->count());
-            $totalQuizzes = $allCourses->sum(fn($course) => $course->quizzes->count());
-            $totalStudents = $allCourses->sum(fn($course) => $course->students->count());
+            $totalMaterials = $allCourses->sum(fn($course) => $course->materials ? $course->materials->count() : 0);
+            $totalQuizzes = $allCourses->sum(fn($course) => $course->quizzes ? $course->quizzes->count() : 0);
+            $totalStudents = $allCourses->sum(function($course) {
+                if (isset($course->students) && $course->students) return $course->students->count();
+                if (isset($course->enrollments) && $course->enrollments) return $course->enrollments->count();
+                return 0;
+            });
         @endphp
 
         <div class="page-header">
@@ -411,15 +415,15 @@
                         <div class="stats-row">
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Materials</div>
-                                <div class="stat-mini-value">{{ $course->materials->count() }}</div>
+                                <div class="stat-mini-value">{{ $course->materials ? $course->materials->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Quizzes</div>
-                                <div class="stat-mini-value">{{ $course->quizzes->count() }}</div>
+                                <div class="stat-mini-value">{{ $course->quizzes ? $course->quizzes->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Students</div>
-                                <div class="stat-mini-value">{{ $course->students->count() }}</div>
+                                <div class="stat-mini-value">{{ isset($course->students) && $course->students ? $course->students->count() : ($course->enrollments ? $course->enrollments->count() : 0) }}</div>
                             </div>
                         </div>
 
@@ -483,15 +487,15 @@
                         <div class="stats-row">
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Materials</div>
-                                <div class="stat-mini-value">{{ $course->materials->count() }}</div>
+                                <div class="stat-mini-value">{{ $course->materials ? $course->materials->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Quizzes</div>
-                                <div class="stat-mini-value">{{ $course->quizzes->count() }}</div>
+                                <div class="stat-mini-value">{{ $course->quizzes ? $course->quizzes->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Students</div>
-                                <div class="stat-mini-value">{{ $course->students->count() }}</div>
+                                <div class="stat-mini-value">{{ isset($course->students) && $course->students ? $course->students->count() : ($course->enrollments ? $course->enrollments->count() : 0) }}</div>
                             </div>
                         </div>
 
