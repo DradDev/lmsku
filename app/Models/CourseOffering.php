@@ -58,6 +58,35 @@ class CourseOffering extends Model
         return $this->hasMany(Certificate::class, 'course_offering_id');
     }
 
+    public function offeringQuizzes()
+    {
+        return $this->hasMany(OfferingQuiz::class, 'course_offering_id');
+    }
+
+    public function students()
+    {
+        return $this->hasManyThrough(
+            User::class,
+            Enrollment::class,
+            'course_offering_id',
+            'id',
+            'id',
+            'user_id'
+        );
+    }
+
+    public function category()
+    {
+        return $this->hasOneThrough(
+            Category::class,
+            MasterCourse::class,
+            'id',
+            'id',
+            'master_course_id',
+            'category_id'
+        );
+    }
+
     // Accessors for 100% Backward Compatibility with Blade Views
     public function getNameAttribute(): string
     {

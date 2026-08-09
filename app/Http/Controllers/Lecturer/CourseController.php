@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseOffering;
+use App\Models\MasterCourse;
+use App\Models\AcademicTerm;
 use App\Models\Material;
 use App\Models\Skill;
 use App\Models\Tag;
@@ -30,7 +33,16 @@ class CourseController extends Controller
             ->latest()
             ->get();
 
-        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses'));
+        $masterCourses = MasterCourse::with(['category', 'materials', 'quizzes'])
+            ->latest()
+            ->get();
+
+        $assignedOfferings = CourseOffering::with(['masterCourse.category', 'academicTerm', 'enrollments.user', 'materials', 'quizzes'])
+            ->where('lecturer_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses', 'masterCourses', 'assignedOfferings'));
     }
 
     public function create(): View
@@ -81,10 +93,37 @@ class CourseController extends Controller
             'user_id' => Auth::id(),
         ]);
 
+        $masterCourse = MasterCourse::create([
+            'code' => 'MC-' . $course->id,
+            'name' => $course->name,
+            'description' => $course->description ?? null,
+            'level' => $course->level,
+            'category_id' => $course->category_id ?? null,
+        ]);
+
+        $activeTerm = AcademicTerm::where('is_active', true)->first() 
+            ?? AcademicTerm::create([
+                'name' => '2025/2026 Ganjil',
+                'start_date' => now()->startOfYear(),
+                'end_date' => now()->endOfYear(),
+                'is_active' => true
+            ]);
+
+        $offering = CourseOffering::create([
+            'master_course_id' => $masterCourse->id,
+            'academic_term_id' => $activeTerm->id,
+            'lecturer_id' => Auth::id(),
+            'start_date' => $course->start_date ?? null,
+            'end_date' => $course->end_date ?? null,
+            'is_archived' => false,
+            'certificate_threshold' => $course->certificate_threshold ?? 60,
+        ]);
+
         if ($request->hasFile('material_file')) {
             $filePath = $request->file('material_file')->store('materials', 'public');
             Material::create([
                 'course_id' => $course->id,
+                'master_course_id' => $masterCourse->id,
                 'title' => $course->name . ' - Learning Material',
                 'file_path' => $filePath,
             ]);

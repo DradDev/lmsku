@@ -40,8 +40,11 @@ class QuizController extends Controller
             }
         }
 
+        $masterCourseId = $course->master_course_id ?? \App\Models\MasterCourse::where('name', $course->name)->value('id');
+
         $quiz = Quiz::create([
             'course_id' => $course->id,
+            'master_course_id' => $masterCourseId,
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
             'quiz_type' => $validated['quiz_type'],
@@ -49,6 +52,21 @@ class QuizController extends Controller
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
         ]);
+
+        if ($masterCourseId) {
+            $offeringIds = \App\Models\CourseOffering::where('master_course_id', $masterCourseId)->pluck('id');
+            foreach ($offeringIds as $offeringId) {
+                \App\Models\OfferingQuiz::firstOrCreate([
+                    'course_offering_id' => $offeringId,
+                    'quiz_id' => $quiz->id,
+                ], [
+                    'start_date' => $quiz->start_date,
+                    'end_date' => $quiz->end_date,
+                    'time_limit' => $quiz->time_limit,
+                    'max_attempts' => $quiz->max_attempts,
+                ]);
+            }
+        }
 
         $typeLabel = match ($validated['quiz_type']) {
             'final' => 'Final Quiz',

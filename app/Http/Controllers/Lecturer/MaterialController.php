@@ -29,8 +29,11 @@ class MaterialController extends Controller
 
         $filePath = $request->file('file')->store('materials', 'public');
 
+        $masterCourseId = $course->master_course_id ?? \App\Models\MasterCourse::where('name', $course->name)->value('id');
+
         Material::create([
             'course_id' => $course->id,
+            'master_course_id' => $masterCourseId,
             'title' => $validated['title'],
             'file_path' => $filePath,
         ]);

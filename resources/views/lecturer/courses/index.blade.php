@@ -378,8 +378,13 @@
 
         <div class="tabs-nav">
             <button class="tab-btn" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
-                Active Courses ({{ $activeCourses->count() }})
+                🎓 Kelas Saya ({{ isset($assignedOfferings) && $assignedOfferings->count() > 0 ? $assignedOfferings->count() : $activeCourses->count() }})
             </button>
+            @if(isset($masterCourses) && $masterCourses->isNotEmpty())
+            <button class="tab-btn" :class="{ 'active': tab === 'master' }" @click="tab = 'master'">
+                📚 Master Kurikulum ({{ $masterCourses->count() }})
+            </button>
+            @endif
             <button class="tab-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
                 Course Bank ({{ $bankCourses->count() }})
             </button>
@@ -387,6 +392,47 @@
 
         <div x-show="tab === 'active'">
             <div class="courses-grid">
+                @if(isset($assignedOfferings) && $assignedOfferings->isNotEmpty())
+                    @foreach($assignedOfferings as $offering)
+                        <div class="course-card">
+                            <div class="course-top">
+                                <span class="course-tag">Kelas Pararel</span>
+                                <span class="course-badge text-indigo-700 bg-indigo-50 border-indigo-200">
+                                    {{ $offering->academicTerm->name ?? '2025/2026 Ganjil' }}
+                                </span>
+                            </div>
+
+                            <div class="course-name">{{ $offering->name }}</div>
+
+                            <div class="text-xs text-slate-500 mb-2 font-medium">
+                                Threshold Sertifikat: {{ $offering->certificate_threshold ?? 60 }}%
+                            </div>
+
+                            <p class="course-desc">{{ $offering->description ?: 'Pengelolaan kegiatan belajar mengajar untuk kelas ini.' }}</p>
+
+                            <div class="stats-row">
+                                <div class="stat-mini">
+                                    <div class="stat-mini-label">Modul</div>
+                                    <div class="stat-mini-value">{{ $offering->materials->count() }}</div>
+                                </div>
+                                <div class="stat-mini">
+                                    <div class="stat-mini-label">Quiz</div>
+                                    <div class="stat-mini-value">{{ $offering->quizzes->count() }}</div>
+                                </div>
+                                <div class="stat-mini">
+                                    <div class="stat-mini-label">Siswa</div>
+                                    <div class="stat-mini-value">{{ $offering->enrollments->count() }}</div>
+                                </div>
+                            </div>
+
+                            <div class="card-actions mt-auto" style="display: flex; flex-direction: column; gap: 8px;">
+                                <a href="{{ route('lecturer.courses.show', $offering->master_course_id ?? 1) }}" class="btn btn-primary text-center w-full">
+                                    🎓 Buka Kelas Saya
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
                 @forelse($activeCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
@@ -450,8 +496,51 @@
                         </a>
                     </div>
                 @endforelse
+                @endif
             </div>
         </div>
+
+        @if(isset($masterCourses) && $masterCourses->isNotEmpty())
+        <div x-show="tab === 'master'" style="display: none;">
+            <div class="courses-grid">
+                @foreach($masterCourses as $master)
+                    <div class="course-card border-indigo-100 bg-indigo-50/20">
+                        <div class="course-top">
+                            <span class="course-tag">Master Kurikulum</span>
+                            <span class="course-badge text-indigo-700 bg-indigo-100 border-indigo-200">
+                                {{ $master->category->name ?? 'Umum' }}
+                            </span>
+                        </div>
+
+                        <div class="course-name">{{ $master->name }}</div>
+                        <div class="text-xs text-slate-500 mb-2 font-mono">Kode: {{ $master->code ?? '-' }}</div>
+                        <p class="course-desc">{{ $master->description ?: 'Kurikulum master untuk seluruh kelas.' }}</p>
+
+                        <div class="stats-row">
+                            <div class="stat-mini">
+                                <div class="stat-mini-label">Modul</div>
+                                <div class="stat-mini-value">{{ $master->materials->count() }}</div>
+                            </div>
+                            <div class="stat-mini">
+                                <div class="stat-mini-label">Quiz</div>
+                                <div class="stat-mini-value">{{ $master->quizzes->count() }}</div>
+                            </div>
+                            <div class="stat-mini">
+                                <div class="stat-mini-label">Level</div>
+                                <div class="stat-mini-value text-xs font-bold">{{ $master->level ?? 'Beginner' }}</div>
+                            </div>
+                        </div>
+
+                        <div class="card-actions mt-auto">
+                            <a href="{{ route('lecturer.courses.show', $master->id) }}" class="btn btn-outline text-center w-full">
+                                📝 Kelola Modul & Bank Quiz
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
 
         <div x-show="tab === 'bank'" style="display: none;">
             <div class="courses-grid">
