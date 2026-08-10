@@ -68,27 +68,45 @@
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Lampiran Dokumen Brief / TOR (PDF / DOCX / ZIP) <span class="text-xs font-normal text-gray-400">(Opsional)</span>
-                        </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Lampiran Dokumen Brief / TOR (PDF / DOCX / ZIP) <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
 
-                        @if($project->brief_file_url)
-                            <div class="mb-2 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
-                                <span>📄 Berkas TOR Brief saat ini sudah terunggah.</span>
-                                <a href="{{ $project->brief_file_url }}" target="_blank" class="font-bold underline text-purple-700">Lihat Brief</a>
-                            </div>
-                        @endif
+                            @if($project->brief_file_url)
+                                <div class="mb-2 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+                                    <span>📄 Berkas TOR Brief saat ini sudah terunggah.</span>
+                                    <a href="{{ $project->brief_file_url }}" target="_blank" class="font-bold underline text-purple-700">Lihat Brief</a>
+                                </div>
+                            @endif
 
-                        <input type="file"
-                               name="brief_file"
-                               accept=".pdf,.doc,.docx,.zip,.rar"
-                               class="w-full rounded-xl border border-gray-300 bg-gray-50 text-sm p-2 text-gray-600 focus:outline-none">
-                        <p class="text-[11px] text-gray-400 mt-1">Upload dokumen TOR/instruksi pengerjaan baru jika ingin mengganti berkas lama (Maksimal 10 MB).</p>
+                            <input type="file"
+                                   name="brief_file"
+                                   accept=".pdf,.doc,.docx,.zip,.rar"
+                                   class="w-full rounded-xl border border-gray-300 bg-gray-50 text-sm p-2 text-gray-600 focus:outline-none">
+                            <p class="text-[11px] text-gray-400 mt-1">Upload dokumen TOR/instruksi pengerjaan baru jika ingin mengganti berkas lama (Maksimal 10 MB).</p>
 
-                        @error('brief_file')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
+                            @error('brief_file')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Benefit & Output Untuk Mahasiswa <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+
+                            <input type="text"
+                                   name="benefits"
+                                   value="{{ old('benefits', $project->benefits) }}"
+                                   class="w-full rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm"
+                                   placeholder="Contoh: Sertifikat Magang Industri, Honorarium Client, Surat Rekomendasi Kerja">
+
+                            @error('benefits')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

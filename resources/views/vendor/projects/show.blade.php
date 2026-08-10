@@ -100,10 +100,21 @@
                             </p>
                         </div>
 
-                        <!-- Brief File Row -->
-                        @if($project->brief_file_url)
-                            <div class="pt-2">
-                                <div class="p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-xl space-y-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <!-- Benefits & Brief File Row -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            @if($project->benefits)
+                                <div class="p-3.5 bg-purple-50/70 border border-purple-100 rounded-xl space-y-1">
+                                    <h5 class="font-bold text-xs text-purple-900 uppercase tracking-wider flex items-center gap-1">
+                                        <span>🎁 Benefits & Output Untuk Mahasiswa</span>
+                                    </h5>
+                                    <p class="text-xs text-purple-900 font-medium leading-relaxed">
+                                        {{ $project->benefits }}
+                                    </p>
+                                </div>
+                            @endif
+
+                            @if($project->brief_file_url)
+                                <div class="p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-xl space-y-2 flex flex-col justify-between">
                                     <div>
                                         <h5 class="font-bold text-xs text-emerald-900 uppercase tracking-wider">
                                             📄 Berkas Acuan TOR / Brief Client
@@ -115,8 +126,8 @@
                                         📥 Download TOR Brief (PDF/ZIP)
                                     </a>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Student Project Participants & Progress Card -->
