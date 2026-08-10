@@ -63,11 +63,8 @@ class CourseController extends Controller
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'is_archived' => ['nullable', 'boolean'],
-            'main_skill_id' => ['required', 'exists:skills,id'],
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
-            'tag_ids' => ['nullable', 'array'],
-            'tag_ids.*' => ['exists:tags,id'],
         ]);
 
         $validated['user_id'] = Auth::id();
@@ -77,23 +74,13 @@ class CourseController extends Controller
 
         $course = Course::create($validated);
 
-        // Prepare Skill Sync Array with is_main flag
+        // Prepare Skill Sync Array (All selected skills are Main Skills for Vendor Course)
         $skillsData = [];
-        $skillsData[$validated['main_skill_id']] = ['is_main' => true, 'weight' => 1.00];
-
-        if (!empty($validated['skill_ids'])) {
-            foreach ($validated['skill_ids'] as $sId) {
-                if ($sId != $validated['main_skill_id']) {
-                    $skillsData[$sId] = ['is_main' => false, 'weight' => 1.00];
-                }
-            }
+        foreach ($validated['skill_ids'] as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
         }
 
         $course->skills()->sync($skillsData);
-
-        if (!empty($validated['tag_ids'])) {
-            $course->tags()->sync($validated['tag_ids']);
-        }
 
         return redirect()
             ->route('vendor.courses.show', $course)
@@ -112,14 +99,9 @@ class CourseController extends Controller
             'quizzes.questions',
             'students',
             'skills',
-            'tags',
         ]);
 
-        $materials = $course->materials;
-        $quizzes = $course->quizzes;
-        $students = $course->students;
-
-        return view('vendor.courses.show', compact('course', 'materials', 'quizzes', 'students'));
+        return view('vendor.courses.show', compact('course'));
     }
 
     public function edit(Course $course): View
@@ -150,32 +132,19 @@ class CourseController extends Controller
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'is_archived' => ['nullable', 'boolean'],
-            'main_skill_id' => ['required', 'exists:skills,id'],
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
-            'tag_ids' => ['nullable', 'array'],
-            'tag_ids.*' => ['exists:tags,id'],
         ]);
 
         $course->update($validated);
 
-        // Prepare Skill Sync Array with is_main flag
+        // Prepare Skill Sync Array (All selected skills are Main Skills for Vendor Course)
         $skillsData = [];
-        $skillsData[$validated['main_skill_id']] = ['is_main' => true, 'weight' => 1.00];
-
-        if (!empty($validated['skill_ids'])) {
-            foreach ($validated['skill_ids'] as $sId) {
-                if ($sId != $validated['main_skill_id']) {
-                    $skillsData[$sId] = ['is_main' => false, 'weight' => 1.00];
-                }
-            }
+        foreach ($validated['skill_ids'] as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
         }
 
         $course->skills()->sync($skillsData);
-
-        if (isset($validated['tag_ids'])) {
-            $course->tags()->sync($validated['tag_ids']);
-        }
 
         return redirect()
             ->route('vendor.courses.show', $course)

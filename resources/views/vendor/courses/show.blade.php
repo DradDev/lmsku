@@ -133,15 +133,14 @@
                         <form action="{{ route('vendor.courses.update', $course) }}" method="POST" class="flex items-center gap-2">
                             @csrf
                             @method('PUT')
-                            @php
-                                $mSkill = $course->skills->firstWhere('pivot.is_main', true) ?? $course->skills->first();
-                            @endphp
                             <input type="hidden" name="name" value="{{ $course->name }}">
                             <input type="hidden" name="batch_name" value="{{ $course->batch_name ?? 'Batch 1 - 2026' }}">
                             <input type="hidden" name="level" value="{{ $course->level }}">
                             <input type="hidden" name="category_id" value="{{ $course->category_id }}">
                             <input type="hidden" name="description" value="{{ $course->description }}">
-                            <input type="hidden" name="main_skill_id" value="{{ $mSkill->id ?? '' }}">
+                            @foreach($course->skills as $cSkill)
+                                <input type="hidden" name="skill_ids[]" value="{{ $cSkill->id }}">
+                            @endforeach
 
                             <div class="relative">
                                 <input type="number" 

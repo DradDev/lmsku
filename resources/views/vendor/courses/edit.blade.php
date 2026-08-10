@@ -1,9 +1,4 @@
 <x-app-layout>
-    @php
-        $mainSkill = $course->skills->firstWhere('pivot.is_main', true) ?? $course->skills->first();
-        $mainSkillId = old('main_skill_id', $mainSkill->id ?? '');
-    @endphp
-
     <div class="min-h-screen bg-slate-50 py-10">
         <div class="max-w-4xl mx-auto px-6">
 
@@ -166,135 +161,48 @@
                         </div>
                     </div>
 
-                    <!-- GROUP 3: MAIN SKILL DROPDOWN & DYNAMIC TAGS FILTER -->
+                    <!-- GROUP 3: MULTI-SELECTION MAIN SKILLS -->
+                    @php
+                        $selectedSkillIds = old('skill_ids', $course->skills->pluck('id')->toArray());
+                    @endphp
                     <div class="space-y-4 pt-2">
-                        <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-2">
-                            <span>⚡ 3. Main Skill Utama & Specialty Tags Filter</span>
-                        </h3>
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                                <span>⚡ 3. Target Main Skills Utama (Dapat Memilih 2 atau Lebih) <span class="text-rose-500">*</span></span>
+                            </h3>
+                            <span id="selected_skills_count" class="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
+                                {{ count($selectedSkillIds) }} Main Skill Terpilih
+                            </span>
+                        </div>
 
-                        <!-- Main Skill Dropdown Select -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                Pilih Main Skill Utama (Primary Skill) <span class="text-rose-500">*</span>
-                            </label>
-                            <select name="main_skill_id" id="main_skill_select" required onchange="filterSpecialtyTags()"
-                                    class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-black text-purple-950 bg-purple-50/50">
-                                <option value="">-- Pilih Main Skill Utama --</option>
-                                @foreach($skills as $sk)
-                                    <option value="{{ $sk->id }}" @selected($mainSkillId == $sk->id)>
-                                        ⚡ {{ $sk->name }}
-                                    </option>
+                        <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-3">
+                            <p class="text-xs text-slate-600 font-medium">Pilih 2 atau lebih skill kompetensi utama yang menjadi fokus sertifikasi course ini:</p>
+
+                            <!-- Hidden Native Inputs Container -->
+                            <div id="hidden_skills_container">
+                                @foreach($selectedSkillIds as $sId)
+                                    <input type="hidden" name="skill_ids[]" value="{{ $sId }}" id="hidden_skill_{{ $sId }}">
                                 @endforeach
-                            </select>
-                            <p class="text-[11px] text-slate-500 mt-1">Memilih Main Skill akan otomatis menyaring daftar **Specialty Tags** di bawahnya.</p>
-                            @error('main_skill_id') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
-
-                        <!-- Secondary Skills Picker (Optional) -->
-                        @php
-                            $selectedSkillIds = old('skill_ids', $course->skills->pluck('id')->toArray());
-                        @endphp
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                    Skill Kompetensi Tambahan (Opsional)
-                                </label>
-                                <span id="selected_skills_count" class="text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200">
-                                    {{ count($selectedSkillIds) }} Skill Terpilih
-                                </span>
                             </div>
 
-                            <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-3 space-y-2">
-                                <div id="hidden_skills_container">
-                                    @foreach($selectedSkillIds as $sId)
-                                        <input type="hidden" name="skill_ids[]" value="{{ $sId }}" id="hidden_skill_{{ $sId }}">
-                                    @endforeach
-                                </div>
-
-                                <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-1">
-                                    @foreach($skills as $sk)
-                                        @php $isSkillSelected = in_array($sk->id, $selectedSkillIds); @endphp
-                                        <button type="button" 
-                                                data-skill-id="{{ $sk->id }}"
-                                                data-skill-name="{{ $sk->name }}"
-                                                onclick="toggleSkillChip(this)"
-                                                class="skill-chip inline-flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold border transition-all text-left cursor-pointer {{ $isSkillSelected ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-purple-300 hover:bg-purple-50/50' }}">
-                                            <span>⚡ {{ $sk->name }}</span>
-                                            <span class="chip-status text-[11px] font-extrabold ml-1">{{ $isSkillSelected ? '✓' : '+' }}</span>
-                                        </button>
-                                    @endforeach
-                                </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-60 overflow-y-auto p-1">
+                                @foreach($skills as $sk)
+                                    @php $isSkillSelected = in_array($sk->id, $selectedSkillIds); @endphp
+                                    <button type="button" 
+                                            data-skill-id="{{ $sk->id }}"
+                                            data-skill-name="{{ $sk->name }}"
+                                            onclick="toggleSkillChip(this)"
+                                            class="skill-chip inline-flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold border transition-all text-left cursor-pointer {{ $isSkillSelected ? 'bg-purple-700 text-white border-purple-700 shadow-md ring-2 ring-purple-300' : 'bg-white text-slate-800 border-slate-200 hover:border-purple-400 hover:bg-purple-50' }}">
+                                        <span>⚡ {{ $sk->name }}</span>
+                                        <span class="chip-status text-xs font-black ml-1.5">{{ $isSkillSelected ? '✓' : '+' }}</span>
+                                    </button>
+                                @endforeach
                             </div>
-                        </div>
-
-                        <!-- Specialty Tags Filtered Container -->
-                        @php
-                            $selectedTagIds = old('tag_ids', $course->tags->pluck('id')->toArray());
-                        @endphp
-                        <div>
-                            <div class="flex items-center justify-between mb-1.5">
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                    🏷️ Specialty Tags (Tersaring Berdasarkan Main Skill)
-                                </label>
-                                <span id="selected_tags_count" class="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
-                                    {{ count($selectedTagIds) }} Tag Terpilih
-                                </span>
-                            </div>
-
-                            <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-3">
-                                <div id="hidden_tags_container">
-                                    @foreach($selectedTagIds as $tId)
-                                        <input type="hidden" name="tag_ids[]" value="{{ $tId }}" id="hidden_tag_{{ $tId }}">
-                                    @endforeach
-                                </div>
-
-                                <div id="tags_chips_grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
-                                    @foreach($tags as $tg)
-                                        @php $isTagSelected = in_array($tg->id, $selectedTagIds); @endphp
-                                        <button type="button" 
-                                                data-tag-id="{{ $tg->id }}"
-                                                data-tag-skill-id="{{ $tg->skill_id ?? '' }}"
-                                                data-tag-name="{{ $tg->name }}"
-                                                onclick="toggleTagChip(this)"
-                                                class="tag-chip inline-flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold border transition-all text-left cursor-pointer {{ $isTagSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50' }}">
-                                            <span>#{{ $tg->name }}</span>
-                                            <span class="chip-status text-[11px] font-extrabold ml-1">{{ $isTagSelected ? '✓' : '+' }}</span>
-                                        </button>
-                                    @endforeach
-                                </div>
-
-                                <p id="no_tags_filtered_notice" class="hidden text-xs text-slate-400 italic text-center py-2">
-                                    Tidak ada tag spesialisasi khusus untuk Main Skill ini. Menampilkan seluruh tag pendukung.
-                                </p>
-                            </div>
+                            @error('skill_ids') <p class="text-rose-600 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
 
                     <script>
-                        function filterSpecialtyTags() {
-                            const mainSkillId = document.getElementById('main_skill_select').value;
-                            const tagChips = document.querySelectorAll('.tag-chip');
-                            let visibleCount = 0;
-
-                            tagChips.forEach(chip => {
-                                const tagSkillId = chip.getAttribute('data-tag-skill-id');
-                                if (!mainSkillId || !tagSkillId || tagSkillId === mainSkillId) {
-                                    chip.classList.remove('hidden');
-                                    visibleCount++;
-                                } else {
-                                    chip.classList.add('hidden');
-                                }
-                            });
-
-                            const notice = document.getElementById('no_tags_filtered_notice');
-                            if (visibleCount === 0 && mainSkillId) {
-                                tagChips.forEach(chip => chip.classList.remove('hidden'));
-                                notice.classList.remove('hidden');
-                            } else {
-                                notice.classList.add('hidden');
-                            }
-                        }
-
                         function toggleSkillChip(btn) {
                             const sId = btn.getAttribute('data-skill-id');
                             const container = document.getElementById('hidden_skills_container');
@@ -302,8 +210,8 @@
 
                             if (existing) {
                                 existing.remove();
-                                btn.classList.remove('bg-purple-600', 'text-white', 'border-purple-600', 'shadow-sm');
-                                btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:border-purple-300', 'hover:bg-purple-50/50');
+                                btn.classList.remove('bg-purple-700', 'text-white', 'border-purple-700', 'shadow-md', 'ring-2', 'ring-purple-300');
+                                btn.classList.add('bg-white', 'text-slate-800', 'border-slate-200', 'hover:border-purple-400', 'hover:bg-purple-50');
                                 btn.querySelector('.chip-status').textContent = '+';
                             } else {
                                 const input = document.createElement('input');
@@ -313,44 +221,14 @@
                                 input.id = 'hidden_skill_' + sId;
                                 container.appendChild(input);
 
-                                btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200', 'hover:border-purple-300', 'hover:bg-purple-50/50');
-                                btn.classList.add('bg-purple-600', 'text-white', 'border-purple-600', 'shadow-sm');
+                                btn.classList.remove('bg-white', 'text-slate-800', 'border-slate-200', 'hover:border-purple-400', 'hover:bg-purple-50');
+                                btn.classList.add('bg-purple-700', 'text-white', 'border-purple-700', 'shadow-md', 'ring-2', 'ring-purple-300');
                                 btn.querySelector('.chip-status').textContent = '✓';
                             }
 
                             const count = container.querySelectorAll('input').length;
-                            document.getElementById('selected_skills_count').textContent = count + ' Skill Terpilih';
+                            document.getElementById('selected_skills_count').textContent = count + ' Main Skill Terpilih';
                         }
-
-                        function toggleTagChip(btn) {
-                            const tId = btn.getAttribute('data-tag-id');
-                            const container = document.getElementById('hidden_tags_container');
-                            const existing = document.getElementById('hidden_tag_' + tId);
-
-                            if (existing) {
-                                existing.remove();
-                                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
-                                btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
-                                btn.querySelector('.chip-status').textContent = '+';
-                            } else {
-                                const input = document.createElement('input');
-                                input.type = 'hidden';
-                                input.name = 'tag_ids[]';
-                                input.value = tId;
-                                input.id = 'hidden_tag_' + tId;
-                                container.appendChild(input);
-
-                                btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
-                                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
-                                btn.querySelector('.chip-status').textContent = '✓';
-                            }
-
-                            const count = container.querySelectorAll('input').length;
-                            document.getElementById('selected_tags_count').textContent = count + ' Tag Terpilih';
-                        }
-
-                        // Run filter on page load
-                        document.addEventListener('DOMContentLoaded', filterSpecialtyTags);
                     </script>
 
                     <!-- ACTION BUTTONS -->
