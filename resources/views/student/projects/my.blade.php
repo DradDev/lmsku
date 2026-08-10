@@ -57,6 +57,67 @@
                 </div>
             </div>
 
+            @if(isset($invitedParticipations) && $invitedParticipations->isNotEmpty())
+                <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-lg text-amber-950 flex items-center gap-2">
+                            <span>📩 Undangan Project Untukmu</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-amber-600 text-white">
+                                {{ $invitedParticipations->count() }} Undangan Baru
+                            </span>
+                        </h4>
+                        <span class="text-xs text-amber-800 font-medium">Konfirmasi keikutsertaanmu di bawah ini</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @foreach($invitedParticipations as $invitation)
+                            @php $invProj = $invitation->project; @endphp
+                            @if($invProj)
+                                <div class="bg-white border border-amber-200 rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-2 mb-1.5">
+                                            @if(($invProj->provider_type ?? 'internal') === 'external' || ($invProj->user->role ?? '') === 'vendor')
+                                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-purple-100 text-purple-800 border border-purple-200">
+                                                    🏢 External: {{ $invProj->user->name ?? 'Vendor' }}
+                                                </span>
+                                            @else
+                                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                                                    🎓 Internal: {{ $invProj->user->name ?? 'Dosen' }}
+                                                </span>
+                                            @endif
+                                            <span class="text-[11px] text-gray-400 font-medium">Diundang {{ $invitation->created_at->diffForHumans() }}</span>
+                                        </div>
+
+                                        <h5 class="font-bold text-base text-gray-900 leading-snug">
+                                            {{ $invProj->title }}
+                                        </h5>
+                                        <p class="text-xs text-gray-600 line-clamp-2 mt-1">
+                                            {{ $invProj->description }}
+                                        </p>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 pt-2 border-t border-gray-100">
+                                        <form action="{{ route('student.projects.accept-invite', $invProj) }}" method="POST" class="flex-1">
+                                            @csrf
+                                            <button type="submit" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm flex items-center justify-center gap-1">
+                                                🚀 Terima Undangan
+                                            </button>
+                                        </form>
+
+                                        <form action="{{ route('student.projects.decline-invite', $invProj) }}" method="POST" onsubmit="return confirm('Tolak undangan project ini?')">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-2 bg-gray-100 hover:bg-red-50 hover:text-red-700 text-gray-600 font-semibold text-xs rounded-xl transition border border-gray-200">
+                                                ✕ Tolak
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             @if ($participations->isEmpty())
             <div class="bg-white shadow rounded p-8 text-center">
                 <div class="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">

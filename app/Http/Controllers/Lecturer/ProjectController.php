@@ -361,14 +361,16 @@ class ProjectController extends Controller
 
         $project->load(['skills', 'tags', 'participations']);
 
-        $existingParticipantUserIds = $project->participations->pluck('user_id')->toArray();
+        $participationsMap = $project->participations->keyBy('user_id');
 
         $students = \App\Models\User::where('role', 'student')
             ->with(['skillProfiles.skill', 'interestProfiles.tag', 'completedProjects'])
             ->get()
-            ->map(function ($student) use ($project, $existingParticipantUserIds) {
+            ->map(function ($student) use ($project, $participationsMap) {
                 $student->match_score = $student->calculateTalentMatchScore($project);
-                $student->is_already_invited = in_array($student->id, $existingParticipantUserIds, true);
+                $part = $participationsMap->get($student->id);
+                $student->invitation_status = $part ? $part->status : null;
+                $student->is_already_invited = $part !== null && in_array($part->status, ['invited', 'in_progress', 'development', 'review', 'completed']);
                 return $student;
             })
             ->sortByDesc('match_score')
@@ -398,13 +400,13 @@ class ProjectController extends Controller
             'Kamu tidak memiliki akses ke project ini.'
         );
 
-        $participation = \App\Models\ProjectParticipation::firstOrCreate(
+        $participation = \App\Models\ProjectParticipation::updateOrCreate(
             [
                 'project_id' => $project->id,
                 'user_id' => $user->id,
             ],
             [
-                'status' => 'in_progress',
+                'status' => 'invited',
                 'progress_percent' => 0,
                 'started_at' => now(),
             ]
@@ -412,6 +414,6 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('lecturer.projects.talent-pool', $project)
-            ->with('success', "Berhasil mengundang {$user->name} ke dalam proyek!");
+            ->with('success', "Undangan resmi telah dikirimkan kepada {$user->name}! Menunggu konfirmasi dari mahasiswa.");
     }
 }

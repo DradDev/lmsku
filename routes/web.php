@@ -150,6 +150,12 @@ Route::middleware(['auth', 'role:student'])
         Route::post('/projects/{project}/join', [StudentProjectController::class, 'join'])
             ->name('projects.join');
 
+        Route::post('/projects/{project}/accept-invite', [StudentProjectController::class, 'acceptInvite'])
+            ->name('projects.accept-invite');
+
+        Route::post('/projects/{project}/decline-invite', [StudentProjectController::class, 'declineInvite'])
+            ->name('projects.decline-invite');
+
         Route::patch('/projects/{project}/progress', [StudentProjectController::class, 'updateProgress'])
             ->name('projects.update-progress');
 

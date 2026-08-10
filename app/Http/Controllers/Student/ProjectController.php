@@ -35,10 +35,91 @@ class ProjectController extends Controller
             ->get();
 
         $joinedProjectIds = ProjectParticipation::where('user_id', $student->id)
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
             ->pluck('project_id')
             ->toArray();
 
-        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors'));
+        $invitedParticipations = ProjectParticipation::with(['project', 'project.user', 'project.skills'])
+            ->where('user_id', $student->id)
+            ->where('status', 'invited')
+            ->latest()
+            ->get();
+
+        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors', 'invitedParticipations'));
+    }
+
+    public function myProjects(): View
+    {
+        $participations = ProjectParticipation::with([
+            'project',
+            'project.skills',
+            'project.tags',
+            'project.user',
+        ])
+            ->where('user_id', Auth::id())
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
+            ->latest()
+            ->get();
+
+        $invitedParticipations = ProjectParticipation::with([
+            'project',
+            'project.skills',
+            'project.tags',
+            'project.user',
+        ])
+            ->where('user_id', Auth::id())
+            ->where('status', 'invited')
+            ->latest()
+            ->get();
+
+        return view('student.projects.my', compact('participations', 'invitedParticipations'));
+    }
+
+    public function acceptInvite(Project $project): RedirectResponse
+    {
+        $participation = ProjectParticipation::where('user_id', Auth::id())
+            ->where('project_id', $project->id)
+            ->where('status', 'invited')
+            ->firstOrFail();
+
+        $participation->update([
+            'status' => 'in_progress',
+            'progress_percent' => 0,
+            'started_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+
+        LearningActivityLog::create([
+            'user_id' => Auth::id(),
+            'project_id' => $project->id,
+            'activity_type' => 'accept_invite_project',
+            'activity_value' => 1,
+            'metadata' => [
+                'participation_id' => $participation->id,
+            ],
+            'occurred_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('student.projects.my')
+            ->with('success', "Selamat! Anda berhasil mengonfirmasi dan bergabung dalam project '{$project->title}'.");
+    }
+
+    public function declineInvite(Project $project): RedirectResponse
+    {
+        $participation = ProjectParticipation::where('user_id', Auth::id())
+            ->where('project_id', $project->id)
+            ->where('status', 'invited')
+            ->firstOrFail();
+
+        $participation->update([
+            'status' => 'declined',
+            'last_activity_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('student.projects.index')
+            ->with('success', "Undangan project '{$project->title}' telah ditolak.");
     }
 
     public function portfolio(): View
@@ -191,28 +272,6 @@ class ProjectController extends Controller
             $reasons[] = "Belum memiliki Sertifikat Matkul Terverifikasi (Lulus Final Quiz).";
         }
 
-        return [
-            'is_eligible' => $isEligible,
-            'has_main_skill' => $hasMainSkill,
-            'has_verified_certificate' => $hasVerifiedCertificate,
-            'main_skill_name' => $mainSkill?->name ?? 'General Skill',
-            'reasons' => $reasons,
-        ];
-    }
-
-    public function myProjects(): View
-    {
-        $participations = ProjectParticipation::with([
-            'project',
-            'project.skills',
-            'project.tags',
-            'project.user',
-        ])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
-
-        return view('student.projects.my', compact('participations'));
     }
 
     public function complete(Project $project): RedirectResponse

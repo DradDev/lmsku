@@ -143,17 +143,25 @@
                                 View Portfolio
                             </a>
 
-                            @if($student->is_already_invited)
-                            <span class="py-2 px-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold cursor-default">
-                                Joined / Invited
-                            </span>
+                            @if($student->invitation_status === 'invited')
+                                <span class="py-2 px-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold cursor-default">
+                                    ⏳ Undangan Terkirim
+                                </span>
+                            @elseif(in_array($student->invitation_status, ['in_progress', 'development', 'review', 'completed']))
+                                <span class="py-2 px-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold cursor-default">
+                                    🚀 Joined
+                                </span>
+                            @elseif($student->invitation_status === 'declined')
+                                <span class="py-2 px-3 bg-red-50 text-red-700 border border-red-200 rounded-lg text-xs font-bold cursor-default">
+                                    ❌ Ditolak
+                                </span>
                             @else
-                            <form action="{{ route('lecturer.projects.invite', [$project, $student]) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit" class="py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
-                                    + Invite Talent
-                                </button>
-                            </form>
+                                <form action="{{ route('lecturer.projects.invite', [$project, $student]) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm">
+                                        + Invite Talent
+                                    </button>
+                                </form>
                             @endif
                         </div>
                     </div>
