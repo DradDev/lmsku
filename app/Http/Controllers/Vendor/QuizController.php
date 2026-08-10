@@ -54,6 +54,7 @@ class QuizController extends Controller
 
         $validated = $request->validate([
             'question' => ['required', 'string'],
+            'difficulty' => ['nullable', 'in:easy,medium,hard'],
             'option_a' => ['required', 'string'],
             'option_b' => ['required', 'string'],
             'option_c' => ['required', 'string'],
@@ -65,6 +66,7 @@ class QuizController extends Controller
             'quiz_id' => $quiz->id,
             'user_id' => Auth::id(),
             'question_type' => 'multiple_choice',
+            'difficulty' => $validated['difficulty'] ?? 'medium',
             'question' => $validated['question'],
             'option_a' => $validated['option_a'],
             'option_b' => $validated['option_b'],

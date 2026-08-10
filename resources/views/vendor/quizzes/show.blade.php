@@ -11,10 +11,10 @@
 
                 <div class="flex items-center gap-2">
                     <span class="px-3 py-1 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-full border border-indigo-200">
-                        Durasi: {{ $quiz->time_limit }} Menit
+                        ⏱️ Durasi: {{ $quiz->time_limit }} Menit
                     </span>
                     <span class="px-3 py-1 bg-purple-50 text-purple-700 font-bold text-xs rounded-full border border-purple-200">
-                        Total Soal: {{ $quiz->questions->count() }}
+                        📝 Total Soal: {{ $quiz->questions->count() }}
                     </span>
                 </div>
             </div>
@@ -39,16 +39,35 @@
                 {{-- Left Column: Add Question Form (5 Cols) --}}
                 <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
                     <h3 class="font-extrabold text-base text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-                        <span>➕ Tambah Soal Pilihan Ganda</span>
+                        <span>➕ Tambah Soal Pilihan Ganda Baru</span>
                     </h3>
 
                     <form action="{{ route('vendor.quizzes.questions.store', $quiz) }}" method="POST" class="space-y-4">
                         @csrf
 
+                        <!-- DIFFICULTY & TYPE -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Difficulty</label>
+                                <select name="difficulty" class="w-full rounded-xl border border-slate-300 bg-slate-50 p-2.5 text-xs font-semibold text-slate-900 focus:border-purple-500 focus:outline-none" required>
+                                    <option value="easy">Easy (Mudah)</option>
+                                    <option value="medium" selected>Medium (Sedang)</option>
+                                    <option value="hard">Hard (Sulit)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipe Soal</label>
+                                <div class="w-full rounded-xl border border-slate-200 bg-slate-100 p-2.5 text-xs font-bold text-slate-600 cursor-not-allowed">
+                                    Multiple Choice
+                                </div>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pertanyaan / Soal</label>
-                            <textarea name="question" rows="3" required placeholder="Tuliskan pertanyaan evaluasi..."
-                                      class="w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl text-xs p-3.5 bg-slate-50/50"></textarea>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Teks Pertanyaan (Question)</label>
+                            <textarea name="question" rows="4" required placeholder="Tulis pertanyaan evaluasi di sini..."
+                                      class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-2xl text-xs p-3.5 bg-slate-50/50"></textarea>
                         </div>
 
                         <div class="space-y-2.5">
@@ -56,18 +75,18 @@
 
                             @foreach(['A' => 'option_a', 'B' => 'option_b', 'C' => 'option_c', 'D' => 'option_d'] as $letter => $field)
                             <div class="flex items-center gap-2">
-                                <span class="font-black text-xs text-indigo-700 w-5 text-center">{{ $letter }}.</span>
+                                <span class="font-black text-xs text-purple-700 w-5 text-center">{{ $letter }}.</span>
                                 <input type="text" name="{{ $field }}" required placeholder="Jawaban {{ $letter }}"
-                                       class="flex-1 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-2.5 bg-white">
+                                       class="flex-1 border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 bg-white">
                                 <label class="flex items-center gap-1.5 text-[11px] text-slate-600 font-bold cursor-pointer bg-slate-100 px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition">
-                                    <input type="radio" name="correct_answer" value="{{ $letter }}" {{ $letter === 'A' ? 'checked' : '' }} class="text-indigo-600 border-slate-300">
+                                    <input type="radio" name="correct_answer" value="{{ $letter }}" {{ $letter === 'A' ? 'checked' : '' }} class="text-purple-600 border-slate-300">
                                     <span>Kunci</span>
                                 </label>
                             </div>
                             @endforeach
                         </div>
 
-                        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
+                        <button type="submit" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition">
                             💾 Simpan Soal Evaluasi
                         </button>
                     </form>
@@ -76,17 +95,30 @@
                 {{-- Right Column: Question List (7 Cols) --}}
                 <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
                     <h3 class="font-extrabold text-base text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
-                        <span>📋 Daftar Soal Evaluasi Kuis</span>
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">{{ $quiz->questions->count() }} Soal Tersimpan</span>
+                        <span>📋 Bank Soal Kuis ({{ $quiz->title }})</span>
+                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-full">{{ $quiz->questions->count() }} Soal Tersimpan</span>
                     </h3>
 
-                    <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                    <div class="space-y-3.5 max-h-[650px] overflow-y-auto pr-1">
                         @forelse($quiz->questions as $qIndex => $q)
-                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5 hover:bg-slate-100/60 transition">
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3 hover:bg-slate-100/60 transition">
                                 <div class="flex items-start justify-between gap-3">
-                                    <h4 class="font-extrabold text-xs text-slate-900 leading-relaxed">
-                                        {{ $qIndex + 1 }}. {{ $q->question }}
-                                    </h4>
+                                    <div class="space-y-1.5">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-700">
+                                                No. {{ $qIndex + 1 }}
+                                            </span>
+                                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700">
+                                                Multiple Choice
+                                            </span>
+                                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                                {{ ucfirst($q->difficulty ?? 'medium') }}
+                                            </span>
+                                        </div>
+                                        <h4 class="font-extrabold text-xs text-slate-900 leading-relaxed pt-1">
+                                            {{ $q->question }}
+                                        </h4>
+                                    </div>
 
                                     <form action="{{ route('vendor.questions.destroy', $q) }}" method="POST" onsubmit="return confirm('Hapus soal ini?')" class="m-0 flex-shrink-0">
                                         @csrf
@@ -95,7 +127,7 @@
                                     </form>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="grid grid-cols-2 gap-2 text-xs pt-1">
                                     @foreach(['A' => $q->option_a, 'B' => $q->option_b, 'C' => $q->option_c, 'D' => $q->option_d] as $letter => $val)
                                         <div class="p-2.5 rounded-xl border {{ strtoupper($q->correct_answer) === $letter ? 'bg-emerald-100/80 border-emerald-300 text-emerald-950 font-extrabold shadow-sm' : 'bg-white border-slate-200 text-slate-700 font-medium' }}">
                                             <span class="font-black mr-1">{{ $letter }}.</span> {{ $val }}
