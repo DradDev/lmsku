@@ -56,6 +56,8 @@ Route::get('/', function () {
     return match (Auth::user()->role) {
         'admin' => redirect()->route('admin.dashboard'),
         'lecturer' => redirect()->route('lecturer.dashboard'),
+        'vendor' => redirect()->route('vendor.dashboard'),
+        'student' => redirect()->route('student.dashboard'),
         default => redirect()->route('student.dashboard'),
     };
 });
