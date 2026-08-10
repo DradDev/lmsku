@@ -467,21 +467,19 @@
                                 @php
                                     $isThisEnrolled = $enrolledOffering && $enrolledOffering->id === $off->id;
                                     $isFull = !$off->hasAvailableCapacity();
-                                    $capText = is_null($off->capacity) 
-                                        ? '♾️ Kuota Unlimited' 
-                                        : ($isFull ? '🔒 KUOTA PENUH' : 'Sisa: ' . max(0, $off->capacity - $off->enrollments_count));
+                                    $availableCap = max(0, $off->capacity - $off->enrollments_count);
                                 @endphp
                                 @if($isThisEnrolled)
                                     <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #d1fae5; color: #065f46; border: 1.5px solid #34d399;">
-                                        📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | {{ $capText }})</span>
+                                        📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | Sisa: {{ $availableCap }})</span>
                                     </div>
                                 @elseif($isFull)
                                     <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; border: 1px solid #cbd5e1;">
-                                        🔒 {{ $off->section_name }} <span style="font-weight: 400;">({{ $off->lecturer->name ?? 'Dosen' }} | {{ $capText }})</span>
+                                        🔒 {{ $off->section_name }} <span style="font-weight: 400;">({{ $off->lecturer->name ?? 'Dosen' }} | PENUH)</span>
                                     </div>
                                 @else
                                     <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1;">
-                                        📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | {{ $capText }})</span>
+                                        📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | Sisa: {{ $availableCap }})</span>
                                     </div>
                                 @endif
                             @endforeach
@@ -542,12 +540,10 @@
                                             @foreach($offerings as $off)
                                                 @php
                                                     $isFull = !$off->hasAvailableCapacity();
-                                                    $optCapText = is_null($off->capacity) 
-                                                        ? '♾️ Unlimited' 
-                                                        : ($isFull ? '🔒 KELAS PENUH' : 'Sisa Kuota: ' . max(0, $off->capacity - $off->enrollments_count));
+                                                    $availableCap = max(0, $off->capacity - $off->enrollments_count);
                                                 @endphp
                                                 <option value="{{ $off->id }}" {{ $isFull ? 'disabled style=color:#94a3b8;background:#f8fafc;' : '' }}>
-                                                    {{ $isFull ? '🔒' : '📌' }} {{ $off->section_name }} — {{ $off->lecturer->name ?? 'Dosen' }} ({{ $optCapText }})
+                                                    {{ $isFull ? '🔒' : '📌' }} {{ $off->section_name }} — {{ $off->lecturer->name ?? 'Dosen' }} {{ $isFull ? '(🔒 KELAS PENUH)' : '(Sisa Kuota: '.$availableCap.')' }}
                                                 </option>
                                             @endforeach
                                         </select>
