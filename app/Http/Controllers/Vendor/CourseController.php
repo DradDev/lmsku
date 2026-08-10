@@ -134,6 +134,7 @@ class CourseController extends Controller
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
+            'is_archived' => ['nullable', 'boolean'],
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],

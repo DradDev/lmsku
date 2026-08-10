@@ -43,7 +43,7 @@
                         @error('name') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Level Kesulitan</label>
                             <select name="level" required class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-3">
@@ -64,9 +64,17 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Passing Grade Kuis (0-100)</label>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Passing Grade (0-100)</label>
                             <input type="number" name="certificate_threshold" value="{{ old('certificate_threshold', $course->certificate_threshold) }}" required min="0" max="100"
                                    class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-3">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Status Course</label>
+                            <select name="is_archived" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-3 font-bold text-purple-900">
+                                <option value="0" {{ old('is_archived', $course->is_archived) ? '' : 'selected' }}>🟢 Active Course (Terbuka)</option>
+                                <option value="1" {{ old('is_archived', $course->is_archived) ? 'selected' : '' }}>🔴 Draft Bank (Internal)</option>
+                            </select>
                         </div>
                     </div>
 

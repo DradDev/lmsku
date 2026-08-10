@@ -62,11 +62,17 @@
                             ✏️ Edit Course
                         </a>
 
-                        <form action="{{ route('vendor.courses.toggle-archive', $course) }}" method="POST" onsubmit="return confirm('Ubah status aktif course ini?')">
+                        <form action="{{ route('vendor.courses.toggle-archive', $course) }}" method="POST" onsubmit="return confirm('Ubah status publikasi/draft course ini?')">
                             @csrf
-                            <button type="submit" class="rounded-xl border px-4 py-2 text-sm font-semibold transition {{ $course->is_archived ? 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' : 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' }}">
-                                {{ $course->is_archived ? 'Aktifkan Course' : 'Arsipkan Course' }}
-                            </button>
+                            @if($course->is_archived)
+                                <button type="submit" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                    <span>🟢 Dipublikasikan (Aktif)</span>
+                                </button>
+                            @else
+                                <button type="submit" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                                    <span>🔴 Simpan ke Draft Bank</span>
+                                </button>
+                            @endif
                         </form>
                     </div>
                 </div>
@@ -98,8 +104,8 @@
                                 Threshold Sertifikat: {{ $course->certificate_threshold ?? 75 }}%
                             </span>
 
-                            <span class="rounded-full {{ $course->is_archived ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200' }} px-3.5 py-1 font-semibold">
-                                Status: {{ $course->is_archived ? '🔴 Archived / Draft Bank' : '🟢 Aktif Dipublikasikan' }}
+                            <span class="rounded-full {{ $course->is_archived ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300' }} px-3.5 py-1 font-bold">
+                                Status: {{ $course->is_archived ? '🔴 Project Bank (Draft Internal)' : '🟢 Active Course (Terbuka Dipublikasikan)' }}
                             </span>
                         </div>
                     </div>
