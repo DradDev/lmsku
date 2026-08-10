@@ -6,6 +6,7 @@ $userInitial = strtoupper(substr($userName, 0, 1));
 $homeRoute = match ($role) {
 'admin' => route('admin.dashboard'),
 'lecturer' => route('lecturer.dashboard'),
+'vendor' => route('vendor.dashboard'),
 default => route('student.dashboard'),
 };
 @endphp
@@ -118,6 +119,33 @@ default => route('student.dashboard'),
                     <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 </svg>
                 Projects
+            </a>
+            @endif
+
+            @if($role === 'vendor')
+            <a href="{{ route('vendor.dashboard') }}"
+                class="lms-nav-link {{ request()->routeIs('vendor.dashboard') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 13h8V3H3zM13 21h8v-6h-8zM13 10h8V3h-8zM3 21h8v-6H3z" />
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="{{ route('vendor.courses.index') }}"
+                class="lms-nav-link {{ request()->routeIs('vendor.courses.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                </svg>
+                Certified Courses
+            </a>
+
+            <a href="{{ route('vendor.projects.index') }}"
+                class="lms-nav-link {{ request()->routeIs('vendor.projects.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                </svg>
+                Industry Projects
             </a>
             @endif
 

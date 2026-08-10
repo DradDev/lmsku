@@ -79,8 +79,9 @@
                         x-model="role"
                         class="mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
 
-                        <option value="student">Student</option>
-                        <option value="lecturer">Author / Vendor</option>
+                        <option value="student">Student (Mahasiswa)</option>
+                        <option value="lecturer">Lecturer (Dosen Akademik)</option>
+                        <option value="vendor">Vendor / Mitra Eksternal Industri</option>
 
                     </select>
 

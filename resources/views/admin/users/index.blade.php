@@ -66,6 +66,7 @@
                                             $avatarBg = match($user->role) {
                                                 'admin' => 'linear-gradient(135deg, #7E22CE, #A855F7)',
                                                 'lecturer' => 'linear-gradient(135deg, #1E3A8A, #2563EB)',
+                                                'vendor' => 'linear-gradient(135deg, #6B21A8, #C084FC)',
                                                 default => 'linear-gradient(135deg, #047857, #10B981)',
                                             };
                                         @endphp
@@ -90,6 +91,7 @@
                                         $roleBadges = match($user->role) {
                                             'admin' => ['bg' => '#F3E8FF', 'color' => '#7E22CE', 'label' => 'Administrator'],
                                             'lecturer' => ['bg' => '#EFF6FF', 'color' => '#2563EB', 'label' => 'Dosen Pengampu'],
+                                            'vendor' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => '🏢 Mitra Vendor'],
                                             default => ['bg' => '#DCFCE7', 'color' => '#15803D', 'label' => 'Mahasiswa'],
                                         };
                                     @endphp
