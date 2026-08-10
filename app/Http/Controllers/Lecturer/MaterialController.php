@@ -107,6 +107,8 @@ class MaterialController extends Controller
             'file_path' => $filePath,
         ]);
 
+        app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseObj->id);
+
         $scopeMsg = $targetScope === 'all'
             ? 'Pustaka Induk (Semua Kelas)'
             : "khusus " . ($courseObj->section_name ?: 'Kelas Ini');
@@ -144,9 +146,8 @@ class MaterialController extends Controller
             'title' => $validated['title'],
         ];
 
-        if ($request->has('target_scope')) {
-            $targetScope = $validated['target_scope'];
-            if ($targetScope === 'all') {
+        if (isset($validated['target_scope'])) {
+            if ($validated['target_scope'] === 'all') {
                 $updateData['course_offering_id'] = null;
             } elseif ($material->course_id) {
                 $updateData['course_offering_id'] = $material->course_id;
@@ -180,7 +181,12 @@ class MaterialController extends Controller
             Storage::disk('public')->delete($material->file_path);
         }
 
+        $courseId = $material->course_offering_id ?? $material->course_id;
         $material->delete();
+
+        if ($courseId) {
+            app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseId);
+        }
 
         return redirect()
             ->route('lecturer.courses.show', $redirectId)
