@@ -23,11 +23,15 @@ class QuizController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'time_limit' => ['nullable', 'integer', 'min:1'],
             'quiz_type' => ['required', Rule::in(['daily', 'weekly', 'final'])],
-            'max_attempts' => ['required', 'integer', 'min:1', 'max:100'],
+            'max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'is_unlimited' => ['nullable', 'boolean'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'target_scope' => ['nullable', Rule::in(['all', 'class'])],
         ]);
+
+        $isUnlimited = $request->boolean('is_unlimited');
+        $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
         $targetScope = $validated['target_scope'] ?? 'all';
         $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
@@ -52,7 +56,7 @@ class QuizController extends Controller
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
             'quiz_type' => $validated['quiz_type'],
-            'max_attempts' => $validated['max_attempts'],
+            'max_attempts' => $maxAttemptsValue,
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
         ]);

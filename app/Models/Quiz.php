@@ -79,6 +79,10 @@ class Quiz extends Model
             return false;
         }
 
+        if ($this->max_attempts === null || $this->max_attempts === 0) {
+            return true;
+        }
+
         $attemptCount = $this->attempts()
             ->where('user_id', $userId)
             ->count();
@@ -95,6 +99,10 @@ class Quiz extends Model
 
     public function remainingAttempts(int $userId): int
     {
+        if ($this->max_attempts === null || $this->max_attempts === 0) {
+            return 999; // Unlimited Attempts
+        }
+
         $attemptCount = $this->attempts()
             ->where('user_id', $userId)
             ->count();
@@ -106,7 +114,7 @@ class Quiz extends Model
 
         $allowedAttempts = $this->max_attempts + $approvedRetakes;
 
-        return max(0, $allowedAttempts - $allowedAttempts < $attemptCount ? 0 : ($allowedAttempts - $attemptCount));
+        return max(0, $allowedAttempts - $attemptCount);
     }
 
     public function getQuizTypeLabelAttribute(): string
