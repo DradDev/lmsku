@@ -125,6 +125,9 @@ class CourseOffering extends Model
         if (is_null($this->capacity)) {
             return true; // Unlimited
         }
+        if ($this->capacity <= 0) {
+            return false; // Kuota 0 atau negatif = Penuh / Ditutup
+        }
         return $this->enrolled_count < $this->capacity;
     }
 

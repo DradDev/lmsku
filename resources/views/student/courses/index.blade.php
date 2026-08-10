@@ -466,11 +466,22 @@
                             @foreach($offerings as $off)
                                 @php
                                     $isThisEnrolled = $enrolledOffering && $enrolledOffering->id === $off->id;
+                                    $isFull = !$off->hasAvailableCapacity();
                                     $availableCap = max(0, $off->capacity - $off->enrollments_count);
                                 @endphp
-                                <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; {{ $isThisEnrolled ? 'background: #d1fae5; color: #065f46; border: 1.5px solid #34d399;' : 'background: #ffffff; color: #334155; border: 1px solid #cbd5e1;' }}">
-                                    📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | Sisa: {{ $availableCap }})</span>
-                                </div>
+                                @if($isThisEnrolled)
+                                    <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #d1fae5; color: #065f46; border: 1.5px solid #34d399;">
+                                        📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | Sisa: {{ $availableCap }})</span>
+                                    </div>
+                                @elseif($isFull)
+                                    <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #f1f5f9; color: #94a3b8; border: 1px solid #cbd5e1;">
+                                        🔒 {{ $off->section_name }} <span style="font-weight: 400;">({{ $off->lecturer->name ?? 'Dosen' }} | PENUH)</span>
+                                    </div>
+                                @else
+                                    <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1;">
+                                        📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | Sisa: {{ $availableCap }})</span>
+                                    </div>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -516,22 +527,42 @@
                             </a>
                             @endif
                         @else
-                            <form action="{{ route('student.courses.enroll', $activeOffering->id) }}" method="POST" id="enroll-form-{{ $master->id }}" style="width: 100%;">
-                                @csrf
-                                <div style="margin-bottom: 8px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Pilih Rombel Kelas:</label>
-                                    <select onchange="document.getElementById('enroll-form-{{ $master->id }}').action = '/student/courses/' + this.value + '/enroll'" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; font-weight: 600; color: #1e293b; background: #ffffff; cursor: pointer; outline: none;">
-                                        @foreach($offerings as $off)
-                                            @php $availableCap = max(0, $off->capacity - $off->enrollments_count); @endphp
-                                            <option value="{{ $off->id }}">📌 {{ $off->section_name }} — {{ $off->lecturer->name ?? 'Dosen' }} (Kuota Sisa: {{ $availableCap }})</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            @php
+                                $availableOfferings = $offerings->filter(fn($o) => $o->hasAvailableCapacity());
+                                $firstAvailable = $availableOfferings->first() ?? $activeOffering;
+                            @endphp
+                            @if($availableOfferings->count() > 0)
+                                <form action="{{ route('student.courses.enroll', $firstAvailable->id) }}" method="POST" id="enroll-form-{{ $master->id }}" style="width: 100%;">
+                                    @csrf
+                                    <div style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Pilih Rombel Kelas:</label>
+                                        <select onchange="document.getElementById('enroll-form-{{ $master->id }}').action = '/student/courses/' + this.value + '/enroll'" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; font-weight: 600; color: #1e293b; background: #ffffff; cursor: pointer; outline: none;">
+                                            @foreach($offerings as $off)
+                                                @php
+                                                    $isFull = !$off->hasAvailableCapacity();
+                                                    $availableCap = max(0, $off->capacity - $off->enrollments_count);
+                                                @endphp
+                                                <option value="{{ $off->id }}" {{ $isFull ? 'disabled style=color:#94a3b8;background:#f8fafc;' : '' }}>
+                                                    {{ $isFull ? '🔒' : '📌' }} {{ $off->section_name }} — {{ $off->lecturer->name ?? 'Dosen' }} {{ $isFull ? '(🔒 KELAS PENUH)' : '(Sisa Kuota: '.$availableCap.')' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
-                                <button type="submit" class="btn btn-success">
-                                    🎓 Ambil Kelas Ini
-                                </button>
-                            </form>
+                                    <button type="submit" class="btn btn-success">
+                                        🎓 Ambil Kelas Ini
+                                    </button>
+                                </form>
+                            @else
+                                <div style="width: 100%;">
+                                    <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-align: center; margin-bottom: 6px;">
+                                        🔒 Seluruh Rombel Kelas Penuh
+                                    </div>
+                                    <button type="button" class="btn" disabled style="width: 100%; background: #e2e8f0; color: #64748b; cursor: not-allowed; opacity: 0.8;">
+                                        🔒 Pendaftaran Ditutup
+                                    </button>
+                                </div>
+                            @endif
                         @endif
                     </div>
                 </div>
