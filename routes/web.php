@@ -39,6 +39,11 @@ use App\Http\Controllers\Admin\AcademicTermController as AdminAcademicTermContro
 use App\Http\Controllers\Admin\CourseOfferingController as AdminCourseOfferingController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 
+// Vendor Controllers
+use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
+use App\Http\Controllers\Vendor\CourseController as VendorCourseController;
+use App\Http\Controllers\Vendor\ProjectController as VendorProjectController;
+
 Route::get('/', function () {
     if (! Auth::check()) {
         return view('welcome');
@@ -352,6 +357,27 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/projects/{project}/toggle-publish', [AdminProjectController::class, 'togglePublish'])
             ->name('projects.toggle-publish');
         Route::resource('projects', AdminProjectController::class)->only(['index', 'show', 'destroy']);
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Vendor / External Industry Partner Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:vendor'])
+    ->prefix('vendor')
+    ->name('vendor.')
+    ->group(function () {
+        Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
+
+        // Industry Certified Courses
+        Route::resource('courses', VendorCourseController::class);
+
+        // Industry Projects
+        Route::post('/projects/{project}/toggle-publish', [VendorProjectController::class, 'togglePublish'])->name('projects.toggle-publish');
+        Route::get('/projects/{project}/talent-pool', [VendorProjectController::class, 'talentPool'])->name('projects.talent-pool');
+        Route::post('/projects/{project}/invite/{user}', [VendorProjectController::class, 'inviteTalent'])->name('projects.invite');
+        Route::resource('projects', VendorProjectController::class);
     });
 
 require __DIR__ . '/auth.php';
