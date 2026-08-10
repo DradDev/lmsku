@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\MasterCourseController as AdminMasterCourseContro
 use App\Http\Controllers\Admin\AcademicTermController as AdminAcademicTermController;
 use App\Http\Controllers\Admin\CourseOfferingController as AdminCourseOfferingController;
 use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
+use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 
 // Vendor Controllers
 use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
@@ -357,6 +358,11 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/projects/{project}/toggle-publish', [AdminProjectController::class, 'togglePublish'])
             ->name('projects.toggle-publish');
         Route::resource('projects', AdminProjectController::class)->only(['index', 'show', 'destroy']);
+
+        // Courses Audit & Emergency Moderation (Vendor & Lecturer Courses)
+        Route::post('/courses/{course}/toggle-archive', [AdminCourseController::class, 'toggleArchive'])
+            ->name('courses.toggle-archive');
+        Route::resource('courses', AdminCourseController::class)->only(['index', 'show', 'destroy']);
     });
 
 /*

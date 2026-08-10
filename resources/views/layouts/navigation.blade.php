@@ -241,6 +241,15 @@ default => route('student.dashboard'),
                 Projects Audit
             </a>
 
+            <a href="{{ route('admin.courses.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                </svg>
+                Audit Courses
+            </a>
+
             @endif
         </div>
 
