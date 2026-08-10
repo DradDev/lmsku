@@ -27,21 +27,31 @@ class MaterialController extends Controller
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx', 'max:20480'],
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip,rar', 'max:20480'],
+            'target_scope' => ['nullable', \Illuminate\Validation\Rule::in(['all', 'class'])],
         ]);
 
+        $targetScope = $validated['target_scope'] ?? 'all';
         $filePath = $request->file('file')->store('materials', 'public');
+
+        $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
+        $offeringId = ($courseObj instanceof \App\Models\CourseOffering) ? $courseObj->id : null;
 
         Material::create([
             'course_id' => $courseObj->id,
-            'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
+            'master_course_id' => $masterCourseId,
+            'course_offering_id' => $targetScope === 'class' ? $offeringId : null,
             'title' => $validated['title'],
             'file_path' => $filePath,
         ]);
 
+        $scopeMsg = $targetScope === 'all'
+            ? 'Pustaka Induk (Semua Kelas)'
+            : "khusus " . ($courseObj->section_name ?: 'Kelas Ini');
+
         return redirect()
             ->route('lecturer.courses.show', $courseObj->id)
-            ->with('success', 'Materi berhasil diupload ke Pustaka Induk.');
+            ->with('success', "Materi berhasil diupload untuk {$scopeMsg}.");
     }
 
     public function show(Material $material)

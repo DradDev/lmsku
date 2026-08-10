@@ -9,6 +9,7 @@ class Material extends Model
     protected $fillable = [
         'course_id',
         'master_course_id',
+        'course_offering_id',
         'title',
         'file_path',
     ];
@@ -19,6 +20,14 @@ class Material extends Model
     public function masterCourse()
     {
         return $this->belongsTo(MasterCourse::class, 'master_course_id');
+    }
+
+    /**
+     * Relasi ke penawaran kelas spesifik (opsional)
+     */
+    public function courseOffering()
+    {
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
     }
 
     /**
