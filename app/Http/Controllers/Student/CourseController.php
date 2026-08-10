@@ -250,6 +250,27 @@ class CourseController extends Controller
         // 1. Coba enroll di CourseOffering (3NF)
         $offering = \App\Models\CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
 
+        // Jika $id bukan CourseOffering ID langsung, periksa apakah $id merupakan master_course_id
+        if (! $offering) {
+            $masterOfferings = \App\Models\CourseOffering::where('master_course_id', $id)
+                ->where('status', 'published')
+                ->whereHas('academicTerm', function ($query) {
+                    $query->where('is_active', true);
+                })
+                ->get();
+
+            if ($masterOfferings->count() > 0) {
+                // Cari rombel yang masih memiliki kuota
+                $offering = $masterOfferings->first(fn($o) => $o->hasAvailableCapacity());
+
+                if (! $offering) {
+                    return redirect()
+                        ->back()
+                        ->with('error', 'Pendaftaran gagal: Seluruh rombel kelas untuk mata kuliah ini sudah memenuhi kuota maksimum (kuota habis).');
+                }
+            }
+        }
+
         if ($offering) {
             $alreadyEnrolled = Enrollment::where('user_id', $user->id)
                 ->where('course_offering_id', $offering->id)
@@ -263,7 +284,7 @@ class CourseController extends Controller
 
             // CAPACITY CHECK: Kuota Mahasiswa
             if (! $offering->hasAvailableCapacity()) {
-                return redirect()->back()->with('error', 'Pendaftaran gagal: Kelas penawaran ini sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
+                return redirect()->back()->with('error', 'Pendaftaran gagal: Rombel ' . $offering->section_name . ' sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
             }
 
             if ($offering->isExpired() || $offering->status === 'cancelled') {
