@@ -51,13 +51,13 @@
                 </p>
             </div>
 
-            <!-- INFO BANNER SANGAT INFORMATIF -->
-            <div class="mb-8 p-5 bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-3xl shadow-md border border-purple-800/50 space-y-2">
-                <div class="flex items-center gap-2 font-extrabold text-sm text-purple-200">
+            <!-- INFO BANNER VENDOR BLUE -->
+            <div class="mb-8 p-5 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl shadow-sm space-y-2">
+                <div class="flex items-center gap-2 font-extrabold text-sm text-blue-900">
                     <span>💡 Otonomi Author Mitra Vendor Industri</span>
                 </div>
-                <p class="text-xs text-purple-100 leading-relaxed">
-                    Sebagai Author Mitra Vendor, Anda memiliki otonomi penuh atas penentuan **Angkatan Batch Sertifikasi** dan **Threshold Kelulusan (%)**. Mahasiswa yang lulus Kuis Akhir pada course ini akan otomatis menerima **Sertifikat Digital Verifikasi Vendor dengan Hash Blockchain & QR Code**.
+                <p class="text-xs text-blue-800 leading-relaxed font-medium">
+                    Sebagai Author Mitra Vendor, Anda memiliki otonomi penuh atas penentuan <strong class="font-bold text-blue-950">Angkatan Batch Sertifikasi</strong> dan <strong class="font-bold text-blue-950">Threshold Kelulusan (%)</strong>. Mahasiswa yang lulus Kuis Akhir pada course ini akan otomatis menerima <strong class="font-bold text-blue-950">Sertifikat Digital Verifikasi Vendor dengan Hash Blockchain & QR Code</strong>.
                 </p>
             </div>
 
