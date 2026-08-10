@@ -374,6 +374,7 @@ Route::middleware(['auth', 'role:vendor'])
         Route::resource('courses', VendorCourseController::class);
 
         // Industry Projects
+        Route::get('/students/{student}/portfolio', [VendorProjectController::class, 'studentPortfolio'])->name('students.portfolio');
         Route::post('/projects/{project}/toggle-publish', [VendorProjectController::class, 'togglePublish'])->name('projects.toggle-publish');
         Route::get('/projects/{project}/talent-pool', [VendorProjectController::class, 'talentPool'])->name('projects.talent-pool');
         Route::post('/projects/{project}/invite/{user}', [VendorProjectController::class, 'inviteTalent'])->name('projects.invite');

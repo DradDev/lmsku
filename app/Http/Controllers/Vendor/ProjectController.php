@@ -254,4 +254,17 @@ class ProjectController extends Controller
 
         return back()->with('success', "Berhasil mengirimkan Undangan Project Industri kepada {$user->name}.");
     }
+
+    public function studentPortfolio(User $student): View
+    {
+        $student->load([
+            'skillProfiles.skill',
+            'interestProfiles.tag',
+            'joinedProjects' => function ($query) {
+                $query->with(['skills', 'creator']);
+            }
+        ]);
+
+        return view('vendor.projects.student_portfolio', compact('student'));
+    }
 }

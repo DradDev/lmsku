@@ -93,7 +93,7 @@
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center gap-2">
-                        <a href="{{ route('lecturer.students.portfolio', $recStudent) }}" target="_blank"
+                        <a href="{{ route('vendor.students.portfolio', $recStudent) }}" target="_blank"
                            class="flex-1 text-center py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">
                             Portofolio
                         </a>
