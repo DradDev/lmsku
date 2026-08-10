@@ -56,11 +56,14 @@ class CourseController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'batch_name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
+            'is_archived' => ['nullable', 'boolean'],
+            'main_skill_id' => ['required', 'exists:skills,id'],
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
@@ -70,12 +73,23 @@ class CourseController extends Controller
         $validated['user_id'] = Auth::id();
         $validated['progress'] = 0;
         $validated['duration_weeks'] = $validated['duration_weeks'] ?? 4;
+        $validated['batch_name'] = $validated['batch_name'] ?? 'Batch 1 - 2026';
 
         $course = Course::create($validated);
 
+        // Prepare Skill Sync Array with is_main flag
+        $skillsData = [];
+        $skillsData[$validated['main_skill_id']] = ['is_main' => true, 'weight' => 1.00];
+
         if (!empty($validated['skill_ids'])) {
-            $course->skills()->sync($validated['skill_ids']);
+            foreach ($validated['skill_ids'] as $sId) {
+                if ($sId != $validated['main_skill_id']) {
+                    $skillsData[$sId] = ['is_main' => false, 'weight' => 1.00];
+                }
+            }
         }
+
+        $course->skills()->sync($skillsData);
 
         if (!empty($validated['tag_ids'])) {
             $course->tags()->sync($validated['tag_ids']);
@@ -129,12 +143,14 @@ class CourseController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'batch_name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'is_archived' => ['nullable', 'boolean'],
+            'main_skill_id' => ['required', 'exists:skills,id'],
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
@@ -143,9 +159,19 @@ class CourseController extends Controller
 
         $course->update($validated);
 
-        if (isset($validated['skill_ids'])) {
-            $course->skills()->sync($validated['skill_ids']);
+        // Prepare Skill Sync Array with is_main flag
+        $skillsData = [];
+        $skillsData[$validated['main_skill_id']] = ['is_main' => true, 'weight' => 1.00];
+
+        if (!empty($validated['skill_ids'])) {
+            foreach ($validated['skill_ids'] as $sId) {
+                if ($sId != $validated['main_skill_id']) {
+                    $skillsData[$sId] = ['is_main' => false, 'weight' => 1.00];
+                }
+            }
         }
+
+        $course->skills()->sync($skillsData);
 
         if (isset($validated['tag_ids'])) {
             $course->tags()->sync($validated['tag_ids']);

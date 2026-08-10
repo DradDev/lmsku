@@ -92,6 +92,10 @@
                         </p>
 
                         <div class="mt-4 flex flex-wrap gap-2 text-sm">
+                            <span class="rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200 px-3.5 py-1 font-black">
+                                🏷️ {{ $course->batch_name ?? 'Batch 1 - 2026' }}
+                            </span>
+
                             <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
                                 Level: {{ $course->level ?? 'Beginner' }}
                             </span>
@@ -129,10 +133,15 @@
                         <form action="{{ route('vendor.courses.update', $course) }}" method="POST" class="flex items-center gap-2">
                             @csrf
                             @method('PUT')
+                            @php
+                                $mSkill = $course->skills->firstWhere('pivot.is_main', true) ?? $course->skills->first();
+                            @endphp
                             <input type="hidden" name="name" value="{{ $course->name }}">
+                            <input type="hidden" name="batch_name" value="{{ $course->batch_name ?? 'Batch 1 - 2026' }}">
                             <input type="hidden" name="level" value="{{ $course->level }}">
                             <input type="hidden" name="category_id" value="{{ $course->category_id }}">
                             <input type="hidden" name="description" value="{{ $course->description }}">
+                            <input type="hidden" name="main_skill_id" value="{{ $mSkill->id ?? '' }}">
 
                             <div class="relative">
                                 <input type="number" 
