@@ -44,6 +44,8 @@ use App\Http\Controllers\Admin\CourseController as AdminCourseController;
 use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
 use App\Http\Controllers\Vendor\CourseController as VendorCourseController;
 use App\Http\Controllers\Vendor\ProjectController as VendorProjectController;
+use App\Http\Controllers\Vendor\MaterialController as VendorMaterialController;
+use App\Http\Controllers\Vendor\QuizController as VendorQuizController;
 
 Route::get('/', function () {
     if (! Auth::check()) {
@@ -379,6 +381,16 @@ Route::middleware(['auth', 'role:vendor'])
         // Industry Certified Courses
         Route::post('/courses/{course}/toggle-archive', [VendorCourseController::class, 'toggleArchive'])->name('courses.toggle-archive');
         Route::resource('courses', VendorCourseController::class);
+
+        // Course Materials & Quizzes
+        Route::post('/courses/{course}/materials', [VendorMaterialController::class, 'store'])->name('materials.store');
+        Route::delete('/materials/{material}', [VendorMaterialController::class, 'destroy'])->name('materials.destroy');
+
+        Route::post('/courses/{course}/quizzes', [VendorQuizController::class, 'store'])->name('quizzes.store');
+        Route::get('/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('quizzes.show');
+        Route::delete('/quizzes/{quiz}', [VendorQuizController::class, 'destroy'])->name('quizzes.destroy');
+        Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
+        Route::delete('/questions/{question}', [VendorQuizController::class, 'destroyQuestion'])->name('questions.destroy');
 
         // Industry Projects
         Route::get('/students/{student}/portfolio', [VendorProjectController::class, 'studentPortfolio'])->name('students.portfolio');
