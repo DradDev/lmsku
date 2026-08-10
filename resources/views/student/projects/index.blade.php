@@ -25,26 +25,46 @@
                 </div>
             @endif
 
-            <!-- SSO UNDIP Style Instructor/Author Selector Dropdown Card for Projects -->
-            <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
-                <label class="block text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-600">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    <span>Daftar Author / Instructor</span>
-                </label>
+            <!-- SSO UNDIP Style Instructor & Provider Filter Card for Projects -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <label class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-600">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        <span>Filter Katalog Project & Provider</span>
+                    </label>
+                    <span class="text-xs text-gray-500 font-medium">Multi-Tenant Filtering</span>
+                </div>
 
-                <select id="author-project-filter" onchange="filterProjectsByAuthor()" class="w-full md:w-1/2 rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm font-semibold text-gray-800 py-3 px-4 shadow-sm cursor-pointer">
-                    <option value="all">-- Semua Author / Instructor --</option>
-                    @foreach($authors as $author)
-                        <option value="{{ $author->id }}">{{ $author->name }}</option>
-                    @endforeach
-                </select>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">Pilih Author / Pembuat</label>
+                        <select id="author-project-filter" onchange="filterProjects()" class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs font-semibold text-gray-800 py-2.5 px-3 shadow-sm cursor-pointer">
+                            <option value="all">-- Semua Author --</option>
+                            @foreach($authors as $author)
+                                <option value="{{ $author->id }}">{{ $author->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                <p class="text-xs text-gray-500 mt-2">
-                    Pilih Author / Instructor untuk mengfilter dan menampilkan daftar project industri yang diunggah.
-                </p>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">Tipe Provider Project</label>
+                        <select id="provider-type-filter" onchange="filterProjects()" class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs font-semibold text-gray-800 py-2.5 px-3 shadow-sm cursor-pointer">
+                            <option value="all">-- Semua Provider (Internal & External) --</option>
+                            <option value="internal">🎓 Internal Dosen Akademik</option>
+                            <option value="external">🏢 External Mitra Vendor Industri</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5">Status Kelayakan Mahasiswa</label>
+                        <select id="eligibility-filter" onchange="filterProjects()" class="w-full rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-xs font-semibold text-gray-800 py-2.5 px-3 shadow-sm cursor-pointer">
+                            <option value="all">-- Semua Project (Eligible & Terkunci) --</option>
+                            <option value="eligible">🟢 Hanya Yang Memenuhi Syarat (Eligible)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -81,14 +101,19 @@
                             $maxStudents = $project->max_students ?? 1;
                             $isFull = $joinedCount >= $maxStudents;
                             $alreadyJoined = in_array($project->id, $joinedProjectIds);
+                            $provType = $project->provider_type ?? (($project->user->role ?? '') === 'vendor' ? 'external' : 'internal');
+                            $isEligible = $project->eligibility['is_eligible'] ?? false;
                         @endphp
 
-                        <div class="project-card bg-white border border-gray-100 shadow-sm hover:shadow-md transition rounded-2xl overflow-hidden flex flex-col" data-author-id="{{ $project->created_by }}">
+                        <div class="project-card bg-white border border-gray-100 shadow-sm hover:shadow-md transition rounded-2xl overflow-hidden flex flex-col"
+                             data-author-id="{{ $project->created_by }}"
+                             data-provider-type="{{ $provType }}"
+                             data-eligible="{{ $isEligible ? 'true' : 'false' }}">
                             <div class="p-5 flex-1">
                                 <div class="flex items-start justify-between gap-3 mb-2">
                                     <div>
                                         <div class="mb-2">
-                                            @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
+                                            @if($provType === 'external')
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
                                                     🏢 External: {{ $project->user->name ?? 'Vendor' }}
                                                 </span>
@@ -174,7 +199,7 @@
                                                 disabled>
                                             Kuota Penuh
                                         </button>
-                                    @elseif(!($project->eligibility['is_eligible'] ?? false))
+                                    @elseif(!$isEligible)
                                         <a href="{{ route('student.projects.show', $project) }}"
                                            class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition">
                                             🔒 Terkunci
@@ -200,13 +225,23 @@
     </div>
 
     <script>
-        function filterProjectsByAuthor() {
-            const selectedAuthorId = document.getElementById('author-project-filter').value;
+        function filterProjects() {
+            const authorId = document.getElementById('author-project-filter').value;
+            const providerType = document.getElementById('provider-type-filter').value;
+            const eligibility = document.getElementById('eligibility-filter').value;
+
             const cards = document.querySelectorAll('.project-card');
 
             cards.forEach(card => {
-                const cardAuthorId = card.getAttribute('data-author-id');
-                if (selectedAuthorId === 'all' || cardAuthorId === selectedAuthorId) {
+                const cardAuthor = card.getAttribute('data-author-id');
+                const cardProvider = card.getAttribute('data-provider-type');
+                const cardEligible = card.getAttribute('data-eligible');
+
+                const matchAuthor = (authorId === 'all' || cardAuthor === authorId);
+                const matchProvider = (providerType === 'all' || cardProvider === providerType);
+                const matchEligible = (eligibility === 'all' || cardEligible === 'true');
+
+                if (matchAuthor && matchProvider && matchEligible) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';

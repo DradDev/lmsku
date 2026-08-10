@@ -128,34 +128,31 @@
                                 </h3>
 
                                 <div class="flex flex-wrap gap-2 mt-2">
-                                    <span class="px-2 py-1 text-xs rounded-lg bg-gray-100 text-gray-700 font-semibold">
+                                <div class="mt-1 flex flex-wrap gap-1">
+                                    <span class="px-2 py-0.5 text-[11px] rounded-lg bg-gray-100 text-gray-700 font-semibold">
                                         Rank #{{ $result->rank }}
                                     </span>
 
-                                    <span class="px-2 py-1 text-xs rounded-lg font-semibold {{ $isCourse ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700' }}">
-                                        {{ ucfirst($result->item_type) }}
-                                    </span>
-
-                                    @if ($isCourse && $alreadyEnrolled)
-                                    <span class="px-2 py-1 text-xs rounded-lg bg-green-100 text-green-700 font-semibold">
-                                        Enrolled
-                                    </span>
-                                    @endif
-
-                                    @if ($isProject)
-                                    @if ($alreadyJoined)
-                                    <span class="px-2 py-1 text-xs rounded-lg bg-green-100 text-green-700 font-semibold">
-                                        Enrolled
-                                    </span>
-                                    @elseif ($isFull)
-                                    <span class="px-2 py-1 text-xs rounded-lg bg-red-100 text-red-700 font-semibold">
-                                        Quota Full
-                                    </span>
+                                    @if ($isCourse)
+                                        @if ($alreadyEnrolled)
+                                            <span class="px-2 py-0.5 text-[11px] rounded-lg bg-green-100 text-green-700 font-semibold">
+                                                Terdaftar
+                                            </span>
+                                        @endif
                                     @else
-                                    <span class="px-2 py-1 text-xs rounded-lg bg-blue-100 text-blue-700 font-semibold">
-                                        Available
-                                    </span>
-                                    @endif
+                                        @if ($alreadyJoined)
+                                            <span class="px-2 py-0.5 text-[11px] rounded-lg bg-green-100 text-green-700 font-semibold">
+                                                Diambil
+                                            </span>
+                                        @elseif ($isFull)
+                                            <span class="px-2 py-0.5 text-[11px] rounded-lg bg-red-100 text-red-700 font-semibold">
+                                                Kuota Penuh
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-0.5 text-[11px] rounded-lg bg-blue-100 text-blue-700 font-semibold">
+                                                Tersedia
+                                            </span>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
