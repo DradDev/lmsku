@@ -26,158 +26,106 @@
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">{{ $masterCourse->name }}</h1>
                         <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->level }}</span>
+                        @if($masterCourse->category)
+                            <span style="background: #EFF6FF; color: #1D4ED8; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->category->name }}</span>
+                        @endif
                     </div>
                     <p style="font-size: 13px; color: #64748B; margin: 6px 0 0 0; line-height: 1.5; max-width: 650px;">
-                        {{ $masterCourse->description ?: 'Pusat kendali administrasi mata kuliah induk, penentuan semester, penawaran kelas paralel, dan kompetensi target.' }}
+                        {{ $masterCourse->description ?: 'Silabus induk mata kuliah. Kelola penawaran kelas paralel untuk semester aktif dan atur target kompetensi skill.' }}
                     </p>
                 </div>
             </div>
 
             <div style="display: flex; align-items: center; gap: 2rem; border-left: 1px solid #F1F5F9; padding-left: 1.5rem;">
                 <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Total Semester</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 2px;">{{ $totalSemesters }}</div>
-                </div>
-
-                <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Total Kelas</div>
+                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Total Kelas Paralel</div>
                     <div style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 2px;">{{ $totalOfferings }}</div>
                 </div>
 
-                <a href="#edit-master-course" 
-                   onclick="document.getElementById('edit-master-course-section').scrollIntoView({behavior: 'smooth'}); return false;"
-                   style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; color: #334155; font-size: 13px; font-weight: 600; text-decoration: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                    Edit Master Course
-                </a>
-            </div>
-        </div>
-
-        <!-- NAVIGATION SUB-TABS -->
-        <div style="display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; padding: 0 4px;">
-            <span style="color: #2563EB; border-bottom: 2px solid #2563EB; padding-bottom: 4px;">Semester ({{ $totalSemesters }})</span>
-            <span style="color: #94A3B8;">&rsaquo;</span>
-            <span style="color: #64748B;">Penawaran Kelas</span>
-            <span style="color: #94A3B8;">&rsaquo;</span>
-            <span style="color: #64748B;">Skill & Tag Target</span>
-        </div>
-
-        <!-- SECTION 1: DAFTAR SEMESTER TABLE CARD -->
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F1F5F9;">
-                <div>
-                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Daftar Semester - {{ $masterCourse->name }}</h2>
-                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Kelola semester untuk mata kuliah induk ini.</p>
+                <div style="text-align: center;">
+                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Riwayat Semester</div>
+                    <div style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 2px;">{{ $totalSemesters }}</div>
                 </div>
-                <a href="{{ route('admin.academic-terms.create') }}" 
-                   style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-                    + Tambah Semester
-                </a>
-            </div>
 
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-                    <thead>
-                        <tr style="background: #FAFAFA; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <th style="padding: 12px 20px;">Semester</th>
-                            <th style="padding: 12px 20px;">Tahun Ajaran</th>
-                            <th style="padding: 12px 20px;">Tipe</th>
-                            <th style="padding: 12px 20px;">Periode</th>
-                            <th style="padding: 12px 20px;">Status</th>
-                            <th style="padding: 12px 20px;">Jumlah Kelas</th>
-                            <th style="padding: 12px 20px; text-align: right;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody style="divide-y: 1px solid #F1F5F9;">
-                        @forelse($academicTerms as $term)
-                            @php
-                                $termOfferingCount = $courseOfferings->where('academic_term_id', $term->id)->count();
-                                $isCurrentSelected = ($selectedTerm && $selectedTerm->id === $term->id);
-                            @endphp
-                            <tr style="border-bottom: 1px solid #F1F5F9; background: {{ $isCurrentSelected ? '#EFF6FF' : '#FFFFFF' }};">
-                                <td style="padding: 14px 20px; font-weight: 700; color: #0F172A;">
-                                    {{ $term->name }}
-                                </td>
-                                <td style="padding: 14px 20px; color: #475569;">
-                                    {{ $term->academic_year ?? '2026/2027' }}
-                                </td>
-                                <td style="padding: 14px 20px;">
-                                    @if(strtolower($term->term_type ?? '') === 'ganjil')
-                                        <span style="background: #E0F2FE; color: #0369A1; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">Ganjil</span>
-                                    @else
-                                        <span style="background: #F3E8FF; color: #7E22CE; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px;">Genap</span>
-                                    @endif
-                                </td>
-                                <td style="padding: 14px 20px; color: #475569;">
-                                    {{ $term->start_date ? \Carbon\Carbon::parse($term->start_date)->format('d/m/Y') : '01/09/2026' }} - {{ $term->end_date ? \Carbon\Carbon::parse($term->end_date)->format('d/m/Y') : '31/01/2027' }}
-                                </td>
-                                <td style="padding: 14px 20px;">
-                                    @if($term->is_active)
-                                        <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
-                                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #15803D;"></span> Aktif
-                                        </span>
-                                    @else
-                                        <span style="background: #F1F5F9; color: #475569; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
-                                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #94A3B8;"></span> Non-Aktif
-                                        </span>
-                                    @endif
-                                </td>
-                                <td style="padding: 14px 20px; font-weight: 700; color: #0F172A;">
-                                    {{ $termOfferingCount }}
-                                </td>
-                                <td style="padding: 14px 20px; text-align: right;">
-                                    <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                                        <a href="{{ route('admin.master-courses.show', [$masterCourse->id, 'term_id' => $term->id]) }}" 
-                                           title="Lihat Kelas Semester Ini"
-                                           style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFF; display: flex; align-items: center; justify-content: center; color: #475569; text-decoration: none;">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-                                        </a>
-                                        <a href="{{ route('admin.academic-terms.edit', $term) }}" 
-                                           title="Edit Semester"
-                                           style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFF; display: flex; align-items: center; justify-content: center; color: #475569; text-decoration: none;">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" style="padding: 2rem; text-align: center; color: #94A3B8;">Belum ada semester terdaftar.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <a href="#edit-master-course-section" 
+                       onclick="document.getElementById('edit-master-course-section').scrollIntoView({behavior: 'smooth'}); return false;"
+                       style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; color: #334155; font-size: 12.5px; font-weight: 600; text-decoration: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                        Edit Master Course
+                    </a>
+
+                    <a href="{{ route('admin.master-courses.index') }}" 
+                       style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 10px; color: #64748B; font-size: 12.5px; font-weight: 600; text-decoration: none;">
+                        &larr; Kembali ke Daftar
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- SECTION 2: PENAWARAN KELAS TABLE CARD -->
+        <!-- SECTION 1: PENAWARAN KELAS PARALEL DENGAN FILTER SEMESTER INTERAKTIF -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F1F5F9; flex-wrap: wrap; gap: 1rem;">
+            
+            <!-- HEADER FILTER SEMESTER -->
+            <div style="padding: 1.25rem 1.5rem; background: #FAFAFA; border-bottom: 1px solid #E2E8F0; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: #2563EB; margin-bottom: 4px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
-                        <a href="{{ route('admin.master-courses.show', $masterCourse->id) }}" style="color: #2563EB; text-decoration: none;">Kembali ke Daftar Semester</a>
-                    </div>
-                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">
-                        Penawaran Kelas - {{ $selectedTerm->name ?? '2026/2027 Ganjil Cert' }}
+                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 8px;">
+                        <span>📚 Penawaran Kelas Paralel Matkul Ini</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #2563EB; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 2px 10px; border-radius: 100px;">
+                            Semester: {{ $selectedTerm->name ?? 'Ganjil 2026/2027' }}
+                        </span>
                     </h2>
-                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Buka dan kelola kelas paralel (Plotting Dosen, Kuota Mhs, & Threshold Awal Sertifikat).</p>
+                    <p style="font-size: 12.5px; color: #64748B; margin: 4px 0 0 0;">
+                        Pilih Semester Akademik di bawah untuk melihat atau membuka kelas baru yang diajar oleh Dosen.
+                    </p>
                 </div>
+
                 <a href="{{ route('admin.course-offerings.create', ['master_course_id' => $masterCourse->id, 'academic_term_id' => $selectedTerm->id ?? '']) }}" 
                    style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; background: #2563EB; color: #FFFFFF; font-size: 13px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-                    + Tambah Penawaran Kelas
+                    + Buka Penawaran Kelas Baru
                 </a>
             </div>
 
+            <!-- BAR PILIHAN SEMESTER (TABS / DROPDOWN SELECTION) -->
+            <div style="padding: 1rem 1.5rem; background: #FFFFFF; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <label style="font-size: 12.5px; font-weight: 700; color: #334155;">📅 Pilih Semester Akademik:</label>
+                    <select onchange="window.location.href=this.value" 
+                            style="padding: 8px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; font-weight: 700; color: #0F172A; outline: none; background: #FFF; cursor: pointer; min-width: 250px;">
+                        @foreach($academicTerms as $term)
+                            @php
+                                $termOfferings = $courseOfferings->where('academic_term_id', $term->id)->count();
+                            @endphp
+                            <option value="{{ route('admin.master-courses.show', [$masterCourse->id, 'term_id' => $term->id]) }}" 
+                                    {{ ($selectedTerm && $selectedTerm->id === $term->id) ? 'selected' : '' }}>
+                                {{ $term->name }} ({{ $term->academic_year }}) {{ $term->is_active ? '🟢 [AKTIF]' : '' }} - {{ $termOfferings }} Kelas
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                @if($selectedTerm)
+                    <div style="font-size: 12px; color: #64748B; font-weight: 600;">
+                        Status Semester: 
+                        @if($selectedTerm->is_active)
+                            <span style="color: #15803D; font-weight: 800;">🟢 Semester Berjalan (Aktif)</span>
+                        @else
+                            <span style="color: #64748B; font-weight: 700;">⚪ Semester Non-Aktif</span>
+                        @endif
+                    </div>
+                @endif
+            </div>
+
+            <!-- TABEL PENAWARAN KELAS UNTUK SEMESTER TERPILIH -->
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                     <thead>
                         <tr style="background: #FAFAFA; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <th style="padding: 12px 20px;">Nama Kelas</th>
+                            <th style="padding: 12px 20px;">Nama Kelas Paralel</th>
                             <th style="padding: 12px 20px;">Dosen Pengampu</th>
-                            <th style="padding: 12px 20px;">Kuota</th>
-                            <th style="padding: 12px 20px;">Threshold Sertifikat</th>
-                            <th style="padding: 12px 20px;">Status</th>
+                            <th style="padding: 12px 20px;">Kapasitas Mhs</th>
+                            <th style="padding: 12px 20px;">Min Score Sertifikat</th>
+                            <th style="padding: 12px 20px;">Status Kelas</th>
                             <th style="padding: 12px 20px; text-align: right;">Aksi</th>
                         </tr>
                     </thead>
@@ -185,19 +133,24 @@
                         @forelse($selectedOfferings as $offering)
                             <tr style="border-bottom: 1px solid #F1F5F9;">
                                 <td style="padding: 14px 20px; font-weight: 700; color: #0F172A;">
-                                    {{ $offering->section_name ?? 'Kelas Cert A' }}
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="width: 28px; height: 28px; border-radius: 8px; background: #EFF6FF; color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;">
+                                            {{ strtoupper(substr($offering->section_name ?? 'A', -1)) }}
+                                        </span>
+                                        <span>{{ $offering->section_name ?? 'Kelas A' }}</span>
+                                    </div>
                                 </td>
-                                <td style="padding: 14px 20px; color: #334155; font-weight: 500;">
-                                    {{ $offering->lecturer->name ?? 'Dr. Budi Santoso' }}
+                                <td style="padding: 14px 20px; color: #334155; font-weight: 600;">
+                                    {{ $offering->lecturer->name ?? 'Belum Di-plotting' }}
+                                    <span style="display: block; font-size: 11px; color: #64748B; font-weight: 400;">{{ $offering->lecturer->email ?? '-' }}</span>
                                 </td>
-                                <td style="padding: 14px 20px; color: #475569;">
-                                    {{ $offering->capacity ?? 30 }} Mhs
+                                <td style="padding: 14px 20px; color: #475569; font-weight: 700;">
+                                    {{ $offering->enrollments_count ?? 0 }} / {{ $offering->capacity ?? 30 }} Mhs
                                 </td>
                                 <td style="padding: 14px 20px;">
                                     <span style="background: #EEF2FF; color: #4338CA; font-weight: 700; font-size: 12px; padding: 3px 10px; border-radius: 6px;">
                                         Min Score: {{ $offering->certificate_threshold ?? 75 }}
                                     </span>
-                                    <span style="display: block; font-size: 11px; color: #64748B; margin-top: 2px;">(Dapat dikelola oleh Dosen)</span>
                                 </td>
                                 <td style="padding: 14px 20px;">
                                     <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">
@@ -208,7 +161,7 @@
                                     <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
                                         <a href="{{ route('admin.course-offerings.edit', $offering) }}" 
                                            title="Edit Kelas"
-                                           style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #E2E8F0; background: #FFF; display: flex; align-items: center; justify-content: center; color: #475569; text-decoration: none;">
+                                           style="width: 30px; height: 30px; border-radius: 8px; border: 1px solid #CBD5E1; background: #FFF; display: flex; align-items: center; justify-content: center; color: #475569; text-decoration: none;">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                         </a>
                                         <form action="{{ route('admin.course-offerings.destroy', $offering) }}" method="POST" onsubmit="return confirm('Hapus penawaran kelas ini?')">
@@ -225,7 +178,14 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="padding: 2rem; text-align: center; color: #94A3B8;">Belum ada penawaran kelas untuk semester ini.</td>
+                                <td colspan="6" style="padding: 2.5rem 1rem; text-align: center; color: #64748B; background: #FAFAFA;">
+                                    <p style="margin: 0; font-size: 14px; font-weight: 700; color: #334155;">Belum Ada Penawaran Kelas untuk Semester {{ $selectedTerm->name ?? '' }}</p>
+                                    <p style="margin: 4px 0 1rem 0; font-size: 12.5px; color: #94A3B8;">Buka penawaran kelas pertama agar mahasiswa dapat memilih Dosen pengampu pada semester ini.</p>
+                                    <a href="{{ route('admin.course-offerings.create', ['master_course_id' => $masterCourse->id, 'academic_term_id' => $selectedTerm->id ?? '']) }}" 
+                                       style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #2563EB; color: #FFFFFF; font-size: 12.5px; font-weight: 700; border-radius: 10px; text-decoration: none;">
+                                        + Buka Kelas Pertama di Semester Ini
+                                    </a>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -233,12 +193,12 @@
             </div>
         </div>
 
-        <!-- SECTION 3: ⚡ TARGET SKILL & TAG KOMPETENSI CARD (GROUPING TERPISAH PER SKILL INDUK) -->
+        <!-- SECTION 2: ⚡ TARGET SKILL & TAG KOMPETENSI CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">⚡ Skill & Tag Target Kompetensi Matkul</h2>
-                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Centang Skill Induk di sebelah kiri. Daftar Tag Sub-Topik akan ditampilkan secara <strong>terpisah dan terkelompok per Skill</strong> di sebelah kanan.</p>
+                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Centang Skill Induk di sebelah kiri. Daftar Tag Sub-Topik akan ditampilkan secara terkelompok per Skill di sebelah kanan.</p>
                 </div>
             </div>
 
@@ -261,7 +221,7 @@
                     @endforelse
 
                     @if($masterCourse->skills->isEmpty() && $masterCourse->tags->isEmpty())
-                        <span style="font-size: 12.5px; color: #94A3B8; italic;">Belum ada Skill atau Tag yang dihubungkan ke Master Course ini. Gunakan form interaktif di bawah untuk menentukan target kompetensi.</span>
+                        <span style="font-size: 12.5px; color: #94A3B8; italic;">Belum ada Skill atau Tag yang dihubungkan ke Master Course ini. Gunakan form di bawah untuk menentukan target kompetensi.</span>
                     @endif
                 </div>
             </div>
@@ -271,7 +231,7 @@
                 @csrf
                 <div style="display: grid; grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.5fr); gap: 1.5rem; margin-bottom: 1.25rem;">
                     
-                    <!-- LANGKAH 1: PILIH SKILL INDUK (BISA PILIH MULTIPLE SKILL) -->
+                    <!-- LANGKAH 1: PILIH SKILL INDUK -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <label style="font-size: 12.5px; font-weight: 700; color: #334155;">1. Pilih Skill Induk (Bisa Multiple):</label>
@@ -292,13 +252,13 @@
                         </div>
                     </div>
 
-                    <!-- LANGKAH 2: DAFTAR TAG SUB-TOPIK DI-GROUP SECARA TERPISAH PER SKILL INDUK -->
+                    <!-- LANGKAH 2: DAFTAR TAG SUB-TOPIK -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                             <label style="font-size: 12.5px; font-weight: 700; color: #334155;">2. Tag Sub-Topik (Terpisah per Kelompok Skill):</label>
                             <span id="tag-count-badge" style="font-size: 11px; font-weight: 700; color: #4338CA; background: #EEF2FF; padding: 2px 8px; border-radius: 100px;">0 Terpilih</span>
                         </div>
-                        
+
                         <!-- PESAN JIKA BELUM ADA SKILL DIPILIH -->
                         <div id="no-skill-selected-notice" style="display: none; padding: 2.5rem 1rem; text-align: center; background: #FAFAFA; border: 2px dashed #CBD5E1; border-radius: 10px; color: #64748B; font-size: 13px;">
                             📌 Centang minimal 1 Skill Induk di sebelah kiri untuk menampilkan kelompok Tag Sub-Topik yang sesuai.
@@ -349,7 +309,7 @@
             </form>
         </div>
 
-        <!-- SECTION 4: EDIT MASTER COURSE FORM INLINE -->
+        <!-- SECTION 3: EDIT MASTER COURSE FORM INLINE -->
         <div id="edit-master-course-section" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem;">
                 <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Edit Metadata Master Course</h2>
@@ -410,8 +370,8 @@
                 i
             </div>
             <div>
-                <strong style="color: #1E40AF; font-size: 13.5px;">Struktur: Master Course &rarr; Semester &rarr; Penawaran Kelas</strong>
-                <p style="color: #1E3A8A; font-size: 12.5px; margin: 2px 0 0 0;">Setiap Skill Induk yang dicentang akan menampilkan kelompok Tag Sub-Topik terkait secara terpisah.</p>
+                <strong style="color: #1E40AF; font-size: 13.5px;">Struktur 3NF: Master Course &rarr; Semester (Academic Term) &rarr; Course Offering (Kelas Paralel)</strong>
+                <p style="color: #1E3A8A; font-size: 12.5px; margin: 2px 0 0 0;">Gunakan dropdown Semester di atas untuk melihat penawaran kelas paralel atau membuka kelas baru pada semester akademik berjalan.</p>
             </div>
         </div>
 
