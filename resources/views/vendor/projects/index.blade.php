@@ -1,322 +1,259 @@
 <x-app-layout>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    <x-slot name="header">
+        <div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    </svg>
+                </div>
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-.page-wrap {
-    min-height: 100vh;
-    background: linear-gradient(180deg, #f8faff 0%, #f3f6fc 100%);
-    color: #1e2435;
-    padding: 2.5rem 0 4rem;
-    font-family: 'Inter', sans-serif;
-}
-
-.tabs-nav {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #e4e7ec;
-    padding-bottom: 1rem;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    font-size: 15px;
-    font-weight: 600;
-    color: #667085;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.tab-btn:hover {
-    color: #101828;
-    background: #f8fafc;
-}
-
-.tab-btn.active {
-    color: #6b21a8;
-    background: #f3e8ff;
-}
-
-.page-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.page-header {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-@media (min-width: 768px) {
-    .page-header {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
-
-.page-eyebrow {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.3px;
-    text-transform: uppercase;
-    color: #6b21a8;
-    margin-bottom: 6px;
-}
-
-.page-title {
-    font-size: 28px;
-    font-weight: 800;
-    color: #101828;
-    letter-spacing: -0.5px;
-}
-
-.page-sub {
-    font-size: 14px;
-    color: #667085;
-    margin-top: 6px;
-    max-width: 720px;
-}
-
-.alert-success {
-    padding: 12px 16px;
-    border-radius: 14px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    background: #ecfdf3;
-    border: 1px solid #abefc6;
-    color: #067647;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 10px 18px;
-    border-radius: 12px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: 'Inter', sans-serif;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #6b21a8 0%, #7e22ce 100%);
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(107, 33, 168, 0.25);
-}
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(107, 33, 168, 0.35); }
-
-.stat-strip {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: #fff;
-    border: 1px solid #e4e7ec;
-    border-radius: 16px;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-}
-
-.stat-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #667085;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-value {
-    font-size: 24px;
-    font-weight: 800;
-    color: #101828;
-    margin-top: 4px;
-}
-
-.table-card {
-    background: #fff;
-    border: 1px solid #e4e7ec;
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-}
-
-.empty-state {
-    background: rgba(255,255,255,0.94);
-    border: 1.5px dashed #d0d5dd;
-    border-radius: 22px;
-    padding: 4rem 2rem;
-    text-align: center;
-}
-</style>
-
-<div class="page-wrap" x-data="{ tab: 'active' }">
-    <div class="page-container">
-
-        <div class="page-header">
-            <div>
-                <p class="page-eyebrow">Author Mitra Vendor Portal &bull; Manajemen Project Real Client</p>
-                <h1 class="page-title">Project Real Client & Industri Mitra Vendor</h1>
-                <p class="page-sub">Kelola active project terpublikasi atau simpan draft project pada Project Bank Mitra Vendor.</p>
-            </div>
-
-            <a href="{{ route('vendor.projects.create') }}" class="btn btn-primary">
-                + Publikasikan Project Baru
-            </a>
-        </div>
-
-        @if(session('success'))
-            <div class="alert-success flex items-center gap-3">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs">✓</span>
                 <div>
-                    <strong>Berhasil!</strong> {{ session('success') }}
-                </div>
-            </div>
-        @endif
-
-        <div class="stat-strip">
-            <div class="stat-card cursor-pointer" @click="tab = 'active'">
-                <div class="stat-label">Aktif Dipublikasikan</div>
-                <div class="stat-value text-emerald-600">{{ $activeProjects->count() }}</div>
-            </div>
-            <div class="stat-card cursor-pointer" @click="tab = 'bank'">
-                <div class="stat-label">Project Bank (Drafts)</div>
-                <div class="stat-value text-amber-600">{{ $bankProjects->count() }}</div>
-            </div>
-            <div class="stat-card cursor-pointer" @click="tab = 'all'">
-                <div class="stat-label">Total Semua Project</div>
-                <div class="stat-value">{{ $allProjects->count() }}</div>
-            </div>
-        </div>
-
-        <div class="tabs-nav">
-            <button class="tab-btn" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
-                Active Projects ({{ $activeProjects->count() }})
-            </button>
-            <button class="tab-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
-                Project Bank / Drafts ({{ $bankProjects->count() }})
-            </button>
-        </div>
-
-        <!-- TAB 1: ACTIVE PROJECTS -->
-        <div x-show="tab === 'active'">
-            <div class="table-card">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-                        <thead>
-                            <tr style="background: #fafafa; border-bottom: 1px solid #e4e7ec; color: #667085; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <th style="padding: 16px 20px;">Judul Project</th>
-                                <th style="padding: 16px 20px;">Level Kesulitan</th>
-                                <th style="padding: 16px 20px;">Tipe & Kuota</th>
-                                <th style="padding: 16px 20px;">Status</th>
-                                <th style="padding: 16px 20px; text-align: right;">Aksi Management</th>
-                            </tr>
-                        </thead>
-
-                        <tbody style="divide-y: 1px solid #f1f5f9;">
-                            @forelse ($activeProjects as $project)
-                                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
-                                    <td style="padding: 16px 20px;">
-                                        <div style="font-size: 14px; font-weight: 800; color: #101828;">{{ $project->title }}</div>
-                                        <div style="font-size: 11.5px; color: #667085; margin-top: 2px;">Dibuat: {{ $project->created_at ? $project->created_at->format('d M Y') : '-' }}</div>
-                                    </td>
-                                    <td style="padding: 16px 20px; font-weight: 700; color: #334155;">
-                                        {{ ucfirst($project->difficulty_level) }}
-                                    </td>
-                                    <td style="padding: 16px 20px; color: #475569;">
-                                        <span style="font-weight: 700; color: #0f172a;">{{ ucfirst($project->type ?? 'General') }}</span> &bull; {{ $project->participations->count() }}/{{ $project->max_students ?? 1 }} Mhs
-                                    </td>
-                                    <td style="padding: 16px 20px;">
-                                        <span style="background: #ecfdf5; color: #047857; border: 1px solid #abefc6; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">
-                                            🟢 Published
-                                        </span>
-                                    </td>
-                                    <td style="padding: 16px 20px; text-align: right;">
-                                        <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
-                                            <a href="{{ route('vendor.projects.talent-pool', $project) }}" style="padding: 6px 12px; background: #fef3c7; color: #b45309; font-size: 12px; font-weight: 700; border-radius: 8px; text-decoration: none;">
-                                                🎯 Talent Pool
-                                            </a>
-                                            <a href="{{ route('vendor.projects.show', $project) }}" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">
-                                                Detail & Kelola →
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" style="padding: 40px; text-align: center; color: #667085;">
-                                        Belum ada project aktif yang dipublikasikan.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        Projects Management (Mitra Vendor Industri)
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Kelola project industri real-world, active listings, dan kecocokan talent mahasiswa terverifikasi.
+                    </p>
                 </div>
             </div>
         </div>
+    </x-slot>
 
-        <!-- TAB 2: PROJECT BANK (DRAFTS) -->
-        <div x-show="tab === 'bank'" style="display: none;">
-            <div class="table-card">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-                        <thead>
-                            <tr style="background: #fafafa; border-bottom: 1px solid #e4e7ec; color: #667085; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <th style="padding: 16px 20px;">Judul Draft Project</th>
-                                <th style="padding: 16px 20px;">Level Kesulitan</th>
-                                <th style="padding: 16px 20px;">Status</th>
-                                <th style="padding: 16px 20px; text-align: right;">Aksi</th>
-                            </tr>
-                        </thead>
+    <div class="py-6" x-data="{ tab: 'active' }">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-                        <tbody style="divide-y: 1px solid #f1f5f9;">
-                            @forelse ($bankProjects as $project)
-                                <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
-                                    <td style="padding: 16px 20px; font-weight: 800; color: #101828;">{{ $project->title }}</td>
-                                    <td style="padding: 16px 20px; font-weight: 700; color: #334155;">{{ ucfirst($project->difficulty_level) }}</td>
-                                    <td style="padding: 16px 20px;">
-                                        <span style="background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">
-                                            🔴 Draft Bank
-                                        </span>
-                                    </td>
-                                    <td style="padding: 16px 20px; text-align: right;">
-                                        <a href="{{ route('vendor.projects.show', $project) }}" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">
-                                            Pratinjau & Edit →
-                                        </a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" style="padding: 40px; text-align: center; color: #667085;">
-                                        Belum ada draft project di Project Bank.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+            @if (session('success'))
+                <div class="mb-5 flex items-start gap-3 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl shadow-sm">
+                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+
+                    <div>
+                        <p class="font-semibold">Berhasil</p>
+                        <p class="text-sm">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if (session('warning'))
+                <div class="mb-5 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl shadow-sm">
+                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 9v4" />
+                        <path d="M12 17h.01" />
+                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                    </svg>
+
+                    <div>
+                        <p class="font-semibold">Catatan Penting</p>
+                        <p class="text-sm">{{ session('warning') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            <div class="mb-6 bg-white border border-gray-100 shadow-sm rounded-2xl p-5">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">
+                            Daftar Project Industri Real Client
+                        </h3>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Kelola active project terpublikasi atau simpan draft project pada Project Bank.
+                        </p>
+                    </div>
+
+                    <a href="{{ route('vendor.projects.create') }}"
+                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14" />
+                            <path d="M5 12h14" />
+                        </svg>
+                        Tambah Project
+                    </a>
                 </div>
             </div>
-        </div>
 
+            <!-- TABS NAVIGATION (Active Projects vs Project Bank) -->
+            <div class="mb-6 border-b border-gray-200 flex gap-4">
+                <button type="button"
+                        @click="tab = 'active'"
+                        :class="tab === 'active' ? 'border-purple-600 text-purple-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+                        class="pb-3 px-1 border-b-2 text-sm transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full" :class="tab === 'active' ? 'bg-green-500' : 'bg-gray-300'"></span>
+                    Active Projects ({{ $activeProjects->count() }})
+                </button>
+
+                <button type="button"
+                        @click="tab = 'bank'"
+                        :class="tab === 'bank' ? 'border-purple-600 text-purple-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+                        class="pb-3 px-1 border-b-2 text-sm transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full" :class="tab === 'bank' ? 'bg-amber-500' : 'bg-gray-300'"></span>
+                    Project Bank ({{ $bankProjects->count() }})
+                </button>
+            </div>
+
+            <!-- TAB 1: ACTIVE PROJECTS -->
+            <div x-show="tab === 'active'">
+                <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-100">
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Judul Project</th>
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Level</th>
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Durasi</th>
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-5 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse ($activeProjects as $project)
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center flex-shrink-0">
+                                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                                    </svg>
+                                                </div>
+
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <p class="font-semibold text-gray-800">{{ $project->title }}</p>
+                                                    </div>
+                                                    <p class="text-sm text-gray-400">Project industri mitra aktif</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-sm font-semibold rounded-full">
+                                                {{ $project->difficulty_level }}
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 text-sm font-semibold rounded-full">
+                                                {{ $project->duration_days }} hari
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 text-sm font-semibold rounded-full">
+                                                Active / Published
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <a href="{{ route('vendor.projects.show', $project) }}" class="inline-flex items-center px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-semibold rounded-xl transition">Detail</a>
+                                                <a href="{{ route('vendor.projects.edit', $project) }}" class="inline-flex items-center px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold rounded-xl transition">Edit</a>
+
+                                                <form action="{{ route('vendor.projects.toggle-publish', $project) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold rounded-xl transition" title="Pindahkan ke Project Bank (Draft)">Pindah ke Bank</button>
+                                                </form>
+
+                                                <form action="{{ route('vendor.projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Yakin hapus project ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-xl transition">Hapus</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-5 py-12 text-center text-gray-400 font-medium">
+                                            Belum ada project aktif. Project terpublikasi akan tampil di sini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PROJECT BANK (DRAFT / REPOSITORY) -->
+            <div x-show="tab === 'bank'">
+                <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-amber-50/50 border-b border-amber-100">
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-amber-900 uppercase tracking-wider">Judul (Bank Project)</th>
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-amber-900 uppercase tracking-wider">Level</th>
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-amber-900 uppercase tracking-wider">Durasi</th>
+                                    <th class="px-5 py-4 text-left text-xs font-bold text-amber-900 uppercase tracking-wider">Status</th>
+                                    <th class="px-5 py-4 text-right text-xs font-bold text-amber-900 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse ($bankProjects as $project)
+                                    <tr class="hover:bg-amber-50/20 transition">
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center flex-shrink-0">
+                                                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                                    </svg>
+                                                </div>
+
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <p class="font-semibold text-gray-800">{{ $project->title }}</p>
+                                                    </div>
+                                                    <p class="text-sm text-gray-400">Draft / Repository Bank Project</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 text-sm font-semibold rounded-full">
+                                                {{ $project->difficulty_level }}
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 text-sm font-semibold rounded-full">
+                                                {{ $project->duration_days }} hari
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-sm font-semibold rounded-full">
+                                                Project Bank (Draft)
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <a href="{{ route('vendor.projects.show', $project) }}" class="inline-flex items-center px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-semibold rounded-xl transition">Detail</a>
+                                                <a href="{{ route('vendor.projects.edit', $project) }}" class="inline-flex items-center px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-semibold rounded-xl transition">Edit</a>
+
+                                                <form action="{{ route('vendor.projects.toggle-publish', $project) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition shadow-xs">Publish ke Active</button>
+                                                </form>
+
+                                                <form action="{{ route('vendor.projects.destroy', $project) }}" method="POST" onsubmit="return confirm('Yakin hapus project ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-xl transition">Hapus</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-5 py-12 text-center text-gray-400 font-medium">
+                                            Belum ada project di Project Bank. Project bertipe Draft atau un-publish akan tersimpan di sini.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
     </div>
-</div>
 </x-app-layout>
