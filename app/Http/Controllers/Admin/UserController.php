@@ -44,7 +44,7 @@ class UserController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'role' => ['required', Rule::in(['admin', 'lecturer', 'student'])],
+            'role' => ['required', Rule::in(['admin', 'lecturer', 'student', 'vendor'])],
         ]);
 
         $user->update([
