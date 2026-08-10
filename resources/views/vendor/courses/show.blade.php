@@ -184,7 +184,7 @@
                         <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div>
                                 <h2 class="text-2xl font-semibold text-slate-900">
-                                    Bank Kuis Sertifikasi
+                                    Bank Kuis Pembelajaran
                                 </h2>
                                 <p class="mt-1 text-sm text-slate-500">
                                     Kelola kuis harian/mingguan dan Kuis Akhir (penentu sertifikat).
@@ -198,10 +198,10 @@
                             </button>
                         </div>
 
-                        <!-- FORM INLINE BUAT KUIS BARU -->
+                        <!-- FORM INLINE BUAT KUIS BARU (SAMA PERSIS DENGAN LECTURER) -->
                         <div id="create-quiz-form-vendor" class="hidden mb-6 p-5 bg-purple-50/50 border border-purple-200 rounded-2xl transition">
                             <h3 class="text-sm font-extrabold text-purple-900 mb-3 flex items-center gap-2">
-                                📝 Form Buat Kuis Sertifikasi Baru
+                                📝 Form Buat Kuis Pembelajaran Baru
                             </h3>
                             <form method="POST" action="{{ route('vendor.quizzes.store', $course->id) }}" class="space-y-4 text-xs">
                                 @csrf
@@ -212,22 +212,58 @@
                                     </div>
 
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Tipe Kuis Sertifikasi</label>
+                                        <label class="block font-bold text-slate-700 mb-1">Tipe Kuis Pembelajaran</label>
                                         <select name="quiz_type" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-bold text-purple-900 bg-white" required>
-                                            <option value="final" selected>🏆 Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
-                                            <option value="weekly">📅 Kuis Mingguan / Evaluasi Bab</option>
                                             <option value="daily">📝 Kuis Biasa / Harian (Section Quiz)</option>
+                                            <option value="weekly">📅 Kuis Mingguan / Evaluasi Bab</option>
+                                            <option value="final">🏆 Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
                                         </select>
                                     </div>
 
                                     <div>
                                         <label class="block font-bold text-slate-700 mb-1">Durasi Pengerjaan (Menit)</label>
-                                        <input type="number" name="time_limit" value="30" min="1" placeholder="Contoh: 30" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white" required>
+                                        <input type="number" name="time_limit" min="1" placeholder="Contoh: 60 (kosongkan jika tanpa batas)" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white">
                                     </div>
 
                                     <div>
                                         <label class="block font-bold text-slate-700 mb-1">Maksimal Percobaan (Attempts)</label>
-                                        <input type="number" name="max_attempts" value="3" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white" required>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" id="max_attempts_input_vendor" name="max_attempts" value="1" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white">
+                                            <label class="inline-flex items-center gap-1.5 px-2.5 py-2.5 bg-slate-100 border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-200 transition whitespace-nowrap">
+                                                <input type="checkbox" name="is_unlimited" value="1" onchange="document.getElementById('max_attempts_input_vendor').disabled = this.checked; if(this.checked){ document.getElementById('max_attempts_input_vendor').value = 0; }" class="rounded text-purple-600 focus:ring-purple-500">
+                                                <span class="text-[11px] font-bold text-slate-700">♾️ Unlimited</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Tanggal Rilis (Opsional)</label>
+                                        <input type="datetime-local" name="start_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white">
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Deadline Selesai (Opsional)</label>
+                                        <input type="datetime-local" name="end_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white">
+                                    </div>
+
+                                    <div class="md:col-span-2 mt-2 pt-2 border-t border-purple-100">
+                                        <label class="block font-bold text-slate-700 mb-1.5">🎯 Target Scope Distribusi Kuis:</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <label class="flex items-center gap-2.5 p-2.5 border border-purple-200 rounded-xl bg-white cursor-pointer hover:border-purple-400 transition">
+                                                <input type="radio" name="target_scope" value="all" checked class="text-purple-600 focus:ring-purple-500">
+                                                <div>
+                                                    <span class="block font-bold text-purple-950 text-xs">🌐 Semua Peserta Course Sertifikasi</span>
+                                                    <span class="block text-[11px] text-slate-500">Kuis akan berlaku otomatis untuk seluruh mahasiswa terdaftar.</span>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white cursor-pointer hover:border-purple-400 transition">
+                                                <input type="radio" name="target_scope" value="class" class="text-purple-600 focus:ring-purple-500">
+                                                <div>
+                                                    <span class="block font-bold text-slate-800 text-xs">📌 Khusus Batch / Kelompok Ini</span>
+                                                    <span class="block text-[11px] text-slate-500">Kuis khusus/remedial untuk batch peserta saat ini.</span>
+                                                </div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -238,7 +274,7 @@
                             </form>
                         </div>
 
-                        <!-- DAFTAR KUIS -->
+                        <!-- DAFTAR KUIS (DENGAN TAMPILAN SAMA PERSIS LECTURER) -->
                         <div class="space-y-4">
                             @forelse ($quizzes as $quiz)
                                 <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -250,7 +286,7 @@
                                                 </h3>
 
                                                 <span class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 text-purple-800 px-3 py-1 text-xs font-semibold">
-                                                    {{ ucfirst($quiz->quiz_type ?? 'Quiz') }}
+                                                    {{ $quiz->quiz_type === 'final' ? '🏆 Final Quiz' : ($quiz->quiz_type === 'weekly' ? '📅 Weekly Quiz' : '📝 Daily Quiz') }}
                                                 </span>
                                             </div>
 
@@ -264,7 +300,7 @@
                                             <p class="mt-1 text-sm text-slate-500">
                                                 Attempts Allowed:
                                                 <span class="text-slate-700 font-semibold">
-                                                    {{ $quiz->max_attempts }}x
+                                                    {{ $quiz->max_attempts === 0 ? 'Unlimited' : $quiz->max_attempts . 'x' }}
                                                 </span>
                                             </p>
 
@@ -276,6 +312,10 @@
                                         </div>
 
                                         <div class="flex flex-wrap gap-2">
+                                            <button type="button" onclick="document.getElementById('edit-quiz-form-vendor-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-700 px-3.5 py-2 text-xs font-semibold hover:bg-amber-100 transition">
+                                                ⚙️ Waktu & Durasi
+                                            </button>
+
                                             <a href="{{ route('vendor.quizzes.show', $quiz) }}"
                                                 class="rounded-xl bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 shadow-sm">
                                                 + Kelola Soal ({{ $quiz->questions ? $quiz->questions->count() : 0 }})
@@ -293,6 +333,44 @@
                                                 </button>
                                             </form>
                                         </div>
+                                    </div>
+
+                                    <!-- FORM INLINE EDIT WAKTU & DURASI KUIS -->
+                                    <div id="edit-quiz-form-vendor-{{ $quiz->id }}" class="hidden mt-4 pt-4 border-t border-slate-200">
+                                        <form method="POST" action="{{ route('vendor.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                            @csrf
+                                            @method('PUT')
+
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Judul Kuis</label>
+                                                <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
+                                            </div>
+
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Durasi (Menit)</label>
+                                                <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tidak ada batas" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                            </div>
+
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Max Attempts</label>
+                                                <input type="number" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
+                                            </div>
+
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Start Date</label>
+                                                <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                            </div>
+
+                                            <div class="md:col-span-2">
+                                                <label class="block font-bold text-slate-700 mb-1">End Date / Deadline</label>
+                                                <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                            </div>
+
+                                            <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+                                                <button type="button" onclick="document.getElementById('edit-quiz-form-vendor-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Batal</button>
+                                                <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             @empty

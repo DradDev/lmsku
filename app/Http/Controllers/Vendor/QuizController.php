@@ -22,15 +22,50 @@ class QuizController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'quiz_type' => ['required', 'in:daily,weekly,final'],
-            'time_limit' => ['required', 'integer', 'min:1'],
-            'max_attempts' => ['required', 'integer', 'min:1'],
+            'time_limit' => ['nullable', 'integer', 'min:1'],
+            'max_attempts' => ['nullable', 'integer', 'min:0'],
+            'is_unlimited' => ['nullable', 'boolean'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
         ]);
 
+        if ($request->boolean('is_unlimited')) {
+            $validated['max_attempts'] = 0;
+        } elseif (empty($validated['max_attempts'])) {
+            $validated['max_attempts'] = 1;
+        }
+
+        unset($validated['is_unlimited']);
         $validated['course_id'] = $course->id;
 
         $quiz = Quiz::create($validated);
 
         return back()->with('success', "Kuis '{$quiz->title}' berhasil dibuat. Silakan tambahkan soal evaluasi.");
+    }
+
+    public function update(Request $request, Course $course, Quiz $quiz): RedirectResponse
+    {
+        if ($course->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke course ini.');
+        }
+
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'time_limit' => ['nullable', 'integer', 'min:1'],
+            'max_attempts' => ['required', 'integer', 'min:1', 'max:100'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+        ]);
+
+        $quiz->update([
+            'title' => $validated['title'],
+            'time_limit' => $validated['time_limit'] ?? null,
+            'max_attempts' => $validated['max_attempts'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+        ]);
+
+        return back()->with('success', "Waktu dan pengaturan Kuis '{$quiz->title}' berhasil diperbarui!");
     }
 
     public function show(Quiz $quiz): View

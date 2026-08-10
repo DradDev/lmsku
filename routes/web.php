@@ -388,6 +388,7 @@ Route::middleware(['auth', 'role:vendor'])
         Route::delete('/materials/{material}', [VendorMaterialController::class, 'destroy'])->name('materials.destroy');
 
         Route::post('/courses/{course}/quizzes', [VendorQuizController::class, 'store'])->name('quizzes.store');
+        Route::put('/courses/{course}/quizzes/{quiz}', [VendorQuizController::class, 'update'])->name('courses.quizzes.update');
         Route::get('/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('quizzes.show');
         Route::delete('/quizzes/{quiz}', [VendorQuizController::class, 'destroy'])->name('quizzes.destroy');
         Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
