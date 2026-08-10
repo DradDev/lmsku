@@ -47,7 +47,6 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'benefits' => ['nullable', 'string'],
             'difficulty_level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
@@ -67,7 +66,7 @@ class ProjectController extends Controller
         $project = Project::create([
             'title' => $validated['title'],
             'description' => $validated['description'],
-            'benefits' => $validated['benefits'] ?? null,
+            'benefits' => null,
             'difficulty_level' => $validated['difficulty_level'],
             'duration_days' => $validated['duration_days'],
             'max_students' => $validated['max_students'],
@@ -146,7 +145,6 @@ class ProjectController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'benefits' => ['nullable', 'string'],
             'difficulty_level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
@@ -156,6 +154,8 @@ class ProjectController extends Controller
             'tag_ids.*' => ['exists:tags,id'],
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'],
         ]);
+
+        $validated['benefits'] = null;
 
         if ($request->hasFile('brief_file')) {
             $path = $request->file('brief_file')->store('project-briefs', 'public');
