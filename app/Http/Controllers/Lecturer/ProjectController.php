@@ -10,6 +10,7 @@ use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProjectController extends Controller
@@ -85,6 +86,9 @@ class ProjectController extends Controller
             'difficulty_level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
+            'provider_type' => ['nullable', 'in:internal,external'],
+            'benefits' => ['nullable', 'string', 'max:1000'],
+            'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip,rar', 'max:10240'],
             'is_published' => ['nullable', 'boolean'],
 
             'skill_ids' => ['nullable', 'array'],
@@ -95,13 +99,26 @@ class ProjectController extends Controller
             'tag_ids.*' => ['exists:tags,id'],
         ]);
 
+        $briefPath = null;
+        if ($request->hasFile('brief_file')) {
+            $briefPath = $request->file('brief_file')->store('project_briefs', 'public');
+        }
+
+        $user = Auth::user();
+        $providerType = $user->role === 'vendor'
+            ? 'external'
+            : ($validated['provider_type'] ?? 'internal');
+
         $project = Project::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'difficulty_level' => $validated['difficulty_level'],
             'duration_days' => $validated['duration_days'],
             'max_students' => $validated['max_students'],
-            'created_by' => Auth::id(),
+            'created_by' => $user->id,
+            'provider_type' => $providerType,
+            'brief_file' => $briefPath,
+            'benefits' => $validated['benefits'] ?? null,
             'is_published' => $request->boolean('is_published'),
         ]);
 
@@ -163,6 +180,9 @@ class ProjectController extends Controller
             'difficulty_level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
+            'provider_type' => ['nullable', 'in:internal,external'],
+            'benefits' => ['nullable', 'string', 'max:1000'],
+            'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip,rar', 'max:10240'],
             'is_published' => ['nullable', 'boolean'],
 
             'skill_ids' => ['nullable', 'array'],
@@ -173,14 +193,28 @@ class ProjectController extends Controller
             'tag_ids.*' => ['exists:tags,id'],
         ]);
 
-        $project->update([
+        $updateData = [
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'difficulty_level' => $validated['difficulty_level'],
             'duration_days' => $validated['duration_days'],
             'max_students' => $validated['max_students'],
+            'benefits' => $validated['benefits'] ?? null,
             'is_published' => $request->boolean('is_published'),
-        ]);
+        ];
+
+        if (isset($validated['provider_type'])) {
+            $updateData['provider_type'] = $validated['provider_type'];
+        }
+
+        if ($request->hasFile('brief_file')) {
+            if (!empty($project->brief_file) && Storage::disk('public')->exists($project->brief_file)) {
+                Storage::disk('public')->delete($project->brief_file);
+            }
+            $updateData['brief_file'] = $request->file('brief_file')->store('project_briefs', 'public');
+        }
+
+        $project->update($updateData);
 
         $this->syncProjectSkillsAndTags($project, $request);
 
@@ -314,7 +348,23 @@ class ProjectController extends Controller
         $mainSkill = $project->skills->firstWhere('pivot.is_main', true) ?? $project->skills->first();
         $hasCourseForSkill = $mainSkill ? $this->checkSkillHasCourse($mainSkill->id) : true;
 
-        return view('lecturer.projects.show', compact('project', 'hasCourseForSkill', 'mainSkill'));
+        $participationsMap = $project->participations->keyBy('user_id');
+
+        $recommendedStudents = \App\Models\User::where('role', 'student')
+            ->with(['skillProfiles.skill', 'interestProfiles.tag', 'completedProjects'])
+            ->get()
+            ->map(function ($student) use ($project, $participationsMap) {
+                $student->match_score = $student->calculateTalentMatchScore($project);
+                $part = $participationsMap->get($student->id);
+                $student->invitation_status = $part ? $part->status : null;
+                $student->is_already_invited = $part !== null && in_array($part->status, ['invited', 'in_progress', 'development', 'review', 'completed']);
+                return $student;
+            })
+            ->sortByDesc('match_score')
+            ->take(3)
+            ->values();
+
+        return view('lecturer.projects.show', compact('project', 'hasCourseForSkill', 'mainSkill', 'recommendedStudents'));
     }
 
     public function talentPool(Request $request, Project $project): View
@@ -327,14 +377,16 @@ class ProjectController extends Controller
 
         $project->load(['skills', 'tags', 'participations']);
 
-        $existingParticipantUserIds = $project->participations->pluck('user_id')->toArray();
+        $participationsMap = $project->participations->keyBy('user_id');
 
         $students = \App\Models\User::where('role', 'student')
             ->with(['skillProfiles.skill', 'interestProfiles.tag', 'completedProjects'])
             ->get()
-            ->map(function ($student) use ($project, $existingParticipantUserIds) {
+            ->map(function ($student) use ($project, $participationsMap) {
                 $student->match_score = $student->calculateTalentMatchScore($project);
-                $student->is_already_invited = in_array($student->id, $existingParticipantUserIds, true);
+                $part = $participationsMap->get($student->id);
+                $student->invitation_status = $part ? $part->status : null;
+                $student->is_already_invited = $part !== null && in_array($part->status, ['invited', 'in_progress', 'development', 'review', 'completed']);
                 return $student;
             })
             ->sortByDesc('match_score')
@@ -364,13 +416,13 @@ class ProjectController extends Controller
             'Kamu tidak memiliki akses ke project ini.'
         );
 
-        $participation = \App\Models\ProjectParticipation::firstOrCreate(
+        $participation = \App\Models\ProjectParticipation::updateOrCreate(
             [
                 'project_id' => $project->id,
                 'user_id' => $user->id,
             ],
             [
-                'status' => 'in_progress',
+                'status' => 'invited',
                 'progress_percent' => 0,
                 'started_at' => now(),
             ]
@@ -378,6 +430,6 @@ class ProjectController extends Controller
 
         return redirect()
             ->route('lecturer.projects.talent-pool', $project)
-            ->with('success', "Berhasil mengundang {$user->name} ke dalam proyek!");
+            ->with('success', "Undangan resmi telah dikirimkan kepada {$user->name}! Menunggu konfirmasi dari mahasiswa.");
     }
 }

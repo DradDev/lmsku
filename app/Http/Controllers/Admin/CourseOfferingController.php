@@ -64,7 +64,7 @@ class CourseOfferingController extends Controller
                         ->where('academic_term_id', $request->academic_term_id);
                 }),
             ],
-            'capacity' => ['nullable', 'integer', 'min:1'],
+            'capacity' => ['nullable', 'integer', 'min:0'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -104,7 +104,7 @@ class CourseOfferingController extends Controller
                         ->where('academic_term_id', $request->academic_term_id);
                 })->ignore($courseOffering->id),
             ],
-            'capacity' => ['nullable', 'integer', 'min:1'],
+            'capacity' => ['nullable', 'integer', 'min:0'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],

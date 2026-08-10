@@ -25,28 +25,6 @@
                 </div>
             @endif
 
-            <!-- SSO UNDIP Style Instructor/Author Selector Dropdown Card for Projects -->
-            <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
-                <label class="block text-sm font-bold text-gray-800 mb-2 flex items-center gap-2">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-600">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                        <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    <span>Daftar Author / Instructor</span>
-                </label>
-
-                <select id="author-project-filter" onchange="filterProjectsByAuthor()" class="w-full md:w-1/2 rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm font-semibold text-gray-800 py-3 px-4 shadow-sm cursor-pointer">
-                    <option value="all">-- Semua Author / Instructor --</option>
-                    @foreach($authors as $author)
-                        <option value="{{ $author->id }}">{{ $author->name }}</option>
-                    @endforeach
-                </select>
-
-                <p class="text-xs text-gray-500 mt-2">
-                    Pilih Author / Instructor untuk mengfilter dan menampilkan daftar project industri yang diunggah.
-                </p>
-            </div>
-
             <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800">
@@ -57,10 +35,27 @@
                     </p>
                 </div>
 
-                <a href="{{ route('student.projects.my') }}"
-                   class="inline-flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-medium rounded-lg transition">
-                    Project Saya
-                </a>
+                <div class="flex items-center gap-2">
+                    @if(isset($invitedParticipations) && $invitedParticipations->isNotEmpty())
+                        <a href="{{ route('student.projects.invitations') }}"
+                           class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition shadow-sm animate-pulse">
+                            <span>📩 Undangan Project</span>
+                            <span class="px-2 py-0.5 rounded-full bg-white text-amber-900 text-xs font-black">
+                                {{ $invitedParticipations->count() }}
+                            </span>
+                        </a>
+                    @else
+                        <a href="{{ route('student.projects.invitations') }}"
+                           class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
+                            <span>📩 Undangan Project</span>
+                        </a>
+                    @endif
+
+                    <a href="{{ route('student.projects.my') }}"
+                       class="inline-flex items-center justify-center px-4 py-2.5 bg-gray-800 hover:bg-gray-900 text-white text-sm font-semibold rounded-xl transition">
+                        Project Saya
+                    </a>
+                </div>
             </div>
 
             @if ($projects->isEmpty())
@@ -81,15 +76,28 @@
                             $maxStudents = $project->max_students ?? 1;
                             $isFull = $joinedCount >= $maxStudents;
                             $alreadyJoined = in_array($project->id, $joinedProjectIds);
+                            $provType = $project->provider_type ?? (($project->user->role ?? '') === 'vendor' ? 'external' : 'internal');
+                            $isEligible = $project->eligibility['is_eligible'] ?? false;
                         @endphp
 
-                        <div class="project-card bg-white border border-gray-100 shadow-sm hover:shadow-md transition rounded-2xl overflow-hidden flex flex-col" data-author-id="{{ $project->created_by }}">
+                        <div class="project-card bg-white border border-gray-100 shadow-sm hover:shadow-md transition rounded-2xl overflow-hidden flex flex-col"
+                             data-author-id="{{ $project->created_by }}"
+                             data-provider-type="{{ $provType }}"
+                             data-eligible="{{ $isEligible ? 'true' : 'false' }}">
                             <div class="p-5 flex-1">
                                 <div class="flex items-start justify-between gap-3 mb-2">
                                     <div>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-2">
-                                            Author: {{ $project->user->name ?? 'Vendor' }}
-                                        </span>
+                                        <div class="mb-2">
+                                            @if($provType === 'external')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                                    🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                    🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                                </span>
+                                            @endif
+                                        </div>
                                         <h3 class="font-semibold text-lg text-gray-800 leading-snug">
                                             {{ $project->title }}
                                         </h3>
@@ -166,13 +174,18 @@
                                                 disabled>
                                             Kuota Penuh
                                         </button>
+                                    @elseif(!$isEligible)
+                                        <a href="{{ route('student.projects.show', $project) }}"
+                                           class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition">
+                                            🔒 Terkunci
+                                        </a>
                                     @else
                                         <form action="{{ route('student.projects.join', $project) }}" method="POST">
                                             @csrf
 
                                             <button type="submit"
-                                                    class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                                                Ambil Project
+                                                    class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
+                                                🚀 Ambil
                                             </button>
                                         </form>
                                     @endif
@@ -187,13 +200,23 @@
     </div>
 
     <script>
-        function filterProjectsByAuthor() {
-            const selectedAuthorId = document.getElementById('author-project-filter').value;
+        function filterProjects() {
+            const authorId = document.getElementById('author-project-filter').value;
+            const providerType = document.getElementById('provider-type-filter').value;
+            const eligibility = document.getElementById('eligibility-filter').value;
+
             const cards = document.querySelectorAll('.project-card');
 
             cards.forEach(card => {
-                const cardAuthorId = card.getAttribute('data-author-id');
-                if (selectedAuthorId === 'all' || cardAuthorId === selectedAuthorId) {
+                const cardAuthor = card.getAttribute('data-author-id');
+                const cardProvider = card.getAttribute('data-provider-type');
+                const cardEligible = card.getAttribute('data-eligible');
+
+                const matchAuthor = (authorId === 'all' || cardAuthor === authorId);
+                const matchProvider = (providerType === 'all' || cardProvider === providerType);
+                const matchEligible = (eligibility === 'all' || cardEligible === 'true');
+
+                if (matchAuthor && matchProvider && matchEligible) {
                     card.style.display = 'flex';
                 } else {
                     card.style.display = 'none';

@@ -49,6 +49,11 @@ class User extends Authenticatable
         return $this->role === 'lecturer';
     }
 
+    public function isVendor()
+    {
+        return $this->role === 'vendor';
+    }
+
     public function isRegistrationPending()
     {
         return $this->registration_status === 'pending';

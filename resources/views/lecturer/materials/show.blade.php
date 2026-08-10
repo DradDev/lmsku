@@ -10,7 +10,7 @@
         <div class="max-w-7xl mx-auto px-6">
 
             <div class="mb-8">
-                <a href="{{ route('lecturer.courses.show', $material->course_id) }}"
+                <a href="{{ route('lecturer.courses.show', $material->course_offering_id ?? $material->course_id) }}"
                    class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
                     ← Back to Course
                 </a>

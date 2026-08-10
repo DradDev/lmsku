@@ -24,47 +24,115 @@
 
             <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
                 <div class="p-5 border-b border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-800">
-                        Project Information
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Complete project details, select main skill, tags, difficulty level, duration, and publication status.
-                    </p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">
+                                Project Information
+                            </h3>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Complete project details, select main skill, tags, difficulty level, duration, and publication status.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs space-y-1">
+                        <div class="font-bold flex items-center gap-1.5 text-sm text-blue-950">
+                            <span>🛡️ Syarat Kelayakan Pendaftaran Mahasiswa (Automated System)</span>
+                        </div>
+                        <p class="leading-relaxed">
+                            Project ini nantinya akan dibuka untuk mahasiswa yang telah <strong>Lulus Final Quiz & Memiliki Sertifikat Terverifikasi</strong> pada Mata Kuliah pembina <strong>Main Skill</strong> yang Anda tentukan di bawah ini.
+                        </p>
+                    </div>
                 </div>
 
-                <form action="{{ route('lecturer.projects.store') }}" method="POST" class="p-5 md:p-6 space-y-5">
+                <form action="{{ route('lecturer.projects.store') }}" method="POST" enctype="multipart/form-data" class="p-5 md:p-6 space-y-5">
                     @csrf
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Project Title
-                        </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Project Title / Judul Project
+                            </label>
 
-                        <input type="text"
-                               name="title"
-                               value="{{ old('title') }}"
-                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-                               placeholder="Example: Smart Contract Evaluation System"
-                               required>
+                            <input type="text"
+                                   name="title"
+                                   value="{{ old('title') }}"
+                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                   placeholder="Contoh: Pengembangan Sistem IoT Smart Farming"
+                                   required>
 
-                        @error('title')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
+                            @error('title')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Asal Provider Project (Internal vs External)
+                            </label>
+
+                            <div class="relative">
+                                <select name="provider_type" class="w-full appearance-none rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm pr-10">
+                                    <option value="internal" @selected(old('provider_type') === 'internal' || auth()->user()->role === 'lecturer')>🎓 Internal Dosen Akademik</option>
+                                    <option value="external" @selected(old('provider_type') === 'external' || auth()->user()->role === 'vendor')>🏢 External Mitra Vendor Industri</option>
+                                </select>
+
+                                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Description
+                            Description / Deskripsi Project
                         </label>
 
                         <textarea name="description"
-                                  rows="5"
+                                  rows="4"
                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                  placeholder="Write a brief description about this project...">{{ old('description') }}</textarea>
+                                  placeholder="Tuliskan deskripsi rincian tugas dan ekspektasi project...">{{ old('description') }}</textarea>
 
                         @error('description')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Lampiran Dokumen Brief / TOR (PDF / ZIP) <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+
+                            <input type="file"
+                                   name="brief_file"
+                                   accept=".pdf,.doc,.docx,.zip,.rar"
+                                   class="w-full rounded-xl border border-gray-300 bg-gray-50 text-sm p-2 text-gray-600 focus:outline-none">
+                            <p class="text-[11px] text-gray-400 mt-1">Upload dokumen TOR/instruksi pengerjaan (Maksimal 10 MB).</p>
+
+                            @error('brief_file')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Benefit & Output Untuk Mahasiswa <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+
+                            <input type="text"
+                                   name="benefits"
+                                   value="{{ old('benefits') }}"
+                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                   placeholder="Contoh: Sertifikat Industri, Surat Rekomendasi Kerja, Nilai Kompro A">
+
+                            @error('benefits')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -132,27 +200,34 @@
                         $mainSkillId = old('main_skill_id');
                     @endphp
 
-                    <div class="border-t border-gray-100 pt-5">
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Primary Skill Requirement (Main Skill)
-                        </label>
+                    <!-- MAIN SKILL REQUIREMENT BOX -->
+                    <div class="border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/30 rounded-2xl p-5 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-sm font-bold text-gray-800 flex items-center gap-2">
+                                <span class="text-amber-500 text-base">★</span>
+                                <span>Primary Skill Requirement (Main Skill Utama)</span>
+                            </label>
+                            <span class="text-[11px] font-bold text-indigo-700 bg-indigo-100/70 px-2.5 py-1 rounded-md border border-indigo-200">
+                                Syarat Prasyarat Wajib
+                            </span>
+                        </div>
 
                         <div class="relative">
                             <select id="main_skill_select"
                                     name="main_skill_id"
-                                    class="w-full appearance-none rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm pr-10"
+                                    class="w-full appearance-none rounded-xl border-gray-300 bg-white focus:border-indigo-600 focus:ring-indigo-600 font-semibold text-gray-800 text-sm py-2.5 pr-10 shadow-sm"
                                     required>
-                                <option value="">-- Select Primary Skill --</option>
+                                <option value="">-- Pilih Main Skill Utama --</option>
 
                                 @foreach ($mainSkills as $mainSkill)
                                     <option value="{{ $mainSkill->id }}"
                                             @selected((int) $mainSkillId === (int) $mainSkill->id)>
-                                        {{ $mainSkill->name }}
+                                        ★ {{ $mainSkill->name }}
                                     </option>
                                 @endforeach
                             </select>
 
-                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                                      stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                      stroke-linejoin="round">
@@ -161,37 +236,45 @@
                             </div>
                         </div>
 
-                        <p class="text-xs text-gray-400 mt-1">
-                            Select the required primary skill. Students who pass the final quiz in this skill can apply for the project.
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            Pilih Main Skill utama yang diuji oleh project ini. Mahasiswa yang telah <strong>Lulus Final Quiz & Memiliki Sertifikat Terverifikasi</strong> pada skill ini yang dapat mendaftar.
                         </p>
 
-                        <div id="no_course_warning" class="hidden mt-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 space-y-1">
-                            <div class="flex items-center gap-2 font-bold text-amber-900">
+                        <div id="no_course_warning" class="hidden p-4 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 space-y-1 shadow-sm">
+                            <div class="flex items-center gap-2 font-bold text-amber-950">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y3="13"/><line x1="12" y1="17" x2="12.01" y3="17"/></svg>
                                 <span>⚠️ Peringatan: Belum Ada Course Aktif untuk Main Skill Ini</span>
                             </div>
-                            <p>
-                                Belum terdapat Course aktif di sistem yang menguji kompetensi Main Skill ini. Project ini tetap bisa Anda simpan/upload, namun mahasiswa tidak akan bisa memenuhi prasyarat kompetensi project ini sebelum Course terkait dibuat.
-                            </p>
-                            <p class="font-semibold text-amber-900 pt-1">
-                                💡 Disarankan untuk membuat Course baru dengan kuis kelulusan (passing score) untuk Main Skill ini terlebih dahulu!
+                            <p class="leading-relaxed">
+                                Belum terdapat Course aktif di sistem yang menguji kompetensi Main Skill ini. Project tetap bisa disajikan, namun mahasiswa belum dapat mendaftar sebelum Course pembina skill dibuat.
                             </p>
                         </div>
                     </div>
 
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="block text-sm font-semibold text-gray-700">
-                                Project Specialty Tags
-                            </label>
+                    <!-- SPECIALTY TAGS SELECTION BOX -->
+                    <div class="border border-gray-200 bg-white rounded-2xl p-5 shadow-sm space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-800">
+                                    🏷️ Tag Spesialisasi Project (Project Specialty Tags)
+                                </label>
+                                <p class="text-xs text-gray-500 mt-0.5">Pilih tag teknologi / spesialisasi pendukung untuk pencocokan talent pool.</p>
+                            </div>
 
-                            <span id="selected_tags_count" class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-100">
-                                {{ count($selectedTagIds) }} tags selected
+                            <span id="selected_tags_count" class="shrink-0 text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
+                                {{ count($selectedTagIds) }} Tag Terpilih
+                            </span>
+                        </div>
+
+                        <!-- LIVE SELECTED TAGS PREVIEW PILLS -->
+                        <div id="selected_tags_pills_bar" class="flex flex-wrap gap-1.5 p-3 bg-gray-50 rounded-xl border border-gray-200 min-h-[44px] items-center">
+                            <span id="no_tags_placeholder" class="text-xs text-gray-400 italic {{ count($selectedTagIds) > 0 ? 'hidden' : '' }}">
+                                Belum ada tag spesialisasi yang dipilih. Klik chip tag di bawah untuk memilih.
                             </span>
                         </div>
 
                         <!-- Search Filter Input Box -->
-                        <div class="relative mb-3">
+                        <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="11" cy="11" r="8"/>
@@ -202,8 +285,8 @@
                             <input type="text"
                                    id="custom_tag_search"
                                    autocomplete="off"
-                                   placeholder="Search tags (e.g. Computer Vision, Cybersecurity, Web Development, Microcontrollers, Animation)..."
-                                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-sm shadow-sm transition">
+                                   placeholder="Ketik untuk mencari tag (misal: Flutter, Laravel, Figma, IoT, AI, Docker)..."
+                                   class="w-full pl-10 pr-4 py-2.5 rounded-xl border-gray-300 focus:border-indigo-600 focus:ring-indigo-600 text-sm shadow-sm transition">
                         </div>
 
                         <!-- Hidden Native Inputs for Form Submission -->
@@ -214,11 +297,11 @@
                         </div>
 
                         <!-- Custom Tag Picker Container -->
-                        <div class="border border-gray-200 rounded-2xl bg-gray-50/50 p-4 max-h-[260px] overflow-y-auto space-y-4 shadow-inner">
+                        <div class="border border-gray-200 rounded-xl bg-gray-50/50 p-4 max-h-[260px] overflow-y-auto space-y-4 shadow-inner">
                             @foreach ($tags->groupBy(fn($t) => $t->skill->name ?? 'General') as $skillName => $skillTags)
                                 <div class="tag-group-wrapper" data-skill-id="{{ $skillTags->first()->skill_id ?? '' }}">
                                     <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100/60">
+                                        <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200">
                                             Skill: {{ $skillName }}
                                         </span>
                                         <span class="h-px bg-gray-200 flex-1"></span>
@@ -230,33 +313,31 @@
                                             <button type="button"
                                                     data-tag-id="{{ $tag->id }}"
                                                     data-tag-name="{{ strtolower($tag->name) }}"
+                                                    data-display-name="{{ $tag->name }}"
                                                     data-skill-id="{{ $tag->skill_id }}"
                                                     onclick="toggleTagChip(this)"
-                                                    class="tag-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer select-none {{ $isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50' }}">
+                                                    class="tag-chip inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all transform active:scale-95 cursor-pointer select-none {{ $isSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm ring-2 ring-indigo-200' : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/60' }}">
                                                 <span class="chip-icon">{{ $isSelected ? '✓' : '+' }}</span>
-                                                <span>{{ $tag->name }}</span>
+                                                <span>#{{ $tag->name }}</span>
                                             </button>
                                         @endforeach
                                     </div>
                                 </div>
                             @endforeach
                         </div>
-
-                        <p class="text-xs text-gray-400 mt-2">
-                            Click tag badges to select or deselect them. Type in the search box to filter tags.
-                        </p>
                     </div>
 
                     <script>
                         function toggleTagChip(btn) {
                             const tagId = btn.getAttribute('data-tag-id');
+                            const tagName = btn.getAttribute('data-display-name') || tagId;
                             const container = document.getElementById('hidden_tags_container');
                             const existingHidden = document.getElementById('hidden_tag_' + tagId);
 
                             if (existingHidden) {
                                 existingHidden.remove();
-                                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
-                                btn.classList.add('bg-white', 'text-gray-700', 'border-gray-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
+                                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm', 'ring-2', 'ring-indigo-200');
+                                btn.classList.add('bg-white', 'text-gray-700', 'border-gray-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/60');
                                 btn.querySelector('.chip-icon').textContent = '+';
                             } else {
                                 const input = document.createElement('input');
@@ -266,20 +347,48 @@
                                 input.id = 'hidden_tag_' + tagId;
                                 container.appendChild(input);
 
-                                btn.classList.remove('bg-white', 'text-gray-700', 'border-gray-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
-                                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
+                                btn.classList.remove('bg-white', 'text-gray-700', 'border-gray-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/60');
+                                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm', 'ring-2', 'ring-indigo-200');
                                 btn.querySelector('.chip-icon').textContent = '✓';
                             }
 
-                            updateTagCount();
+                            updateTagCountAndPills();
                         }
 
-                        function updateTagCount() {
+                        function updateTagCountAndPills() {
                             const container = document.getElementById('hidden_tags_container');
                             const count = container ? container.querySelectorAll('input').length : 0;
                             const countSpan = document.getElementById('selected_tags_count');
+                            const pillsBar = document.getElementById('selected_tags_pills_bar');
+                            const placeholder = document.getElementById('no_tags_placeholder');
+
                             if (countSpan) {
-                                countSpan.textContent = count + ' tags selected';
+                                countSpan.textContent = count + ' Tag Terpilih';
+                            }
+
+                            if (pillsBar) {
+                                pillsBar.querySelectorAll('.active-tag-pill').forEach(el => el.remove());
+
+                                const selectedInputs = container ? container.querySelectorAll('input') : [];
+                                if (selectedInputs.length === 0) {
+                                    if (placeholder) placeholder.classList.remove('hidden');
+                                } else {
+                                    if (placeholder) placeholder.classList.add('hidden');
+
+                                    selectedInputs.forEach(input => {
+                                        const tagId = input.value;
+                                        const btn = document.querySelector(`.tag-chip[data-tag-id="${tagId}"]`);
+                                        const tagName = btn ? btn.getAttribute('data-display-name') : ('Tag #' + tagId);
+
+                                        const pill = document.createElement('span');
+                                        pill.className = 'active-tag-pill inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-sm cursor-pointer hover:bg-indigo-700 transition';
+                                        pill.innerHTML = `#${tagName} <span class="hover:text-red-200 font-bold ml-1">✕</span>`;
+                                        pill.onclick = function() {
+                                            if (btn) toggleTagChip(btn);
+                                        };
+                                        pillsBar.appendChild(pill);
+                                    });
+                                }
                             }
                         }
 
@@ -341,6 +450,7 @@
 
                             filterCustomTags();
                             checkMainSkillCourseWarning();
+                            updateTagCountAndPills();
                         });
                     </script>
 

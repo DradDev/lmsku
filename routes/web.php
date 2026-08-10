@@ -37,6 +37,16 @@ use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\MasterCourseController as AdminMasterCourseController;
 use App\Http\Controllers\Admin\AcademicTermController as AdminAcademicTermController;
 use App\Http\Controllers\Admin\CourseOfferingController as AdminCourseOfferingController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
+use App\Http\Controllers\Admin\CourseController as AdminCourseController;
+
+// Vendor Controllers
+use App\Http\Controllers\Vendor\DashboardController as VendorDashboardController;
+use App\Http\Controllers\Vendor\CourseController as VendorCourseController;
+use App\Http\Controllers\Vendor\ProjectController as VendorProjectController;
+use App\Http\Controllers\Vendor\MaterialController as VendorMaterialController;
+use App\Http\Controllers\Vendor\QuizController as VendorQuizController;
+use App\Http\Controllers\Vendor\QuestionController as VendorQuestionController;
 
 Route::get('/', function () {
     if (! Auth::check()) {
@@ -46,6 +56,8 @@ Route::get('/', function () {
     return match (Auth::user()->role) {
         'admin' => redirect()->route('admin.dashboard'),
         'lecturer' => redirect()->route('lecturer.dashboard'),
+        'vendor' => redirect()->route('vendor.dashboard'),
+        'student' => redirect()->route('student.dashboard'),
         default => redirect()->route('student.dashboard'),
     };
 });
@@ -146,8 +158,17 @@ Route::middleware(['auth', 'role:student'])
         Route::get('/my-projects', [StudentProjectController::class, 'myProjects'])
             ->name('projects.my');
 
+        Route::get('/project-invitations', [StudentProjectController::class, 'invitations'])
+            ->name('projects.invitations');
+
         Route::post('/projects/{project}/join', [StudentProjectController::class, 'join'])
             ->name('projects.join');
+
+        Route::post('/projects/{project}/accept-invite', [StudentProjectController::class, 'acceptInvite'])
+            ->name('projects.accept-invite');
+
+        Route::post('/projects/{project}/decline-invite', [StudentProjectController::class, 'declineInvite'])
+            ->name('projects.decline-invite');
 
         Route::patch('/projects/{project}/progress', [StudentProjectController::class, 'updateProgress'])
             ->name('projects.update-progress');
@@ -337,6 +358,55 @@ Route::middleware(['auth', 'role:admin'])
         // Course Offerings
         Route::resource('course-offerings', AdminCourseOfferingController::class)
             ->except(['show']);
+
+        // Projects Audit & Emergency Moderation
+        Route::post('/projects/{project}/toggle-publish', [AdminProjectController::class, 'togglePublish'])
+            ->name('projects.toggle-publish');
+        Route::resource('projects', AdminProjectController::class)->only(['index', 'show', 'destroy']);
+
+        // Courses Audit & Emergency Moderation (Vendor & Lecturer Courses)
+        Route::post('/courses/{course}/toggle-archive', [AdminCourseController::class, 'toggleArchive'])
+            ->name('courses.toggle-archive');
+        Route::resource('courses', AdminCourseController::class)->only(['index', 'show', 'destroy']);
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Vendor / External Industry Partner Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:vendor'])
+    ->prefix('vendor')
+    ->name('vendor.')
+    ->group(function () {
+        Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
+
+        // Industry Certified Courses
+        Route::post('/courses/{course}/toggle-archive', [VendorCourseController::class, 'toggleArchive'])->name('courses.toggle-archive');
+        Route::resource('courses', VendorCourseController::class);
+
+        // Course Materials & Quizzes
+        Route::post('/courses/{course}/materials', [VendorMaterialController::class, 'store'])->name('materials.store');
+        Route::delete('/materials/{material}', [VendorMaterialController::class, 'destroy'])->name('materials.destroy');
+
+        Route::post('/courses/{course}/quizzes', [VendorQuizController::class, 'store'])->name('quizzes.store');
+        Route::put('/courses/{course}/quizzes/{quiz}', [VendorQuizController::class, 'update'])->name('courses.quizzes.update');
+        Route::get('/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('quizzes.show');
+        Route::delete('/quizzes/{quiz}', [VendorQuizController::class, 'destroy'])->name('quizzes.destroy');
+        Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
+        Route::delete('/questions/{question}', [VendorQuizController::class, 'destroyQuestion'])->name('questions.destroy');
+
+        // Question Builder & Batch Routes
+        Route::post('/questions', [VendorQuestionController::class, 'store'])->name('questions.store');
+        Route::get('/questions/{question}/edit', [VendorQuestionController::class, 'edit'])->name('questions.edit');
+        Route::put('/questions/{question}', [VendorQuestionController::class, 'update'])->name('questions.update');
+
+        // Industry Projects
+        Route::get('/students/{student}/portfolio', [VendorProjectController::class, 'studentPortfolio'])->name('students.portfolio');
+        Route::post('/projects/{project}/toggle-publish', [VendorProjectController::class, 'togglePublish'])->name('projects.toggle-publish');
+        Route::get('/projects/{project}/talent-pool', [VendorProjectController::class, 'talentPool'])->name('projects.talent-pool');
+        Route::post('/projects/{project}/invite/{user}', [VendorProjectController::class, 'inviteTalent'])->name('projects.invite');
+        Route::resource('projects', VendorProjectController::class);
     });
 
 require __DIR__ . '/auth.php';

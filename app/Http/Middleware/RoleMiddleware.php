@@ -16,10 +16,10 @@ class RoleMiddleware
      * @param  string  $role
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle(Request $request, Closure $next, $role): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Cek apakah pengguna login dan apakah role sesuai
-        if (!$request->user() || $request->user()->role !== $role) {
+        // Cek apakah pengguna login dan apakah role ada dalam daftar yang diizinkan
+        if (!$request->user() || !in_array($request->user()->role, $roles, true)) {
             abort(403, 'Unauthorized action.');
         }
 

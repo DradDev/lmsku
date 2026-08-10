@@ -68,7 +68,14 @@ class CourseController extends Controller
                 ->get();
 
             $course = $offering;
-            $materials = $offering->masterCourse->materials ?? collect();
+            $materials = Material::where('master_course_id', $offering->master_course_id)
+                ->where(function ($q) use ($offering) {
+                    $q->whereNull('course_offering_id')
+                      ->orWhere('course_offering_id', $offering->id)
+                      ->orWhere('course_id', $offering->id);
+                })
+                ->latest()
+                ->get();
             $quizzes = $offering->quizzes->count() > 0 ? $offering->quizzes : ($offering->masterCourse->quizzes ?? collect());
             $students = $offering->enrollments->map(fn($e) => $e->user)->filter();
             $enrollments = $offering->enrollments;

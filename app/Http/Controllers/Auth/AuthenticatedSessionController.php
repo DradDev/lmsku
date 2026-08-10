@@ -66,6 +66,10 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('lecturer.dashboard');
         }
 
+        if ($user->role === 'vendor') {
+            return redirect()->route('vendor.dashboard');
+        }
+
         return redirect()->route('student.dashboard');
     }
 

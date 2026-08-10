@@ -28,15 +28,30 @@
                 </p>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <div style="background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10.5px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total User</div>
-                    <div style="font-size: 18px; font-weight: 800; color: #0F172A;">{{ $users->count() }}</div>
+                    <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total User</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #0F172A;">{{ $users->count() }}</div>
+                </div>
+
+                <div style="background: #DCFCE7; border: 1px solid #BBF7D0; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 700; color: #15803D; text-transform: uppercase;">Mahasiswa</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #166534;">{{ $users->where('role', 'student')->count() }}</div>
+                </div>
+
+                <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 700; color: #1D4ED8; text-transform: uppercase;">Dosen Pengampu</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #1E40AF;">{{ $users->where('role', 'lecturer')->count() }}</div>
+                </div>
+
+                <div style="background: #F3E8FF; border: 1px solid #E9D5FF; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 700; color: #6B21A8; text-transform: uppercase;">🏢 Mitra Vendor</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #581C87;">{{ $users->where('role', 'vendor')->count() }}</div>
                 </div>
 
                 <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10.5px; font-weight: 700; color: #B45309; text-transform: uppercase;">Pending Approval</div>
-                    <div style="font-size: 18px; font-weight: 800; color: #92400E;">{{ $users->where('registration_status', 'pending')->count() }}</div>
+                    <div style="font-size: 10px; font-weight: 700; color: #B45309; text-transform: uppercase;">Pending</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #92400E;">{{ $users->where('registration_status', 'pending')->count() }}</div>
                 </div>
             </div>
         </div>
@@ -66,6 +81,7 @@
                                             $avatarBg = match($user->role) {
                                                 'admin' => 'linear-gradient(135deg, #7E22CE, #A855F7)',
                                                 'lecturer' => 'linear-gradient(135deg, #1E3A8A, #2563EB)',
+                                                'vendor' => 'linear-gradient(135deg, #6B21A8, #C084FC)',
                                                 default => 'linear-gradient(135deg, #047857, #10B981)',
                                             };
                                         @endphp
@@ -90,6 +106,7 @@
                                         $roleBadges = match($user->role) {
                                             'admin' => ['bg' => '#F3E8FF', 'color' => '#7E22CE', 'label' => 'Administrator'],
                                             'lecturer' => ['bg' => '#EFF6FF', 'color' => '#2563EB', 'label' => 'Dosen Pengampu'],
+                                            'vendor' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => '🏢 Mitra Vendor'],
                                             default => ['bg' => '#DCFCE7', 'color' => '#15803D', 'label' => 'Mahasiswa'],
                                         };
                                     @endphp

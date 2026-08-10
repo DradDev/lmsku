@@ -46,7 +46,8 @@
                                 class="w-full rounded-xl border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 font-medium"
                                 required>
                             <option value="student" @selected(old('role', $user->role) === 'student')>Student (Mahasiswa)</option>
-                            <option value="lecturer" @selected(old('role', $user->role) === 'lecturer')>Author / Instructor (Dosen / Vendor)</option>
+                            <option value="lecturer" @selected(old('role', $user->role) === 'lecturer')>Lecturer (Dosen Akademik)</option>
+                            <option value="vendor" @selected(old('role', $user->role) === 'vendor')>Vendor Eksternal Mitra</option>
                             <option value="admin" @selected(old('role', $user->role) === 'admin')>Admin (Administrator System)</option>
                         </select>
                         <p class="mt-1.5 text-xs text-slate-500">Mengubah role akan secara otomatis menyesuaikan hak akses menu dan portal pengguna.</p>

@@ -17,21 +17,125 @@ class ProjectController extends Controller
 {
     public function index(): View
     {
+        $student = Auth::user();
+        $student->load('skillProfiles');
+
         $projects = Project::where('is_published', true)
             ->with(['user', 'skills', 'tags'])
             ->withCount('participations')
             ->latest()
             ->get();
 
+        foreach ($projects as $project) {
+            $project->eligibility = $this->checkStudentEligibility($student, $project);
+        }
+
         $authors = User::whereIn('id', $projects->pluck('created_by')->filter()->unique())
             ->orderBy('name')
             ->get();
 
-        $joinedProjectIds = ProjectParticipation::where('user_id', Auth::id())
+        $joinedProjectIds = ProjectParticipation::where('user_id', $student->id)
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
             ->pluck('project_id')
             ->toArray();
 
-        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors'));
+        $invitedParticipations = ProjectParticipation::with(['project', 'project.user', 'project.skills'])
+            ->where('user_id', $student->id)
+            ->where('status', 'invited')
+            ->latest()
+            ->get();
+
+        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors', 'invitedParticipations'));
+    }
+
+    public function myProjects(): View
+    {
+        $participations = ProjectParticipation::with([
+            'project',
+            'project.skills',
+            'project.tags',
+            'project.user',
+        ])
+            ->where('user_id', Auth::id())
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
+            ->latest()
+            ->get();
+
+        $invitedParticipations = ProjectParticipation::with([
+            'project',
+            'project.skills',
+            'project.tags',
+            'project.user',
+        ])
+            ->where('user_id', Auth::id())
+            ->where('status', 'invited')
+            ->latest()
+            ->get();
+
+        return view('student.projects.my', compact('participations', 'invitedParticipations'));
+    }
+
+    public function invitations(): View
+    {
+        $invitedParticipations = ProjectParticipation::with([
+            'project',
+            'project.skills',
+            'project.tags',
+            'project.user',
+        ])
+            ->where('user_id', Auth::id())
+            ->where('status', 'invited')
+            ->latest()
+            ->get();
+
+        return view('student.projects.invitations', compact('invitedParticipations'));
+    }
+
+    public function acceptInvite(Project $project): RedirectResponse
+    {
+        $participation = ProjectParticipation::where('user_id', Auth::id())
+            ->where('project_id', $project->id)
+            ->where('status', 'invited')
+            ->firstOrFail();
+
+        $participation->update([
+            'status' => 'in_progress',
+            'progress_percent' => 0,
+            'started_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+
+        LearningActivityLog::create([
+            'user_id' => Auth::id(),
+            'project_id' => $project->id,
+            'activity_type' => 'accept_invite_project',
+            'activity_value' => 1,
+            'metadata' => [
+                'participation_id' => $participation->id,
+            ],
+            'occurred_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('student.projects.my')
+            ->with('success', "Selamat! Anda berhasil mengonfirmasi dan bergabung dalam project '{$project->title}'.");
+    }
+
+    public function declineInvite(Project $project): RedirectResponse
+    {
+        $participation = ProjectParticipation::where('user_id', Auth::id())
+            ->where('project_id', $project->id)
+            ->where('status', 'invited')
+            ->firstOrFail();
+
+        $participation->update([
+            'status' => 'declined',
+            'last_activity_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('student.projects.index')
+            ->with('success', "Undangan project '{$project->title}' telah ditolak.");
     }
 
     public function portfolio(): View
@@ -52,6 +156,9 @@ class ProjectController extends Controller
     {
         abort_unless($project->is_published, 404);
 
+        $student = Auth::user();
+        $student->load('skillProfiles');
+
         $project->load([
             'skills',
             'tags',
@@ -62,31 +169,35 @@ class ProjectController extends Controller
         ]);
 
         LearningActivityLog::create([
-            'user_id' => Auth::id(),
+            'user_id' => $student->id,
             'project_id' => $project->id,
             'activity_type' => 'view_project',
             'activity_value' => 1,
             'occurred_at' => now(),
         ]);
 
-        $participation = ProjectParticipation::where('user_id', Auth::id())
+        $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
             ->first();
 
         $canComment = $participation !== null;
+        $eligibility = $this->checkStudentEligibility($student, $project);
 
         return view('student.projects.show', compact(
             'project',
             'participation',
-            'canComment'
+            'canComment',
+            'eligibility'
         ));
     }
 
     public function join(Project $project): RedirectResponse
     {
         abort_unless($project->is_published, 404);
+        $student = Auth::user();
+        $student->load('skillProfiles');
 
-        $alreadyJoined = ProjectParticipation::where('user_id', Auth::id())
+        $alreadyJoined = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
             ->exists();
 
@@ -105,21 +216,18 @@ class ProjectController extends Controller
                 ->with('error', 'Project quota is full.');
         }
 
-        // Check Required Skill Competency for Project
-        $requiredSkillIds = $project->skills->pluck('id')->toArray();
-        if (!empty($requiredSkillIds)) {
-            $userSkillIds = Auth::user()->skillProfiles->pluck('skill_id')->toArray();
-            $hasMatchingSkill = !empty(array_intersect($requiredSkillIds, $userSkillIds));
+        // Strict Check: Certificate Verified + Main Skill Competency
+        $eligibility = $this->checkStudentEligibility($student, $project);
 
-            if (!$hasMatchingSkill) {
-                return redirect()
-                    ->route('student.projects.show', $project)
-                    ->with('error', 'You have not acquired the required skill competency for this project yet. Please complete the related Course & Final Quiz first to build your competency!');
-            }
+        if (!$eligibility['is_eligible']) {
+            $reasonMsg = implode(' ', $eligibility['reasons']);
+            return redirect()
+                ->route('student.projects.show', $project)
+                ->with('error', "Pendaftaran ditolak. Anda belum memenuhi kriteria kelayakan project ini: {$reasonMsg}");
         }
 
         $participation = ProjectParticipation::create([
-            'user_id' => Auth::id(),
+            'user_id' => $student->id,
             'project_id' => $project->id,
             'status' => 'in_progress',
             'progress_percent' => 0,
@@ -128,7 +236,7 @@ class ProjectController extends Controller
         ]);
 
         LearningActivityLog::create([
-            'user_id' => Auth::id(),
+            'user_id' => $student->id,
             'project_id' => $project->id,
             'activity_type' => 'join_project',
             'activity_value' => 1,
@@ -143,19 +251,50 @@ class ProjectController extends Controller
             ->with('success', 'Project successfully joined.');
     }
 
-    public function myProjects(): View
+    public function checkStudentEligibility(User $student, Project $project): array
     {
-        $participations = ProjectParticipation::with([
-            'project',
-            'project.skills',
-            'project.tags',
-            'project.user',
-        ])
-            ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
+        $mainSkill = $project->skills->firstWhere('pivot.is_main', true) ?? $project->skills->first();
+        $requiredSkillIds = $project->skills->pluck('id')->toArray();
 
-        return view('student.projects.my', compact('participations'));
+        $hasMainSkill = false;
+        if (!empty($requiredSkillIds)) {
+            $userSkillIds = $student->skillProfiles->pluck('skill_id')->toArray();
+            $hasMainSkill = !empty(array_intersect($requiredSkillIds, $userSkillIds));
+        } else {
+            $hasMainSkill = true; // No skill requirement
+        }
+
+        // Certificate check: Student must have at least 1 verified certificate or verified final quiz attempt
+        $hasVerifiedCertificate = \App\Models\Certificate::where('user_id', $student->id)
+            ->where('status', 'verified')
+            ->exists();
+
+        if (!$hasVerifiedCertificate) {
+            $hasVerifiedCertificate = \App\Models\QuizAttempt::where('user_id', $student->id)
+                ->where('is_verified', true)
+                ->where('score', '>=', 60)
+                ->exists();
+        }
+
+        $isEligible = $hasMainSkill && $hasVerifiedCertificate;
+
+        $reasons = [];
+        if (!$hasMainSkill) {
+            $skillName = $mainSkill ? $mainSkill->name : 'Main Skill';
+            $reasons[] = "Belum memiliki Main Skill: {$skillName}.";
+        }
+
+        if (!$hasVerifiedCertificate) {
+            $reasons[] = "Belum memiliki Sertifikat Matkul Terverifikasi (Lulus Final Quiz).";
+        }
+
+        return [
+            'is_eligible' => $isEligible,
+            'has_main_skill' => $hasMainSkill,
+            'has_verified_certificate' => $hasVerifiedCertificate,
+            'main_skill_name' => $mainSkill?->name ?? 'General Skill',
+            'reasons' => $reasons,
+        ];
     }
 
     public function complete(Project $project): RedirectResponse

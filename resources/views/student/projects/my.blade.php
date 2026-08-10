@@ -50,10 +50,27 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('student.projects.index') }}"
-                        class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition shadow-sm">
-                        + Cari Project Baru
-                    </a>
+                    <div class="flex items-center gap-2">
+                        @if(isset($invitedParticipations) && $invitedParticipations->isNotEmpty())
+                            <a href="{{ route('student.projects.invitations') }}"
+                               class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition shadow-sm animate-pulse">
+                                <span>📩 Undangan Project</span>
+                                <span class="px-2 py-0.5 rounded-full bg-white text-amber-900 text-xs font-black">
+                                    {{ $invitedParticipations->count() }}
+                                </span>
+                            </a>
+                        @else
+                            <a href="{{ route('student.projects.invitations') }}"
+                               class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
+                                <span>📩 Undangan Project</span>
+                            </a>
+                        @endif
+
+                        <a href="{{ route('student.projects.index') }}"
+                            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition shadow-sm">
+                            + Cari Project Baru
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -85,11 +102,23 @@
                 $progress = $participation->progress_percent ?? 0;
                 @endphp
 
-                <div class="bg-white shadow rounded p-5 flex flex-col justify-between">
+                <div class="bg-white shadow-sm border border-gray-100 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition">
                     <div>
                         <div class="flex justify-between items-start gap-3 mb-3">
                             <div>
-                                <h3 class="font-bold text-lg text-gray-900">
+                                <div class="mb-1.5">
+                                    @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                            🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                            🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <h3 class="font-bold text-lg text-gray-900 leading-snug">
                                     {{ $project->title ?? 'Project tidak ditemukan' }}
                                 </h3>
 
@@ -99,19 +128,27 @@
                                 </p>
                             </div>
 
-                            <span class="shrink-0 px-3 py-1 rounded-full text-xs font-semibold {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-700' }}">
+                            <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-700' }}">
                                 {{ $statusLabels[$status] ?? $status }}
                             </span>
                         </div>
 
-                        <p class="text-sm text-gray-600 mb-4">
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2">
                             {{ \Illuminate\Support\Str::limit($project->description ?? '-', 120) }}
                         </p>
+
+                        @if($project && $project->brief_file_url)
+                            <div class="mb-4">
+                                <a href="{{ $project->brief_file_url }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs rounded-xl transition">
+                                    📥 Download TOR / Brief PDF
+                                </a>
+                            </div>
+                        @endif
 
                         <div class="mb-4">
                             <div class="flex justify-between text-sm text-gray-600 mb-2">
                                 <span>Progress</span>
-                                <span>{{ $progress }}%</span>
+                                <span class="font-bold text-indigo-600">{{ $progress }}%</span>
                             </div>
 
                             <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">

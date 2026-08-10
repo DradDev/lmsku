@@ -19,7 +19,7 @@ class CourseController extends Controller
         $user = Auth::user();
 
         // 3NF CourseOfferings yang dipublish di semester aktif
-        $offerings = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
+        $offerings = \App\Models\CourseOffering::with(['masterCourse.category', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
             ->where('status', 'published')
             ->whereHas('academicTerm', function ($query) {
                 $query->where('is_active', true);
@@ -28,46 +28,40 @@ class CourseController extends Controller
             ->latest()
             ->get();
 
-        // Legacy courses fallback
-        $legacyCourses = Course::with(['materials', 'quizzes.questions', 'user'])
-            ->active()
-            ->withCount('students')
-            ->latest()
-            ->get();
-
-        $courses = $offerings->count() > 0 ? $offerings : $legacyCourses;
-
-        $authors = User::whereIn('id', $courses->map(fn($c) => $c->lecturer_id ?? $c->user_id)->filter()->unique())
-            ->orderBy('name')
-            ->get();
-
-        $enrollments = Enrollment::where('user_id', $user->id)
-            ->get();
-
+        $enrollments = Enrollment::where('user_id', $user->id)->get();
         $enrolledOfferingIds = $enrollments->pluck('course_offering_id')->filter()->toArray();
         $enrolledCourseIds = $enrollments->pluck('course_id')->filter()->toArray();
 
-        foreach ($courses as $course) {
-            $isOffering = $course instanceof \App\Models\CourseOffering;
-            $enrollment = $isOffering
-                ? $enrollments->firstWhere('course_offering_id', $course->id)
-                : $enrollments->firstWhere('course_id', $course->id);
+        // Group offerings by master_course_id
+        $groupedOfferings = $offerings->groupBy('master_course_id');
+        $groupedCourses = collect();
 
-            $course->progress = $enrollment?->progress_percent ?? 0;
-            $course->is_completed = $enrollment?->status === 'completed';
-            $course->enrollment_status = $enrollment?->status;
-            $course->is_enrolled = (bool) $enrollment;
-            $course->can_get_certificate = false;
+        foreach ($groupedOfferings as $masterId => $offeringGroup) {
+            $firstOffering = $offeringGroup->first();
+            $masterCourse = $firstOffering->masterCourse;
 
-            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
+            // Check if user is enrolled in any offering of this master course
+            $userEnrollmentInGroup = $enrollments->first(function ($e) use ($offeringGroup) {
+                return in_array($e->course_offering_id, $offeringGroup->pluck('id')->toArray());
+            });
 
-            if ($finalQuiz && $course->is_enrolled) {
+            $enrolledOffering = $userEnrollmentInGroup
+                ? $offeringGroup->firstWhere('id', $userEnrollmentInGroup->course_offering_id)
+                : null;
+
+            $activeOffering = $enrolledOffering ?? $firstOffering;
+
+            $progress = $userEnrollmentInGroup?->progress_percent ?? 0;
+            $isCompleted = $userEnrollmentInGroup?->status === 'completed';
+            $isEnrolled = (bool) $userEnrollmentInGroup;
+
+            $finalQuiz = $activeOffering->quizzes->firstWhere('quiz_type', 'final');
+            $canGetCertificate = false;
+
+            if ($finalQuiz && $isEnrolled) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
                 $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
+                    $approvedQuestions->every(fn($q) => $q->question_type === 'multiple_choice');
 
                 $verifiedAttempt = QuizAttempt::where('user_id', $user->id)
                     ->where('quiz_id', $finalQuiz->id)
@@ -75,13 +69,28 @@ class CourseController extends Controller
                     ->orderByDesc('score')
                     ->first();
 
-                if ($verifiedAttempt && $verifiedAttempt->score >= ($course->certificate_threshold ?? 70) && $onlyMultipleChoice) {
-                    $course->can_get_certificate = true;
+                if ($verifiedAttempt && $verifiedAttempt->score >= ($activeOffering->certificate_threshold ?? 70) && $onlyMultipleChoice) {
+                    $canGetCertificate = true;
                 }
             }
+
+            $groupedCourses->push((object)[
+                'master_course' => $masterCourse,
+                'offerings' => $offeringGroup,
+                'active_offering' => $activeOffering,
+                'enrolled_offering' => $enrolledOffering,
+                'is_enrolled' => $isEnrolled,
+                'progress' => $progress,
+                'is_completed' => $isCompleted,
+                'can_get_certificate' => $canGetCertificate,
+            ]);
         }
 
-        return view('student.courses.index', compact('courses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors'));
+        $authors = User::whereIn('id', $offerings->pluck('lecturer_id')->filter()->unique())
+            ->orderBy('name')
+            ->get();
+
+        return view('student.courses.index', compact('groupedCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors'));
     }
 
     public function show(string $id)
@@ -241,6 +250,27 @@ class CourseController extends Controller
         // 1. Coba enroll di CourseOffering (3NF)
         $offering = \App\Models\CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
 
+        // Jika $id bukan CourseOffering ID langsung, periksa apakah $id merupakan master_course_id
+        if (! $offering) {
+            $masterOfferings = \App\Models\CourseOffering::where('master_course_id', $id)
+                ->where('status', 'published')
+                ->whereHas('academicTerm', function ($query) {
+                    $query->where('is_active', true);
+                })
+                ->get();
+
+            if ($masterOfferings->count() > 0) {
+                // Cari rombel yang masih memiliki kuota
+                $offering = $masterOfferings->first(fn($o) => $o->hasAvailableCapacity());
+
+                if (! $offering) {
+                    return redirect()
+                        ->back()
+                        ->with('error', 'Pendaftaran gagal: Seluruh rombel kelas untuk mata kuliah ini sudah memenuhi kuota maksimum (kuota habis).');
+                }
+            }
+        }
+
         if ($offering) {
             $alreadyEnrolled = Enrollment::where('user_id', $user->id)
                 ->where('course_offering_id', $offering->id)
@@ -254,7 +284,7 @@ class CourseController extends Controller
 
             // CAPACITY CHECK: Kuota Mahasiswa
             if (! $offering->hasAvailableCapacity()) {
-                return redirect()->back()->with('error', 'Pendaftaran gagal: Kelas penawaran ini sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
+                return redirect()->back()->with('error', 'Pendaftaran gagal: Rombel ' . $offering->section_name . ' sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
             }
 
             if ($offering->isExpired() || $offering->status === 'cancelled') {
@@ -282,7 +312,7 @@ class CourseController extends Controller
 
             return redirect()
                 ->route('student.courses.show', $offering->id)
-                ->with('success', "Berhasil mendaftar di kelas '{$offering->full_name}'. Selamat belajar!");
+                ->with('success', 'Enrollment berhasil! Selamat belajar.');
         }
 
         // 2. Fallback ke legacy Course
@@ -299,7 +329,7 @@ class CourseController extends Controller
         }
 
         if ($course->isExpired() || $course->is_archived) {
-            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk pendaftaran baru.');
+            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk enrollment baru.');
         }
 
         Enrollment::create([
@@ -308,8 +338,8 @@ class CourseController extends Controller
             'progress_percent' => 0,
             'completed_material_count' => 0,
             'completed_quiz_count' => 0,
-            'total_material_count' => $course->materials()->count(),
-            'total_quiz_count' => $course->quizzes()->count(),
+            'total_material_count' => $course->materials->count(),
+            'total_quiz_count' => $course->quizzes->count(),
             'status' => 'not_started',
             'started_at' => now(),
             'last_activity_at' => now(),
@@ -320,29 +350,20 @@ class CourseController extends Controller
             courseId: $course->id
         );
 
-        app(CourseProgressService::class)->recalculate($user->id, $course->id);
-
         return redirect()
             ->route('student.courses.show', $course->id)
-            ->with('success', 'Course berhasil diambil.');
+            ->with('success', 'Enrollment berhasil! Selamat belajar.');
     }
 
-    private function logActivity(
-        string $activityType,
-        ?int $courseId = null,
-        ?int $materialId = null,
-        ?int $quizId = null,
-        float|int $activityValue = 1,
-        ?array $metadata = null
-    ): void {
+    private function logActivity(string $activityType, int $courseId): void
+    {
+        $validCourseId = Course::where('id', $courseId)->exists() ? $courseId : null;
+
         LearningActivityLog::create([
             'user_id' => Auth::id(),
-            'course_id' => $courseId,
-            'material_id' => $materialId,
-            'quiz_id' => $quizId,
+            'course_id' => $validCourseId,
             'activity_type' => $activityType,
-            'activity_value' => $activityValue,
-            'metadata' => $metadata,
+            'activity_value' => 1,
             'occurred_at' => now(),
         ]);
     }

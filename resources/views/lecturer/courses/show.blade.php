@@ -280,7 +280,13 @@
 
                                     <div>
                                         <label class="block font-bold text-slate-700 mb-1">Maksimal Percobaan (Attempts)</label>
-                                        <input type="number" name="max_attempts" value="1" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold" required>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" id="max_attempts_input" name="max_attempts" value="1" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                            <label class="inline-flex items-center gap-1.5 px-2.5 py-2.5 bg-slate-100 border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-200 transition whitespace-nowrap">
+                                                <input type="checkbox" name="is_unlimited" value="1" onchange="document.getElementById('max_attempts_input').disabled = this.checked; if(this.checked){ document.getElementById('max_attempts_input').value = 0; }" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                                <span class="text-[11px] font-bold text-slate-700">♾️ Unlimited</span>
+                                            </label>
+                                        </div>
                                     </div>
 
                                     <div>
@@ -291,6 +297,26 @@
                                     <div>
                                         <label class="block font-bold text-slate-700 mb-1">Deadline Selesai (Opsional)</label>
                                         <input type="datetime-local" name="end_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                    </div>
+
+                                    <div class="md:col-span-2 mt-2 pt-2 border-t border-indigo-100">
+                                        <label class="block font-bold text-slate-700 mb-1.5">🎯 Target Scope Distribusi Kuis:</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <label class="flex items-center gap-2.5 p-2.5 border border-indigo-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
+                                                <input type="radio" name="target_scope" value="all" checked class="text-indigo-600 focus:ring-indigo-500">
+                                                <div>
+                                                    <span class="block font-bold text-indigo-950 text-xs">🌐 Semua Kelas Pararel (Master)</span>
+                                                    <span class="block text-[11px] text-slate-500">Kuis akan otomatis berlaku untuk Kelas A, B, C, dst.</span>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
+                                                <input type="radio" name="target_scope" value="class" class="text-indigo-600 focus:ring-indigo-500">
+                                                <div>
+                                                    <span class="block font-bold text-slate-800 text-xs">📌 Khusus {{ $course->section_name ?: 'Kelas Ini' }}</span>
+                                                    <span class="block text-[11px] text-slate-500">Kuis khusus/remedial hanya untuk rombel kelas ini.</span>
+                                                </div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
 

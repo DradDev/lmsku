@@ -22,9 +22,9 @@
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                     <span style="background: #EFF6FF; color: #2563EB; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase;">Pusat Katalis Akademik</span>
                 </div>
-                <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">Katalog Master Course Induk</h1>
+                <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">Katalog Master Course Induk (Akademik Dosen)</h1>
                 <p style="font-size: 13px; color: #64748B; margin: 4px 0 0 0;">
-                    Pilih mata kuliah di bawah untuk membuka <strong>Gerbang Administrasi 3NF</strong> (Semester, Penawaran Kelas, & Pengaturan Matkul).
+                    Pilih mata kuliah di bawah untuk membuka <strong>Gerbang Administrasi 3NF</strong> (Semester, Penawaran Kelas, & Pengaturan Matkul Dosen).
                 </p>
             </div>
 
@@ -32,6 +32,20 @@
                style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #2563EB; color: #FFFFFF; font-size: 13.5px; font-weight: 700; border-radius: 10px; text-decoration: none; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                 Tambah Master Course Baru
+            </a>
+        </div>
+
+        <!-- CONCEPT EXPLANATION BANNER (AKADEMIK VS VENDOR) -->
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: 13px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">💡</span>
+                <div>
+                    <span style="font-weight: 800; color: #0F172A;">Konsep Arsitektur 3NF vs Course Vendor:</span>
+                    <span style="color: #475569; margin-left: 4px;">Master Course di atas terikat Semester Kampus (Dosen Akademik). Course Sertifikasi Industri dari Mitra Vendor dipublikasikan secara langsung (Standalone) tanpa terikat Semester.</span>
+                </div>
+            </div>
+            <a href="{{ route('admin.projects.index') }}" style="background: #F3E8FF; color: #6B21A8; font-weight: 700; font-size: 12px; padding: 6px 12px; border-radius: 8px; text-decoration: none; white-space: nowrap;">
+                🏢 Audit Project Vendor →
             </a>
         </div>
 

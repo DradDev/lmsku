@@ -15,12 +15,24 @@ class Project extends Model
         'duration_days',
         'max_students',
         'created_by',
+        'provider_type',
+        'brief_file',
+        'benefits',
         'is_published',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
     ];
+
+    public function getBriefFileUrlAttribute()
+    {
+        if (empty($this->brief_file)) {
+            return null;
+        }
+
+        return asset('storage/' . $this->brief_file);
+    }
 
     public function creator()
     {
