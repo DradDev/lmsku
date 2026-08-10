@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\TagController as AdminTagController;
 use App\Http\Controllers\Admin\MasterCourseController as AdminMasterCourseController;
 use App\Http\Controllers\Admin\AcademicTermController as AdminAcademicTermController;
 use App\Http\Controllers\Admin\CourseOfferingController as AdminCourseOfferingController;
+use App\Http\Controllers\Admin\ProjectController as AdminProjectController;
 
 Route::get('/', function () {
     if (! Auth::check()) {
@@ -337,6 +338,11 @@ Route::middleware(['auth', 'role:admin'])
         // Course Offerings
         Route::resource('course-offerings', AdminCourseOfferingController::class)
             ->except(['show']);
+
+        // Projects Audit & Emergency Moderation
+        Route::post('/projects/{project}/toggle-publish', [AdminProjectController::class, 'togglePublish'])
+            ->name('projects.toggle-publish');
+        Route::resource('projects', AdminProjectController::class)->only(['index', 'show', 'destroy']);
     });
 
 require __DIR__ . '/auth.php';
