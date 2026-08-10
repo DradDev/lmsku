@@ -45,39 +45,94 @@
                     </div>
                 </div>
 
-                <form action="{{ route('lecturer.projects.store') }}" method="POST" class="p-5 md:p-6 space-y-5">
+                <form action="{{ route('lecturer.projects.store') }}" method="POST" enctype="multipart/form-data" class="p-5 md:p-6 space-y-5">
                     @csrf
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Project Title
-                        </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Project Title / Judul Project
+                            </label>
 
-                        <input type="text"
-                               name="title"
-                               value="{{ old('title') }}"
-                               class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-                               placeholder="Example: Smart Contract Evaluation System"
-                               required>
+                            <input type="text"
+                                   name="title"
+                                   value="{{ old('title') }}"
+                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                   placeholder="Contoh: Pengembangan Sistem IoT Smart Farming"
+                                   required>
 
-                        @error('title')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
+                            @error('title')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Asal Provider Project (Internal vs External)
+                            </label>
+
+                            <div class="relative">
+                                <select name="provider_type" class="w-full appearance-none rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm pr-10">
+                                    <option value="internal" @selected(old('provider_type') === 'internal' || auth()->user()->role === 'lecturer')>🎓 Internal Dosen Akademik</option>
+                                    <option value="external" @selected(old('provider_type') === 'external' || auth()->user()->role === 'vendor')>🏢 External Mitra Vendor Industri</option>
+                                </select>
+
+                                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="m6 9 6 6 6-6" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">
-                            Description
+                            Description / Deskripsi Project
                         </label>
 
                         <textarea name="description"
-                                  rows="5"
+                                  rows="4"
                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-                                  placeholder="Write a brief description about this project...">{{ old('description') }}</textarea>
+                                  placeholder="Tuliskan deskripsi rincian tugas dan ekspektasi project...">{{ old('description') }}</textarea>
 
                         @error('description')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Lampiran Dokumen Brief / TOR (PDF / ZIP) <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+
+                            <input type="file"
+                                   name="brief_file"
+                                   accept=".pdf,.doc,.docx,.zip,.rar"
+                                   class="w-full rounded-xl border border-gray-300 bg-gray-50 text-sm p-2 text-gray-600 focus:outline-none">
+                            <p class="text-[11px] text-gray-400 mt-1">Upload dokumen TOR/instruksi pengerjaan (Maksimal 10 MB).</p>
+
+                            @error('brief_file')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                Benefit & Output Untuk Mahasiswa <span class="text-xs font-normal text-gray-400">(Opsional)</span>
+                            </label>
+
+                            <input type="text"
+                                   name="benefits"
+                                   value="{{ old('benefits') }}"
+                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                   placeholder="Contoh: Sertifikat Industri, Surat Rekomendasi Kerja, Nilai Kompro A">
+
+                            @error('benefits')
+                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

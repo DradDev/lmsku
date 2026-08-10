@@ -87,9 +87,17 @@
                             <div class="p-5 flex-1">
                                 <div class="flex items-start justify-between gap-3 mb-2">
                                     <div>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 mb-2">
-                                            Author: {{ $project->user->name ?? 'Vendor' }}
-                                        </span>
+                                        <div class="mb-2">
+                                            @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                                    🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                                    🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                                </span>
+                                            @endif
+                                        </div>
                                         <h3 class="font-semibold text-lg text-gray-800 leading-snug">
                                             {{ $project->title }}
                                         </h3>

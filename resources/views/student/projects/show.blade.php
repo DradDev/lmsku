@@ -58,6 +58,18 @@
             <div class="bg-white shadow rounded-2xl p-6">
                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                                    🏢 External Mitra Vendor Industri ({{ $project->user->name ?? 'Vendor' }})
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                                    🎓 Internal Dosen Akademik ({{ $project->user->name ?? 'Dosen' }})
+                                </span>
+                            @endif
+                        </div>
+
                         <h3 class="font-bold text-2xl text-gray-900">
                             {{ $project->title }}
                         </h3>
@@ -83,12 +95,19 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <div class="flex flex-col items-end gap-2">
                         <a href="{{ route('student.projects.index') }}"
                            class="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl text-sm transition">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                             Back to Projects
                         </a>
+
+                        @if($project->brief_file_url)
+                            <a href="{{ $project->brief_file_url }}" target="_blank"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition shadow-sm">
+                                📥 Download TOR / Brief Project (PDF)
+                            </a>
+                        @endif
 
                         @if ($participation)
                             <a href="{{ route('student.projects.my') }}"
@@ -107,6 +126,13 @@
                     <p class="text-gray-700 whitespace-pre-line leading-relaxed">
                         {{ $project->description }}
                     </p>
+
+                    @if($project->benefits)
+                        <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-900 text-xs">
+                            <span class="font-bold text-sm block mb-1">🎁 Benefits & Output Mahasiswa:</span>
+                            <p class="text-indigo-800 font-medium">{{ $project->benefits }}</p>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
