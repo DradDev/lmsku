@@ -18,6 +18,7 @@ class Course extends Model
         'is_archived',
         'certificate_threshold',
         'category_id',
+        'batch_name',
     ];
 
     protected $casts = [

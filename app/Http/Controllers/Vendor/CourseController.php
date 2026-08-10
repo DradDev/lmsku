@@ -56,12 +56,14 @@ class CourseController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'batch_name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
-            'skill_ids' => ['nullable', 'array'],
+            'is_archived' => ['nullable', 'boolean'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
@@ -70,12 +72,17 @@ class CourseController extends Controller
         $validated['user_id'] = Auth::id();
         $validated['progress'] = 0;
         $validated['duration_weeks'] = $validated['duration_weeks'] ?? 4;
+        $validated['batch_name'] = $validated['batch_name'] ?? 'Batch 1 - 2026';
 
         $course = Course::create($validated);
 
-        if (!empty($validated['skill_ids'])) {
-            $course->skills()->sync($validated['skill_ids']);
+        // Prepare Skill Sync Array (All selected skills are Main Skills for Vendor Course)
+        $skillsData = [];
+        foreach ($validated['skill_ids'] as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
         }
+
+        $course->skills()->sync($skillsData);
 
         if (!empty($validated['tag_ids'])) {
             $course->tags()->sync($validated['tag_ids']);
@@ -101,11 +108,7 @@ class CourseController extends Controller
             'tags',
         ]);
 
-        $materials = $course->materials;
-        $quizzes = $course->quizzes;
-        $students = $course->students;
-
-        return view('vendor.courses.show', compact('course', 'materials', 'quizzes', 'students'));
+        return view('vendor.courses.show', compact('course'));
     }
 
     public function edit(Course $course): View
@@ -129,13 +132,14 @@ class CourseController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'batch_name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
             'is_archived' => ['nullable', 'boolean'],
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
@@ -143,9 +147,13 @@ class CourseController extends Controller
 
         $course->update($validated);
 
-        if (isset($validated['skill_ids'])) {
-            $course->skills()->sync($validated['skill_ids']);
+        // Prepare Skill Sync Array (All selected skills are Main Skills for Vendor Course)
+        $skillsData = [];
+        foreach ($validated['skill_ids'] as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
         }
+
+        $course->skills()->sync($skillsData);
 
         if (isset($validated['tag_ids'])) {
             $course->tags()->sync($validated['tag_ids']);
