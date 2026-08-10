@@ -46,6 +46,7 @@ use App\Http\Controllers\Vendor\CourseController as VendorCourseController;
 use App\Http\Controllers\Vendor\ProjectController as VendorProjectController;
 use App\Http\Controllers\Vendor\MaterialController as VendorMaterialController;
 use App\Http\Controllers\Vendor\QuizController as VendorQuizController;
+use App\Http\Controllers\Vendor\QuestionController as VendorQuestionController;
 
 Route::get('/', function () {
     if (! Auth::check()) {
@@ -391,6 +392,11 @@ Route::middleware(['auth', 'role:vendor'])
         Route::delete('/quizzes/{quiz}', [VendorQuizController::class, 'destroy'])->name('quizzes.destroy');
         Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
         Route::delete('/questions/{question}', [VendorQuizController::class, 'destroyQuestion'])->name('questions.destroy');
+
+        // Question Builder & Batch Routes
+        Route::post('/questions', [VendorQuestionController::class, 'store'])->name('questions.store');
+        Route::get('/questions/{question}/edit', [VendorQuestionController::class, 'edit'])->name('questions.edit');
+        Route::put('/questions/{question}', [VendorQuestionController::class, 'update'])->name('questions.update');
 
         // Industry Projects
         Route::get('/students/{student}/portfolio', [VendorProjectController::class, 'studentPortfolio'])->name('students.portfolio');
