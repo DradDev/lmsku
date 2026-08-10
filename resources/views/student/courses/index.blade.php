@@ -51,131 +51,84 @@
             margin-top: 3px;
         }
 
-        .alert {
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            font-size: 13px;
-        }
-
-        .alert-success {
-            background: #edfaf4;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-
-        .alert-error {
-            background: #fef2f2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
         .filter-tabs {
             display: flex;
-            gap: 6px;
+            gap: 8px;
             margin-bottom: 2rem;
-            flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 4px;
         }
 
         .filter-tab {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 7px 16px;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 8px 16px;
             border-radius: 100px;
-            font-size: 12px;
-            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #64748b;
             cursor: pointer;
-            border: 1px solid #e8eaf2;
-            background: #fff;
-            color: #7b8399;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.15s;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .filter-tab:hover {
-            border-color: #c1cce8;
-            color: #1e2435;
+            border-color: #cbd5e1;
+            color: #334155;
         }
 
         .filter-tab.active {
-            background: #1e3a5f;
-            border-color: #1e3a5f;
-            color: #fff;
+            background: #3b5bdb;
+            color: #ffffff;
+            border-color: #3b5bdb;
+            box-shadow: 0 4px 12px rgba(59, 91, 219, 0.25);
+        }
+
+        .tab-count {
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 100px;
+            background: rgba(0, 0, 0, 0.06);
+
         }
 
         .filter-tab.active .tab-count {
             background: rgba(255, 255, 255, 0.2);
-            color: #fff;
-        }
 
-        .tab-count {
-            background: #eef2ff;
-            color: #2d5be3;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 100px;
-        }
-
-        .empty-state {
-            background: #fff;
-            border: 1.5px dashed #dde0ec;
-            border-radius: 16px;
-            padding: 4rem 2rem;
-            text-align: center;
-        }
-
-        .empty-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            background: #eef2ff;
-            border: 1px solid #c7d4f8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1rem;
-        }
-
-        .empty-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #5a607a;
-            margin-bottom: 5px;
-        }
-
-        .empty-sub {
-            font-size: 13px;
-            color: #b0b4c9;
         }
 
         .courses-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            gap: 1.5rem;
         }
 
         .course-card {
-            background: #fff;
-            border: 1px solid #e8eaf2;
-            border-radius: 16px;
-            padding: 1.4rem;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
-            transition: box-shadow 0.2s, transform 0.2s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            transition: all 0.25s ease;
         }
 
         .course-card:hover {
-            box-shadow: 0 6px 24px rgba(45, 91, 227, 0.09);
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            border-color: #cbd5e1;
         }
 
         .badge-row {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            align-items: center;
+            gap: 8px;
             margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .course-badge {
@@ -214,8 +167,8 @@
         }
 
         .course-title {
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 17px;
+            font-weight: 700;
             color: #1e2435;
             line-height: 1.4;
             margin-bottom: 8px;
@@ -317,6 +270,7 @@
             background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
             color: #fff;
             box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+            width: 100%;
         }
 
         .btn-primary:hover {
@@ -328,6 +282,7 @@
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: #fff;
             box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+            width: 100%;
         }
 
         .btn-success:hover {
@@ -340,6 +295,7 @@
             color: #047857;
             border: 1.5px solid #a7f3d0;
             box-shadow: 0 2px 6px rgba(16, 185, 129, 0.1);
+            width: 100%;
         }
 
         .btn-cert:hover {
@@ -372,13 +328,19 @@
         <div class="page-container">
 
             @if (session('success'))
-            <div class="alert alert-success">
+            <div class="alert alert-success" style="padding: 12px 16px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; border-radius: 12px; margin-bottom: 1rem; font-size: 14px; font-weight: 600;">
                 {{ session('success') }}
             </div>
             @endif
 
+            @if (session('info'))
+            <div class="alert alert-info" style="padding: 12px 16px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: 12px; margin-bottom: 1rem; font-size: 14px; font-weight: 600;">
+                {{ session('info') }}
+            </div>
+            @endif
+
             @if (session('error'))
-            <div class="alert alert-error">
+            <div class="alert alert-error" style="padding: 12px 16px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 12px; margin-bottom: 1rem; font-size: 14px; font-weight: 600;">
                 {{ session('error') }}
             </div>
             @endif
@@ -386,45 +348,41 @@
             <div class="page-top">
                 <div>
                     <p class="page-eyebrow">COMPRO TEKKOM · Student Course</p>
-                    <h1 class="page-title">Competency Courses</h1>
+                    <h1 class="page-title">Katalog Mata Kuliah Kompetensi</h1>
                     <p class="page-sub">
-                        Explore available courses, enroll in new topics, or continue your active learning.
+                        Pilih mata kuliah dan tentukan rombel kelas pararel (Kelas A, B, C, D) yang ingin Anda ikuti.
                     </p>
                 </div>
             </div>
 
-            <!-- SSO UNDIP Style Instructor/Author Selector Dropdown Card -->
+            <!-- Author Filter Dropdown Card -->
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                 <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #1e2435; margin-bottom: 8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #2d5be3;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    <span>Daftar Author / Instructor</span>
+                    <span>Daftar Dosen Pengampu / Author</span>
                 </label>
 
                 <select id="author-filter-select" onchange="applyFilters()" style="width: 100%; max-width: 480px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 14px; font-weight: 600; color: #1e2435; background-color: #ffffff; cursor: pointer; outline: none;">
-                    <option value="all">-- Semua Author / Instructor --</option>
+                    <option value="all">-- Semua Dosen Pengampu --</option>
                     @foreach($authors as $author)
                         <option value="{{ $author->id }}">{{ $author->name }}</option>
                     @endforeach
                 </select>
-
-                <p style="font-size: 12px; color: #64748b; margin-top: 8px; margin-bottom: 0;">
-                    Pilih Author / Instructor untuk mengfilter dan menampilkan daftar mata kuliah / course yang diampu.
-                </p>
             </div>
 
             <div class="filter-tabs">
                 <button class="filter-tab active" onclick="filterCourses('all', this)">
-                    All Courses
+                    Semua Mata Kuliah
                     <span class="tab-count" id="count-all">0</span>
                 </button>
 
                 <button class="filter-tab" onclick="filterCourses('available', this)">
-                    Available
+                    Tersedia
                     <span class="tab-count" id="count-available">0</span>
                 </button>
 
                 <button class="filter-tab" onclick="filterCourses('enrolled', this)">
-                    Enrolled
+                    Terdaftar
                     <span class="tab-count" id="count-enrolled">0</span>
                 </button>
 
@@ -439,83 +397,100 @@
                 </button>
             </div>
 
-            @if($courses->count() > 0)
+            @if($groupedCourses->count() > 0)
             <div class="courses-grid" id="courses-grid">
-                @foreach($courses as $course)
+                @foreach($groupedCourses as $item)
                 @php
-                $alreadyEnrolled = in_array($course->id, $enrolledCourseIds ?? []);
+                    $master = $item->master_course;
+                    $offerings = $item->offerings;
+                    $isEnrolled = $item->is_enrolled;
+                    $enrolledOffering = $item->enrolled_offering;
+                    $activeOffering = $item->active_offering;
+                    $progress = $item->progress;
+                    $isCompleted = $item->is_completed;
 
-                $progress = $alreadyEnrolled ? ($course->progress ?? 0) : 0;
-                $isCompleted = $alreadyEnrolled && ($course->is_completed ?? false);
+                    if (! $isEnrolled) {
+                        $status = 'available';
+                    } elseif ($isCompleted) {
+                        $status = 'completed';
+                    } elseif ($progress > 0) {
+                        $status = 'progress';
+                    } else {
+                        $status = 'enrolled';
+                    }
 
-                if (! $alreadyEnrolled) {
-                $status = 'available';
-                } elseif ($isCompleted) {
-                $status = 'completed';
-                } elseif ($progress > 0) {
-                $status = 'progress';
-                } else {
-                $status = 'enrolled';
-                }
+                    $lecturerIdsStr = $offerings->pluck('lecturer_id')->join(',');
                 @endphp
 
-                <div class="course-card" data-status="{{ $status }}" data-author-id="{{ $course->user_id }}">
+                <div class="course-card" data-status="{{ $status }}" data-author-id="{{ $lecturerIdsStr }}">
                     <div class="badge-row">
-                        @if($alreadyEnrolled)
-                        <span class="course-badge badge-enrolled">
-                            Enrolled
-                        </span>
+                        @if($isEnrolled)
+                            <span class="course-badge badge-enrolled">
+                                ✓ Terdaftar di {{ $enrolledOffering->section_name }}
+                            </span>
                         @else
-                        <span class="course-badge badge-available">
-                            Available
-                        </span>
+                            <span class="course-badge badge-available">
+                                Available
+                            </span>
                         @endif
 
                         @if($isCompleted)
-                        <span class="course-badge badge-completed">
-                            Completed
-                        </span>
-                        @elseif($alreadyEnrolled && $progress > 0)
-                        <span class="course-badge badge-progress">
-                            In Progress
-                        </span>
+                            <span class="course-badge badge-completed">
+                                Completed
+                            </span>
+                        @elseif($isEnrolled && $progress > 0)
+                            <span class="course-badge badge-progress">
+                                In Progress
+                            </span>
                         @endif
                     </div>
 
                     <div class="course-title">
-                        {{ $course->name }}
+                        {{ $master->name }}
                     </div>
 
                     <p class="course-description">
-                        {{ \Illuminate\Support\Str::limit($course->description, 120) }}
+                        {{ \Illuminate\Support\Str::limit($master->description, 110) }}
                     </p>
 
-                    <div class="course-meta">
-                        <div class="course-meta-item">
-                            <strong>Instructor:</strong>
-                            <span>{{ $course->user->name ?? 'Unknown' }}</span>
+                    <!-- SECTION PILLS: PEMILIHAN KELAS PARAREL -->
+                    <div style="margin-top: 4px; margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;">
+                        <div style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+                            <span>🎓 Rombel Kelas ({{ $offerings->count() }} Kelas):</span>
+                            @if($isEnrolled && $enrolledOffering)
+                                <span style="color: #059669; font-weight: 800; font-size: 10px;">{{ $enrolledOffering->section_name }}</span>
+                            @endif
                         </div>
 
-                        <div class="course-meta-item">
-                            <strong>Level:</strong>
-                            <span>{{ $course->level ?? '-' }}</span>
-                        </div>
-
-                        <div class="course-meta-item">
-                            <strong>Duration:</strong>
-                            <span>{{ $course->duration_weeks ?? '-' }} weeks</span>
-                        </div>
-
-                        <div class="course-meta-item">
-                            <strong>Students:</strong>
-                            <span>{{ $course->students_count ?? 0 }} enrolled</span>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            @foreach($offerings as $off)
+                                @php
+                                    $isThisEnrolled = $enrolledOffering && $enrolledOffering->id === $off->id;
+                                    $availableCap = max(0, $off->capacity - $off->enrollments_count);
+                                @endphp
+                                <div style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; {{ $isThisEnrolled ? 'background: #d1fae5; color: #065f46; border: 1.5px solid #34d399;' : 'background: #ffffff; color: #334155; border: 1px solid #cbd5e1;' }}">
+                                    📌 {{ $off->section_name }} <span style="font-weight: 400; opacity: 0.85;">({{ $off->lecturer->name ?? 'Dosen' }} | Sisa: {{ $availableCap }})</span>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
-                    @if($alreadyEnrolled)
+                    <div class="course-meta">
+                        <div class="course-meta-item">
+                            <strong>Level:</strong>
+                            <span>{{ $master->level ?? 'Beginner' }}</span>
+                        </div>
+
+                        <div class="course-meta-item">
+                            <strong>Kategori:</strong>
+                            <span>{{ $master->category->name ?? 'General' }}</span>
+                        </div>
+                    </div>
+
+                    @if($isEnrolled)
                     <div class="progress-section">
                         <div class="progress-header">
-                            <span class="progress-text">Progress</span>
+                            <span class="progress-text">Progress Pembelajaran</span>
                             <span class="progress-pct">{{ $progress }}%</span>
                         </div>
 
@@ -525,60 +500,51 @@
                             </div>
                         </div>
                     </div>
-                    @else
-                    <div class="progress-section">
-                        <div class="progress-header">
-                            <span class="progress-text">Status</span>
-                            <span class="progress-pct">Belum diambil</span>
-                        </div>
-
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width: 0%"></div>
-                        </div>
-                    </div>
                     @endif
 
                     <div class="course-actions">
-                        @if($alreadyEnrolled)
-                        <a href="{{ route('student.courses.show', $course) }}"
-                            class="btn btn-primary">
-                            {{ $isCompleted ? 'Review Course' : 'Lanjut Belajar' }}
-                        </a>
+                        @if($isEnrolled)
+                            <a href="{{ route('student.courses.show', $enrolledOffering->id) }}"
+                                class="btn btn-primary">
+                                {{ $isCompleted ? 'Review Course' : 'Lanjut Belajar ('.$enrolledOffering->section_name.')' }}
+                            </a>
 
-                        @if($course->can_get_certificate ?? false)
-                        <a href="{{ route('student.certificate.show', $course->id) }}"
-                            class="btn btn-cert">
-                            Certificate
-                        </a>
-                        @endif
+                            @if($item->can_get_certificate)
+                            <a href="{{ route('student.certificate.show', $enrolledOffering->id) }}"
+                                class="btn btn-cert" style="margin-top: 6px;">
+                                📜 Klaim Sertifikat
+                            </a>
+                            @endif
                         @else
-                        <form action="{{ route('student.courses.enroll', $course) }}" method="POST">
-                            @csrf
+                            <form action="{{ route('student.courses.enroll', $activeOffering->id) }}" method="POST" id="enroll-form-{{ $master->id }}" style="width: 100%;">
+                                @csrf
+                                <div style="margin-bottom: 8px;">
+                                    <label style="font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Pilih Rombel Kelas:</label>
+                                    <select onchange="document.getElementById('enroll-form-{{ $master->id }}').action = '/student/courses/' + this.value + '/enroll'" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 12px; font-weight: 600; color: #1e293b; background: #ffffff; cursor: pointer; outline: none;">
+                                        @foreach($offerings as $off)
+                                            @php $availableCap = max(0, $off->capacity - $off->enrollments_count); @endphp
+                                            <option value="{{ $off->id }}">📌 {{ $off->section_name }} — {{ $off->lecturer->name ?? 'Dosen' }} (Kuota Sisa: {{ $availableCap }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                            <button type="submit" class="btn btn-success">
-                                Ambil Course
-                            </button>
-                        </form>
+                                <button type="submit" class="btn btn-success">
+                                    🎓 Ambil Kelas Ini
+                                </button>
+                            </form>
                         @endif
                     </div>
                 </div>
                 @endforeach
             </div>
             @else
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2d5be3" stroke-width="1.5">
-                        <rect x="2" y="3" width="20" height="14" rx="2" />
-                        <path d="M8 21h8M12 17v4" />
-                    </svg>
+            <div class="empty-state" style="background: #fff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 3rem; text-align: center;">
+                <div class="empty-title" style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px;">
+                    Belum ada mata kuliah yang tersedia.
                 </div>
 
-                <div class="empty-title">
-                    Belum ada course yang tersedia.
-                </div>
-
-                <div class="empty-sub">
-                    Course akan muncul setelah lecturer membuat course.
+                <div class="empty-sub" style="font-size: 13px; color: #64748b;">
+                    Mata kuliah akan muncul setelah Admin membuka rombel kelas pada semester aktif.
                 </div>
             </div>
             @endif
@@ -602,7 +568,8 @@
 
             cards.forEach(card => {
                 const cardStatus = card.dataset.status;
-                const cardAuthorId = card.dataset.authorId;
+                const cardAuthorIdStr = card.dataset.authorId || '';
+                const authorIds = cardAuthorIdStr.split(',');
 
                 let matchesStatus = false;
                 if (currentStatusFilter === 'all') {
@@ -613,7 +580,7 @@
                     matchesStatus = (cardStatus === currentStatusFilter);
                 }
 
-                let matchesAuthor = (selectedAuthorId === 'all') || (cardAuthorId === selectedAuthorId);
+                let matchesAuthor = (selectedAuthorId === 'all') || authorIds.includes(selectedAuthorId);
 
                 if (matchesStatus && matchesAuthor) {
                     card.style.display = 'flex';

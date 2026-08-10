@@ -47,6 +47,12 @@
                                     {{ $statusLabels[$status] ?? $status }}
                                 </span>
 
+                                @if($course instanceof \App\Models\CourseOffering)
+                                    <span class="inline-flex rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1 text-xs font-bold text-emerald-900 shadow-sm">
+                                        📌 {{ $course->section_name }} (Dosen: {{ $course->lecturer->name ?? 'Dosen' }})
+                                    </span>
+                                @endif
+
                                 <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                                     {{ $course->level ?? 'No Level' }}
                                 </span>
