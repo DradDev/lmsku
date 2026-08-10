@@ -75,6 +75,22 @@ class ProjectController extends Controller
         return view('student.projects.my', compact('participations', 'invitedParticipations'));
     }
 
+    public function invitations(): View
+    {
+        $invitedParticipations = ProjectParticipation::with([
+            'project',
+            'project.skills',
+            'project.tags',
+            'project.user',
+        ])
+            ->where('user_id', Auth::id())
+            ->where('status', 'invited')
+            ->latest()
+            ->get();
+
+        return view('student.projects.invitations', compact('invitedParticipations'));
+    }
+
     public function acceptInvite(Project $project): RedirectResponse
     {
         $participation = ProjectParticipation::where('user_id', Auth::id())

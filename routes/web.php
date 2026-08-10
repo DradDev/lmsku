@@ -147,6 +147,9 @@ Route::middleware(['auth', 'role:student'])
         Route::get('/my-projects', [StudentProjectController::class, 'myProjects'])
             ->name('projects.my');
 
+        Route::get('/project-invitations', [StudentProjectController::class, 'invitations'])
+            ->name('projects.invitations');
+
         Route::post('/projects/{project}/join', [StudentProjectController::class, 'join'])
             ->name('projects.join');
 
