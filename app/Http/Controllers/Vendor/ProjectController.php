@@ -193,6 +193,20 @@ class ProjectController extends Controller
             ->with('success', 'Project Industri Mitra berhasil dihapus.');
     }
 
+    public function togglePublish(Project $project): RedirectResponse
+    {
+        if ($project->created_by !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke project industri ini.');
+        }
+
+        $newStatus = !$project->is_published;
+        $project->update(['is_published' => $newStatus]);
+
+        $statusLabel = $newStatus ? 'dipublikasikan dan aktif dibuka untuk mahasiswa' : 'diubah menjadi Draft internal';
+
+        return back()->with('success', "Status Project '{$project->title}' berhasil {$statusLabel}.");
+    }
+
     public function talentPool(Project $project): View
     {
         if ($project->created_by !== Auth::id()) {

@@ -21,6 +21,39 @@
             </div>
             @endif
 
+            <!-- Executive Status Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Total Project Industri</div>
+                        <div class="text-2xl font-black text-gray-900 mt-0.5">{{ $allProjects->count() }}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold">
+                        💼
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Aktif Dipublikasikan (Terbuka)</div>
+                        <div class="text-2xl font-black text-emerald-600 mt-0.5">{{ $allProjects->where('is_published', true)->count() }}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+                        🟢
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm">
+                    <div>
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Bank Project (Draft Internal)</div>
+                        <div class="text-2xl font-black text-amber-600 mt-0.5">{{ $allProjects->where('is_published', false)->count() }}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                        🔴
+                    </div>
+                </div>
+            </div>
+
             @if ($allProjects->isEmpty())
             <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center space-y-3 shadow-sm">
                 <div class="w-14 h-14 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
@@ -43,9 +76,14 @@
                             <span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-black uppercase rounded-md">
                                 🏢 {{ Auth::user()->name }}
                             </span>
-                            <span class="px-2 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-md">
-                                {{ ucfirst($project->difficulty_level) }}
-                            </span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold {{ $project->is_published ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200' }}">
+                                    {{ $project->is_published ? '🟢 Published' : '🔴 Draft' }}
+                                </span>
+                                <span class="px-2 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-md">
+                                    {{ ucfirst($project->difficulty_level) }}
+                                </span>
+                            </div>
                         </div>
 
                         <h3 class="font-extrabold text-base text-gray-900 leading-snug">

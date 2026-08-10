@@ -195,6 +195,19 @@
                             <span>🎯 Talent Screening Engine</span>
                         </a>
 
+                        <form action="{{ route('vendor.projects.toggle-publish', $project) }}" method="POST">
+                            @csrf
+                            @if($project->is_published)
+                                <button type="submit" class="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                                    <span>📦 Kembalikan Status ke Draft</span>
+                                </button>
+                            @else
+                                <button type="submit" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+                                    <span>🚀 Publikasikan Project ke Mahasiswa</span>
+                                </button>
+                            @endif
+                        </form>
+
                         <div class="grid grid-cols-2 gap-2 pt-1">
                             <a href="{{ route('vendor.projects.edit', $project) }}"
                                class="text-center py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition">
