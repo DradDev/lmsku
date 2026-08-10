@@ -237,35 +237,64 @@
                     </form>
                 </div>
             @else
-                <div class="bg-white shadow rounded-2xl p-6">
+                <div class="bg-white shadow rounded-2xl p-6 border border-gray-100">
                     <h4 class="font-semibold text-lg text-gray-900 mb-2">
-                        Join This Project
+                        Syarat Kelayakan & Pendaftaran Project
                     </h4>
 
-                    <p class="text-gray-600 text-sm mb-4">
-                        After joining this project, you can update execution progress through In Progress, Development, Review, to Done.
-                    </p>
+                    <div class="mb-5 p-4 rounded-xl text-xs space-y-2 {{ ($eligibility['is_eligible'] ?? false) ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-amber-50 border border-amber-200 text-amber-900' }}">
+                        <div class="font-bold flex items-center gap-1.5 text-sm">
+                            @if($eligibility['is_eligible'] ?? false)
+                                <span>🟢 Status: ELIGIBLE (Memenuhi Syarat)</span>
+                            @else
+                                <span>🔒 Status: TERKUNCI (Syarat Belum Terpenuhi)</span>
+                            @endif
+                        </div>
 
-                    <div class="mb-4">
-                        <p class="text-sm {{ $isFull ? 'text-red-600' : 'text-green-600' }}">
-                            <strong>Quota:</strong>
-                            {{ $joinedCount }}/{{ $maxStudents }} students
-                        </p>
+                        <div class="space-y-1 pt-1">
+                            <div class="flex items-center gap-2">
+                                <span>{{ ($eligibility['has_main_skill'] ?? false) ? '✅' : '❌' }}</span>
+                                <span>Main Skill Requirement: <strong>{{ $eligibility['main_skill_name'] ?? 'Skill' }}</strong></span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <span>{{ ($eligibility['has_verified_certificate'] ?? false) ? '✅' : '❌' }}</span>
+                                <span>Sertifikat Matkul Terverifikasi (Lulus Final Quiz)</span>
+                            </div>
+                        </div>
+
+                        @if(!($eligibility['is_eligible'] ?? false))
+                            <p class="pt-2 text-amber-800 font-semibold leading-relaxed">
+                                💡 Petunjuk: Untuk membuka project ini, selesaikan Materi & Final Quiz pada Mata Kuliah pembina skill <strong>{{ $eligibility['main_skill_name'] ?? '' }}</strong> hingga lulus dan mendapatkan sertifikat!
+                            </p>
+                        @endif
+                    </div>
+
+                    <div class="mb-4 flex items-center justify-between text-sm">
+                        <span class="{{ $isFull ? 'text-red-600 font-bold' : 'text-gray-600' }}">
+                            <strong>Kuota Mahasiswa:</strong> {{ $joinedCount }}/{{ $maxStudents }} terisi
+                        </span>
                     </div>
 
                     @if ($isFull)
                         <button type="button"
                                 class="px-5 py-2.5 bg-gray-400 text-white font-semibold text-sm rounded-xl cursor-not-allowed"
                                 disabled>
-                            Quota Full
+                            🔒 Kuota Penuh
+                        </button>
+                    @elseif(!($eligibility['is_eligible'] ?? false))
+                        <button type="button"
+                                class="px-5 py-2.5 bg-gray-300 text-gray-600 font-bold text-sm rounded-xl cursor-not-allowed border border-gray-300"
+                                disabled>
+                            🔒 Terkunci (Syarat Belum Terpenuhi)
                         </button>
                     @else
                         <form action="{{ route('student.projects.join', $project) }}" method="POST">
                             @csrf
 
                             <button type="submit"
-                                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition">
-                                Join Project
+                                    class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition shadow-sm">
+                                🚀 Ambil Project Ini
                             </button>
                         </form>
                     @endif

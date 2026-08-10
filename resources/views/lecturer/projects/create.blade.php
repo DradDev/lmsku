@@ -24,12 +24,25 @@
 
             <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
                 <div class="p-5 border-b border-gray-100">
-                    <h3 class="text-lg font-bold text-gray-800">
-                        Project Information
-                    </h3>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Complete project details, select main skill, tags, difficulty level, duration, and publication status.
-                    </p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">
+                                Project Information
+                            </h3>
+                            <p class="text-sm text-gray-500 mt-1">
+                                Complete project details, select main skill, tags, difficulty level, duration, and publication status.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs space-y-1">
+                        <div class="font-bold flex items-center gap-1.5 text-sm text-blue-950">
+                            <span>🛡️ Syarat Kelayakan Pendaftaran Mahasiswa (Automated System)</span>
+                        </div>
+                        <p class="leading-relaxed">
+                            Project ini nantinya akan dibuka untuk mahasiswa yang telah <strong>Lulus Final Quiz & Memiliki Sertifikat Terverifikasi</strong> pada Mata Kuliah pembina <strong>Main Skill</strong> yang Anda tentukan di bawah ini.
+                        </p>
+                    </div>
                 </div>
 
                 <form action="{{ route('lecturer.projects.store') }}" method="POST" class="p-5 md:p-6 space-y-5">

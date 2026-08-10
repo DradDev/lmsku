@@ -166,13 +166,18 @@
                                                 disabled>
                                             Kuota Penuh
                                         </button>
+                                    @elseif(!($project->eligibility['is_eligible'] ?? false))
+                                        <a href="{{ route('student.projects.show', $project) }}"
+                                           class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition">
+                                            🔒 Terkunci
+                                        </a>
                                     @else
                                         <form action="{{ route('student.projects.join', $project) }}" method="POST">
                                             @csrf
 
                                             <button type="submit"
-                                                    class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
-                                                Ambil Project
+                                                    class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
+                                                🚀 Ambil
                                             </button>
                                         </form>
                                     @endif
