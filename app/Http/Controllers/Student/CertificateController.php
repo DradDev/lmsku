@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\CourseOffering;
+use App\Models\Enrollment;
 use App\Models\Project;
 use App\Models\QuizAttempt;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -53,7 +56,7 @@ class CertificateController extends Controller
                     ->orderByDesc('score')
                     ->first();
 
-                $certificateRecord = \App\Models\Certificate::where('user_id', $student->id)
+                $certificateRecord = Certificate::where('user_id', $student->id)
                     ->where(function ($q) use ($enrollment, $item) {
                         if ($enrollment->course_offering_id) {
                             $q->where('course_offering_id', $enrollment->course_offering_id);
@@ -103,7 +106,7 @@ class CertificateController extends Controller
 
     public function show(string $id): View
     {
-        $courseOffering = \App\Models\CourseOffering::find($id);
+        $courseOffering = CourseOffering::find($id);
         $course = $courseOffering ?? Course::findOrFail($id);
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
@@ -115,7 +118,7 @@ class CertificateController extends Controller
 
     public function download(string $id): Response
     {
-        $courseOffering = \App\Models\CourseOffering::find($id);
+        $courseOffering = CourseOffering::find($id);
         $course = $courseOffering ?? Course::findOrFail($id);
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
@@ -173,18 +176,32 @@ class CertificateController extends Controller
         return $pdf->download($filename);
     }
 
-    private function resolveCertificateData(Course $course): array
+    private function resolveCertificateData(object $course): array
     {
         $student = Auth::user();
 
-        $isEnrolled = DB::table('enrollments')
-            ->where('user_id', $student->id)
-            ->where('course_id', $course->id)
-            ->exists();
+        $isOffering = $course instanceof CourseOffering;
+
+        if ($isOffering) {
+            $isEnrolled = DB::table('enrollments')
+                ->where('user_id', $student->id)
+                ->where('course_offering_id', $course->id)
+                ->exists();
+        } else {
+            $isEnrolled = DB::table('enrollments')
+                ->where('user_id', $student->id)
+                ->where('course_id', $course->id)
+                ->exists();
+        }
 
         abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
 
-        $course->load(['user', 'quizzes.questions']);
+        $course->load(['quizzes.questions']);
+        if ($isOffering) {
+            $course->load('lecturer');
+        } else {
+            $course->load('user');
+        }
 
         $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
 
@@ -204,8 +221,14 @@ class CertificateController extends Controller
         abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
         abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '.');
 
-        $certificateRecord = \App\Models\Certificate::where('user_id', $student->id)
-            ->where('course_id', $course->id)
+        $certificateRecord = Certificate::where('user_id', $student->id)
+            ->where(function ($q) use ($isOffering, $course) {
+                if ($isOffering) {
+                    $q->where('course_offering_id', $course->id);
+                } else {
+                    $q->where('course_id', $course->id);
+                }
+            })
             ->first();
 
         abort_if(
