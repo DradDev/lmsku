@@ -1,101 +1,117 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-bold text-xl text-gray-800 leading-tight flex items-center gap-2">
-                <span>📝 Kelola Soal Evaluasi Kuis — {{ $quiz->title }}</span>
-            </h2>
-            <a href="{{ route('vendor.courses.show', $course) }}" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl hover:bg-gray-200 transition">
-                ← Kembali ke Course
-            </a>
-        </div>
-    </x-slot>
+    <div class="min-h-screen bg-slate-50 py-10">
+        <div class="max-w-7xl mx-auto px-6 space-y-6">
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            {{-- HEADER NAVIGATION --}}
+            <div class="flex items-center justify-between mb-4">
+                <a href="{{ route('vendor.courses.show', $course) }}"
+                    class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition">
+                    ← Kembali ke Course {{ $course->name }}
+                </a>
 
-            @if (session('success'))
-            <div class="p-4 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl shadow-sm font-semibold text-xs flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>{{ session('success') }}</span>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 bg-indigo-50 text-indigo-700 font-bold text-xs rounded-full border border-indigo-200">
+                        Durasi: {{ $quiz->time_limit }} Menit
+                    </span>
+                    <span class="px-3 py-1 bg-purple-50 text-purple-700 font-bold text-xs rounded-full border border-purple-200">
+                        Total Soal: {{ $quiz->questions->count() }}
+                    </span>
+                </div>
             </div>
+
+            {{-- ALERTS --}}
+            @if (session('success'))
+                <div class="mb-6 flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm text-sm font-medium">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="font-bold text-emerald-900">Berhasil!</p>
+                        <p class="mt-0.5 text-emerald-700 text-xs sm:text-sm">{{ session('success') }}</p>
+                    </div>
+                </div>
             @endif
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                <!-- Left Column: Add Question Form (5 Cols) -->
-                <div class="lg:col-span-5 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-                    <h3 class="font-extrabold text-base text-gray-900 border-b border-gray-100 pb-3">
-                        ➕ Tambah Soal Pilihan Ganda Baru
+                {{-- Left Column: Add Question Form (5 Cols) --}}
+                <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+                    <h3 class="font-extrabold text-base text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <span>➕ Tambah Soal Pilihan Ganda</span>
                     </h3>
 
                     <form action="{{ route('vendor.quizzes.questions.store', $quiz) }}" method="POST" class="space-y-4">
                         @csrf
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Pertanyaan / Soal</label>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Pertanyaan / Soal</label>
                             <textarea name="question" rows="3" required placeholder="Tuliskan pertanyaan evaluasi..."
-                                      class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-3"></textarea>
+                                      class="w-full border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-2xl text-xs p-3.5 bg-slate-50/50"></textarea>
                         </div>
 
-                        <div class="space-y-2">
-                            <label class="block text-xs font-bold text-gray-700 uppercase">Pilihan Jawaban (Opsi A - D)</label>
+                        <div class="space-y-2.5">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Pilihan Jawaban (Opsi A - D)</label>
 
                             @foreach(['A' => 'option_a', 'B' => 'option_b', 'C' => 'option_c', 'D' => 'option_d'] as $letter => $field)
                             <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs text-indigo-700 w-5">{{ $letter }}.</span>
+                                <span class="font-black text-xs text-indigo-700 w-5 text-center">{{ $letter }}.</span>
                                 <input type="text" name="{{ $field }}" required placeholder="Jawaban {{ $letter }}"
-                                       class="flex-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-2.5">
-                                <label class="flex items-center gap-1 text-[11px] text-gray-600 font-semibold cursor-pointer">
-                                    <input type="radio" name="correct_answer" value="{{ $letter }}" {{ $letter === 'A' ? 'checked' : '' }} class="text-indigo-600 border-gray-300">
+                                       class="flex-1 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-2.5 bg-white">
+                                <label class="flex items-center gap-1.5 text-[11px] text-slate-600 font-bold cursor-pointer bg-slate-100 px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition">
+                                    <input type="radio" name="correct_answer" value="{{ $letter }}" {{ $letter === 'A' ? 'checked' : '' }} class="text-indigo-600 border-slate-300">
                                     <span>Kunci</span>
                                 </label>
                             </div>
                             @endforeach
                         </div>
 
-                        <button type="submit" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition">
                             💾 Simpan Soal Evaluasi
                         </button>
                     </form>
                 </div>
 
-                <!-- Right Column: Question List (7 Cols) -->
-                <div class="lg:col-span-7 bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-                    <h3 class="font-extrabold text-base text-gray-900 border-b border-gray-100 pb-3 flex items-center justify-between">
-                        <span>📋 Daftar Soal Evaluasi ({{ $quiz->questions->count() }} Soal)</span>
-                        <span class="text-xs font-semibold text-gray-500">Waktu: {{ $quiz->time_limit }} Menit</span>
+                {{-- Right Column: Question List (7 Cols) --}}
+                <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
+                    <h3 class="font-extrabold text-base text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+                        <span>📋 Daftar Soal Evaluasi Kuis</span>
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full">{{ $quiz->questions->count() }} Soal Tersimpan</span>
                     </h3>
 
-                    @forelse($quiz->questions as $qIndex => $q)
-                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-2">
-                            <div class="flex items-start justify-between gap-2">
-                                <h4 class="font-bold text-xs text-gray-900">
-                                    {{ $qIndex + 1 }}. {{ $q->question }}
-                                </h4>
+                    <div class="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                        @forelse($quiz->questions as $qIndex => $q)
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3.5 hover:bg-slate-100/60 transition">
+                                <div class="flex items-start justify-between gap-3">
+                                    <h4 class="font-extrabold text-xs text-slate-900 leading-relaxed">
+                                        {{ $qIndex + 1 }}. {{ $q->question }}
+                                    </h4>
 
-                                <form action="{{ route('vendor.questions.destroy', $q) }}" method="POST" onsubmit="return confirm('Hapus soal ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-xs text-red-600 hover:text-red-800 font-bold">🗑️ Hapus</button>
-                                </form>
-                            </div>
+                                    <form action="{{ route('vendor.questions.destroy', $q) }}" method="POST" onsubmit="return confirm('Hapus soal ini?')" class="m-0 flex-shrink-0">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="px-2.5 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 font-bold text-[11px] rounded-lg transition">🗑️ Hapus</button>
+                                    </form>
+                                </div>
 
-                            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                                @foreach(['A' => $q->option_a, 'B' => $q->option_b, 'C' => $q->option_c, 'D' => $q->option_d] as $letter => $val)
-                                    <div class="p-2 rounded-lg border {{ strtoupper($q->correct_answer) === $letter ? 'bg-emerald-100 border-emerald-300 text-emerald-900 font-bold' : 'bg-white border-gray-200 text-gray-700' }}">
-                                        {{ $letter }}. {{ $val }}
-                                        @if(strtoupper($q->correct_answer) === $letter)
-                                            <span class="text-[10px] text-emerald-700 font-black ml-1">(Kunci Jawaban)</span>
-                                        @endif
-                                    </div>
-                                @endforeach
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    @foreach(['A' => $q->option_a, 'B' => $q->option_b, 'C' => $q->option_c, 'D' => $q->option_d] as $letter => $val)
+                                        <div class="p-2.5 rounded-xl border {{ strtoupper($q->correct_answer) === $letter ? 'bg-emerald-100/80 border-emerald-300 text-emerald-950 font-extrabold shadow-sm' : 'bg-white border-slate-200 text-slate-700 font-medium' }}">
+                                            <span class="font-black mr-1">{{ $letter }}.</span> {{ $val }}
+                                            @if(strtoupper($q->correct_answer) === $letter)
+                                                <span class="text-[10px] text-emerald-800 font-black ml-1 bg-emerald-200 px-1.5 py-0.5 rounded">(Kunci)</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @empty
-                        <div class="p-8 text-center bg-gray-50 rounded-xl text-xs text-gray-500">
-                            Belum ada soal evaluasi ditambahkan. Gunakan formulir di sebelah kiri untuk menambah soal.
-                        </div>
-                    @endforelse
+                        @empty
+                            <div class="p-8 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl text-xs text-slate-400">
+                                Belum ada soal evaluasi ditambahkan. Gunakan formulir di sebelah kiri untuk membuat soal kuis.
+                            </div>
+                        @endforelse
+                    </div>
                 </div>
 
             </div>

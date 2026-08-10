@@ -101,7 +101,11 @@ class CourseController extends Controller
             'tags',
         ]);
 
-        return view('vendor.courses.show', compact('course'));
+        $materials = $course->materials;
+        $quizzes = $course->quizzes;
+        $students = $course->students;
+
+        return view('vendor.courses.show', compact('course', 'materials', 'quizzes', 'students'));
     }
 
     public function edit(Course $course): View
