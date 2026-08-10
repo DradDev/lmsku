@@ -47,7 +47,7 @@
                     ➕ Buat Course Sertifikasi Industri Baru
                 </h1>
                 <p class="mt-1 text-sm text-slate-500">
-                    Rancang silabus pelatihan mandiri, kriteria passing grade sertifikat, angkatan batch, serta target kompetensi utama.
+                    Rancang silabus pelatihan mandiri, kriteria passing grade sertifikat, angkatan batch, serta target kompetensi mahasiswa.
                 </p>
             </div>
 
@@ -180,7 +180,7 @@
                     <div class="space-y-4 pt-2">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                <span>⚡ 3. Target Main Skills Utama (Dapat Memilih 2 atau Lebih) <span class="text-rose-500">*</span></span>
+                                <span>⚡ 3. Target Main Skills Utama (Pilih 2 atau Lebih) <span class="text-rose-500">*</span></span>
                             </h3>
                             <span id="selected_skills_count" class="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
                                 {{ count($selectedSkillIds) }} Main Skill Terpilih
@@ -188,16 +188,16 @@
                         </div>
 
                         <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-3">
-                            <p class="text-xs text-slate-600 font-medium">Pilih 2 atau lebih skill kompetensi utama yang menjadi fokus sertifikasi course ini:</p>
+                            <p class="text-xs text-slate-600 font-medium">Klik untuk memilih 1, 2, atau lebih Main Skill. Specialty Tags di bawah akan tersaring otomatis sesuai kombinasi Main Skill terpilih:</p>
 
-                            <!-- Hidden Native Inputs Container -->
+                            <!-- Hidden Native Inputs Container for Skills -->
                             <div id="hidden_skills_container">
                                 @foreach($selectedSkillIds as $sId)
                                     <input type="hidden" name="skill_ids[]" value="{{ $sId }}" id="hidden_skill_{{ $sId }}">
                                 @endforeach
                             </div>
 
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-60 overflow-y-auto p-1">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 max-h-56 overflow-y-auto p-1">
                                 @foreach($skills as $sk)
                                     @php $isSkillSelected = in_array($sk->id, $selectedSkillIds); @endphp
                                     <button type="button" 
@@ -214,7 +214,85 @@
                         </div>
                     </div>
 
+                    <!-- GROUP 4: DYNAMIC FILTERED SPECIALTY TAGS BASED ON SELECTED MAIN SKILLS -->
+                    @php
+                        $selectedTagIds = old('tag_ids', []);
+                    @endphp
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
+                                🏷️ 4. Specialty Tags (Tersaring Otomatis dari Main Skill Terpilih)
+                            </h3>
+                            <span id="selected_tags_count" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
+                                {{ count($selectedTagIds) }} Tag Terpilih
+                            </span>
+                        </div>
+
+                        <div class="border border-slate-200 bg-slate-50/50 rounded-2xl p-4 space-y-3">
+                            <!-- Hidden Native Inputs Container for Tags -->
+                            <div id="hidden_tags_container">
+                                @foreach($selectedTagIds as $tId)
+                                    <input type="hidden" name="tag_ids[]" value="{{ $tId }}" id="hidden_tag_{{ $tId }}">
+                                @endforeach
+                            </div>
+
+                            <div id="tags_chips_grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
+                                @foreach($tags as $tg)
+                                    @php $isTagSelected = in_array($tg->id, $selectedTagIds); @endphp
+                                    <button type="button" 
+                                            data-tag-id="{{ $tg->id }}"
+                                            data-tag-skill-id="{{ $tg->skill_id ?? '' }}"
+                                            data-tag-name="{{ $tg->name }}"
+                                            onclick="toggleTagChip(this)"
+                                            class="tag-chip inline-flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-bold border transition-all text-left cursor-pointer {{ $isTagSelected ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50' }}">
+                                        <span>#{{ $tg->name }}</span>
+                                        <span class="chip-status text-[11px] font-extrabold ml-1">{{ $isTagSelected ? '✓' : '+' }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+
+                            <p id="no_skills_selected_notice" class="hidden text-xs text-slate-400 italic text-center py-3">
+                                💡 Pilih setidaknya 1 Main Skill pada bagian (3) di atas untuk menampilkan Specialty Tags yang relevan.
+                            </p>
+                        </div>
+                    </div>
+
                     <script>
+                        function getSelectedSkillIds() {
+                            const container = document.getElementById('hidden_skills_container');
+                            const inputs = container.querySelectorAll('input[name="skill_ids[]"]');
+                            return Array.from(inputs).map(inp => inp.value);
+                        }
+
+                        function filterSpecialtyTagsByMainSkills() {
+                            const selectedSkillIds = getSelectedSkillIds();
+                            const tagChips = document.querySelectorAll('.tag-chip');
+                            const notice = document.getElementById('no_skills_selected_notice');
+
+                            if (selectedSkillIds.length === 0) {
+                                tagChips.forEach(chip => chip.classList.add('hidden'));
+                                notice.classList.remove('hidden');
+                                return;
+                            }
+
+                            notice.classList.add('hidden');
+                            let visibleCount = 0;
+
+                            tagChips.forEach(chip => {
+                                const tagSkillId = chip.getAttribute('data-tag-skill-id');
+                                if (!tagSkillId || selectedSkillIds.includes(tagSkillId)) {
+                                    chip.classList.remove('hidden');
+                                    visibleCount++;
+                                } else {
+                                    chip.classList.add('hidden');
+                                }
+                            });
+
+                            if (visibleCount === 0) {
+                                tagChips.forEach(chip => chip.classList.remove('hidden'));
+                            }
+                        }
+
                         function toggleSkillChip(btn) {
                             const sId = btn.getAttribute('data-skill-id');
                             const container = document.getElementById('hidden_skills_container');
@@ -240,7 +318,40 @@
 
                             const count = container.querySelectorAll('input').length;
                             document.getElementById('selected_skills_count').textContent = count + ' Main Skill Terpilih';
+
+                            // Dynamically filter specialty tags based on updated selected skills!
+                            filterSpecialtyTagsByMainSkills();
                         }
+
+                        function toggleTagChip(btn) {
+                            const tId = btn.getAttribute('data-tag-id');
+                            const container = document.getElementById('hidden_tags_container');
+                            const existing = document.getElementById('hidden_tag_' + tId);
+
+                            if (existing) {
+                                existing.remove();
+                                btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
+                                btn.classList.add('bg-white', 'text-slate-700', 'border-slate-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
+                                btn.querySelector('.chip-status').textContent = '+';
+                            } else {
+                                const input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = 'tag_ids[]';
+                                input.value = tId;
+                                input.id = 'hidden_tag_' + tId;
+                                container.appendChild(input);
+
+                                btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-200', 'hover:border-indigo-300', 'hover:bg-indigo-50/50');
+                                btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600', 'shadow-sm');
+                                btn.querySelector('.chip-status').textContent = '✓';
+                            }
+
+                            const count = container.querySelectorAll('input').length;
+                            document.getElementById('selected_tags_count').textContent = count + ' Tag Terpilih';
+                        }
+
+                        // Run dynamic filter on page load
+                        document.addEventListener('DOMContentLoaded', filterSpecialtyTagsByMainSkills);
                     </script>
 
                     <!-- ACTION BUTTONS -->

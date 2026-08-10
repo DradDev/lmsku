@@ -65,6 +65,8 @@ class CourseController extends Controller
             'is_archived' => ['nullable', 'boolean'],
             'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['exists:tags,id'],
         ]);
 
         $validated['user_id'] = Auth::id();
@@ -81,6 +83,10 @@ class CourseController extends Controller
         }
 
         $course->skills()->sync($skillsData);
+
+        if (!empty($validated['tag_ids'])) {
+            $course->tags()->sync($validated['tag_ids']);
+        }
 
         return redirect()
             ->route('vendor.courses.show', $course)
@@ -99,6 +105,7 @@ class CourseController extends Controller
             'quizzes.questions',
             'students',
             'skills',
+            'tags',
         ]);
 
         return view('vendor.courses.show', compact('course'));
@@ -134,6 +141,8 @@ class CourseController extends Controller
             'is_archived' => ['nullable', 'boolean'],
             'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['exists:tags,id'],
         ]);
 
         $course->update($validated);
@@ -145,6 +154,10 @@ class CourseController extends Controller
         }
 
         $course->skills()->sync($skillsData);
+
+        if (isset($validated['tag_ids'])) {
+            $course->tags()->sync($validated['tag_ids']);
+        }
 
         return redirect()
             ->route('vendor.courses.show', $course)
