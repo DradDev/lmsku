@@ -25,7 +25,9 @@ return new class extends Migration
         }
 
         // Change course_id to nullable in materials
-        DB::statement("ALTER TABLE `materials` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `materials` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        }
 
         // Drop foreign key di quizzes jika ada
         try {
@@ -37,7 +39,9 @@ return new class extends Migration
         }
 
         // Change course_id to nullable in quizzes
-        DB::statement("ALTER TABLE `quizzes` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `quizzes` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        }
     }
 
     /**

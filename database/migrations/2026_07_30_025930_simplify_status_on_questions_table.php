@@ -9,19 +9,23 @@ return new class extends Migration
     {
         DB::statement("UPDATE questions SET status = 'approved' WHERE status IN ('draft', 'pending', 'rejected')");
 
-        DB::statement("
-            ALTER TABLE questions
-            MODIFY status ENUM('draft', 'pending', 'approved', 'rejected')
-            NOT NULL DEFAULT 'approved'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE questions
+                MODIFY status ENUM('draft', 'pending', 'approved', 'rejected')
+                NOT NULL DEFAULT 'approved'
+            ");
+        }
     }
 
     public function down(): void
     {
-        DB::statement("
-            ALTER TABLE questions
-            MODIFY status ENUM('draft', 'pending', 'approved', 'rejected')
-            NOT NULL DEFAULT 'draft'
-        ");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("
+                ALTER TABLE questions
+                MODIFY status ENUM('draft', 'pending', 'approved', 'rejected')
+                NOT NULL DEFAULT 'draft'
+            ");
+        }
     }
 };

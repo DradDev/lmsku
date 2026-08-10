@@ -29,7 +29,11 @@ class Course extends Model
 
     public function isExpired(): bool
     {
-        return $this->end_date !== null && $this->end_date->isPast() && !$this->end_date->isToday();
+        if (!$this->end_date) {
+            return false;
+        }
+        $endDate = $this->end_date instanceof \Carbon\Carbon ? $this->end_date : \Carbon\Carbon::parse($this->end_date);
+        return $endDate->isPast() && !$endDate->isToday();
     }
 
     public function isActive(): bool
@@ -110,8 +114,31 @@ class Course extends Model
     {
         return $this->hasMany(MaterialProgress::class);
     }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function offerings()
+    {
+        return $this->hasMany(CourseOffering::class, 'master_course_id');
+    }
+
+    public function latestOffering()
+    {
+        return $this->hasOne(CourseOffering::class, 'master_course_id')->latestOfMany();
+    }
+
+    public function getStartDateAttribute($value)
+    {
+        $val = $value ?? $this->latestOffering?->start_date;
+        return $val ? \Carbon\Carbon::parse($val) : null;
+    }
+
+    public function getEndDateAttribute($value)
+    {
+        $val = $value ?? $this->latestOffering?->end_date;
+        return $val ? \Carbon\Carbon::parse($val) : null;
     }
 }

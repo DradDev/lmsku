@@ -30,45 +30,67 @@ class Backfill3nfData extends Command
         $this->info('Starting Strict 3NF Data Backfill process...');
 
         // 1. Create or get default Academic Term
-        $termId = DB::table('academic_terms')->insertGetId([
-            'name' => '2025/2026 Ganjil',
-            'start_date' => now()->startOfYear(),
-            'end_date' => now()->endOfYear(),
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $existingTerm = DB::table('academic_terms')->where('is_active', true)->first();
+        if ($existingTerm) {
+            $termId = $existingTerm->id;
+        } else {
+            $termId = DB::table('academic_terms')->insertGetId([
+                'name' => '2025/2026 Ganjil',
+                'academic_year' => '2025/2026',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
-        $this->info("Academic Term created with ID: {$termId}");
+        $this->info("Academic Term ID: {$termId}");
 
         // 2. Fetch existing courses
         $courses = DB::table('courses')->get();
         $this->info("Found {$courses->count()} existing courses to migrate.");
 
         foreach ($courses as $course) {
-            // Create MasterCourse
-            $masterCourseId = DB::table('master_courses')->insertGetId([
-                'code' => 'MC-' . $course->id,
-                'name' => $course->name,
-                'description' => $course->description ?? null,
-                'level' => $course->level ?? 'Beginner',
-                'category_id' => $course->category_id ?? null,
-                'created_at' => $course->created_at ?? now(),
-                'updated_at' => $course->updated_at ?? now(),
-            ]);
+            // Find or create MasterCourse
+            $existingMC = DB::table('master_courses')
+                ->where('code', 'MC-' . $course->id)
+                ->orWhere('name', $course->name)
+                ->first();
 
-            // Create CourseOffering
-            $offeringId = DB::table('course_offerings')->insertGetId([
-                'master_course_id' => $masterCourseId,
-                'academic_term_id' => $termId,
-                'lecturer_id' => $course->user_id,
-                'start_date' => $course->start_date ?? null,
-                'end_date' => $course->end_date ?? null,
-                'is_archived' => $course->is_archived ?? false,
-                'certificate_threshold' => $course->certificate_threshold ?? 60,
-                'created_at' => $course->created_at ?? now(),
-                'updated_at' => $course->updated_at ?? now(),
-            ]);
+            if ($existingMC) {
+                $masterCourseId = $existingMC->id;
+            } else {
+                $masterCourseId = DB::table('master_courses')->insertGetId([
+                    'code' => 'MC-' . $course->id,
+                    'name' => $course->name,
+                    'description' => $course->description ?? null,
+                    'level' => $course->level ?? 'Beginner',
+                    'category_id' => $course->category_id ?? null,
+                    'created_at' => $course->created_at ?? now(),
+                    'updated_at' => $course->updated_at ?? now(),
+                ]);
+            }
+
+            // Find or create CourseOffering
+            $existingOffering = DB::table('course_offerings')
+                ->where('master_course_id', $masterCourseId)
+                ->where('lecturer_id', $course->user_id)
+                ->first();
+
+            if ($existingOffering) {
+                $offeringId = $existingOffering->id;
+            } else {
+                $offeringId = DB::table('course_offerings')->insertGetId([
+                    'master_course_id' => $masterCourseId,
+                    'academic_term_id' => $termId,
+                    'lecturer_id' => $course->user_id,
+                    'start_date' => $course->start_date ?? null,
+                    'end_date' => $course->end_date ?? null,
+                    'is_archived' => $course->is_archived ?? false,
+                    'certificate_threshold' => $course->certificate_threshold ?? 60,
+                    'created_at' => $course->created_at ?? now(),
+                    'updated_at' => $course->updated_at ?? now(),
+                ]);
+            }
 
             // Map materials to master_course_id
             if (Schema::hasTable('materials') && Schema::hasColumn('materials', 'master_course_id')) {

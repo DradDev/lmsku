@@ -25,14 +25,16 @@ return new class extends Migration
         }
 
         // Make course_id nullable
-        DB::statement("ALTER TABLE `certificates` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `certificates` MODIFY `course_id` BIGINT UNSIGNED NULL;");
 
-        // Change blockchain_hash column length to 255
-        if (Schema::hasColumn('certificates', 'blockchain_hash')) {
-            DB::statement("ALTER TABLE `certificates` MODIFY `blockchain_hash` VARCHAR(255) NULL;");
-        }
-        if (Schema::hasColumn('quiz_attempts', 'blockchain_hash')) {
-            DB::statement("ALTER TABLE `quiz_attempts` MODIFY `blockchain_hash` VARCHAR(255) NULL;");
+            // Change blockchain_hash column length to 255
+            if (Schema::hasColumn('certificates', 'blockchain_hash')) {
+                DB::statement("ALTER TABLE `certificates` MODIFY `blockchain_hash` VARCHAR(255) NULL;");
+            }
+            if (Schema::hasColumn('quiz_attempts', 'blockchain_hash')) {
+                DB::statement("ALTER TABLE `quiz_attempts` MODIFY `blockchain_hash` VARCHAR(255) NULL;");
+            }
         }
     }
 

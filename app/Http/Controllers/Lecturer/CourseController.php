@@ -199,18 +199,46 @@ class CourseController extends Controller
             'tag_ids.*' => ['exists:tags,id'],
         ]);
 
+        $startDate = !empty($validated['start_date']) ? \Carbon\Carbon::parse($validated['start_date']) : ($course->start_date ? \Carbon\Carbon::parse($course->start_date) : now());
+        $durationWeeks = (int) $validated['duration_weeks'];
+        $endDate = !empty($validated['end_date']) ? \Carbon\Carbon::parse($validated['end_date']) : $startDate->copy()->addWeeks($durationWeeks);
+
         $updateData = [
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'level' => $validated['level'],
-            'duration_weeks' => $validated['duration_weeks'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
+            'duration_weeks' => $durationWeeks,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'certificate_threshold' => $validated['certificate_threshold'] ?? 60,
             'category_id' => $validated['category_id'] ?? null,
         ];
 
         $course->update($updateData);
+
+        $masterCourse = \App\Models\MasterCourse::firstOrCreate(
+            ['name' => $course->name],
+            [
+                'code' => 'MC-' . strtoupper(\Illuminate\Support\Str::slug($course->name)),
+                'description' => $course->description,
+                'level' => $course->level,
+                'category_id' => $course->category_id,
+            ]
+        );
+
+        // Sync 3NF CourseOffering
+        $defaultTerm = \App\Models\AcademicTerm::where('is_active', true)->first();
+        \App\Models\CourseOffering::updateOrCreate(
+            ['master_course_id' => $masterCourse->id],
+            [
+                'academic_term_id' => $defaultTerm->id ?? 1,
+                'lecturer_id' => Auth::id(),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'is_archived' => $course->is_archived,
+                'certificate_threshold' => $course->certificate_threshold,
+            ]
+        );
 
         if ($request->hasFile('material_file')) {
             $filePath = $request->file('material_file')->store('materials', 'public');

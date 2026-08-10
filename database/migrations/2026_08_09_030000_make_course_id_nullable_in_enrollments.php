@@ -24,7 +24,9 @@ return new class extends Migration
         }
 
         // Make course_id nullable
-        DB::statement("ALTER TABLE `enrollments` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE `enrollments` MODIFY `course_id` BIGINT UNSIGNED NULL;");
+        }
 
         // Add unique constraint (user_id, course_offering_id) if not exists
         try {
