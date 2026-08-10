@@ -12,72 +12,126 @@
         </div>
     </x-slot>
 
-    <div class="py-6">
+    <div class="py-6" x-data="{ tab: 'active' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             @if (session('success'))
-            <div class="p-4 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl shadow-sm">
-                {{ session('success') }}
+            <div class="p-4 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl shadow-sm font-semibold text-xs flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>{{ session('success') }}</span>
             </div>
             @endif
 
-            @if ($courses->isEmpty())
-            <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center space-y-3 shadow-sm">
-                <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-                    🎓
-                </div>
-                <h3 class="font-extrabold text-base text-gray-900">Belum Ada Course Sertifikasi</h3>
-                <p class="text-xs text-gray-500 max-w-md mx-auto">
-                    Buat pelatihan kompetensi industri untuk mempersiapkan mahasiswa sebelum mengambil project industri Anda.
-                </p>
-                <a href="{{ route('vendor.courses.create') }}" class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm">
-                    + Buat Course Pertama
-                </a>
-            </div>
-            @else
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($courses as $course)
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col justify-between space-y-4 hover:shadow-md transition">
-                    <div class="space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-black uppercase rounded-md">
-                                🏢 {{ Auth::user()->name }}
-                            </span>
-                            <span class="px-2 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-md">
-                                {{ $course->level }}
-                            </span>
-                        </div>
-
-                        <h3 class="font-extrabold text-base text-gray-900 leading-snug">
-                            {{ $course->name }}
-                        </h3>
-
-                        <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                            {{ $course->description }}
-                        </p>
+            <!-- Executive Status Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div @click="tab = 'active'" class="cursor-pointer bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm hover:border-emerald-500 transition">
+                    <div>
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Course Aktif (Terbuka)</div>
+                        <div class="text-2xl font-black text-emerald-600 mt-0.5">{{ $activeCourses->count() }}</div>
                     </div>
-
-                    <div class="pt-3 border-t border-gray-100 space-y-3">
-                        <div class="flex items-center justify-between text-xs text-gray-600 font-semibold">
-                            <span>Passing Grade Kuis:</span>
-                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-black rounded-md">{{ $course->certificate_threshold }}</span>
-                        </div>
-
-                        <div class="flex items-center justify-between gap-2 pt-1">
-                            <a href="{{ route('vendor.courses.show', $course) }}"
-                               class="flex-1 text-center py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition">
-                                Kelola Materials & Quiz
-                            </a>
-                            <a href="{{ route('vendor.courses.edit', $course) }}"
-                               class="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">
-                                ✏️
-                            </a>
-                        </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+                        🎓
                     </div>
                 </div>
-                @endforeach
+
+                <div @click="tab = 'bank'" class="cursor-pointer bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm hover:border-amber-500 transition">
+                    <div>
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Course Bank (Draft / Arsip)</div>
+                        <div class="text-2xl font-black text-amber-600 mt-0.5">{{ $bankCourses->count() }}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                        📦
+                    </div>
+                </div>
+
+                <div @click="tab = 'all'" class="cursor-pointer bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between shadow-sm hover:border-indigo-500 transition">
+                    <div>
+                        <div class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Total Semua Course</div>
+                        <div class="text-2xl font-black text-gray-900 mt-0.5">{{ $allCourses->count() }}</div>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold">
+                        📊
+                    </div>
+                </div>
             </div>
-            @endif
+
+            <!-- TAB FILTER BAR -->
+            <div class="border-b border-gray-200 flex gap-4">
+                <button type="button" @click="tab = 'active'"
+                        :class="tab === 'active' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+                        class="pb-3 px-1 border-b-2 text-xs transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full" :class="tab === 'active' ? 'bg-emerald-500' : 'bg-gray-300'"></span>
+                    Active Courses ({{ $activeCourses->count() }})
+                </button>
+
+                <button type="button" @click="tab = 'bank'"
+                        :class="tab === 'bank' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+                        class="pb-3 px-1 border-b-2 text-xs transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full" :class="tab === 'bank' ? 'bg-amber-500' : 'bg-gray-300'"></span>
+                    Course Bank / Drafts ({{ $bankCourses->count() }})
+                </button>
+
+                <button type="button" @click="tab = 'all'"
+                        :class="tab === 'all' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
+                        class="pb-3 px-1 border-b-2 text-xs transition-all flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full" :class="tab === 'all' ? 'bg-indigo-600' : 'bg-gray-300'"></span>
+                    Semua Course ({{ $allCourses->count() }})
+                </button>
+            </div>
+
+            <!-- TAB 1: ACTIVE COURSES -->
+            <div x-show="tab === 'active'" x-transition>
+                @if ($activeCourses->isEmpty())
+                <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center space-y-3 shadow-sm">
+                    <p class="text-xs text-gray-500 font-medium">Belum ada course sertifikasi aktif.</p>
+                </div>
+                @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($activeCourses as $course)
+                        @include('vendor.courses._course_card', ['course' => $course])
+                    @endforeach
+                </div>
+                @endif
+            </div>
+
+            <!-- TAB 2: BANK / DRAFT COURSES -->
+            <div x-show="tab === 'bank'" x-transition>
+                @if ($bankCourses->isEmpty())
+                <div class="bg-white rounded-2xl border border-gray-200 p-10 text-center space-y-3 shadow-sm">
+                    <p class="text-xs text-gray-500 font-medium">Tidak ada draft/arsip course tersimpan di Course Bank.</p>
+                </div>
+                @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($bankCourses as $course)
+                        @include('vendor.courses._course_card', ['course' => $course])
+                    @endforeach
+                </div>
+                @endif
+            </div>
+
+            <!-- TAB 3: ALL COURSES -->
+            <div x-show="tab === 'all'" x-transition>
+                @if ($allCourses->isEmpty())
+                <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center space-y-3 shadow-sm">
+                    <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                        🎓
+                    </div>
+                    <h3 class="font-extrabold text-base text-gray-900">Belum Ada Course Sertifikasi</h3>
+                    <p class="text-xs text-gray-500 max-w-md mx-auto">
+                        Buat pelatihan kompetensi industri untuk mempersiapkan mahasiswa sebelum mengambil project industri Anda.
+                    </p>
+                    <a href="{{ route('vendor.courses.create') }}" class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm">
+                        + Buat Course Pertama
+                    </a>
+                </div>
+                @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach ($allCourses as $course)
+                        @include('vendor.courses._course_card', ['course' => $course])
+                    @endforeach
+                </div>
+                @endif
+            </div>
 
         </div>
     </div>

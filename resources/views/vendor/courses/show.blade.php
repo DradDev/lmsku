@@ -27,12 +27,33 @@
             <!-- Hero Detail Card -->
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-3">
-                    <span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 font-extrabold text-xs rounded-md">
-                        🏢 Vendor Certified: {{ Auth::user()->name }}
-                    </span>
-                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">
-                        Passing Grade Kuis: {{ $course->certificate_threshold }}
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 bg-purple-100 text-purple-800 font-extrabold text-xs rounded-md">
+                            🏢 Vendor Certified: {{ Auth::user()->name }}
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-md text-xs font-bold {{ $course->is_archived ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200' }}">
+                            {{ $course->is_archived ? '🔴 Draft Bank (Archived)' : '🟢 Active' }}
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <form action="{{ route('vendor.courses.toggle-archive', $course) }}" method="POST">
+                            @csrf
+                            @if($course->is_archived)
+                                <button type="submit" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-bold transition">
+                                    🚀 Aktifkan Kembali Course
+                                </button>
+                            @else
+                                <button type="submit" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-full text-xs font-bold transition">
+                                    📦 Arsipkan ke Draft Bank
+                                </button>
+                            @endif
+                        </form>
+
+                        <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">
+                            Passing Grade Kuis: {{ $course->certificate_threshold }}
+                        </span>
+                    </div>
                 </div>
 
                 <p class="text-xs text-gray-700 leading-relaxed whitespace-pre-line">

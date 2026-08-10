@@ -18,12 +18,29 @@ class CourseController extends Controller
     {
         $vendorId = Auth::id();
 
-        $courses = Course::with(['materials', 'quizzes', 'students', 'category'])
+        $allCourses = Course::with(['materials', 'quizzes', 'students', 'category'])
             ->where('user_id', $vendorId)
             ->latest()
             ->get();
 
-        return view('vendor.courses.index', compact('courses'));
+        $activeCourses = $allCourses->where('is_archived', false)->values();
+        $bankCourses = $allCourses->where('is_archived', true)->values();
+
+        return view('vendor.courses.index', compact('allCourses', 'activeCourses', 'bankCourses'));
+    }
+
+    public function toggleArchive(Course $course): RedirectResponse
+    {
+        if ($course->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke course ini.');
+        }
+
+        $newStatus = !$course->is_archived;
+        $course->update(['is_archived' => $newStatus]);
+
+        $statusLabel = $newStatus ? 'diarsipkan (Draft Bank)' : 'diaktifkan dan dibuka kembali';
+
+        return back()->with('success', "Status Course '{$course->name}' berhasil {$statusLabel}.");
     }
 
     public function create(): View

@@ -371,6 +371,7 @@ Route::middleware(['auth', 'role:vendor'])
         Route::get('/dashboard', [VendorDashboardController::class, 'index'])->name('dashboard');
 
         // Industry Certified Courses
+        Route::post('/courses/{course}/toggle-archive', [VendorCourseController::class, 'toggleArchive'])->name('courses.toggle-archive');
         Route::resource('courses', VendorCourseController::class);
 
         // Industry Projects
