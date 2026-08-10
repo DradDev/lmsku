@@ -88,7 +88,7 @@
 
             <!-- BAR PILIHAN SEMESTER (TABS / DROPDOWN SELECTION) -->
             <div style="padding: 1rem 1.5rem; background: #FFFFFF; border-bottom: 1px solid #F1F5F9; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <label style="font-size: 12.5px; font-weight: 700; color: #334155;">📅 Pilih Semester Akademik:</label>
                     <select onchange="window.location.href=this.value" 
                             style="padding: 8px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; font-weight: 700; color: #0F172A; outline: none; background: #FFF; cursor: pointer; min-width: 250px;">
@@ -102,6 +102,13 @@
                             </option>
                         @endforeach
                     </select>
+
+                    <a href="{{ route('admin.academic-terms.create') }}" 
+                       target="_blank"
+                       title="Buka form pembuatan semester akademik kampus baru"
+                       style="display: inline-flex; align-items: center; gap: 5px; padding: 7px 12px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; color: #334155; font-size: 12px; font-weight: 700; text-decoration: none;">
+                        <span>⚙️ + Tambah Semester Baru</span>
+                    </a>
                 </div>
 
                 @if($selectedTerm)
