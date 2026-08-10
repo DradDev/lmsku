@@ -272,6 +272,13 @@ class ProjectController extends Controller
             $reasons[] = "Belum memiliki Sertifikat Matkul Terverifikasi (Lulus Final Quiz).";
         }
 
+        return [
+            'is_eligible' => $isEligible,
+            'has_main_skill' => $hasMainSkill,
+            'has_verified_certificate' => $hasVerifiedCertificate,
+            'main_skill_name' => $mainSkill?->name ?? 'General Skill',
+            'reasons' => $reasons,
+        ];
     }
 
     public function complete(Project $project): RedirectResponse
