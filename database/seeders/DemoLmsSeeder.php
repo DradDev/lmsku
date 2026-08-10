@@ -64,10 +64,37 @@ class DemoLmsSeeder extends Seeder
             'updated_at' => $now,
         ]);
 
-        $studentId = DB::table('users')->insertGetId([
-            'name' => 'Andi Pratama',
-            'email' => 'student@lmsku.test',
-            'role' => 'student',
+        $studentIds = [];
+        $studentsData = [
+            ['name' => 'Andi Pratama', 'email' => 'student@lmsku.test'],
+            ['name' => 'Siti Rahmawati', 'email' => 'siti@lmsku.test'],
+            ['name' => 'Budi Wijaya', 'email' => 'budi@lmsku.test'],
+            ['name' => 'Dewi Lestari', 'email' => 'dewi@lmsku.test'],
+            ['name' => 'Rizky Febrian', 'email' => 'rizky@lmsku.test'],
+            ['name' => 'Fajar Nugraha', 'email' => 'fajar@lmsku.test'],
+            ['name' => 'Maya Putri', 'email' => 'maya@lmsku.test'],
+            ['name' => 'Hendra Gunawan', 'email' => 'hendra@lmsku.test'],
+        ];
+
+        foreach ($studentsData as $st) {
+            $studentIds[] = DB::table('users')->insertGetId([
+                'name' => $st['name'],
+                'email' => $st['email'],
+                'role' => 'student',
+                'registration_status' => 'approved',
+                'email_verified_at' => $now,
+                'password' => Hash::make('password'),
+                'remember_token' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+        $studentId = $studentIds[0];
+
+        $vendorId = DB::table('users')->insertGetId([
+            'name' => 'PT Telkom Indonesia (Vendor)',
+            'email' => 'vendor@lmsku.test',
+            'role' => 'vendor',
             'registration_status' => 'approved',
             'email_verified_at' => $now,
             'password' => Hash::make('password'),
@@ -679,12 +706,81 @@ class DemoLmsSeeder extends Seeder
         ];
 
         foreach ($courses as $courseData) {
-            $this->seedCoursePackage($courseData, $lecturerId, $studentId, $now);
+            $this->seedCoursePackage($courseData, $lecturerId, $studentIds, $now);
+        }
+
+        $vendorCourses = [
+            [
+                'name' => 'Telkom Cloud Computing & DevOps Certification',
+                'description' => 'Sertifikasi industri penguasaan arsitektur cloud, Kubernetes, Docker containerization, dan CI/CD pipeline dari PT Telkom Indonesia.',
+                'level' => 'Advanced',
+                'progress' => 95,
+                'duration_weeks' => 8,
+                'materials' => [
+                    ['title' => '01 - Cloud Architecture Overview.pdf', 'filename' => 'cloud-overview.pdf', 'content' => 'Overview arsitektur cloud Telkom dan infrastruktur AWS.'],
+                    ['title' => '02 - Docker & Kubernetes Guide.pdf', 'filename' => 'docker-k8s.pdf', 'content' => 'Panduan deployment container dan cluster orchestration.'],
+                ],
+                'quiz' => [
+                    'title' => 'Ujian Sertifikasi Cloud & DevOps Engineer',
+                    'time_limit' => 45,
+                    'max_attempts' => 2,
+                    'questions' => [
+                        [
+                            'type' => 'multiple_choice',
+                            'question' => 'Apa fungsi utama Orchestrator seperti Kubernetes?',
+                            'options' => [
+                                'A' => 'Mengelola lifecycle & auto-scaling container',
+                                'B' => 'Menghapus database',
+                                'C' => 'Mengedit file css',
+                                'D' => 'Mematikan server',
+                            ],
+                            'correct' => 'A',
+                            'difficulty' => 'medium',
+                        ],
+                    ],
+                    'student_answers' => ['A'],
+                ],
+            ],
+            [
+                'name' => 'Telkom Cyber Security & Network Auditing',
+                'description' => 'Program sertifikasi analisa keamanan jaringan, vulnerability assessment, dan penetration testing standar industri.',
+                'level' => 'Intermediate',
+                'progress' => 90,
+                'duration_weeks' => 6,
+                'materials' => [
+                    ['title' => '01 - Network Security Fundamentals.pdf', 'filename' => 'net-security.pdf', 'content' => 'Dasar-dasar proteksi firewall dan analisis paket data.'],
+                ],
+                'quiz' => [
+                    'title' => 'Kuis Sertifikasi Network Security Audit',
+                    'time_limit' => 30,
+                    'max_attempts' => 3,
+                    'questions' => [
+                        [
+                            'type' => 'multiple_choice',
+                            'question' => 'Protokol mana yang paling aman untuk komunikasi terenkripsi?',
+                            'options' => [
+                                'A' => 'HTTPS (TLS 1.3)',
+                                'B' => 'HTTP Plain Text',
+                                'C' => 'FTP Unencrypted',
+                                'D' => 'Telnet',
+                            ],
+                            'correct' => 'A',
+                            'difficulty' => 'easy',
+                        ],
+                    ],
+                    'student_answers' => ['A'],
+                ],
+            ],
+        ];
+
+        foreach ($vendorCourses as $vCourseData) {
+            $this->seedCoursePackage($vCourseData, $vendorId, $studentIds, $now);
         }
     }
 
-    private function seedCoursePackage(array $courseData, int $lecturerId, int $studentId, $now): void
+    private function seedCoursePackage(array $courseData, int $lecturerId, array $studentIds, $now): void
     {
+        $studentId = $studentIds[0];
         $courseId = DB::table('courses')->insertGetId([
             'name' => $courseData['name'],
             'description' => $courseData['description'],
@@ -696,12 +792,14 @@ class DemoLmsSeeder extends Seeder
             'updated_at' => $now,
         ]);
 
-        DB::table('enrollments')->insert([
-            'user_id' => $studentId,
-            'course_id' => $courseId,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ]);
+        foreach ($studentIds as $sid) {
+            DB::table('enrollments')->insert([
+                'user_id' => $sid,
+                'course_id' => $courseId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
 
         foreach ($courseData['materials'] as $material) {
             $path = 'demo/materials/' . $this->slug($courseData['name']) . '/' . $material['filename'];
@@ -755,14 +853,16 @@ class DemoLmsSeeder extends Seeder
             $now
         );
 
-        $this->seedFinalQuiz(
-            $courseId,
-            $lecturerId,
-            $studentId,
-            $courseData['final_quiz'],
-            $courseData['name'],
-            $now
-        );
+        if (isset($courseData['final_quiz'])) {
+            $this->seedFinalQuiz(
+                $courseId,
+                $lecturerId,
+                $studentId,
+                $courseData['final_quiz'],
+                $courseData['name'],
+                $now
+            );
+        }
     }
 
     private function seedRegularQuiz(
