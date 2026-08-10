@@ -26,8 +26,10 @@ class QuizController extends Controller
             'max_attempts' => ['required', 'integer', 'min:1', 'max:100'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'target_scope' => ['nullable', Rule::in(['all', 'class'])],
         ]);
 
+        $targetScope = $validated['target_scope'] ?? 'all';
         $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
 
         // Hanya boleh 1 quiz final per course/master course
@@ -55,15 +57,54 @@ class QuizController extends Controller
             'end_date' => $validated['end_date'] ?? null,
         ]);
 
+        // Sinkronkan ke offering_quizzes berdasarkan target scope
+        if ($courseObj instanceof \App\Models\CourseOffering) {
+            if ($targetScope === 'all') {
+                $allOfferings = \App\Models\CourseOffering::where('master_course_id', $masterCourseId)
+                    ->where('lecturer_id', Auth::id())
+                    ->get();
+
+                foreach ($allOfferings as $offeringItem) {
+                    \App\Models\OfferingQuiz::updateOrCreate(
+                        [
+                            'course_offering_id' => $offeringItem->id,
+                            'quiz_id' => $quiz->id,
+                        ],
+                        [
+                            'start_date' => $quiz->start_date,
+                            'end_date' => $quiz->end_date,
+                            'time_limit' => $quiz->time_limit,
+                            'max_attempts' => $quiz->max_attempts,
+                        ]
+                    );
+                }
+            } else {
+                \App\Models\OfferingQuiz::updateOrCreate(
+                    [
+                        'course_offering_id' => $courseObj->id,
+                        'quiz_id' => $quiz->id,
+                    ],
+                    [
+                        'start_date' => $quiz->start_date,
+                        'end_date' => $quiz->end_date,
+                        'time_limit' => $quiz->time_limit,
+                        'max_attempts' => $quiz->max_attempts,
+                    ]
+                );
+            }
+        }
+
         $typeLabel = match ($validated['quiz_type']) {
             'final' => 'Final Quiz',
             'weekly' => 'Weekly Quiz',
             default => 'Daily Quiz',
         };
 
+        $scopeLabel = $targetScope === 'all' ? 'untuk Semua Kelas (Master)' : "khusus untuk {$courseObj->section_name}";
+
         return redirect()
             ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
-            ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat! Silakan buat soal-soal untuk quiz ini di bawah ini.");
+            ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat {$scopeLabel}! Silakan buat soal-soal untuk quiz ini.");
     }
 
     public function update(Request $request, Course $course, Quiz $quiz): RedirectResponse

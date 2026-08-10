@@ -292,6 +292,26 @@
                                         <label class="block font-bold text-slate-700 mb-1">Deadline Selesai (Opsional)</label>
                                         <input type="datetime-local" name="end_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
                                     </div>
+
+                                    <div class="md:col-span-2 mt-2 pt-2 border-t border-indigo-100">
+                                        <label class="block font-bold text-slate-700 mb-1.5">🎯 Target Scope Distribusi Kuis:</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                            <label class="flex items-center gap-2.5 p-2.5 border border-indigo-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
+                                                <input type="radio" name="target_scope" value="all" checked class="text-indigo-600 focus:ring-indigo-500">
+                                                <div>
+                                                    <span class="block font-bold text-indigo-950 text-xs">🌐 Semua Kelas Pararel (Master)</span>
+                                                    <span class="block text-[11px] text-slate-500">Kuis akan otomatis berlaku untuk Kelas A, B, C, dst.</span>
+                                                </div>
+                                            </label>
+                                            <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
+                                                <input type="radio" name="target_scope" value="class" class="text-indigo-600 focus:ring-indigo-500">
+                                                <div>
+                                                    <span class="block font-bold text-slate-800 text-xs">📌 Khusus {{ $course->section_name ?: 'Kelas Ini' }}</span>
+                                                    <span class="block text-[11px] text-slate-500">Kuis khusus/remedial hanya untuk rombel kelas ini.</span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="flex justify-end gap-2 pt-2 border-t border-indigo-200">
