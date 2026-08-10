@@ -22,7 +22,7 @@
                         <input type="text" name="title" value="{{ old('title') }}" required
                                placeholder="Contoh: Pengembangan Fitur Microservices Payment Gateway"
                                class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-xl text-xs p-3">
-                        @error('title') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @error
+                        @error('title') <p class="text-red-600 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
