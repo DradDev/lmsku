@@ -348,7 +348,23 @@ class ProjectController extends Controller
         $mainSkill = $project->skills->firstWhere('pivot.is_main', true) ?? $project->skills->first();
         $hasCourseForSkill = $mainSkill ? $this->checkSkillHasCourse($mainSkill->id) : true;
 
-        return view('lecturer.projects.show', compact('project', 'hasCourseForSkill', 'mainSkill'));
+        $participationsMap = $project->participations->keyBy('user_id');
+
+        $recommendedStudents = \App\Models\User::where('role', 'student')
+            ->with(['skillProfiles.skill', 'interestProfiles.tag', 'completedProjects'])
+            ->get()
+            ->map(function ($student) use ($project, $participationsMap) {
+                $student->match_score = $student->calculateTalentMatchScore($project);
+                $part = $participationsMap->get($student->id);
+                $student->invitation_status = $part ? $part->status : null;
+                $student->is_already_invited = $part !== null && in_array($part->status, ['invited', 'in_progress', 'development', 'review', 'completed']);
+                return $student;
+            })
+            ->sortByDesc('match_score')
+            ->take(3)
+            ->values();
+
+        return view('lecturer.projects.show', compact('project', 'hasCourseForSkill', 'mainSkill', 'recommendedStudents'));
     }
 
     public function talentPool(Request $request, Project $project): View

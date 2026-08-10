@@ -162,6 +162,104 @@
                 </div>
             </div>
 
+            <!-- AI Talent Match Preview Widget -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-purple-900 rounded-2xl p-6 shadow-md text-white space-y-5">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-indigo-700/60 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-indigo-300">
+                            <span>🎯 COMPRO Match Engine</span>
+                            <span class="px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 text-[10px]">Realtime Screening</span>
+                        </div>
+                        <h3 class="text-xl font-black text-white mt-1">
+                            Rekomendasi Talent Mahasiswa Terbaik
+                        </h3>
+                        <p class="text-xs text-indigo-200 mt-1">
+                            Mahasiswa dengan kecocokan kompetensi tertinggi berdasarkan Quiz, Portofolio, dan Sertifikat.
+                        </p>
+                    </div>
+
+                    <a href="{{ route('lecturer.projects.talent-pool', $project) }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs rounded-xl transition shadow-sm self-start md:self-auto">
+                        <span>Lihat Semua Talent (Talent Pool Engine)</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                </div>
+
+                @if(!isset($recommendedStudents) || $recommendedStudents->isEmpty())
+                    <p class="text-xs text-indigo-200 italic">Belum ada mahasiswa yang memenuhi kualifikasi talent pool.</p>
+                @else
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        @foreach($recommendedStudents as $index => $recStudent)
+                            @php
+                                $mScore = $recStudent->match_score;
+                                $scoreColor = $mScore >= 80 ? 'bg-emerald-500 text-white' : ($mScore >= 60 ? 'bg-indigo-400 text-white' : 'bg-amber-400 text-amber-950');
+                            @endphp
+
+                            <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-xl p-4 flex flex-col justify-between space-y-3">
+                                <div>
+                                    <div class="flex items-center justify-between gap-2 mb-2">
+                                        <span class="text-[11px] font-bold text-indigo-200">#{{ $index + 1 }} Top Candidate</span>
+                                        <span class="px-2.5 py-0.5 rounded-full text-xs font-black {{ $scoreColor }}">
+                                            🎯 {{ $mScore }}% MATCH
+                                        </span>
+                                    </div>
+
+                                    <div class="flex items-center gap-3">
+                                        @if($recStudent->avatar_url)
+                                            <img src="{{ $recStudent->avatar_url }}" class="w-10 h-10 rounded-full object-cover border border-white/20">
+                                        @else
+                                            <div class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-black text-sm border border-white/20">
+                                                {{ strtoupper(substr($recStudent->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+
+                                        <div class="overflow-hidden">
+                                            <h5 class="font-bold text-sm text-white truncate">{{ $recStudent->name }}</h5>
+                                            <p class="text-[11px] text-indigo-200 truncate">{{ $recStudent->peminatan ?? 'General Track' }}</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 pt-2 border-t border-white/10 text-[11px] text-indigo-200 space-y-1">
+                                        <div class="flex justify-between">
+                                            <span>Main Skill:</span>
+                                            <span class="font-semibold text-white">{{ $recStudent->skillProfiles->first()->skill->name ?? 'Skill' }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Approved Works:</span>
+                                            <span class="font-semibold text-white">{{ $recStudent->completedProjects->count() }} Projects</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-2 flex items-center gap-2">
+                                    <a href="{{ route('lecturer.students.portfolio', $recStudent) }}" target="_blank"
+                                       class="flex-1 text-center py-1.5 px-2 bg-white/20 hover:bg-white/30 text-white font-semibold text-[11px] rounded-lg transition">
+                                        Portofolio
+                                    </a>
+
+                                    @if($recStudent->invitation_status === 'invited')
+                                        <span class="py-1.5 px-2 bg-amber-400/20 border border-amber-300/40 text-amber-200 font-bold text-[11px] rounded-lg">
+                                            ⏳ Terkirim
+                                        </span>
+                                    @elseif(in_array($recStudent->invitation_status, ['in_progress', 'development', 'review', 'completed']))
+                                        <span class="py-1.5 px-2 bg-emerald-400/20 border border-emerald-300/40 text-emerald-200 font-bold text-[11px] rounded-lg">
+                                            🚀 Joined
+                                        </span>
+                                    @else
+                                        <form action="{{ route('lecturer.projects.invite', [$project, $recStudent]) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="py-1.5 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[11px] rounded-lg transition shadow-sm">
+                                                + Undang
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
             <div class="bg-white shadow rounded-2xl p-6">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
                     <div>
