@@ -14,6 +14,15 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
 
+                <!-- Info Banner Master Course Mandiri -->
+                <div class="p-4 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-2xl flex items-center gap-3">
+                    <span class="text-xl">💡</span>
+                    <div class="text-xs">
+                        <span class="font-extrabold block">Pembuatan Master Course Sertifikasi Mandiri:</span>
+                        <span class="text-indigo-700">Sebagai Author Mitra Vendor, Anda tidak terikat Semester Kampus. Silabus yang Anda buat akan langsung menjadi Master Course Sertifikasi milik organisasi Anda.</span>
+                    </div>
+                </div>
+
                 <form action="{{ route('vendor.courses.store') }}" method="POST" class="space-y-5">
                     @csrf
 
