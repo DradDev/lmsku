@@ -147,7 +147,7 @@ class ProjectController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'benefits' => ['nullable', 'string'],
-            'difficulty_level' => ['required', 'in:easy,medium,hard'],
+            'difficulty_level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
             'is_published' => ['nullable', 'boolean'],

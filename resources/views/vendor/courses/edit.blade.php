@@ -11,7 +11,25 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-4">
+
+            @if (session('success'))
+            <div class="p-4 bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-xl shadow-sm font-semibold text-xs flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>{{ session('success') }}</span>
+            </div>
+            @endif
+
+            @if ($errors->any())
+            <div class="p-4 bg-red-100 border border-red-300 text-red-700 rounded-xl shadow-sm text-xs">
+                <ul class="list-disc list-inside space-y-1">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
+
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
 
                 <form action="{{ route('vendor.courses.update', $course) }}" method="POST" class="space-y-5">
