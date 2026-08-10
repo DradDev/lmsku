@@ -81,7 +81,7 @@
 
                         <option value="student">Student (Mahasiswa)</option>
                         <option value="lecturer">Lecturer (Dosen Akademik)</option>
-                        <option value="vendor">Vendor / Mitra Eksternal Industri</option>
+                        <option value="vendor">Author (Mitra Vendor Industri)</option>
 
                     </select>
 

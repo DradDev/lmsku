@@ -103,7 +103,8 @@
                                 name="role"
                                 class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
                                 <option value="student" {{ old('role') === 'student' ? 'selected' : '' }}>Student</option>
-                                <option value="lecturer" {{ old('role') === 'lecturer' ? 'selected' : '' }}>Author / Vendor</option>
+                                <option value="lecturer" {{ old('role') === 'lecturer' ? 'selected' : '' }}>Lecturer (Dosen)</option>
+                                <option value="vendor" {{ old('role') === 'vendor' ? 'selected' : '' }}>Author (Mitra Vendor)</option>
                                 <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                             </select>
                         </div>
