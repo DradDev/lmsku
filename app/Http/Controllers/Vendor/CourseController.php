@@ -108,7 +108,14 @@ class CourseController extends Controller
             'tags',
         ]);
 
-        return view('vendor.courses.show', compact('course'));
+        $students = $course->students;
+        $materials = $course->materials;
+        $quizzes = $course->quizzes;
+        $completedStudentCount = $students->filter(function ($s) {
+            return ($s->pivot->progress_percent ?? 0) >= 100;
+        })->count();
+
+        return view('vendor.courses.show', compact('course', 'students', 'materials', 'quizzes', 'completedStudentCount'));
     }
 
     public function edit(Course $course): View
