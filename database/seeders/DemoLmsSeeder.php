@@ -18,6 +18,12 @@ class DemoLmsSeeder extends Seeder
         Schema::disableForeignKeyConstraints();
 
         $tablesToTruncate = [
+            'project_comments',
+            'project_status_histories',
+            'project_participations',
+            'project_skills',
+            'project_tags',
+            'projects',
             'quiz_answers',
             'quiz_attempts',
             'submissions',
@@ -775,6 +781,91 @@ class DemoLmsSeeder extends Seeder
 
         foreach ($vendorCourses as $vCourseData) {
             $this->seedCoursePackage($vCourseData, $vendorId, $studentIds, $now);
+        }
+
+        $this->seedProjects($vendorId, $lecturerId, $studentIds, $now);
+    }
+
+    private function seedProjects(int $vendorId, int $lecturerId, array $studentIds, $now): void
+    {
+        $projects = [
+            [
+                'title' => 'Telkom Smart City IoT Infrastructure Challenge',
+                'description' => 'Perancangan arsitektur IoT smart sensor network dan dashboard pemantauan real-time untuk infrastruktur perkotaan pintar dari PT Telkom Indonesia.',
+                'difficulty_level' => 'Advanced',
+                'duration_days' => 60,
+                'max_students' => 10,
+                'created_by' => $vendorId,
+                'provider_type' => 'external',
+                'is_published' => true,
+                'participations' => [
+                    ['user_id' => $studentIds[0], 'status' => 'in_progress', 'progress_percent' => 75],
+                    ['user_id' => $studentIds[1], 'status' => 'completed', 'progress_percent' => 100],
+                    ['user_id' => $studentIds[2], 'status' => 'in_progress', 'progress_percent' => 50],
+                    ['user_id' => $studentIds[3], 'status' => 'invited', 'progress_percent' => 0],
+                ],
+            ],
+            [
+                'title' => 'Enterprise Microservices API Gateway System',
+                'description' => 'Pengembangan high-throughput API Gateway berbasis Go/Laravel dengan rate-limiting, OAuth2 authentication, dan load balancing untuk skala industri.',
+                'difficulty_level' => 'Intermediate',
+                'duration_days' => 45,
+                'max_students' => 8,
+                'created_by' => $vendorId,
+                'provider_type' => 'external',
+                'is_published' => true,
+                'participations' => [
+                    ['user_id' => $studentIds[4], 'status' => 'in_progress', 'progress_percent' => 60],
+                    ['user_id' => $studentIds[5], 'status' => 'invited', 'progress_percent' => 0],
+                    ['user_id' => $studentIds[6], 'status' => 'in_progress', 'progress_percent' => 40],
+                ],
+            ],
+            [
+                'title' => 'Capstone Project LMSKU 3NF Normalization Engine',
+                'description' => 'Proyek tugas akhir mata kuliah Web Programming: implementasi refactoring basis data 3NF, sistem rekomendasi AI, dan sertifikat blockchain.',
+                'difficulty_level' => 'Intermediate',
+                'duration_days' => 30,
+                'max_students' => 15,
+                'created_by' => $lecturerId,
+                'provider_type' => 'internal',
+                'is_published' => true,
+                'participations' => [
+                    ['user_id' => $studentIds[0], 'status' => 'in_progress', 'progress_percent' => 90],
+                    ['user_id' => $studentIds[1], 'status' => 'completed', 'progress_percent' => 100],
+                    ['user_id' => $studentIds[2], 'status' => 'in_progress', 'progress_percent' => 80],
+                    ['user_id' => $studentIds[3], 'status' => 'in_progress', 'progress_percent' => 50],
+                    ['user_id' => $studentIds[7], 'status' => 'in_progress', 'progress_percent' => 30],
+                ],
+            ],
+        ];
+
+        foreach ($projects as $proj) {
+            $projectId = DB::table('projects')->insertGetId([
+                'title' => $proj['title'],
+                'description' => $proj['description'],
+                'difficulty_level' => $proj['difficulty_level'],
+                'duration_days' => $proj['duration_days'],
+                'max_students' => $proj['max_students'],
+                'created_by' => $proj['created_by'],
+                'provider_type' => $proj['provider_type'],
+                'is_published' => $proj['is_published'],
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            foreach ($proj['participations'] as $part) {
+                DB::table('project_participations')->insert([
+                    'user_id' => $part['user_id'],
+                    'project_id' => $projectId,
+                    'status' => $part['status'],
+                    'progress_percent' => $part['progress_percent'],
+                    'started_at' => $now,
+                    'completed_at' => $part['status'] === 'completed' ? $now : null,
+                    'last_activity_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
         }
     }
 
