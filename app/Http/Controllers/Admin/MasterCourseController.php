@@ -17,12 +17,12 @@ class MasterCourseController extends Controller
 {
     public function index(): View
     {
-        $masterCourses = MasterCourse::with('category')
+        $masterCourses = MasterCourse::with(['category', 'skills', 'tags', 'materials', 'quizzes'])
             ->withCount('offerings')
             ->orderBy('name')
             ->get();
 
-        $vendorCourses = Course::with(['user', 'category', 'skills'])
+        $vendorCourses = Course::with(['user', 'category', 'skills', 'tags', 'materials', 'quizzes', 'masterCourse'])
             ->whereHas('user', function ($query) {
                 $query->where('role', 'vendor');
             })

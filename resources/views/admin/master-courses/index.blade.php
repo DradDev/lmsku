@@ -19,7 +19,7 @@
         </div>
     </x-slot>
 
-    <div class="py-6" x-data="{ tab: 'all' }">
+    <div class="py-6" x-data="{ tab: 'all', search: '' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             <!-- SUCCESS / ERROR ALERTS -->
@@ -113,187 +113,241 @@
                 </div>
             </div>
 
-            <!-- TAB NAVIGATION (ALL / INTERNAL / VENDOR) -->
-            <div class="border-b border-gray-200 flex gap-4">
-                <button type="button" 
-                        @click="tab = 'all'" 
-                        :class="tab === 'all' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
-                        class="pb-3 px-1 border-b-2 text-sm transition-all flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full" :class="tab === 'all' ? 'bg-blue-600' : 'bg-gray-300'"></span>
-                    Semua Master Course ({{ $masterCourses->count() + $vendorCourses->count() }})
-                </button>
+            <!-- CONTROLS ROW: SEARCH INPUT & TABS -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+                <!-- TAB NAVIGATION -->
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                    <button type="button" 
+                            @click="tab = 'all'" 
+                            :class="tab === 'all' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
+                            class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
+                        <span>🌐 Semua Course</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
+                            {{ $masterCourses->count() + $vendorCourses->count() }}
+                        </span>
+                    </button>
 
-                <button type="button" 
-                        @click="tab = 'internal'" 
-                        :class="tab === 'internal' ? 'border-blue-600 text-blue-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
-                        class="pb-3 px-1 border-b-2 text-sm transition-all flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full" :class="tab === 'internal' ? 'bg-blue-500' : 'bg-gray-300'"></span>
-                    🏛️ Internal Kampus ({{ $masterCourses->count() }})
-                </button>
+                    <button type="button" 
+                            @click="tab = 'internal'" 
+                            :class="tab === 'internal' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
+                            class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
+                        <span>🏛️ Internal Kampus</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'internal' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
+                            {{ $masterCourses->count() }}
+                        </span>
+                    </button>
 
-                <button type="button" 
-                        @click="tab = 'vendor'" 
-                        :class="tab === 'vendor' ? 'border-purple-600 text-purple-600 font-bold' : 'border-transparent text-gray-500 hover:text-gray-700 font-medium'"
-                        class="pb-3 px-1 border-b-2 text-sm transition-all flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full" :class="tab === 'vendor' ? 'bg-purple-600' : 'bg-gray-300'"></span>
-                    🏢 Sertifikasi Vendor ({{ $vendorCourses->count() }})
-                </button>
+                    <button type="button" 
+                            @click="tab = 'vendor'" 
+                            :class="tab === 'vendor' ? 'bg-purple-700 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
+                            class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
+                        <span>🏢 Sertifikasi Vendor</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'vendor' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
+                            {{ $vendorCourses->count() }}
+                        </span>
+                    </button>
+                </div>
+
+                <!-- LIVE SEARCH INPUT BOX -->
+                <div class="relative w-full sm:w-80">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                    </div>
+
+                    <input type="text"
+                           x-model="search"
+                           placeholder="Ketik cari nama course, kode, vendor..."
+                           class="w-full pl-10 pr-4 py-2 rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs shadow-sm bg-white">
+                </div>
             </div>
 
-            <!-- UNIFIED CATALOG TABLE CARD -->
-            <div class="bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-100 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="px-5 py-4">Tipe Provider</th>
-                                <th class="px-5 py-4">Kode / Batch</th>
-                                <th class="px-5 py-4">Nama Master Course / Sertifikasi</th>
-                                <th class="px-5 py-4">Level</th>
-                                <th class="px-5 py-4">Kategori</th>
-                                <th class="px-5 py-4">Kelas / Batches</th>
-                                <th class="px-5 py-4 text-right">Aksi Utama</th>
-                            </tr>
-                        </thead>
+            <!-- CARDS GRID LAYOUT -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                        <tbody class="divide-y divide-gray-100 bg-white">
+                <!-- 1. ACADEMIC INTERNAL MASTER COURSES CARDS -->
+                @foreach ($masterCourses as $mc)
+                    @php
+                        $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . ($mc->description ?? '') . ' ' . ($mc->category->name ?? ''));
+                        $levelBadges = [
+                            'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
+                            'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
+                        ];
+                        $badgeClass = $levelBadges[$mc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+                    @endphp
 
-                            <!-- 1. ACADEMIC INTERNAL MASTER COURSES -->
-                            @foreach ($masterCourses as $mc)
-                                <tr x-show="tab === 'all' || tab === 'internal'" class="hover:bg-gray-50 transition">
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold">
-                                            🏛️ Internal Kampus
-                                        </span>
-                                    </td>
+                    <div x-show="(tab === 'all' || tab === 'internal') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
+                         class="bg-white border border-gray-200 hover:border-blue-300 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                        <div>
+                            <!-- Header Badges Row -->
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold">
+                                    🏛️ Internal Kampus
+                                </span>
 
-                                    <td class="px-5 py-4">
-                                        <span class="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-                                            {{ $mc->code ?? 'MC-' . $mc->id }}
-                                        </span>
-                                    </td>
+                                <span class="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                                    {{ $mc->code ?? 'MC-' . $mc->id }}
+                                </span>
+                            </div>
 
-                                    <td class="px-5 py-4">
-                                        <a href="{{ route('admin.master-courses.show', $mc) }}" class="font-extrabold text-gray-900 hover:text-blue-600 transition">
-                                            {{ $mc->name }}
-                                        </a>
-                                        @if($mc->description)
-                                            <p class="text-xs text-gray-500 mt-0.5 line-clamp-1">
-                                                {{ $mc->description }}
-                                            </p>
-                                        @endif
-                                    </td>
+                            <!-- Course Title & Description -->
+                            <h3 class="font-extrabold text-base text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
+                                <a href="{{ route('admin.master-courses.show', $mc) }}">
+                                    {{ $mc->name }}
+                                </a>
+                            </h3>
 
-                                    <td class="px-5 py-4">
-                                        @php
-                                            $levelBadges = [
-                                                'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                                'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                                'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                            ];
-                                            $badgeClass = $levelBadges[$mc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
-                                        @endphp
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border {{ $badgeClass }}">
-                                            {{ $mc->level }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md">
-                                            {{ $mc->category->name ?? 'Umum' }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-sky-50 text-sky-800 text-xs font-bold rounded-full">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                                            {{ $mc->offerings_count }} Kelas
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4 text-right">
-                                        <a href="{{ route('admin.master-courses.show', $mc) }}" 
-                                           class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                                            Buka Gerbang Matkul
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-
-                            <!-- 2. VENDOR CERTIFICATION MASTER COURSES -->
-                            @foreach ($vendorCourses as $vc)
-                                <tr x-show="tab === 'all' || tab === 'vendor'" class="hover:bg-purple-50/30 transition bg-purple-50/10">
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-full text-xs font-bold">
-                                            🏢 Mitra Vendor ({{ $vc->user->name ?? 'External' }})
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="font-extrabold text-xs text-purple-900 bg-purple-100 px-2.5 py-1 rounded-md border border-purple-200">
-                                            {{ $vc->batch_name ?? 'Batch 1 - 2026' }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <a href="{{ route('vendor.courses.show', $vc) }}" class="font-extrabold text-purple-950 hover:text-purple-700 transition">
-                                            {{ $vc->name }}
-                                        </a>
-                                        @if($vc->description)
-                                            <p class="text-xs text-purple-800 mt-0.5 line-clamp-1">
-                                                {{ $vc->description }}
-                                            </p>
-                                        @endif
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        @php
-                                            $levelBadges = [
-                                                'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                                'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                                'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
-                                            ];
-                                            $badgeClass = $levelBadges[$vc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
-                                        @endphp
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border {{ $badgeClass }}">
-                                            {{ $vc->level }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-md">
-                                            {{ $vc->category->name ?? 'Sertifikasi Vendor' }}
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-full border border-emerald-100">
-                                            Threshold: {{ $vc->certificate_threshold ?? 75 }}%
-                                        </span>
-                                    </td>
-
-                                    <td class="px-5 py-4 text-right">
-                                        <a href="{{ route('vendor.courses.show', $vc) }}" 
-                                           class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
-                                            Inspeksi Vendor
-                                        </a>
-                                    </td>
-                                </tr>
-                            @endforeach
-
-                            @if ($masterCourses->isEmpty() && $vendorCourses->isEmpty())
-                                <tr>
-                                    <td colspan="7" class="px-5 py-12 text-center text-gray-400 font-medium">
-                                        Belum ada Master Course atau Course Sertifikasi Vendor terdaftar.
-                                    </td>
-                                </tr>
+                            @if($mc->description)
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                                    {{ $mc->description }}
+                                </p>
                             @endif
 
-                        </tbody>
-                    </table>
-                </div>
+                            <!-- Meta Info Badges Row -->
+                            <div class="mt-4 flex flex-wrap items-center gap-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $badgeClass }}">
+                                    {{ $mc->level }}
+                                </span>
+
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
+                                    📁 {{ $mc->category->name ?? 'Umum' }}
+                                </span>
+
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-sky-50 text-sky-800 text-xs font-bold rounded-md border border-sky-100">
+                                    📌 {{ $mc->offerings_count }} Rombel Kelas
+                                </span>
+                            </div>
+
+                            <!-- Skills & Tags Preview Chips -->
+                            @if($mc->skills->count() > 0 || $mc->tags->count() > 0)
+                                <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-1.5">
+                                    @foreach($mc->skills as $sk)
+                                        <span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-100 text-[11px] font-bold rounded-md">
+                                            ⚡ {{ $sk->name }}
+                                        </span>
+                                    @endforeach
+
+                                    @foreach($mc->tags as $tg)
+                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-md">
+                                            #{{ $tg->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Card Footer Action Buttons -->
+                        <div class="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                            <span class="text-[11px] text-gray-400 font-semibold">
+                                {{ $mc->materials->count() }} Materi • {{ $mc->quizzes->count() }} Kuis
+                            </span>
+
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ route('admin.master-courses.edit', $mc) }}"
+                                   class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition"
+                                   title="Edit Master Course">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </a>
+
+                                <a href="{{ route('admin.master-courses.show', $mc) }}" 
+                                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                                    <span>Buka Gerbang</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+
+                <!-- 2. VENDOR CERTIFICATION COURSES CARDS -->
+                @foreach ($vendorCourses as $vc)
+                    @php
+                        $vendorName = $vc->user->name ?? 'Mitra Vendor';
+                        $searchHaystack = strtolower($vc->name . ' ' . ($vc->batch_name ?? '') . ' ' . $vendorName . ' ' . ($vc->category->name ?? ''));
+                        $levelBadges = [
+                            'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                            'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
+                            'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
+                        ];
+                        $badgeClass = $levelBadges[$vc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+                    @endphp
+
+                    <div x-show="(tab === 'all' || tab === 'vendor') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
+                         class="bg-white border border-purple-200 hover:border-purple-400 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                        <div>
+                            <!-- Header Badges Row -->
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-bold">
+                                    🏢 Sertifikasi Vendor
+                                </span>
+
+                                <span class="font-mono text-xs font-bold text-purple-900 bg-purple-100 px-2.5 py-1 rounded-md border border-purple-200">
+                                    🏷️ {{ $vc->batch_name ?? 'Batch 1' }}
+                                </span>
+                            </div>
+
+                            <!-- Course Title & Vendor Name -->
+                            <h3 class="font-extrabold text-base text-gray-900 group-hover:text-purple-700 transition-colors line-clamp-2 leading-snug">
+                                <a href="{{ route('vendor.courses.show', $vc) }}">
+                                    {{ $vc->name }}
+                                </a>
+                            </h3>
+
+                            <p class="text-xs font-bold text-purple-700 mt-1 flex items-center gap-1">
+                                <span>🏢 {{ $vendorName }}</span>
+                            </p>
+
+                            @if($vc->description)
+                                <p class="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
+                                    {{ $vc->description }}
+                                </p>
+                            @endif
+
+                            <!-- Meta Info Badges Row -->
+                            <div class="mt-4 flex flex-wrap items-center gap-2">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $badgeClass }}">
+                                    {{ $vc->level }}
+                                </span>
+
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
+                                    Threshold {{ $vc->certificate_threshold ?? 75 }}%
+                                </span>
+
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
+                                    📁 {{ $vc->category->name ?? 'Bootcamp' }}
+                                </span>
+                            </div>
+
+                            <!-- Skills Preview Chips -->
+                            @if($vc->skills->count() > 0)
+                                <div class="mt-4 pt-3 border-t border-purple-100 flex flex-wrap gap-1.5">
+                                    @foreach($vc->skills as $sk)
+                                        <span class="px-2 py-0.5 bg-purple-100/70 text-purple-800 border border-purple-200 text-[11px] font-bold rounded-md">
+                                            ⚡ {{ $sk->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Card Footer Action Buttons -->
+                        <div class="mt-5 pt-4 border-t border-purple-100 flex items-center justify-between gap-2">
+                            <span class="text-[11px] text-purple-600 font-bold">
+                                {{ $vc->materials->count() }} Materi • {{ $vc->quizzes->count() }} Kuis
+                            </span>
+
+                            <a href="{{ route('vendor.courses.show', $vc) }}" 
+                               class="inline-flex items-center gap-1.5 px-3 py-2 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                                <span>Detail Vendor</span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+
             </div>
 
         </div>
