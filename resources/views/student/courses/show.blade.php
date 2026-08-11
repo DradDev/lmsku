@@ -1,5 +1,6 @@
 <x-app-layout>
     @php
+    $errors = $errors ?? new \Illuminate\Support\ViewErrorBag();
     $progress = $enrollment?->progress_percent ?? 0;
 
     $completedMaterialCount = $enrollment?->completed_material_count ?? 0;

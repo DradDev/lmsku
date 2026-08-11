@@ -280,19 +280,19 @@ class ProjectController extends Controller
 
         $reasons = [];
         if (!$hasMainSkill) {
-            $skillName = $mainSkill ? $mainSkill->name : 'Main Skill';
-            $reasons[] = "Belum memiliki Main Skill: {$skillName}.";
+            $skillNames = $project->skills->pluck('name')->implode(', ');
+            $reasons[] = "Belum memiliki Target Main Skill: " . ($skillNames ?: 'General Skill') . ".";
         }
 
         if (!$hasVerifiedCertificate) {
-            $reasons[] = "Belum memiliki Sertifikat Matkul Terverifikasi (Lulus Final Quiz).";
+            $reasons[] = "Belum memiliki Sertifikat Terverifikasi (Lulus Final Quiz / Sertifikat Vendor).";
         }
 
         return [
             'is_eligible' => $isEligible,
             'has_main_skill' => $hasMainSkill,
             'has_verified_certificate' => $hasVerifiedCertificate,
-            'main_skill_name' => $mainSkill?->name ?? 'General Skill',
+            'main_skill_name' => $project->skills->pluck('name')->implode(', ') ?: 'General Skill',
             'reasons' => $reasons,
         ];
     }
