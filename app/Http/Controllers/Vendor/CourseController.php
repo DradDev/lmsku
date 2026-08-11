@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\MasterCourse;
 use App\Models\Skill;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class CourseController extends Controller
@@ -69,19 +71,38 @@ class CourseController extends Controller
             'tag_ids.*' => ['exists:tags,id'],
         ]);
 
+        // Create or find parent MasterCourse for Vendor (Strict 3NF)
+        $masterCourse = MasterCourse::firstOrCreate(
+            [
+                'name' => $validated['name'],
+                'user_id' => Auth::id(),
+            ],
+            [
+                'code' => 'VMC-' . strtoupper(Str::random(6)),
+                'description' => $validated['description'],
+                'level' => $validated['level'],
+                'category_id' => $validated['category_id'],
+            ]
+        );
+
+        $skillsData = [];
+        $masterSkillsData = [];
+        foreach ($validated['skill_ids'] as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
+            $masterSkillsData[$sId] = ['is_main' => true];
+        }
+        $masterCourse->skills()->sync($masterSkillsData);
+        if (!empty($validated['tag_ids'])) {
+            $masterCourse->tags()->sync($validated['tag_ids']);
+        }
+
         $validated['user_id'] = Auth::id();
+        $validated['master_course_id'] = $masterCourse->id;
         $validated['progress'] = 0;
         $validated['duration_weeks'] = $validated['duration_weeks'] ?? 4;
         $validated['batch_name'] = $validated['batch_name'] ?? 'Batch 1 - 2026';
 
         $course = Course::create($validated);
-
-        // Prepare Skill Sync Array (All selected skills are Main Skills for Vendor Course)
-        $skillsData = [];
-        foreach ($validated['skill_ids'] as $sId) {
-            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
-        }
-
         $course->skills()->sync($skillsData);
 
         if (!empty($validated['tag_ids'])) {
@@ -90,13 +111,30 @@ class CourseController extends Controller
 
         return redirect()
             ->route('vendor.courses.show', $course)
-            ->with('success', 'Course Sertifikasi Industri berhasil dipublikasikan.');
+            ->with('success', 'Course Sertifikasi Industri & Kurikulum Induk berhasil dipublikasikan.');
     }
 
     public function show(Course $course): View
     {
         if (Auth::user()->role !== 'admin' && $course->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
+        }
+
+        // Ensure MasterCourse link exists
+        if (!$course->master_course_id) {
+            $masterCourse = MasterCourse::firstOrCreate(
+                [
+                    'name' => $course->name,
+                    'user_id' => $course->user_id,
+                ],
+                [
+                    'code' => 'VMC-' . strtoupper(Str::random(6)),
+                    'description' => $course->description,
+                    'level' => $course->level,
+                    'category_id' => $course->category_id,
+                ]
+            );
+            $course->update(['master_course_id' => $masterCourse->id]);
         }
 
         $course->load([
@@ -106,14 +144,23 @@ class CourseController extends Controller
             'students',
             'skills',
             'tags',
+            'masterCourse.materials',
+            'masterCourse.quizzes',
         ]);
 
-        $materials = $course->materials;
-        $quizzes = $course->quizzes;
+        // Combined materials & quizzes (From batch OR inherited from master course)
+        $materials = $course->materials->merge($course->masterCourse->materials ?? collect())->unique('id');
+        $quizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
         $students = $course->students;
         $completedStudentCount = $course->enrollments()->where('status', 'completed')->count();
 
-        return view('vendor.courses.show', compact('course', 'materials', 'quizzes', 'students', 'completedStudentCount'));
+        // Other active batches under the same master course
+        $otherBatches = Course::where('master_course_id', $course->master_course_id)
+            ->where('id', '!=', $course->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('vendor.courses.show', compact('course', 'materials', 'quizzes', 'students', 'completedStudentCount', 'otherBatches'));
     }
 
     public function edit(Course $course): View
@@ -152,7 +199,19 @@ class CourseController extends Controller
 
         $course->update($validated);
 
-        // Prepare Skill Sync Array (All selected skills are Main Skills for Vendor Course)
+        // Also update parent MasterCourse if exists
+        if ($course->master_course_id) {
+            $masterCourse = MasterCourse::find($course->master_course_id);
+            if ($masterCourse) {
+                $masterCourse->update([
+                    'name' => $validated['name'],
+                    'description' => $validated['description'],
+                    'level' => $validated['level'],
+                    'category_id' => $validated['category_id'],
+                ]);
+            }
+        }
+
         $skillsData = [];
         foreach ($validated['skill_ids'] as $sId) {
             $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
@@ -167,6 +226,62 @@ class CourseController extends Controller
         return redirect()
             ->route('vendor.courses.show', $course)
             ->with('success', 'Course Sertifikasi Industri berhasil diperbarui.');
+    }
+
+    public function launchBatch(Request $request, Course $course): RedirectResponse
+    {
+        if ($course->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
+        }
+
+        $validated = $request->validate([
+            'batch_name' => ['required', 'string', 'max:255'],
+            'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
+            'duration_weeks' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        // Ensure MasterCourse exists
+        if (!$course->master_course_id) {
+            $masterCourse = MasterCourse::firstOrCreate(
+                [
+                    'name' => $course->name,
+                    'user_id' => Auth::id(),
+                ],
+                [
+                    'code' => 'VMC-' . strtoupper(Str::random(6)),
+                    'description' => $course->description,
+                    'level' => $course->level,
+                    'category_id' => $course->category_id,
+                ]
+            );
+            $course->update(['master_course_id' => $masterCourse->id]);
+        }
+
+        $newBatch = Course::create([
+            'name' => $course->name,
+            'batch_name' => $validated['batch_name'],
+            'description' => $course->description,
+            'user_id' => Auth::id(),
+            'master_course_id' => $course->master_course_id,
+            'level' => $course->level,
+            'progress' => 0,
+            'duration_weeks' => $validated['duration_weeks'] ?? $course->duration_weeks ?? 4,
+            'certificate_threshold' => $validated['certificate_threshold'],
+            'category_id' => $course->category_id,
+            'is_archived' => false,
+        ]);
+
+        // Sync skills & tags from parent course
+        $skillsData = [];
+        foreach ($course->skills as $s) {
+            $skillsData[$s->id] = ['is_main' => $s->pivot->is_main ?? true, 'weight' => $s->pivot->weight ?? 1.00];
+        }
+        $newBatch->skills()->sync($skillsData);
+        $newBatch->tags()->sync($course->tags->pluck('id')->toArray());
+
+        return redirect()
+            ->route('vendor.courses.show', $newBatch)
+            ->with('success', '🚀 Angkatan ' . $newBatch->batch_name . ' berhasil dirilis! Seluruh materi dan kuis dari kurikulum induk otomatis diwariskan.');
     }
 
     public function destroy(Course $course): RedirectResponse

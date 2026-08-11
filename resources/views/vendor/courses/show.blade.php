@@ -59,6 +59,13 @@
                     </a>
 
                     <div class="flex items-center gap-2">
+                        <!-- BUTTON LAUNCH BATCH BARU (3NF BATCH OFFERING) -->
+                        <button type="button" 
+                                onclick="document.getElementById('launch_batch_modal').classList.remove('hidden')"
+                                class="px-4 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                            <span>🚀 Launch Batch Baru</span>
+                        </button>
+
                         <a href="{{ route('vendor.courses.edit', $course) }}" 
                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
                             ✏️ Edit Course
@@ -82,7 +89,7 @@
                 <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600 mb-2">
-                            Portal Author Mitra Vendor &bull; Manajemen Sertifikasi Industri
+                            Portal Author Mitra Vendor &bull; Manajemen Sertifikasi Industri 3NF
                         </p>
 
                         <h1 class="text-3xl font-bold tracking-tight text-slate-900">
@@ -115,6 +122,105 @@
                             </span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- BATCH SWITCHER CARD (DUPLIKASI/WARISAN ANGKATAN 3NF) -->
+            @php $otherBatches = $otherBatches ?? collect(); @endphp
+            <div class="rounded-3xl border border-indigo-200 bg-white p-5 shadow-sm mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                                🏷️ Angkatan Batch Rilis (Kurikulum Induk #MC-{{ $course->master_course_id ?? $course->id }})
+                            </span>
+                        </div>
+                        <h3 class="text-sm font-extrabold text-slate-900">
+                            Kelola Angkatan Batch & Warisan Modul/Kuis Pembelajaran
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Seluruh materi & kuis pada kurikulum ini diwariskan otomatis antar batch tanpa duplikasi file fisik server (Strict 3NF).
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold text-slate-400">Batch Aktif Saat Ini:</span>
+                        <span class="px-3.5 py-1.5 rounded-xl bg-purple-700 text-white font-extrabold text-xs shadow-sm ring-2 ring-purple-300">
+                            ✓ {{ $course->batch_name ?? 'Batch 1 - 2026' }}
+                        </span>
+
+                        @foreach($otherBatches as $ob)
+                            <a href="{{ route('vendor.courses.show', $ob) }}" 
+                               class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-100 hover:text-purple-900 text-slate-700 font-bold text-xs border border-slate-200 transition">
+                                🔄 Switch ke {{ $ob->batch_name }}
+                            </a>
+                        @endforeach
+
+                        <button type="button" 
+                                onclick="document.getElementById('launch_batch_modal').classList.remove('hidden')"
+                                class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs border border-indigo-200 transition cursor-pointer">
+                            + Launch Batch Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL LAUNCH BATCH BARU -->
+            <div id="launch_batch_modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-5 animate-in fade-in zoom-in duration-200">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>🚀 Launch Angkatan Batch Baru</span>
+                        </h3>
+                        <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
+                            ✕
+                        </button>
+                    </div>
+
+                    <form action="{{ route('vendor.courses.launch-batch', $course) }}" method="POST" class="space-y-4">
+                        @csrf
+                        
+                        <div class="p-4 bg-purple-50 rounded-2xl border border-purple-100 text-xs text-purple-900 leading-relaxed">
+                            💡 **Efisiensi Kurikulum 3NF**: Seluruh modul materi (PDF/Video) dan bank kuis dari **{{ $course->name }}** akan otomatis diwariskan ke batch baru ini tanpa perlu di-upload ulang.
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Nama Batch Angkatan Baru <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" name="batch_name" required placeholder="Contoh: Batch 2 - Intake Q3 2026"
+                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-extrabold text-purple-900">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Threshold Sertifikat (%) <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="number" name="certificate_threshold" value="{{ $course->certificate_threshold ?? 75 }}" min="0" max="100" required
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-slate-900">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Durasi (Minggu)
+                                </label>
+                                <input type="number" name="duration_weeks" value="{{ $course->duration_weeks ?? 4 }}" min="1" required
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-slate-900">
+                            </div>
+                        </div>
+
+                        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                            <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')"
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                    class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md transition">
+                                🚀 Rilis Batch Baru Sekarang
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
