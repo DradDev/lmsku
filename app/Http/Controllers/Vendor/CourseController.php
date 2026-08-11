@@ -95,7 +95,7 @@ class CourseController extends Controller
 
     public function show(Course $course): View
     {
-        if ($course->user_id !== Auth::id()) {
+        if (Auth::user()->role !== 'admin' && $course->user_id !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 

@@ -11,6 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
+use App\Models\Course;
+
 class MasterCourseController extends Controller
 {
     public function index(): View
@@ -20,7 +22,14 @@ class MasterCourseController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.master-courses.index', compact('masterCourses'));
+        $vendorCourses = Course::with(['user', 'category', 'skills'])
+            ->whereHas('user', function ($query) {
+                $query->where('role', 'vendor');
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('admin.master-courses.index', compact('masterCourses', 'vendorCourses'));
     }
 
     public function create(): View
