@@ -108,7 +108,12 @@ class CourseController extends Controller
             'tags',
         ]);
 
-        return view('vendor.courses.show', compact('course'));
+        $materials = $course->materials;
+        $quizzes = $course->quizzes;
+        $students = $course->students;
+        $completedStudentCount = $course->enrollments()->where('status', 'completed')->count();
+
+        return view('vendor.courses.show', compact('course', 'materials', 'quizzes', 'students', 'completedStudentCount'));
     }
 
     public function edit(Course $course): View

@@ -12,8 +12,10 @@
         'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
     ];
 
-    $courseStudents = $students ?? collect();
-    $completedStudentCount = $courseStudents->filter(fn($s) => ($s->pivot->status ?? '') === 'completed')->count();
+    $students = $students ?? $course->students ?? collect();
+    $materials = $materials ?? $course->materials ?? collect();
+    $quizzes = $quizzes ?? $course->quizzes ?? collect();
+    $completedStudentCount = $completedStudentCount ?? $students->filter(fn($s) => ($s->pivot->status ?? '') === 'completed')->count();
     @endphp
 
     <div class="min-h-screen bg-slate-50 py-10">
