@@ -145,11 +145,10 @@ class CourseController extends Controller
                 ->where('course_id', $course->id)
                 ->first();
 
-            abort_unless($enrollment, 403, 'Kamu tidak terdaftar di course sertifikasi vendor ini.');
-
-            app(CourseProgressService::class)->recalculate($user->id, $course->id);
-
-            $enrollment->refresh();
+            if ($enrollment) {
+                app(CourseProgressService::class)->recalculate($user->id, $course->id);
+                $enrollment->refresh();
+            }
 
             $this->logActivity(
                 activityType: 'view_course',
@@ -169,7 +168,7 @@ class CourseController extends Controller
             $canDownloadCertificate = false;
             $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
 
-            if ($finalQuiz) {
+            if ($finalQuiz && $enrollment) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
                 $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
@@ -195,10 +194,12 @@ class CourseController extends Controller
                     $canDownloadCertificate = true;
                     $certificateStatusText = 'Certificate Sertifikasi Industri sudah tersedia untuk diunduh.';
                 }
+            } elseif (! $enrollment) {
+                $certificateStatusText = 'Silakan ambil course sertifikasi ini untuk mengakses kuis dan sertifikat.';
             }
 
             $retakeRequest = null;
-            if ($finalQuiz) {
+            if ($finalQuiz && $enrollment) {
                 $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
                     ->where('quiz_id', $finalQuiz->id)
                     ->latest()
@@ -228,8 +229,6 @@ class CourseController extends Controller
                 ->where('course_offering_id', $offering->id)
                 ->first();
 
-            abort_unless($enrollment, 403, 'Kamu tidak terdaftar di kelas penawaran ini.');
-
             $course = $offering; // Magic accessors handle backward compatibility!
 
             $this->logActivity(
@@ -242,7 +241,7 @@ class CourseController extends Controller
             $canDownloadCertificate = false;
             $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
 
-            if ($finalQuiz) {
+            if ($finalQuiz && $enrollment) {
                 $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
                 $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
@@ -268,10 +267,12 @@ class CourseController extends Controller
                     $canDownloadCertificate = true;
                     $certificateStatusText = 'Certificate sudah tersedia untuk diunduh.';
                 }
+            } elseif (! $enrollment) {
+                $certificateStatusText = 'Silakan ambil rombel kelas ini untuk mengakses materi dan kuis.';
             }
 
             $retakeRequest = null;
-            if ($finalQuiz) {
+            if ($finalQuiz && $enrollment) {
                 $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
                     ->where('quiz_id', $finalQuiz->id)
                     ->latest()

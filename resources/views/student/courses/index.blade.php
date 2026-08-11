@@ -553,9 +553,15 @@
                                         </select>
                                     </div>
 
-                                    <button type="submit" class="btn btn-success">
-                                        🎓 Ambil Kelas Ini
-                                    </button>
+                                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                        <a href="{{ route('student.courses.show', $firstAvailable->id) }}" class="btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; width: 100%; justify-content: center;">
+                                            👁️ Preview Silabus
+                                        </a>
+
+                                        <button type="submit" class="btn btn-success" style="width: 100%;">
+                                            🎓 Ambil Kelas
+                                        </button>
+                                    </div>
                                 </form>
                             @else
                                 <div style="width: 100%;">
@@ -650,12 +656,18 @@
                                             @endif
                                         </div>
                                     @else
-                                        <form action="{{ route('student.courses.enroll', $vc->id) }}" method="POST">
-                                            @csrf
-                                            <button type="submit" class="btn btn-success" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); width: 100%;">
-                                                ✨ Daftar Sertifikasi Vendor
-                                            </button>
-                                        </form>
+                                        <div style="display: flex; gap: 8px;">
+                                            <a href="{{ route('student.courses.show', $vc->id) }}" class="btn" style="background: #ffffff; color: #6b21a8; border: 1px solid #ddd6fe; width: 100%; justify-content: center;">
+                                                👁️ Preview Detail
+                                            </a>
+
+                                            <form action="{{ route('student.courses.enroll', $vc->id) }}" method="POST" style="width: 100%;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-success" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); width: 100%;">
+                                                    ✨ Ambil Sertifikasi
+                                                </button>
+                                            </form>
+                                        </div>
                                     @endif
                                 </div>
                             </div>

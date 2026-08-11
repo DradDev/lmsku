@@ -6,6 +6,7 @@
     </x-slot>
 
     @php
+        $errors = $errors ?? new \Illuminate\Support\ViewErrorBag();
         $statusLabels = [
             'in_progress' => 'In Progress',
             'development' => 'Development',

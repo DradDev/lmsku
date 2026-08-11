@@ -78,51 +78,72 @@
                             @endif
                         </div>
 
-                        <div class="w-full lg:w-96 bg-slate-50 rounded-2xl p-5 border border-slate-200">
-                            <div class="flex items-center justify-between mb-3">
-                                <p class="text-sm text-slate-500">
-                                    Course Progress
+                        @if(!$enrollment)
+                            <div class="w-full lg:w-96 bg-purple-50 rounded-2xl p-5 border border-purple-200 shadow-sm">
+                                <span class="inline-block text-[11px] font-bold text-purple-700 bg-purple-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                                    👀 Course Preview (Belum Terdaftar)
+                                </span>
+                                <h3 class="text-lg font-bold text-purple-950 mt-3">
+                                    Tertarik Mengikuti Course Ini?
+                                </h3>
+                                <p class="text-xs text-purple-800 mt-1 leading-relaxed">
+                                    Ambil course ini sekarang untuk membuka akses penuh ke seluruh modul materi, kuis evaluasi, dan klaim Sertifikat Digital Blockchain.
                                 </p>
 
-                                <span class="text-sm font-semibold text-indigo-700">
+                                <form action="{{ route('student.courses.enroll', $course->id) }}" method="POST" class="mt-4">
+                                    @csrf
+                                    <button type="submit" class="w-full py-3 px-4 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                                        <span>🎓 Ambil / Enroll Course Ini</span>
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="w-full lg:w-96 bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <p class="text-sm text-slate-500">
+                                        Course Progress
+                                    </p>
+
+                                    <span class="text-sm font-semibold text-indigo-700">
+                                        {{ $progress }}%
+                                    </span>
+                                </div>
+
+                                <h2 class="text-3xl font-bold text-slate-900 mb-4">
                                     {{ $progress }}%
-                                </span>
-                            </div>
+                                </h2>
 
-                            <h2 class="text-3xl font-bold text-slate-900 mb-4">
-                                {{ $progress }}%
-                            </h2>
-
-                            <div class="w-full bg-slate-200 rounded-full h-3 mb-5 overflow-hidden">
-                                <div class="h-3 rounded-full {{ $progress >= 100 ? 'bg-emerald-600' : 'bg-indigo-600' }}"
-                                    style="width: {{ $progress }}%">
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3 text-sm">
-                                <div class="rounded-xl bg-white border border-slate-200 p-3">
-                                    <span class="block text-lg font-bold text-slate-900">
-                                        {{ $completedMaterialCount }}/{{ $totalMaterialCount }}
-                                    </span>
-                                    <span class="text-slate-500">
-                                        Materials
-                                    </span>
+                                <div class="w-full bg-slate-200 rounded-full h-3 mb-5 overflow-hidden">
+                                    <div class="h-3 rounded-full {{ $progress >= 100 ? 'bg-emerald-600' : 'bg-indigo-600' }}"
+                                        style="width: {{ $progress }}%">
+                                    </div>
                                 </div>
 
-                                <div class="rounded-xl bg-white border border-slate-200 p-3">
-                                    <span class="block text-lg font-bold text-slate-900">
-                                        {{ $completedQuizCount }}/{{ $totalQuizCount }}
-                                    </span>
-                                    <span class="text-slate-500">
-                                        Quizzes
-                                    </span>
-                                </div>
-                            </div>
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div class="rounded-xl bg-white border border-slate-200 p-3">
+                                        <span class="block text-lg font-bold text-slate-900">
+                                            {{ $completedMaterialCount }}/{{ $totalMaterialCount }}
+                                        </span>
+                                        <span class="text-slate-500">
+                                            Materials
+                                        </span>
+                                    </div>
 
-                            <p class="text-xs text-slate-500 mt-4 leading-relaxed">
-                                Progress dihitung otomatis dari material yang sudah dibuka dan quiz yang sudah dikerjakan.
-                            </p>
-                        </div>
+                                    <div class="rounded-xl bg-white border border-slate-200 p-3">
+                                        <span class="block text-lg font-bold text-slate-900">
+                                            {{ $completedQuizCount }}/{{ $totalQuizCount }}
+                                        </span>
+                                        <span class="text-slate-500">
+                                            Quizzes
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <p class="text-xs text-slate-500 mt-4 leading-relaxed">
+                                    Progress dihitung otomatis dari material yang sudah dibuka dan quiz yang sudah dikerjakan.
+                                </p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -184,10 +205,16 @@
                                 </div>
 
                                 <div class="flex gap-3">
-                                    <a href="{{ route('student.materials.show', $material) }}"
-                                        class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-                                        View Material
-                                    </a>
+                                    @if($enrollment)
+                                        <a href="{{ route('student.materials.show', $material) }}"
+                                            class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+                                            View Material
+                                        </a>
+                                    @else
+                                        <span class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-500 border border-slate-200">
+                                            🔒 Terkunci (Ambil Course)
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                             @endforeach
@@ -245,7 +272,11 @@
                                 </div>
 
                                 <div class="flex items-center gap-3">
-                                    @if ($quiz->quiz_type === 'final' && $verifiedFinalAttempt && $verifiedFinalAttempt->score < 70 && !$quiz->canAttempt(Auth::id()))
+                                    @if(!$enrollment)
+                                        <span class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-500 border border-slate-200">
+                                            🔒 Terkunci (Ambil Course)
+                                        </span>
+                                    @elseif ($quiz->quiz_type === 'final' && $verifiedFinalAttempt && $verifiedFinalAttempt->score < 70 && !$quiz->canAttempt(Auth::id()))
                                         @if ($retakeRequest && $retakeRequest->status === 'pending')
                                             <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold rounded-xl">
                                                 ⏳ Request Retake Pending
