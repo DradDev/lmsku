@@ -76,33 +76,33 @@
                     <div class="space-y-4">
                         @foreach($mcAnswers as $i => $answer)
                             @php $correct = $answer->is_correct; @endphp
-                            <div class="rounded-xl border {{ $correct ? 'border-emerald-200 bg-emerald-50/40' : 'border-rose-200 bg-rose-50/40' }} p-4">
+                            <div class="rounded-xl border {{ $correct ? 'border-emerald-300 bg-emerald-50/60' : 'border-rose-300 bg-rose-50/60' }} p-4">
                                 <div class="flex items-start justify-between gap-4">
                                     <div class="flex-1">
-                                        <p class="text-xs font-bold uppercase tracking-wider {{ $correct ? 'text-emerald-700' : 'text-rose-700' }} mb-1 flex items-center gap-1">
+                                        <p class="text-xs font-extrabold uppercase tracking-wider {{ $correct ? 'text-emerald-900' : 'text-rose-900' }} mb-1 flex items-center gap-1">
                                             <span>Question {{ $i + 1 }}</span>
                                             <span>— {{ $correct ? '✓ Correct' : '✗ Incorrect' }}</span>
                                         </p>
-                                        <p class="text-sm font-semibold text-slate-900 leading-relaxed">
+                                        <p class="text-sm font-bold text-slate-900 leading-relaxed">
                                             {{ $answer->question->question ?? '-' }}
                                         </p>
                                     </div>
-                                    <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-black {{ $correct ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800 border border-rose-300' }}">
+                                    <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-black {{ $correct ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-rose-100 text-rose-900 border border-rose-300' }}">
                                         {{ $correct ? '+1 Point' : '0 Point' }}
                                     </span>
                                 </div>
 
                                 <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                                     <div class="rounded-lg bg-white border border-slate-200 px-3 py-2">
-                                        <span class="text-slate-500">Your Answer: </span>
-                                        <span class="font-bold {{ $correct ? 'text-emerald-700' : 'text-rose-700' }}">
+                                        <span class="text-slate-700 font-medium">Your Answer: </span>
+                                        <span class="font-extrabold {{ $correct ? 'text-emerald-900' : 'text-rose-900' }}">
                                             {{ $answer->selected_option ?? '-' }}
                                         </span>
                                     </div>
                                     @if(!$correct)
-                                        <div class="rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
-                                            <span class="text-slate-600">Correct Answer: </span>
-                                            <span class="font-bold text-emerald-800">
+                                        <div class="rounded-lg bg-emerald-50 border border-emerald-300 px-3 py-2">
+                                            <span class="text-slate-700 font-medium">Correct Answer: </span>
+                                            <span class="font-extrabold text-emerald-900">
                                                 {{ $answer->question->correct_answer ?? '-' }}
                                             </span>
                                         </div>
@@ -122,25 +122,25 @@
                     <div class="space-y-4">
                         @foreach($essayAnswers as $i => $answer)
                             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                <p class="text-xs font-bold uppercase tracking-wider text-indigo-600 mb-1 flex items-center gap-2">
+                                <p class="text-xs font-extrabold uppercase tracking-wider text-indigo-800 mb-1 flex items-center gap-2">
                                     <span>Essay {{ $i + 1 }}</span>
                                     @if(!is_null($answer->score))
-                                        <span class="text-emerald-700 font-extrabold bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">Score: {{ $answer->score }} pts</span>
+                                        <span class="text-emerald-900 font-extrabold bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full">Score: {{ $answer->score }} pts</span>
                                     @else
-                                        <span class="text-amber-700 font-bold bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-full">Pending Evaluation</span>
+                                        <span class="text-amber-900 font-extrabold bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full">Pending Evaluation</span>
                                     @endif
                                 </p>
-                                <p class="text-sm font-semibold text-slate-900 leading-relaxed mb-3">{{ $answer->question->question ?? '-' }}</p>
+                                <p class="text-sm font-bold text-slate-900 leading-relaxed mb-3">{{ $answer->question->question ?? '-' }}</p>
 
-                                <div class="rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-700">
-                                    <span class="block text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">Your Answer:</span>
+                                <div class="rounded-lg bg-white border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900">
+                                    <span class="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">Your Answer:</span>
                                     {{ $answer->answer_text ?? '-' }}
                                 </div>
 
                                 @if(!empty($answer->feedback))
                                     <div class="mt-3 rounded-lg bg-indigo-50 border border-indigo-200 px-3.5 py-2.5 text-sm">
-                                        <span class="block text-xs font-bold text-indigo-700 mb-1 uppercase tracking-wider">Author / Vendor Feedback:</span>
-                                        <span class="text-slate-800">{{ $answer->feedback }}</span>
+                                        <span class="block text-xs font-extrabold text-indigo-900 mb-1 uppercase tracking-wider">Author / Vendor Feedback:</span>
+                                        <span class="text-slate-900 font-medium">{{ $answer->feedback }}</span>
                                     </div>
                                 @endif
                             </div>
@@ -150,5 +150,5 @@
             @endif
 
         </div>
-    </div>
+    </main>
 </x-app-layout>
