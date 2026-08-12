@@ -1,155 +1,138 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.projects.index') }}" class="w-9 h-9 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center transition">
-                    ←
-                </a>
-                <div>
-                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                        Detail Audit Project: {{ $project->title }}
-                    </h2>
-                    <p class="text-sm text-gray-500">
-                        Audit kriteria kompetensi, kelayakan partisipasi, dan moderasi rilis.
-                    </p>
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            <!-- HERO HEADER CARD -->
+            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <a href="{{ route('admin.projects.index') }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-lg transition">
+                                ← Kembali
+                            </a>
+
+                            @if(($project->user->role ?? 'lecturer') === 'vendor')
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-purple-50 text-purple-700 border border-purple-200">
+                                    Mitra Vendor Eksternal
+                                </span>
+                            @else
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                                    Dosen Akademik Internal
+                                </span>
+                            @endif
+
+                            @if($project->is_published)
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    🟢 Status: Published & Aktif
+                                </span>
+                            @else
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-rose-100 text-rose-800 border border-rose-200">
+                                    ⛔ Status: Suspended / Draft
+                                </span>
+                            @endif
+                        </div>
+
+                        <h1 class="text-2xl font-extrabold text-slate-900 leading-tight">
+                            {{ $project->title }}
+                        </h1>
+                        <p class="text-xs text-slate-500 mt-1">
+                            Dibuat oleh: <strong class="text-slate-800">{{ optional($project->user)->name ?? 'Tidak Diketahui' }}</strong> ({{ optional($project->user)->email ?? '-' }})
+                        </p>
+                    </div>
+
+                    <!-- MODERATION ACTION BUTTON -->
+                    <div class="flex items-center gap-3">
+                        <form action="{{ route('admin.projects.toggle-publish', $project) }}" method="POST">
+                            @csrf
+                            <button type="submit" onclick="return confirm('Ubah status rilis project ini?')" class="px-5 py-3 text-xs font-extrabold rounded-xl shadow-xs transition {{ $project->is_published ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white' }}">
+                                {{ $project->is_published ? '⛔ Suspend Project' : '🚀 Publikasikan Project' }}
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <form action="{{ route('admin.projects.toggle-publish', $project) }}" method="POST">
-                @csrf
-                <button type="submit" onclick="return confirm('Apakah Anda yakin ingin mengubah status rilis project ini?')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm shadow-sm transition {{ $project->is_published ? 'bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200' : 'bg-emerald-600 text-white hover:bg-emerald-700' }}">
-                    {{ $project->is_published ? '🛑 Suspend (Sembunyikan dari Student)' : '🚀 Publikasikan Project' }}
-                </button>
-            </form>
-        </div>
-    </x-slot>
-
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-
+            <!-- SUCCESS ALERTS -->
             @if (session('success'))
-                <div class="mb-5 flex items-start gap-3 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl shadow-sm">
-                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                    </svg>
+                <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl shadow-sm">
+                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
                     <div>
-                        <p class="font-semibold">Berhasil</p>
-                        <p class="text-sm">{{ session('success') }}</p>
+                        <p class="font-semibold text-sm">Berhasil</p>
+                        <p class="text-xs mt-0.5">{{ session('success') }}</p>
                     </div>
                 </div>
             @endif
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                <!-- LEFT COLUMN: PROJECT DETAILS & SKILL REQUIREMENTS -->
+                <!-- LEFT COLUMN: DETAILS & SKILLS -->
                 <div class="lg:col-span-2 space-y-6">
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <div class="flex items-center gap-2 mb-4">
-                            @if(($project->user->role ?? 'lecturer') === 'vendor')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                    🏢 Vendor Eksternal Mitra
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                    🎓 Dosen Akademik Internal
-                                </span>
-                            @endif
-
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700">
-                                {{ $project->difficulty_level ?? 'Beginner' }}
-                            </span>
+                    <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-5">
+                        <div>
+                            <h3 class="text-base font-extrabold text-slate-900 mb-2">📋 Rincian & Deskripsi Project</h3>
+                            <p class="text-xs text-slate-600 leading-relaxed whitespace-pre-line">
+                                {{ $project->description ?: 'Belum ada rincian deskripsi project.' }}
+                            </p>
                         </div>
 
-                        <h3 class="text-2xl font-bold text-gray-900 mb-3">{{ $project->title }}</h3>
-                        <p class="text-sm text-gray-600 leading-relaxed mb-6 whitespace-pre-line">{{ $project->description ?: 'Tidak ada deskripsi rincian.' }}</p>
-
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs">
-                            <div>
-                                <span class="block text-gray-400 font-medium">Pembuat / Provider:</span>
-                                <span class="font-bold text-gray-800 text-sm">{{ $project->user->name ?? 'Unknown' }}</span>
+                        <!-- METRICS GRID -->
+                        <div class="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100 text-xs">
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <span class="block text-slate-400 font-semibold text-[11px]">Level Kesulitan</span>
+                                <strong class="text-slate-900 font-extrabold text-sm mt-0.5 block">{{ $project->difficulty_level ?? 'Beginner' }}</strong>
                             </div>
 
-                            <div>
-                                <span class="block text-gray-400 font-medium">Estimasi Durasi:</span>
-                                <span class="font-bold text-gray-800 text-sm">{{ $project->duration_days }} Hari</span>
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <span class="block text-slate-400 font-semibold text-[11px]">Estimasi Durasi</span>
+                                <strong class="text-indigo-600 font-extrabold text-sm mt-0.5 block">{{ $project->duration_days }} Hari</strong>
                             </div>
 
-                            <div>
-                                <span class="block text-gray-400 font-medium">Maksimal Mahasiswa:</span>
-                                <span class="font-bold text-gray-800 text-sm">{{ $project->max_students ?? 1 }} Orang</span>
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <span class="block text-slate-400 font-semibold text-[11px]">Kuota Mahasiswa</span>
+                                <strong class="text-emerald-600 font-extrabold text-sm mt-0.5 block">{{ $project->participations_count }} / {{ $project->max_students ?? 1 }} Mhs</strong>
                             </div>
                         </div>
                     </div>
 
                     <!-- REQUIRED SKILLS & TAGS -->
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <h4 class="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            <span>🎯 Syarat Main Skill & Tag Kompetensi</span>
-                        </h4>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Main Skill & Skill Syarat:</label>
-                                <div class="flex flex-wrap gap-2">
-                                    @forelse($project->skills as $sk)
-                                        <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold {{ $sk->pivot->is_main ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700' }}">
-                                            {{ $sk->pivot->is_main ? '★ MAIN SKILL: ' : '' }}{{ $sk->name }}
-                                        </span>
-                                    @empty
-                                        <span class="text-xs text-gray-400 italic">Belum ada skill yang disyaratkan.</span>
-                                    @endforelse
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Tag Spesialisasi:</label>
-                                <div class="flex flex-wrap gap-2">
-                                    @forelse($project->tags as $tag)
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                            #{{ $tag->name }}
-                                        </span>
-                                    @empty
-                                        <span class="text-xs text-gray-400 italic">Tanpa tag spesialisasi.</span>
-                                    @endforelse
-                                </div>
-                            </div>
+                    <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
+                        <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Syarat Main Skill & Tag Kompetensi:</h4>
+                        <div class="flex flex-wrap gap-2">
+                            @forelse($project->skills as $sk)
+                                <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold {{ $sk->pivot->is_main ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-200' }}">
+                                    {{ $sk->pivot->is_main ? '★ MAIN SKILL: ' : '' }}{{ $sk->name }}
+                                </span>
+                            @empty
+                                <p class="text-xs text-slate-400 italic">Belum ada skill yang disyaratkan.</p>
+                            @endforelse
                         </div>
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: ENROLLED STUDENTS AUDIT -->
+                <!-- RIGHT COLUMN: ENROLLED PARTICIPANTS ROSTER -->
                 <div class="space-y-6">
-                    <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-                        <h4 class="text-base font-bold text-gray-800 mb-4 flex items-center justify-between">
-                            <span>👥 Daftar Mahasiswa Terdaftar</span>
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">
-                                {{ $project->participations->count() }} / {{ $project->max_students ?? 1 }}
+                    <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6 space-y-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <h4 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Partisipan Mahasiswa:</h4>
+                            <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                {{ $project->participations->count() }} Terdaftar
                             </span>
-                        </h4>
+                        </div>
 
-                        <div class="divide-y divide-gray-100">
+                        <div class="space-y-2">
                             @forelse($project->participations as $part)
-                                <div class="py-3 flex items-center justify-between gap-3">
+                                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
                                     <div>
-                                        <p class="font-bold text-sm text-gray-900">{{ $part->user->name ?? 'Unknown Student' }}</p>
-                                        <p class="text-xs text-gray-500">{{ $part->user->email ?? '-' }}</p>
-                                        <div class="mt-1 text-[11px] text-gray-400">
-                                            Progress: <span class="font-bold text-indigo-600">{{ $part->progress_percent }}%</span>
-                                        </div>
+                                        <p class="font-bold text-slate-900">{{ optional($part->user)->name ?? 'Mahasiswa' }}</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">Status: <strong class="text-emerald-700 capitalize">{{ $part->status ?? 'Active' }}</strong></p>
                                     </div>
 
-                                    <div>
-                                        @if($part->status === 'completed')
-                                            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">Selesai</span>
-                                        @else
-                                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700">Aktif</span>
-                                        @endif
-                                    </div>
+                                    <span class="font-mono font-extrabold text-teal-700 bg-teal-50 px-2 py-1 rounded-md border border-teal-100">
+                                        {{ $part->progress_percent ?? 0 }}%
+                                    </span>
                                 </div>
                             @empty
-                                <div class="text-center py-6 text-xs text-gray-400 italic">
-                                    Belum ada mahasiswa yang mengambil project ini.
-                                </div>
+                                <p class="text-xs text-slate-400 italic py-2">Belum ada mahasiswa yang mengambil project ini.</p>
                             @endforelse
                         </div>
                     </div>
