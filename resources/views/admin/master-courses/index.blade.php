@@ -253,7 +253,7 @@
 
                             <!-- Course Title & Vendor Name -->
                             <h3 class="font-extrabold text-base text-gray-900 group-hover:text-purple-700 transition-colors line-clamp-2 leading-snug">
-                                <a href="{{ route('vendor.courses.show', $vc) }}">
+                                <a href="{{ route('admin.courses.show', $vc) }}">
                                     {{ $vc->name }}
                                 </a>
                             </h3>
@@ -286,7 +286,7 @@
                                 {{ $vc->materials->count() }} Materi • {{ $vc->quizzes->count() }} Kuis
                             </span>
 
-                            <a href="{{ route('vendor.courses.show', $vc) }}" 
+                            <a href="{{ route('admin.courses.show', $vc) }}" 
                                class="inline-flex items-center gap-1.5 px-3 py-2 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl shadow-xs transition">
                                 <span>Detail Vendor</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
