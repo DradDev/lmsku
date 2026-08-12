@@ -18,6 +18,8 @@ class DemoLmsSeeder extends Seeder
         Schema::disableForeignKeyConstraints();
 
         $tablesToTruncate = [
+            'quiz_retake_requests',
+            'certificates',
             'project_comments',
             'project_status_histories',
             'project_participations',
@@ -105,6 +107,29 @@ class DemoLmsSeeder extends Seeder
             'email_verified_at' => $now,
             'password' => Hash::make('password'),
             'remember_token' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        // Pending Users for Admin Verification Scenario (KF-01-02 / KF-03-02)
+        DB::table('users')->insert([
+            'name' => 'Bagus Pratama (Pending Student)',
+            'email' => 'bagus_pending@lmsku.test',
+            'role' => 'student',
+            'registration_status' => 'pending',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        DB::table('users')->insert([
+            'name' => 'PT Cybernet Indonesia (Pending Vendor)',
+            'email' => 'cybernet_pending@lmsku.test',
+            'role' => 'vendor',
+            'registration_status' => 'pending',
+            'email_verified_at' => null,
+            'password' => Hash::make('password'),
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -784,6 +809,49 @@ class DemoLmsSeeder extends Seeder
         }
 
         $this->seedProjects($vendorId, $lecturerId, $studentIds, $now);
+        $this->seedCertificatesAndRetakes($studentIds, $now);
+    }
+
+    private function seedCertificatesAndRetakes(array $studentIds, $now): void
+    {
+        // Verified Certificate for Student 1 on Vendor Course 5
+        DB::table('certificates')->insert([
+            'user_id' => $studentIds[0],
+            'course_id' => 5, // Telkom Cloud Computing
+            'score' => 95,
+            'blockchain_hash' => '0x7f8a9b2c3d4e5f6a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b2c3d4e5f6a',
+            'blockchain_id' => 'CERT-TELKOM-2026-8801',
+            'completed_at' => $now,
+            'status' => 'verified',
+            'is_verified' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        // Pending Certificate for Student 2 on Vendor Course 6
+        DB::table('certificates')->insert([
+            'user_id' => $studentIds[1],
+            'course_id' => 6, // Telkom Cyber Security
+            'score' => 88,
+            'blockchain_hash' => '0x1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b',
+            'blockchain_id' => 'CERT-TELKOM-2026-8802',
+            'completed_at' => $now,
+            'status' => 'pending',
+            'is_verified' => false,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        // Quiz Retake Request for Student 3 on Quiz ID 1
+        DB::table('quiz_retake_requests')->insert([
+            'user_id' => $studentIds[2],
+            'course_id' => 1,
+            'quiz_id' => 1,
+            'reason' => 'Mohon izin retake kuis evaluasi untuk perbaikan nilai kelulusan sertifikasi.',
+            'status' => 'pending',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
     }
 
     private function seedProjects(int $vendorId, int $lecturerId, array $studentIds, $now): void
