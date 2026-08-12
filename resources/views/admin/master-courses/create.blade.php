@@ -34,13 +34,12 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Kode Mata Kuliah <span class="text-rose-500">*</span></label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Kode Mata Kuliah <span class="text-slate-400 font-normal">(Opsional - Otomatis)</span></label>
                             <input type="text"
                                    name="code"
                                    value="{{ old('code') }}"
                                    class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs font-bold"
-                                   placeholder="Contoh: TKG101, INF202"
-                                   required>
+                                   placeholder="Kosongkan untuk Kode Otomatis: TK-EMB-INT-001">
                             @error('code')
                                 <p class="text-rose-600 text-xs mt-1 font-semibold">{{ $message }}</p>
                             @enderror

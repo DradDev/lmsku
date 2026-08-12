@@ -41,7 +41,7 @@ class MasterCourseController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'unique:master_courses,code'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:master_courses,code'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
@@ -49,11 +49,51 @@ class MasterCourseController extends Controller
             'category_id' => ['nullable', 'exists:categories,id'],
         ]);
 
+        if (empty($validated['code'])) {
+            $validated['code'] = $this->generateInternalCode($validated['category_id'] ?? null, $validated['level']);
+        }
+
         MasterCourse::create($validated);
 
         return redirect()
             ->route('admin.master-courses.index')
-            ->with('success', 'Master Course berhasil ditambahkan.');
+            ->with('success', 'Master Course berhasil ditambahkan dengan kode ' . $validated['code'] . '.');
+    }
+
+    private function generateInternalCode(?int $categoryId, string $level): string
+    {
+        $prefix = 'TK';
+        $categoryCode = 'GEN';
+
+        if ($categoryId) {
+            $category = Category::find($categoryId);
+            if ($category && !empty($category->name)) {
+                $words = explode(' ', trim($category->name));
+                if (count($words) >= 2) {
+                    $categoryCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                } else {
+                    $categoryCode = strtoupper(substr($words[0], 0, 3));
+                }
+            }
+        }
+
+        $levelCode = match(strtolower($level)) {
+            'beginner' => 'BEG',
+            'intermediate' => 'INT',
+            'advanced' => 'ADV',
+            default => 'BEG',
+        };
+
+        $base = "{$prefix}-{$categoryCode}-{$levelCode}";
+        $count = MasterCourse::where('code', 'LIKE', "{$base}-%")->count() + 1;
+        $code = "{$base}-" . sprintf('%03d', $count);
+
+        while (MasterCourse::where('code', $code)->exists()) {
+            $count++;
+            $code = "{$base}-" . sprintf('%03d', $count);
+        }
+
+        return $code;
     }
 
     public function edit(MasterCourse $masterCourse): View
