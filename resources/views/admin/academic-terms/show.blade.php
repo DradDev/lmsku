@@ -45,10 +45,10 @@
                     <!-- PROMINENT ADD OFFERING BUTTON -->
                     <div>
                         <button type="button" 
-                                @click="showCreateOfferingModal = true"
+                                @click="selectedMasterCourseId = ''; showCreateOfferingModal = true"
                                 class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-teal-500/20 transition whitespace-nowrap">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                            <span>+ Tambah / Buka Matkul di Semester Ini</span>
+                            <span>+ Buka Matkul Baru di Semester Ini</span>
                         </button>
                     </div>
                 </div>
@@ -123,9 +123,9 @@
                     </div>
 
                     <button type="button" 
-                            @click="showCreateOfferingModal = true"
+                            @click="selectedMasterCourseId = ''; showCreateOfferingModal = true"
                             class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
-                        <span>+ Buka Rombel Baru</span>
+                        <span>+ Buka Matkul Baru</span>
                     </button>
                 </div>
 
@@ -139,9 +139,9 @@
                             Klik tombol di bawah ini untuk memilih Master Course dari pustaka kurikulum dan membuka rombel kelas baru pada semester ini.
                         </p>
                         <button type="button" 
-                                @click="showCreateOfferingModal = true"
+                                @click="selectedMasterCourseId = ''; showCreateOfferingModal = true"
                                 class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-teal-500/20 transition">
-                            + Tambah / Buka Matkul di Semester Ini
+                            + Buka Matkul Baru di Semester Ini
                         </button>
                     </div>
                 @else
@@ -151,7 +151,7 @@
                             <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                                 <div class="p-5 bg-slate-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div class="flex items-center gap-3">
-                                        <span class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                                        <span class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0">
                                             📚
                                         </span>
                                         <div>
@@ -169,10 +169,18 @@
                                         </div>
                                     </div>
 
+                                    <!-- DIRECT BUTTON TO ADD A NEW ROMBEL CLASS TO THIS SPECIFIC MASTER COURSE -->
                                     <div class="flex items-center gap-2">
-                                        <span class="px-3 py-1 bg-teal-100 text-teal-800 text-xs font-extrabold rounded-lg">
+                                        <span class="px-3 py-1.5 bg-teal-50 text-teal-700 border border-teal-100 text-xs font-extrabold rounded-xl">
                                             {{ $offeringsGroup->count() }} Rombel Kelas
                                         </span>
+
+                                        <button type="button" 
+                                                @click="selectedMasterCourseId = '{{ $masterCourse->id }}'; showCreateOfferingModal = true"
+                                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-extrabold text-xs rounded-xl shadow-xs transition">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                            <span>+ Tambah Rombel Matkul Ini</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -283,6 +291,17 @@
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <!-- CARD FOOTER ACTION BAR TO ADD A PARALLEL CLASS -->
+                                <div class="px-5 py-3 bg-slate-50 border-t border-gray-100 flex items-center justify-between">
+                                    <span class="text-[11px] font-semibold text-slate-500">Ingin menambah rombel paralel baru untuk <strong>{{ $masterCourse->name }}</strong> (misal: Kelas B / Kelas C)?</span>
+                                    <button type="button" 
+                                            @click="selectedMasterCourseId = '{{ $masterCourse->id }}'; showCreateOfferingModal = true"
+                                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 font-extrabold text-xs rounded-xl transition">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                        <span>+ Buka Rombel Paralel (Kelas B/C)</span>
+                                    </button>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -310,7 +329,7 @@
 
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1.5">Pilih Master Course Induk <span class="text-rose-500">*</span></label>
-                        <select name="master_course_id" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
+                        <select name="master_course_id" x-model="selectedMasterCourseId" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
                             <option value="">-- Pilih Master Course dari Pustaka --</option>
                             @foreach($allMasterCourses as $mc)
                                 <option value="{{ $mc->id }}">📚 {{ $mc->code ?? 'MC-'.$mc->id }} — {{ $mc->name }}</option>
