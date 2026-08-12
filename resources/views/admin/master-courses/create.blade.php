@@ -102,6 +102,56 @@
                         @enderror
                     </div>
 
+                    <!-- TARGET SKILL COMPETENCY SELECTION -->
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                        <div>
+                            <label class="block text-xs font-extrabold text-slate-800">
+                                Target Skill Utama (Competency Skills)
+                            </label>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                Skill pertama yang Anda centang akan digunakan sebagai rujukan Singkatan Kode Course (contoh: <strong>Embedded Systems → TK-EMB-INT-001</strong>).
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 max-h-48 overflow-y-auto">
+                            @foreach($skills as $skill)
+                                <label class="flex items-center gap-2 p-2 bg-white border border-slate-200 rounded-lg cursor-pointer hover:border-blue-300 transition text-xs font-medium text-slate-700">
+                                    <input type="checkbox"
+                                           name="skill_ids[]"
+                                           value="{{ $skill->id }}"
+                                           {{ is_array(old('skill_ids')) && in_array($skill->id, old('skill_ids')) ? 'checked' : '' }}
+                                           class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                                    <span>{{ $skill->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- SPECIALTY TAGS SELECTION -->
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                        <div>
+                            <label class="block text-xs font-extrabold text-slate-800">
+                                Tag Spesialisasi (Specialty Tags)
+                            </label>
+                            <p class="text-[11px] text-slate-500 mt-0.5">
+                                Centang tag spesialisasi yang relevan dengan kurikulum mata kuliah ini.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-1">
+                            @foreach($tags as $tag)
+                                <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-purple-300 transition text-xs font-semibold text-purple-700">
+                                    <input type="checkbox"
+                                           name="tag_ids[]"
+                                           value="{{ $tag->id }}"
+                                           {{ is_array(old('tag_ids')) && in_array($tag->id, old('tag_ids')) ? 'checked' : '' }}
+                                           class="rounded border-slate-300 text-purple-600 focus:ring-purple-500">
+                                    <span>#{{ $tag->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Deskripsi Kurikulum Induk (Opsional)</label>
                         <textarea name="description"

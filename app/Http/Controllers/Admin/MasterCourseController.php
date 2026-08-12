@@ -35,7 +35,10 @@ class MasterCourseController extends Controller
     public function create(): View
     {
         $categories = Category::orderBy('name')->get();
-        return view('admin.master-courses.create', compact('categories'));
+        $skills = Skill::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
+
+        return view('admin.master-courses.create', compact('categories', 'skills', 'tags'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -47,34 +50,74 @@ class MasterCourseController extends Controller
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
             'category_id' => ['nullable', 'exists:categories,id'],
+            'skill_ids' => ['nullable', 'array'],
+            'skill_ids.*' => ['exists:skills,id'],
+            'tag_ids' => ['nullable', 'array'],
+            'tag_ids.*' => ['exists:tags,id'],
         ]);
 
+        $skillIds = $validated['skill_ids'] ?? [];
+        $tagIds = $validated['tag_ids'] ?? [];
+
         if (empty($validated['code'])) {
-            $validated['code'] = $this->generateInternalCode($validated['category_id'] ?? null, $validated['level']);
+            $validated['code'] = $this->generateInternalCode($validated['category_id'] ?? null, $skillIds, $validated['level']);
         }
 
-        MasterCourse::create($validated);
+        $masterCourse = MasterCourse::create([
+            'code' => $validated['code'],
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'level' => $validated['level'],
+            'certificate_threshold' => $validated['certificate_threshold'],
+            'category_id' => $validated['category_id'] ?? null,
+        ]);
+
+        if (!empty($skillIds)) {
+            $masterCourse->skills()->sync($skillIds);
+        }
+
+        if (!empty($tagIds)) {
+            $masterCourse->tags()->sync($tagIds);
+        }
 
         return redirect()
-            ->route('admin.master-courses.index')
-            ->with('success', 'Master Course berhasil ditambahkan dengan kode ' . $validated['code'] . '.');
+            ->route('admin.master-courses.show', $masterCourse)
+            ->with('success', 'Master Course berhasil dibuat dengan kode ' . $masterCourse->code . ' beserta target kompetensi skill & tag.');
     }
 
-    private function generateInternalCode(?int $categoryId, string $level): string
+    private function generateInternalCode(?int $categoryId, array $skillIds, string $level): string
     {
         $prefix = 'TK';
-        $categoryCode = 'GEN';
+        $skillCode = '';
 
-        if ($categoryId) {
+        // 1. Prioritaskan Main Skill pilihan pertama Admin
+        if (!empty($skillIds)) {
+            $primarySkill = Skill::find($skillIds[0]);
+            if ($primarySkill && !empty($primarySkill->name)) {
+                $words = explode(' ', trim($primarySkill->name));
+                if (count($words) >= 2) {
+                    $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                } else {
+                    $skillCode = strtoupper(substr($words[0], 0, 3));
+                }
+            }
+        }
+
+        // 2. Fallback ke Kategori jika skill tidak dipilih
+        if (empty($skillCode) && $categoryId) {
             $category = Category::find($categoryId);
             if ($category && !empty($category->name)) {
                 $words = explode(' ', trim($category->name));
                 if (count($words) >= 2) {
-                    $categoryCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                    $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
                 } else {
-                    $categoryCode = strtoupper(substr($words[0], 0, 3));
+                    $skillCode = strtoupper(substr($words[0], 0, 3));
                 }
             }
+        }
+
+        if (empty($skillCode)) {
+            $skillCode = 'GEN';
         }
 
         $levelCode = match(strtolower($level)) {
@@ -84,7 +127,7 @@ class MasterCourseController extends Controller
             default => 'BEG',
         };
 
-        $base = "{$prefix}-{$categoryCode}-{$levelCode}";
+        $base = "{$prefix}-{$skillCode}-{$levelCode}";
         $count = MasterCourse::where('code', 'LIKE', "{$base}-%")->count() + 1;
         $code = "{$base}-" . sprintf('%03d', $count);
 
