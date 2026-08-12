@@ -45,7 +45,7 @@
                 </div>
 
                 <div style="background: #F3E8FF; border: 1px solid #E9D5FF; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 700; color: #6B21A8; text-transform: uppercase;">🏢 Mitra Vendor</div>
+                    <div style="font-size: 10px; font-weight: 700; color: #6B21A8; text-transform: uppercase;">Mitra Vendor</div>
                     <div style="font-size: 16px; font-weight: 800; color: #581C87;">{{ $users->where('role', 'vendor')->count() }}</div>
                 </div>
 
@@ -106,7 +106,7 @@
                                         $roleBadges = match($user->role) {
                                             'admin' => ['bg' => '#F3E8FF', 'color' => '#7E22CE', 'label' => 'Administrator'],
                                             'lecturer' => ['bg' => '#EFF6FF', 'color' => '#2563EB', 'label' => 'Dosen Pengampu'],
-                                            'vendor' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => '🏢 Mitra Vendor'],
+                                            'vendor' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => 'Mitra Vendor'],
                                             default => ['bg' => '#DCFCE7', 'color' => '#15803D', 'label' => 'Mahasiswa'],
                                         };
                                     @endphp
@@ -168,13 +168,6 @@
                                            style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #2563EB; color: #FFFFFF; font-size: 12px; font-weight: 700; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                                             Detail
-                                        </a>
-
-                                        <!-- CHANGE ROLE BUTTON -->
-                                        <a href="{{ route('admin.users.edit', $user->id) }}" 
-                                           title="Ubah Peran (Role)"
-                                           style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #475569; text-decoration: none;">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                         </a>
 
                                         <!-- DELETE BUTTON -->
