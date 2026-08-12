@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight flex items-center gap-2">
-            <span>🎯 COMPRO Talent Pool & Matching Engine</span>
+            <span>COMPRO Talent Pool & Matching Engine</span>
         </h2>
     </x-slot>
 
@@ -64,7 +64,7 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-4">
                     <div>
                         <h4 class="text-lg font-extrabold text-gray-900">
-                            🎯 Student Talent Screening & Invite Control
+                            Student Talent Screening & Invite Control
                         </h4>
                         <p class="text-xs text-gray-500 mt-0.5">
                             Filter dan undang talenta terbaik secara instan untuk mempercepat pembentukan tim project.
@@ -94,9 +94,9 @@
                                 class="w-full py-2 text-xs font-semibold rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 cursor-pointer">
                             <option value="all">-- Semua Status Undangan --</option>
                             <option value="none">Belum Diundang (Available)</option>
-                            <option value="invited">⏳ Undangan Terkirim (Pending)</option>
-                            <option value="joined">🚀 Sudah Bergabung (Joined)</option>
-                            <option value="declined">❌ Undangan Ditolak</option>
+                            <option value="invited">Undangan Terkirim (Pending)</option>
+                            <option value="joined">Sudah Bergabung (Joined)</option>
+                            <option value="declined">Undangan Ditolak</option>
                         </select>
                     </div>
 
@@ -105,8 +105,8 @@
                         <select id="talent-score-filter" onchange="filterTalents()"
                                 class="w-full py-2 text-xs font-semibold rounded-xl border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 cursor-pointer">
                             <option value="all">-- Semua Score Match --</option>
-                            <option value="high">🔥 High Match (≥ 80%)</option>
-                            <option value="medium">⚡ Medium Match (60% - 79%)</option>
+                            <option value="high">High Match (≥ 80%)</option>
+                            <option value="medium">Medium Match (60% - 79%)</option>
                         </select>
                     </div>
                 </div>
@@ -146,7 +146,7 @@
                                 </span>
 
                                 <span class="px-3 py-1 rounded-full text-xs font-black tracking-wide shadow-sm {{ $scoreBadgeClass }}">
-                                    🎯 {{ $matchScore }}% MATCH
+                                    {{ $matchScore }}% MATCH
                                 </span>
                             </div>
 
@@ -213,15 +213,15 @@
 
                             @if($student->invitation_status === 'invited')
                                 <span class="py-2 px-3 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold cursor-default">
-                                    ⏳ Undangan Terkirim
+                                    Undangan Terkirim
                                 </span>
                             @elseif(in_array($student->invitation_status, ['in_progress', 'development', 'review', 'completed']))
                                 <span class="py-2 px-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold cursor-default">
-                                    🚀 Joined
+                                    Joined
                                 </span>
                             @elseif($student->invitation_status === 'declined')
                                 <span class="py-2 px-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold cursor-default">
-                                    ❌ Ditolak
+                                    Ditolak
                                 </span>
                             @else
                                 <form action="{{ route('lecturer.projects.invite', [$project, $student]) }}" method="POST" class="inline">

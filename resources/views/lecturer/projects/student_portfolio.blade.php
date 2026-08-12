@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            📄 Digital Talent Portfolio & Resume
+            Digital Talent Portfolio & Resume
         </h2>
     </x-slot>
 
@@ -68,7 +68,7 @@
             <!-- Skill Competency Profiles Grid -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h4 class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                    <span>📊 Skill Competency Profile (Skill Scores)</span>
+                    <span>Skill Competency Profile (Skill Scores)</span>
                 </h4>
                 <p class="text-sm text-gray-500 mb-6">
                     Student skill competency scores evaluated from quizzes and completed projects.
@@ -104,7 +104,7 @@
             <!-- Student Interest Profile Tags Card -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h4 class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                    <span>🏷️ Student Interest & Specialty Tags</span>
+                    <span>Student Interest & Specialty Tags</span>
                 </h4>
                 <p class="text-sm text-gray-500 mb-4">
                     Interest tags and specializations selected by the student in project exploration.
@@ -129,7 +129,7 @@
             <!-- Completed Projects & Track Record Portfolio -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                 <h4 class="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                    <span>📁 Verified Project Track Record</span>
+                    <span>Verified Project Track Record</span>
                 </h4>
                 <p class="text-sm text-gray-500 mb-6">
                     List of real-world projects completed and approved by Author/Vendor.

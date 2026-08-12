@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight flex items-center gap-2">
-                <span>📁 Detail Project & Managing Dashboard</span>
+                <span>Detail Project & Managing Dashboard</span>
             </h2>
 
             <div class="flex items-center gap-2">
@@ -14,7 +14,7 @@
 
                 <a href="{{ route('lecturer.projects.edit', $project) }}"
                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
-                    ✏️ Edit Project
+                    Edit Project
                 </a>
             </div>
         </div>
@@ -62,7 +62,7 @@
             <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-xl space-y-1 shadow-sm">
                 <div class="flex items-center gap-2 font-bold text-amber-900">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y3="13"/><line x1="12" y1="17" x2="12.01" y3="17"/></svg>
-                    <span>⚠️ Peringatan: Belum Ada Course Aktif untuk Main Skill ({{ $mainSkill->name ?? 'Skill' }})</span>
+                    <span>Peringatan: Belum Ada Course Aktif untuk Main Skill ({{ $mainSkill->name ?? 'Skill' }})</span>
                 </div>
                 <p class="text-xs leading-relaxed text-amber-800">
                     Project ini membutuhkan kompetensi <strong>{{ $mainSkill->name ?? 'Skill Utama' }}</strong>, namun saat ini belum ada Course aktif di sistem yang menguji skill tersebut. Mahasiswa belum bisa memenuhi prasyarat kompetensi project ini sampai Course terkait dibuat.
@@ -82,16 +82,16 @@
                             <div class="flex flex-wrap items-center gap-2 mb-2">
                                 @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
                                     <span class="px-2.5 py-0.5 text-xs font-extrabold uppercase rounded-md bg-purple-100 text-purple-800 border border-purple-200">
-                                        🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                        External: {{ $project->user->name ?? 'Vendor' }}
                                     </span>
                                 @else
                                     <span class="px-2.5 py-0.5 text-xs font-extrabold uppercase rounded-md bg-blue-50 text-blue-700 border border-blue-200">
-                                        🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                        Internal: {{ $project->user->name ?? 'Dosen' }}
                                     </span>
                                 @endif
 
                                 <span class="px-2.5 py-0.5 rounded-md text-xs font-bold {{ $project->is_published ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-red-100 text-red-800 border border-red-200' }}">
-                                    {{ $project->is_published ? '🟢 Published' : '🔴 Draft' }}
+                                    {{ $project->is_published ? 'Published' : 'Draft' }}
                                 </span>
 
                                 <span class="px-2.5 py-0.5 bg-gray-100 text-gray-700 rounded-md text-xs font-semibold">
@@ -111,7 +111,7 @@
                         <!-- Description -->
                         <div class="pt-3 border-t border-gray-100 space-y-2">
                             <h4 class="font-bold text-sm text-gray-900 uppercase tracking-wide">
-                                📋 Deskripsi & Deliverables Project
+                                Deskripsi & Deliverables Project
                             </h4>
                             <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
                                 {{ $project->description }}
@@ -123,7 +123,7 @@
                             @if($project->benefits)
                                 <div class="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl space-y-1">
                                     <h5 class="font-bold text-xs text-indigo-900 uppercase tracking-wider flex items-center gap-1">
-                                        <span>🎁 Benefits & Insentif Mahasiswa</span>
+                                        <span>Benefits & Insentif Mahasiswa</span>
                                     </h5>
                                     <p class="text-xs text-indigo-900 font-medium leading-relaxed">
                                         {{ $project->benefits }}
@@ -135,13 +135,13 @@
                                 <div class="p-3.5 bg-emerald-50/70 border border-emerald-100 rounded-xl space-y-2 flex flex-col justify-between">
                                     <div>
                                         <h5 class="font-bold text-xs text-emerald-900 uppercase tracking-wider">
-                                            📄 Berkas Acuan TOR / Brief
+                                            Berkas Acuan TOR / Brief
                                         </h5>
                                         <p class="text-xs text-emerald-800 mt-0.5">Berkas instruksi resmi pengerjaan project.</p>
                                     </div>
                                     <a href="{{ $project->brief_file_url }}" target="_blank"
                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg transition shadow-sm">
-                                        📥 Download TOR Brief (PDF/ZIP)
+                                        Download TOR Brief (PDF/ZIP)
                                     </a>
                                 </div>
                             @endif
@@ -153,7 +153,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
                             <div>
                                 <h3 class="font-extrabold text-xl text-gray-900">
-                                    👥 Student Participants & Progress Monitor
+                                    Student Participants & Progress Monitor
                                 </h3>
                                 <p class="text-xs text-gray-500 mt-0.5">
                                     Pantau progress dan catatan pengerjaan mahasiswa yang terdaftar dalam project ini.
@@ -167,9 +167,6 @@
 
                         @if ($project->participations->isEmpty())
                         <div class="border border-gray-200 rounded-xl p-8 bg-gray-50 text-center space-y-3">
-                            <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-xl">
-                                👨‍💻
-                            </div>
                             <p class="text-gray-600 text-sm font-semibold">
                                 Belum ada mahasiswa yang terdaftar pada project ini.
                             </p>
@@ -248,7 +245,7 @@
                                         <td colspan="5" class="p-3 bg-gray-50/80 border-t border-gray-100">
                                             <details class="group">
                                                 <summary class="cursor-pointer font-bold text-xs text-indigo-700 hover:text-indigo-900 flex items-center gap-1">
-                                                    <span>📜 Lihat Riwayat Progress & Status ({{ $participation->statusHistories->count() }})</span>
+                                                    <span>Lihat Riwayat Progress & Status ({{ $participation->statusHistories->count() }})</span>
                                                 </summary>
 
                                                 <div class="mt-3 space-y-2 pl-2">
@@ -286,7 +283,7 @@
                     <div class="bg-white shadow-sm rounded-2xl border border-gray-200 p-6 space-y-4">
                         <div>
                             <h3 class="font-extrabold text-xl text-gray-900 mb-1">
-                                💬 Discussion & Direct Feedback
+                                Discussion & Direct Feedback
                             </h3>
                             <p class="text-xs text-gray-500">
                                 Berikan arahan, bimbingan, atau umpan balik resmi pengerjaan project kepada mahasiswa.
@@ -310,7 +307,7 @@
 
                             <button type="submit"
                                 class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
-                                🚀 Kirim Umpan Balik
+                                Kirim Umpan Balik
                             </button>
                         </form>
 
@@ -341,19 +338,19 @@
                     <!-- Quick Actions Card -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
                         <h4 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider">
-                            ⚡ Quick Controls
+                            Quick Controls
                         </h4>
 
                         <a href="{{ route('lecturer.projects.talent-pool', $project) }}"
                            class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-sm transition">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
-                            <span>🎯 Buka Talent Screening Engine</span>
+                            <span>Buka Talent Screening Engine</span>
                         </a>
 
                         <div class="grid grid-cols-2 gap-2 pt-1">
                             <a href="{{ route('lecturer.projects.edit', $project) }}"
                                class="text-center py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition">
-                                ✏️ Edit Project
+                                Edit Project
                             </a>
 
                             <a href="{{ route('lecturer.projects.index') }}"
@@ -366,7 +363,7 @@
                     <!-- Skills & Tags Qualifications Card -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-4">
                         <h4 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider">
-                            ⭐ Qualification Requirements
+                            Qualification Requirements
                         </h4>
 
                         <!-- Main Skill Card -->
@@ -375,7 +372,7 @@
                             @forelse ($project->skills as $skill)
                                 @if($skill->pivot->is_main)
                                     <div class="font-black text-sm text-indigo-950 flex items-center gap-1.5">
-                                        <span>⭐ {{ $skill->name }}</span>
+                                        <span>{{ $skill->name }}</span>
                                     </div>
                                 @endif
                             @empty
@@ -403,7 +400,7 @@
                         <div class="flex items-center justify-between border-b border-indigo-800/60 pb-3">
                             <div>
                                 <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">COMPRO Screening</span>
-                                <h4 class="font-black text-base text-white">🎯 Top Candidate Match</h4>
+                                <h4 class="font-black text-base text-white">Top Candidate Match</h4>
                             </div>
 
                             <a href="{{ route('lecturer.projects.talent-pool', $project) }}"
@@ -439,7 +436,7 @@
                                             </div>
 
                                             <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $scoreColor }}">
-                                                🎯 {{ $mScore }}%
+                                                {{ $mScore }}%
                                             </span>
                                         </div>
 
@@ -451,11 +448,11 @@
 
                                             @if($recStudent->invitation_status === 'invited')
                                                 <span class="py-1 px-2 bg-amber-400/20 text-amber-200 font-bold text-[10px] rounded-md">
-                                                    ⏳ Pending
+                                                    Pending
                                                 </span>
                                             @elseif(in_array($recStudent->invitation_status, ['in_progress', 'development', 'review', 'completed']))
                                                 <span class="py-1 px-2 bg-emerald-400/20 text-emerald-200 font-bold text-[10px] rounded-md">
-                                                    🚀 Joined
+                                                    Joined
                                                 </span>
                                             @else
                                                 <form action="{{ route('lecturer.projects.invite', [$project, $recStudent]) }}" method="POST">

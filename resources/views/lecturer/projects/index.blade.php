@@ -129,7 +129,7 @@
                                                     <div class="flex items-center gap-2">
                                                         <p class="font-semibold text-gray-800">{{ $project->title }}</p>
                                                         @if($hasNoCourse)
-                                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-md" title="Belum ada Course di sistem untuk Main Skill {{ $mainSkill->name }}">⚠️ Course Belum Ada</span>
+                                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-md" title="Belum ada Course di sistem untuk Main Skill {{ $mainSkill->name }}">Course Belum Ada</span>
                                                         @endif
                                                     </div>
                                                     <p class="text-sm text-gray-400">Project pembelajaran aktif</p>
@@ -215,7 +215,7 @@
                                                     <div class="flex items-center gap-2">
                                                         <p class="font-semibold text-gray-800">{{ $project->title }}</p>
                                                         @if($hasNoCourse)
-                                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-md" title="Belum ada Course di sistem untuk Main Skill {{ $mainSkill->name }}">⚠️ Course Belum Ada</span>
+                                                            <span class="px-2 py-0.5 bg-amber-100 text-amber-800 text-[11px] font-bold rounded-md" title="Belum ada Course di sistem untuk Main Skill {{ $mainSkill->name }}">Course Belum Ada</span>
                                                         @endif
                                                     </div>
                                                     <p class="text-sm text-gray-400">Draft / Repository Bank Project</p>
