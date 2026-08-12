@@ -116,17 +116,9 @@
 
             <!-- SEMESTER COURSE OFFERINGS ADMINISTRATION LIST -->
             <div class="space-y-6">
-                <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                    <div>
-                        <h3 class="text-lg font-extrabold text-slate-900">📚 Penawaran Rombel Kelas Semester Ini</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Daftar kelas paralel dan penugasan Dosen Pengampu yang sedang dibuka pada {{ $academicTerm->name }}.</p>
-                    </div>
-
-                    <button type="button" 
-                            @click="selectedMasterCourseId = ''; showCreateOfferingModal = true"
-                            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
-                        <span>+ Buka Matkul Baru</span>
-                    </button>
+                <div class="border-b border-gray-200 pb-3">
+                    <h3 class="text-lg font-extrabold text-slate-900">📚 Penawaran Rombel Kelas Semester Ini</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Daftar kelas paralel dan penugasan Dosen Pengampu yang sedang dibuka pada {{ $academicTerm->name }}.</p>
                 </div>
 
                 @if($groupedOfferings->isEmpty())
