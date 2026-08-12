@@ -350,6 +350,13 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('master-courses', AdminMasterCourseController::class);
 
         // Academic Terms
+        Route::post('/academic-terms/offerings', [AdminAcademicTermController::class, 'storeOffering'])
+            ->name('academic-terms.offerings.store');
+        Route::put('/academic-terms/offerings/{offering}', [AdminAcademicTermController::class, 'updateOffering'])
+            ->name('academic-terms.offerings.update');
+        Route::delete('/academic-terms/offerings/{offering}', [AdminAcademicTermController::class, 'destroyOffering'])
+            ->name('academic-terms.offerings.destroy');
+
         Route::resource('academic-terms', AdminAcademicTermController::class)
             ->except(['show']);
         Route::post('/academic-terms/{academicTerm}/toggle-active', [AdminAcademicTermController::class, 'toggleActive'])
