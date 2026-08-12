@@ -144,7 +144,7 @@
 
 .course-instructor {
     font-size: 12px;
-    color: #9399b0;
+    color: #475569;
 }
 
 .progress-wrap {
@@ -160,13 +160,13 @@
 
 .progress-label {
     font-size: 11px;
-    color: #9399b0;
+    color: #475569;
     font-weight: 600;
 }
 
 .progress-percent {
     font-size: 11px;
-    color: #6366f1;
+    color: #4f46e5;
     font-weight: 700;
 }
 
@@ -180,7 +180,7 @@
 .progress-fill {
     height: 100%;
     border-radius: 100px;
-    background: linear-gradient(90deg, #6366f1, #818cf8);
+    background: linear-gradient(90deg, #4f46e5, #6366f1);
 }
 
 .status-badge {
@@ -195,7 +195,7 @@
 
 .status-ready {
     background: #edfaf4;
-    color: #1a7a4a;
+    color: #166534;
     border: 1px solid #a7e9c8;
 }
 
@@ -228,14 +228,14 @@
 }
 
 .btn-primary {
-    background: #6366f1;
+    background: #4f46e5;
     color: #fff;
 }
-.btn-primary:hover { background: #4f46e5; }
+.btn-primary:hover { background: #4338ca; }
 
 .btn-secondary {
     background: #eef2ff;
-    color: #4f46e5;
+    color: #3730a3;
     border: 1px solid #c7d2fe;
 }
 .btn-secondary:hover { background: #e5e7ff; }
@@ -261,7 +261,7 @@
 
 .mini-label {
     font-size: 11px;
-    color: #98a2b3;
+    color: #475569;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .6px;
@@ -276,7 +276,7 @@
 
 .mini-sub {
     font-size: 12px;
-    color: #64748b;
+    color: #334155;
     line-height: 1.6;
 }
 
@@ -311,13 +311,13 @@
 
 .activity-text {
     font-size: 13px;
-    color: #475467;
+    color: #334155;
     line-height: 1.5;
 }
 
 .activity-meta {
     font-size: 11px;
-    color: #98a2b3;
+    color: #475569;
     white-space: nowrap;
 }
 
@@ -343,7 +343,7 @@
 .item-tag {
     font-size: 11px;
     font-weight: 700;
-    color: #6366f1;
+    color: #4f46e5;
     margin-bottom: 4px;
 }
 
@@ -356,7 +356,7 @@
 
 .item-sub {
     font-size: 12px;
-    color: #9399b0;
+    color: #475569;
     margin-bottom: 10px;
 }
 
@@ -370,7 +370,7 @@
 .result-score {
     font-size: 34px;
     font-weight: 700;
-    color: #6366f1;
+    color: #4f46e5;
     margin-bottom: 6px;
 }
 
@@ -381,7 +381,7 @@
     border: 1px solid #eef0f8;
     padding: 12px 14px;
     font-size: 13px;
-    color: #5a607a;
+    color: #334155;
     line-height: 1.6;
 }
 
@@ -391,7 +391,7 @@
     font-weight: 700;
     letter-spacing: .7px;
     text-transform: uppercase;
-    color: #6366f1;
+    color: #4f46e5;
     margin-bottom: 5px;
 }
 
@@ -401,7 +401,7 @@
 
 .empty-text {
     font-size: 13px;
-    color: #b0b4c9;
+    color: #475569;
     font-style: italic;
 }
 
@@ -431,16 +431,14 @@
 }
 
 @media (max-width:768px){
-
     .dashboard-two-column{
         grid-template-columns:1fr;
     }
-
 }
 
 </style>
 
-<div class="dash-wrap">
+<main class="dash-wrap" role="main" aria-label="Student Dashboard Utama">
     <div class="dash-container">
 
         @php
@@ -462,11 +460,11 @@
         </div>
 
         @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
         @endif
 
         @if(session('error'))
-            <div class="alert alert-error">{{ session('error') }}</div>
+            <div class="alert alert-error" role="alert">{{ session('error') }}</div>
         @endif
 
         <div class="stat-grid">
@@ -504,7 +502,7 @@
             <div class="card">
                 <div class="section-header">
                     <h2 class="section-title">Continue Learning</h2>
-                    <a href="{{ route('student.courses.index') }}" class="section-meta">View all →</a>
+                    <a href="{{ route('student.courses.index') }}" class="section-meta" aria-label="Lihat semua course Anda">View all →</a>
                 </div>
 
                 @if($courses->count() > 0)
@@ -522,7 +520,7 @@
                                         <span class="progress-percent">{{ $progress }}%</span>
                                     </div>
 
-                                    <div class="progress-track">
+                                    <div class="progress-track" role="progressbar" aria-valuenow="{{ $progress }}" aria-valuemin="0" aria-valuemax="100" aria-label="Progres course {{ $course->name }}">
                                         <div class="progress-fill" style="width: {{ $progress }}%"></div>
                                     </div>
                                 </div>
@@ -534,12 +532,12 @@
                                 @endif
 
                                 <div class="actions">
-                                    <a href="{{ route('student.courses.show', $course->id) }}" class="btn btn-primary">
+                                    <a href="{{ route('student.courses.show', $course->id) }}" class="btn btn-primary" aria-label="Lanjutkan course {{ $course->name }}">
                                         Continue
                                     </a>
 
                                     @if($course->can_get_certificate ?? false)
-                                        <a href="{{ route('student.certificate.show', $course->id) }}" class="btn btn-secondary">
+                                        <a href="{{ route('student.certificate.show', $course->id) }}" class="btn btn-secondary" aria-label="Lihat sertifikat course {{ $course->name }}">
                                             Certificate
                                         </a>
                                     @endif
@@ -556,7 +554,7 @@
                 <div class="card">
                     <div class="section-header">
                         <h2 class="section-title">Certificates</h2>
-                        <a href="{{ route('student.certificate.index') }}" class="section-meta">Open →</a>
+                        <a href="{{ route('student.certificate.index') }}" class="section-meta" aria-label="Buka halaman sertifikat">Open →</a>
                     </div>
 
                     <div class="info-kpi">
@@ -629,7 +627,7 @@
                     <div class="section-header">
                         <h2 class="section-title">Learning Progress</h2>
                     </div>
-                    <canvas id="progressChart" height="120"></canvas>
+                    <canvas id="progressChart" height="120" role="img" aria-label="Grafik Progres Pembelajaran Mingguan"></canvas>
                 </div>
             </div>
         </div>
@@ -647,13 +645,13 @@
                             <div class="item-title">
                                 {{ $quiz->title }}
                                 @if($quiz->quiz_type === 'final')
-                                    <span style="margin-left:8px; font-size:11px; color:#10b981; font-weight:700;">
+                                    <span style="margin-left:8px; font-size:11px; color:#166534; font-weight:700;">
                                         Final Quiz
                                     </span>
                                 @endif
                             </div>
                             <div class="item-sub">{{ $quiz->approved_questions_count ?? 0 }} approved question(s)</div>
-                            <a href="{{ route('student.quiz.show', $quiz->id) }}" class="btn btn-primary">
+                            <a href="{{ route('student.quiz.show', $quiz->id) }}" class="btn btn-primary" aria-label="Kerjakan kuis {{ $quiz->title }}">
                                 Take Quiz
                             </a>
                         </div>
@@ -663,13 +661,10 @@
                 @endif
             </div>
 
-
-        
-
             <div class="card">
                 <div class="section-header">
                     <h2 class="section-title">Latest Quiz Result</h2>
-                    <a href="{{ route('student.results.index') }}" class="section-meta">View all →</a>
+                    <a href="{{ route('student.results.index') }}" class="section-meta" aria-label="Lihat semua hasil kuis Anda">View all →</a>
                 </div>
 
                 @if(($latestQuizResults ?? collect())->count() > 0)
@@ -694,7 +689,7 @@
 
                     @endforeach
                 @elseif(!empty($pendingQuiz))
-                    <div class="result-score" style="font-size:24px; color:#f59e0b;">Pending</div>
+                    <div class="result-score" style="font-size:24px; color:#b45309;">Pending</div>
                     <div class="muted-box">
                         <span class="muted-label">Status</span>
                         Quiz submitted, waiting for admin verification.
@@ -706,7 +701,7 @@
         </div>
 
     </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -719,12 +714,12 @@ if (ctx) {
             datasets: [{
                 label: 'Learning Progress',
                 data: [60, 65, 70, 80, 85],
-                borderColor: '#6366f1',
-                backgroundColor: 'rgba(99,102,241,0.07)',
+                borderColor: '#4f46e5',
+                backgroundColor: 'rgba(79,70,229,0.07)',
                 borderWidth: 2,
                 tension: 0.4,
                 fill: true,
-                pointBackgroundColor: '#6366f1',
+                pointBackgroundColor: '#4f46e5',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
                 pointRadius: 4,
@@ -735,7 +730,7 @@ if (ctx) {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#7b8399',
+                        color: '#475569',
                         font: { family: 'Inter', size: 12 }
                     }
                 }
@@ -743,15 +738,16 @@ if (ctx) {
             scales: {
                 x: {
                     grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { color: '#9399b0', font: { family: 'Inter', size: 11 } }
+                    ticks: { color: '#475569', font: { family: 'Inter', size: 11 } }
                 },
                 y: {
                     grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { color: '#9399b0', font: { family: 'Inter', size: 11 } }
+                    ticks: { color: '#475569', font: { family: 'Inter', size: 11 } }
                 }
             }
         }
     });
 }
 </script>
+</x-app-layout>cript>
 </x-app-layout>
