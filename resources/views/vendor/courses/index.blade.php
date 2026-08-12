@@ -316,14 +316,14 @@
                 @forelse($activeCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
-                            <span class="course-tag">🏢 Vendor Certified</span>
+                            <span class="course-tag">Vendor Certified</span>
                             <span class="course-badge text-green-700 bg-green-50 border-green-200">Aktif Dipublikasikan</span>
                         </div>
 
                         <div class="course-name">{{ $course->name }}</div>
 
                         <div class="text-xs text-purple-700 mb-3 font-bold flex items-center gap-1.5">
-                            <span>⚡ Certificate Threshold:</span>
+                            <span>Certificate Threshold:</span>
                             <span class="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
                         </div>
 
@@ -346,7 +346,7 @@
 
                         <div style="margin-top: auto;">
                             <a href="{{ route('vendor.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                🚀 Kelola Course Sertifikasi
+                                Kelola Course Sertifikasi
                             </a>
                         </div>
                     </div>
@@ -365,8 +365,8 @@
                 @forelse($bankCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
-                            <span class="course-tag">🏢 Draft Vendor</span>
-                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">🔴 Archived / Draft</span>
+                            <span class="course-tag">Draft Vendor</span>
+                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">Archived / Draft</span>
                         </div>
 
                         <div class="course-name">{{ $course->name }}</div>
@@ -394,7 +394,7 @@
 
                         <div style="margin-top: auto;">
                             <a href="{{ route('vendor.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                🚀 Pratinjau & Edit Course
+                                Pratinjau & Edit Course
                             </a>
                         </div>
                     </div>
