@@ -12,6 +12,7 @@ class MasterCourse extends Model
         'name',
         'description',
         'level',
+        'certificate_threshold',
         'category_id',
     ];
 

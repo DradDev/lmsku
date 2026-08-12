@@ -192,6 +192,10 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
                                     📁 {{ $mc->category->name ?? 'Umum' }}
                                 </span>
+
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
+                                    Threshold {{ $mc->certificate_threshold ?? 75 }}%
+                                </span>
                             </div>
 
                             <!-- Skills & Tags Preview Chips -->

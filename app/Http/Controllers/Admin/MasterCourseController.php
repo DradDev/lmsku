@@ -45,6 +45,7 @@ class MasterCourseController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
+            'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
             'category_id' => ['nullable', 'exists:categories,id'],
         ]);
 
@@ -68,6 +69,7 @@ class MasterCourseController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
+            'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
             'category_id' => ['nullable', 'exists:categories,id'],
         ]);
 

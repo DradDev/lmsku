@@ -32,7 +32,7 @@
                 <form action="{{ route('admin.master-courses.store') }}" method="POST" class="space-y-5">
                     @csrf
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Kode Mata Kuliah <span class="text-rose-500">*</span></label>
                             <input type="text"
@@ -49,12 +49,27 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Level Kesulitan <span class="text-rose-500">*</span></label>
                             <select name="level" class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs font-bold bg-white" required>
-                                <option value="">-- Pilih Level Kesulitan --</option>
+                                <option value="">-- Pilih Level --</option>
                                 <option value="Beginner" {{ old('level') == 'Beginner' ? 'selected' : '' }}>🟢 Beginner (Dasar)</option>
                                 <option value="Intermediate" {{ old('level') == 'Intermediate' ? 'selected' : '' }}>🟡 Intermediate (Menengah)</option>
                                 <option value="Advanced" {{ old('level') == 'Advanced' ? 'selected' : '' }}>🔴 Advanced (Lanjut)</option>
                             </select>
                             @error('level')
+                                <p class="text-rose-600 text-xs mt-1 font-semibold">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Passing Score Sertifikat (%) <span class="text-rose-500">*</span></label>
+                            <input type="number"
+                                   name="certificate_threshold"
+                                   value="{{ old('certificate_threshold', 75) }}"
+                                   min="1"
+                                   max="100"
+                                   class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs font-bold"
+                                   placeholder="75"
+                                   required>
+                            @error('certificate_threshold')
                                 <p class="text-rose-600 text-xs mt-1 font-semibold">{{ $message }}</p>
                             @enderror
                         </div>
