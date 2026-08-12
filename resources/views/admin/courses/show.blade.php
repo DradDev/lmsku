@@ -1,8 +1,8 @@
 <x-app-layout>
-    <div class="py-6" x-data="{ showSuspendModal: false, showReviseModal: false }">
+    <div class="py-6" x-data="{ showSuspendModal: false }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            <!-- ALERTS -->
+            <!-- SUCCESS ALERTS -->
             @if (session('success'))
                 <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl shadow-sm">
                     <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
@@ -26,10 +26,6 @@
                                 <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-rose-100 text-rose-800 border border-rose-200">
                                     ⛔ Status: Dibekukan (Suspended)
                                 </span>
-                            @elseif($course->moderation_status === 'revision_requested')
-                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-amber-100 text-amber-800 border border-amber-200">
-                                    📝 Status: Meminta Revisi
-                                </span>
                             @else
                                 <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
                                     🟢 Status: Published & Aktif
@@ -45,7 +41,7 @@
                         </p>
                     </div>
 
-                    <!-- ACTION BUTTONS: ONLY SUSPEND & REVISE (NO ARCHIVE / DELETE) FOR VENDOR COURSES -->
+                    <!-- ACTION BUTTONS: ONLY SUSPEND & PULIHKAN (NO REVISE, ARCHIVE, OR DELETE) FOR VENDOR COURSES -->
                     <div class="flex items-center gap-2 flex-wrap">
                         <a href="{{ route('admin.master-courses.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
                             ← Kembali ke Katalog
@@ -53,31 +49,23 @@
 
                         @if($course->user?->role === 'vendor')
                             <!-- VENDOR COURSE MODERATION CONTROLS -->
-                            @if($course->moderation_status !== 'published')
+                            @if($course->moderation_status === 'suspended')
                                 <form action="{{ route('admin.courses.approve', $course) }}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                                        <span>Setujui & Pulihkan</span>
+                                        <span>✅ Pulihkan Course (Aktifkan)</span>
                                     </button>
                                 </form>
+                            @else
+                                <!-- SUSPEND BUTTON -->
+                                <button type="button" 
+                                        @click="showSuspendModal = true"
+                                        class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                                    <span>⛔ Suspend (Bekukan)</span>
+                                </button>
                             @endif
-
-                            <!-- REVISE BUTTON -->
-                            <button type="button" 
-                                    @click="showReviseModal = true"
-                                    class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                                <span>📝 Revise (Minta Revisi)</span>
-                            </button>
-
-                            <!-- SUSPEND BUTTON -->
-                            <button type="button" 
-                                    @click="showSuspendModal = true"
-                                    class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-extrabold text-xs rounded-xl shadow-sm transition flex items-center gap-1.5">
-                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                                <span>⛔ Suspend (Bekukan)</span>
-                            </button>
                         @else
                             <!-- NON-VENDOR COURSES REGULAR CONTROLS -->
                             <form action="{{ route('admin.courses.toggle-archive', $course) }}" method="POST" class="inline">
@@ -92,10 +80,10 @@
             </div>
 
             <!-- MODERATION NOTE ALERT BOX -->
-            @if($course->moderation_note)
-                <div class="p-4 rounded-2xl border {{ $course->moderation_status === 'suspended' ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-amber-50 border-amber-200 text-amber-800' }} shadow-xs space-y-1">
+            @if($course->moderation_status === 'suspended' && $course->moderation_note)
+                <div class="p-4 rounded-2xl border bg-rose-50 border-rose-200 text-rose-800 shadow-xs space-y-1">
                     <div class="flex items-center gap-2 font-extrabold text-xs uppercase tracking-wider">
-                        <span>{{ $course->moderation_status === 'suspended' ? '⛔ Catatan Penangguhan (Suspended):' : '📝 Catatan Catatan Revisi Admin:' }}</span>
+                        <span>⛔ Catatan Penangguhan (Suspended):</span>
                     </div>
                     <p class="text-xs font-semibold leading-relaxed">
                         "{{ $course->moderation_note }}"
@@ -175,41 +163,12 @@
 
                     <div>
                         <label class="block text-xs font-bold text-gray-700 mb-1.5">Alasan Penangguhan / Catatan Admin</label>
-                        <textarea name="moderation_note" rows="3" class="w-full rounded-xl border-gray-300 focus:border-rose-500 focus:ring-rose-500 text-xs" placeholder="Jelaskan alasan pembekuan course vendor ini..."></textarea>
+                        <textarea name="moderation_note" rows="3" class="w-full rounded-xl border-gray-300 focus:border-rose-500 focus:ring-rose-500 text-xs font-medium" placeholder="Jelaskan alasan pembekuan course vendor ini..."></textarea>
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                         <button type="button" @click="showSuspendModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
                         <button type="submit" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">⛔ Bekukan Course</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- MODAL: REVISE (MINTA REVISI SILABUS / MATERI) -->
-        <div x-show="showReviseModal" 
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4"
-             style="display: none;">
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden" @click.away="showReviseModal = false">
-                <div class="p-5 border-b border-gray-100 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-base font-extrabold text-amber-700">📝 Minta Revisi (Revise Request)</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Kirimkan instruksi perbaikan materi ke Mitra Vendor.</p>
-                    </div>
-                    <button type="button" @click="showReviseModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
-                </div>
-
-                <form action="{{ route('admin.courses.revise', $course) }}" method="POST" class="p-5 space-y-4">
-                    @csrf
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 mb-1.5">Instruksi & Catatan Revisi <span class="text-rose-500">*</span></label>
-                        <textarea name="moderation_note" rows="4" class="w-full rounded-xl border-gray-300 focus:border-amber-500 focus:ring-amber-500 text-xs" placeholder="Tuliskan poin-poin revisi silabus/kuis/materi yang perlu diperbaiki oleh Vendor..." required></textarea>
-                    </div>
-
-                    <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
-                        <button type="button" @click="showReviseModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">📝 Kirim Permintaan Revisi</button>
                     </div>
                 </form>
             </div>

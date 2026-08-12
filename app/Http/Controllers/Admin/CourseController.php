@@ -87,20 +87,6 @@ class CourseController extends Controller
         return back()->with('success', "Course Vendor '{$course->name}' berhasil dibekukan (Suspended) oleh Admin.");
     }
 
-    public function revise(Request $request, Course $course): RedirectResponse
-    {
-        $validated = $request->validate([
-            'moderation_note' => ['required', 'string', 'max:1000'],
-        ]);
-
-        $course->update([
-            'moderation_status' => 'revision_requested',
-            'moderation_note' => $validated['moderation_note'],
-        ]);
-
-        return back()->with('success', "Permintaan revisi silabus/materi untuk Course Vendor '{$course->name}' berhasil dikirimkan ke Mitra Vendor.");
-    }
-
     public function approve(Request $request, Course $course): RedirectResponse
     {
         $course->update([
@@ -108,7 +94,7 @@ class CourseController extends Controller
             'moderation_note' => null,
         ]);
 
-        return back()->with('success', "Course Vendor '{$course->name}' telah disetujui dan dipulihkan kembali ke status Published.");
+        return back()->with('success', "Course Vendor '{$course->name}' telah dipulihkan kembali ke status Published.");
     }
 
     public function toggleArchive(Course $course): RedirectResponse

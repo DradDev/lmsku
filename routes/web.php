@@ -373,8 +373,6 @@ Route::middleware(['auth', 'role:admin'])
         // Courses Audit & Moderation (Vendor & Lecturer Courses)
         Route::post('/courses/{course}/suspend', [AdminCourseController::class, 'suspend'])
             ->name('courses.suspend');
-        Route::post('/courses/{course}/revise', [AdminCourseController::class, 'revise'])
-            ->name('courses.revise');
         Route::post('/courses/{course}/approve', [AdminCourseController::class, 'approve'])
             ->name('courses.approve');
         Route::post('/courses/{course}/toggle-archive', [AdminCourseController::class, 'toggleArchive'])
