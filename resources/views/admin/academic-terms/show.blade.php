@@ -23,11 +23,11 @@
                                 </h2>
                                 @if($academicTerm->is_active)
                                     <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                        🟢 Semester Berjalan (Aktif)
+                                        Semester Berjalan (Aktif)
                                     </span>
                                 @else
                                     <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-slate-100 text-slate-600 border border-slate-200">
-                                        ⚪ Non-Aktif
+                                        Non-Aktif
                                     </span>
                                 @endif
                             </div>
@@ -36,7 +36,7 @@
                                 <span>Tahun Akademik: <strong class="text-slate-800">{{ $academicTerm->academic_year ?? '2026/2027' }}</strong></span>
                                 <span>•</span>
                                 <span class="flex items-center gap-1 font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-0.5 rounded-lg">
-                                    📅 Rentang Perkuliahan: {{ $academicTerm->start_date ? $academicTerm->start_date->format('d M Y') : 'Mulai Belum Set' }} – {{ $academicTerm->end_date ? $academicTerm->end_date->format('d M Y') : 'Selesai Belum Set' }}
+                                    Rentang Perkuliahan: {{ $academicTerm->start_date ? $academicTerm->start_date->format('d M Y') : 'Mulai Belum Set' }} – {{ $academicTerm->end_date ? $academicTerm->end_date->format('d M Y') : 'Selesai Belum Set' }}
                                 </span>
                             </div>
                         </div>
@@ -117,14 +117,14 @@
             <!-- SEMESTER COURSE OFFERINGS ADMINISTRATION LIST -->
             <div class="space-y-6">
                 <div class="border-b border-gray-200 pb-3">
-                    <h3 class="text-lg font-extrabold text-slate-900">📚 Penawaran Rombel Kelas Semester Ini</h3>
+                    <h3 class="text-lg font-extrabold text-slate-900">Penawaran Rombel Kelas Semester Ini</h3>
                     <p class="text-xs text-slate-500 mt-0.5">Daftar kelas paralel dan penugasan Dosen Pengampu yang sedang dibuka pada {{ $academicTerm->name }}.</p>
                 </div>
 
                 @if($groupedOfferings->isEmpty())
                     <div class="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center space-y-3">
                         <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-2xl font-bold">
-                            📖
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         </div>
                         <h4 class="text-base font-extrabold text-slate-800">Belum Ada Mata Kuliah / Rombel Dibuka</h4>
                         <p class="text-xs text-slate-500 max-w-md mx-auto">
@@ -144,7 +144,7 @@
                                 <div class="p-5 bg-slate-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div class="flex items-center gap-3">
                                         <span class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0">
-                                            📚
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                                         </span>
                                         <div>
                                             <div class="flex items-center gap-2">
@@ -208,7 +208,7 @@
                                                         @if($off->lecturer)
                                                             <div class="flex items-center gap-2">
                                                                 <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px]">
-                                                                    👨‍🏫
+                                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                                                 </span>
                                                                 <div>
                                                                     <p class="font-bold text-slate-900">{{ $off->lecturer->name }}</p>
@@ -239,15 +239,15 @@
                                                     <td class="px-5 py-3.5">
                                                         @if($off->status === 'published')
                                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                🟢 Published
+                                                                Published
                                                             </span>
                                                         @elseif($off->status === 'draft')
                                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                                                🟡 Draft
+                                                                Draft
                                                             </span>
                                                         @else
                                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                                🔴 Cancelled
+                                                                Cancelled
                                                             </span>
                                                         @endif
                                                     </td>
@@ -266,14 +266,14 @@
                                                                         end_date: '{{ $off->end_date ? $off->end_date->format('Y-m-d') : ($academicTerm->end_date ? $academicTerm->end_date->format('Y-m-d') : '') }}'
                                                                     }; showEditOfferingModal = true"
                                                                     class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[11px] rounded-lg transition">
-                                                                ✏️ Edit Rombel
+                                                                Edit Rombel
                                                             </button>
 
                                                             <form action="{{ route('admin.academic-terms.offerings.destroy', $off->id) }}" method="POST" onsubmit="return confirm('Tutup / Batalkan rombel kelas ini?')">
                                                                 @csrf
                                                                 @method('DELETE')
                                                                 <button type="submit" class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition">
-                                                                    🔴 Hapus
+                                                                    Hapus
                                                                 </button>
                                                             </form>
                                                         </div>
@@ -309,7 +309,7 @@
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden" @click.away="showCreateOfferingModal = false">
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">🚀 Buka Matkul & Rombel Kelas Baru</h3>
+                        <h3 class="text-base font-extrabold text-gray-900">Buka Matkul & Rombel Kelas Baru</h3>
                         <p class="text-xs text-gray-500 mt-0.5">Pilih Master Course dari pustaka kurikulum dan tentukan Dosen Pengampu pada {{ $academicTerm->name }}.</p>
                     </div>
                     <button type="button" @click="showCreateOfferingModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
@@ -324,7 +324,7 @@
                         <select name="master_course_id" x-model="selectedMasterCourseId" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
                             <option value="">-- Pilih Master Course dari Pustaka --</option>
                             @foreach($allMasterCourses as $mc)
-                                <option value="{{ $mc->id }}">📚 {{ $mc->code ?? 'MC-'.$mc->id }} — {{ $mc->name }}</option>
+                                <option value="{{ $mc->id }}">{{ $mc->code ?? 'MC-'.$mc->id }} — {{ $mc->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -347,7 +347,7 @@
                             <option value="">-- Pilih Dosen Pengampu --</option>
                             @foreach($lecturers as $lec)
                                 <option value="{{ $lec->id }}">
-                                    👨‍🏫 {{ $lec->name }} ({{ $lec->assigned_classes_count ?? 0 }} Kelas Diampu)
+                                    {{ $lec->name }} ({{ $lec->assigned_classes_count ?? 0 }} Kelas Diampu)
                                 </option>
                             @endforeach
                         </select>
@@ -374,15 +374,15 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1.5">Status Rombel <span class="text-rose-500">*</span></label>
                             <select name="status" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
-                                <option value="published" selected>🟢 Published (Terbuka)</option>
-                                <option value="draft">🟡 Draft (Tertutup)</option>
+                                <option value="published" selected>Published (Terbuka)</option>
+                                <option value="draft">Draft (Tertutup)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                         <button type="button" @click="showCreateOfferingModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">🚀 Simpan & Buka Rombel</button>
+                        <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">Simpan & Buka Rombel</button>
                     </div>
                 </form>
             </div>
@@ -395,7 +395,7 @@
             <div @click.away="showEditOfferingModal = false" class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden">
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">✏️ Edit Rombel / Ganti Dosen Pengampu</h3>
+                        <h3 class="text-base font-extrabold text-gray-900">Edit Rombel / Ganti Dosen Pengampu</h3>
                         <p class="text-xs text-gray-500 mt-0.5">Perbarui nama rombel, dosen pengampu, kuota, atau status publikasi.</p>
                     </div>
                     <button type="button" @click="showEditOfferingModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
@@ -422,7 +422,7 @@
                         <select name="lecturer_id" x-model="editOfferingData.lecturer_id" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
                             @foreach($lecturers as $lec)
                                 <option value="{{ $lec->id }}">
-                                    👨‍🏫 {{ $lec->name }}
+                                    {{ $lec->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -449,16 +449,16 @@
                         <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1.5">Status Rombel <span class="text-rose-500">*</span></label>
                             <select name="status" x-model="editOfferingData.status" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
-                                <option value="published">🟢 Published (Terbuka)</option>
-                                <option value="draft">🟡 Draft (Tertutup)</option>
-                                <option value="cancelled">🔴 Cancelled (Batal)</option>
+                                <option value="published">Published (Terbuka)</option>
+                                <option value="draft">Draft (Tertutup)</option>
+                                <option value="cancelled">Cancelled (Batal)</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                         <button type="button" @click="showEditOfferingModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">💾 Simpan Perubahan</button>
+                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>

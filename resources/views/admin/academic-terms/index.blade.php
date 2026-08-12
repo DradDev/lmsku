@@ -71,11 +71,11 @@
                             <div class="flex items-center justify-between gap-2">
                                 @if($term->is_active)
                                     <span class="px-3 py-1 text-xs font-extrabold uppercase tracking-wider rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                        🟢 Semester Berjalan (Aktif)
+                                        Semester Berjalan (Aktif)
                                     </span>
                                 @else
                                     <span class="px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                                        ⚪ Non-Aktif
+                                        Non-Aktif
                                     </span>
                                 @endif
 
@@ -99,7 +99,7 @@
                                     @elseif($term->start_date)
                                         Mulai: {{ $term->start_date->format('d M Y') }}
                                     @else
-                                        📅 Periode Belum Diatur
+                                        Periode Belum Diatur
                                     @endif
                                 </span>
                             </div>
@@ -129,7 +129,7 @@
                         <div class="pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
                             <a href="{{ route('admin.academic-terms.show', $term) }}" 
                                class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition">
-                                <span>📂 Buka Pengaturan Semester</span>
+                                <span>Buka Pengaturan Semester</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                             </a>
 
@@ -166,7 +166,7 @@
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden" @click.away="showEditTermModal = false">
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">✏️ Edit Periode Semester & Tanggal</h3>
+                        <h3 class="text-base font-extrabold text-gray-900">Edit Periode Semester & Tanggal</h3>
                         <p class="text-xs text-gray-500 mt-0.5">Perbarui nama, tahun akademik, dan rentang tanggal semester.</p>
                     </div>
                     <button type="button" @click="showEditTermModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
@@ -211,13 +211,13 @@
                     <div class="pt-2">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="is_active" value="1" x-model="editTermData.is_active" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                            <span class="text-xs font-bold text-slate-800">🟢 Tetapkan Sebagai Semester Berjalan (Aktif)</span>
+                            <span class="text-xs font-bold text-slate-800">Tetapkan Sebagai Semester Berjalan (Aktif)</span>
                         </label>
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                         <button type="button" @click="showEditTermModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">💾 Simpan Perubahan</button>
+                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -272,13 +272,13 @@
                     <div class="pt-2">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                            <span class="text-xs font-bold text-slate-800">🟢 Langsung Aktifkan Semester Ini</span>
+                            <span class="text-xs font-bold text-slate-800">Langsung Aktifkan Semester Ini</span>
                         </label>
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                         <button type="button" onclick="document.getElementById('createTermModal').style.display='none'" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">🚀 Buat Semester</button>
+                        <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">Buat Semester</button>
                     </div>
                 </form>
             </div>
