@@ -211,7 +211,7 @@
 
                             <!-- Course Title & Description -->
                             <h3 class="font-extrabold text-base text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
-                                <a href="{{ route('admin.master-courses.show', [$mc, 'term_id' => $selectedTerm->id]) }}">
+                                <a href="{{ route('admin.master-courses.show', array_merge([$mc->id], $selectedTerm ? ['term_id' => $selectedTerm->id] : [])) }}">
                                     {{ $mc->name }}
                                 </a>
                             </h3>
@@ -265,7 +265,7 @@
                             </span>
 
                             <div class="flex items-center gap-1.5">
-                                <a href="{{ route('admin.master-courses.show', [$mc, 'term_id' => $selectedTerm->id]) }}" 
+                                <a href="{{ route('admin.master-courses.show', array_merge([$mc->id], $selectedTerm ? ['term_id' => $selectedTerm->id] : [])) }}" 
                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
                                     <span>📂 Kelola Rombel & Dosen</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
