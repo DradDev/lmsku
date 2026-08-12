@@ -78,11 +78,15 @@ class Backfill3nfData extends Command
 
             if ($existingOffering) {
                 $offeringId = $existingOffering->id;
+                DB::table('course_offerings')
+                    ->where('id', $offeringId)
+                    ->update(['status' => 'published']);
             } else {
                 $offeringId = DB::table('course_offerings')->insertGetId([
                     'master_course_id' => $masterCourseId,
                     'academic_term_id' => $termId,
                     'lecturer_id' => $course->user_id,
+                    'status' => 'published',
                     'start_date' => $course->start_date ?? null,
                     'end_date' => $course->end_date ?? null,
                     'is_archived' => $course->is_archived ?? false,
