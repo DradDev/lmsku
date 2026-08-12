@@ -11,9 +11,9 @@ default => route('student.dashboard'),
 };
 @endphp
 
-<nav class="lms-nav">
+<nav class="lms-nav" aria-label="Navigasi Utama Aplikasi">
     <div class="lms-nav-inner">
-        <a href="{{ $homeRoute }}" class="lms-brand">
+        <a href="{{ $homeRoute }}" class="lms-brand" aria-label="COMPRO TEKKOM Beranda">
             <div class="lms-brand-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 10v6M2 10l10-5 10 5-10 5z" />

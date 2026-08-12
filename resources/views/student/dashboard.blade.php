@@ -37,7 +37,7 @@
 
 .dash-sub {
     font-size: 14px;
-    color: #7b8399;
+    color: #475569;
     margin-top: 5px;
 }
 
@@ -72,7 +72,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .6px;
-    color: #98a2b3;
+    color: #475569;
     margin-bottom: 8px;
 }
 
