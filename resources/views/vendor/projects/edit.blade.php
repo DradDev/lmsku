@@ -65,7 +65,7 @@
 
                             <div class="relative">
                                 <select name="provider_type" class="w-full appearance-none rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm pr-10 bg-slate-50">
-                                    <option value="external" selected>🏢 External Mitra Vendor Industri</option>
+                                    <option value="external" selected>External Mitra Vendor Industri</option>
                                 </select>
                             </div>
                         </div>
@@ -89,7 +89,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                🎁 Benefit & Output Untuk Mahasiswa (Opsional)
+                                Benefit & Output Untuk Mahasiswa (Opsional)
                             </label>
 
                             <textarea name="benefits"
@@ -109,7 +109,7 @@
 
                             @if($project->brief_file_url)
                                 <div class="mb-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
-                                    <span class="font-bold text-slate-700">📄 File TOR Saat Ini Tersimpan</span>
+                                    <span class="font-bold text-slate-700">File TOR Saat Ini Tersimpan</span>
                                     <a href="{{ asset($project->brief_file_url) }}" target="_blank" class="text-purple-600 font-extrabold hover:underline">Unduh Brief ↗</a>
                                 </div>
                             @endif
@@ -174,7 +174,6 @@
                     <div class="border border-purple-200 bg-gradient-to-br from-purple-50/60 to-indigo-50/30 rounded-2xl p-5 shadow-sm space-y-4">
                         <div class="flex items-center justify-between border-b border-purple-200/60 pb-3">
                             <label class="block text-sm font-extrabold text-gray-900 flex items-center gap-2">
-                                <span class="text-purple-700 text-base">⚡</span>
                                 <span>Target Main Skills Utama (Pilih 2 atau Lebih) <span class="text-rose-500">*</span></span>
                             </label>
                             <span id="selected_skills_count" class="text-xs font-bold text-purple-700 bg-purple-100 px-3 py-1 rounded-full border border-purple-200">
@@ -201,7 +200,7 @@
                                         data-skill-name="{{ $sk->name }}"
                                         onclick="toggleSkillChip(this)"
                                         class="skill-chip inline-flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold border transition-all text-left cursor-pointer {{ $isSkillSelected ? 'bg-purple-700 text-white border-purple-700 shadow-md ring-2 ring-purple-300' : 'bg-white text-slate-800 border-slate-200 hover:border-purple-400 hover:bg-purple-50' }}">
-                                    <span>⚡ {{ $sk->name }}</span>
+                                    <span>{{ $sk->name }}</span>
                                     <span class="chip-status text-xs font-black ml-1.5">{{ $isSkillSelected ? '✓' : '+' }}</span>
                                 </button>
                             @endforeach
@@ -217,7 +216,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
                             <div>
                                 <label class="block text-sm font-bold text-gray-800">
-                                    🏷️ Specialty Tags (Tersaring Otomatis dari Main Skill Terpilih)
+                                    Specialty Tags (Tersaring Otomatis dari Main Skill Terpilih)
                                 </label>
                                 <p class="text-xs text-gray-500 mt-0.5">Tag spesialisasi yang relevan dengan Main Skill terpilih di atas.</p>
                             </div>
@@ -250,7 +249,7 @@
                         </div>
 
                         <p id="no_skills_selected_notice" class="hidden text-xs text-gray-400 italic text-center py-3">
-                            💡 Pilih setidaknya 1 Target Main Skill pada bagian atas untuk menampilkan Specialty Tags yang relevan.
+                            Pilih setidaknya 1 Target Main Skill pada bagian atas untuk menampilkan Specialty Tags yang relevan.
                         </p>
                     </div>
 
@@ -359,8 +358,8 @@
 
                             <div class="relative">
                                 <select name="is_published" class="w-full appearance-none rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-sm pr-10 font-bold text-gray-800">
-                                    <option value="1" @selected(old('is_published', $project->is_published) == 1)>🟢 Published (Terbuka untuk Talent Matching)</option>
-                                    <option value="0" @selected(old('is_published', $project->is_published) == 0)>🔴 Project Bank (Draft Internal)</option>
+                                    <option value="1" @selected(old('is_published', $project->is_published) == 1)>Published (Terbuka untuk Talent Matching)</option>
+                                    <option value="0" @selected(old('is_published', $project->is_published) == 0)>Project Bank (Draft Internal)</option>
                                 </select>
                             </div>
                         </div>
@@ -372,7 +371,7 @@
                         </a>
 
                         <button type="submit" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm rounded-xl shadow-sm transition">
-                            💾 Simpan Perubahan Project
+                            Simpan Perubahan Project
                         </button>
                     </div>
                 </form>

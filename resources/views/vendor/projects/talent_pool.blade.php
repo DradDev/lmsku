@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 class="font-bold text-xl text-gray-800 leading-tight flex items-center gap-2">
-                <span>🎯 COMPRO Talent Screening Engine (Vendor)</span>
+                <span>COMPRO Talent Screening Engine (Vendor)</span>
             </h2>
 
             <a href="{{ route('vendor.projects.show', $project) }}" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl">
@@ -30,7 +30,7 @@
             <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl p-6 shadow-md text-white space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="px-2.5 py-0.5 bg-purple-500/30 text-purple-200 border border-purple-400/30 rounded-md text-[10px] font-black uppercase">
-                        🏢 {{ Auth::user()->name }}
+                        {{ Auth::user()->name }}
                     </span>
                     <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 font-bold text-xs rounded-full border border-emerald-400/30">
                         Primary Skill: {{ $mainSkill->name ?? 'Skill Requirement' }}
@@ -72,7 +72,7 @@
                             </div>
 
                             <span class="px-2.5 py-1 rounded-full text-xs font-black {{ $scoreColor }}">
-                                🎯 {{ $mScore }}%
+                                {{ $mScore }}%
                             </span>
                         </div>
 
@@ -100,11 +100,11 @@
 
                         @if($recStudent->invitation_status === 'invited')
                             <span class="py-2 px-3 bg-amber-100 text-amber-800 font-bold text-xs rounded-xl">
-                                ⏳ Invited
+                                Invited
                             </span>
                         @elseif(in_array($recStudent->invitation_status, ['in_progress', 'development', 'review', 'completed']))
                             <span class="py-2 px-3 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl">
-                                🚀 Joined
+                                Joined
                             </span>
                         @else
                             <form action="{{ route('vendor.projects.invite', [$project, $recStudent]) }}" method="POST">

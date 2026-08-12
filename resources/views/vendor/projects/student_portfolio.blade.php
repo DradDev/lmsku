@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-bold text-xl text-gray-800 leading-tight flex items-center gap-2">
-                <span>📄 Digital Talent Portfolio & Resume</span>
+                <span>Digital Talent Portfolio & Resume</span>
             </h2>
             <a href="javascript:history.back()" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold text-xs rounded-xl hover:bg-gray-200 transition">
                 ← Kembali
@@ -57,7 +57,7 @@
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
                 <div>
                     <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <span>📊 Skill Competency Profile</span>
+                        <span>Skill Competency Profile</span>
                     </h4>
                     <p class="text-xs text-gray-500">Skor kompetensi skill mahasiswa berbasis kuis sertifikasi & karya project.</p>
                 </div>
