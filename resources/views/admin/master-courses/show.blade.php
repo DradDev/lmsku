@@ -65,11 +65,11 @@
 
 
 
-        <!-- SECTION 2: ⚡ TARGET SKILL & TAG KOMPETENSI CARD -->
+        <!-- SECTION 2: TARGET SKILL & TAG KOMPETENSI CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                 <div>
-                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">⚡ Skill & Tag Target Kompetensi Matkul</h2>
+                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Skill & Tag Target Kompetensi Matkul</h2>
                     <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Centang Skill Induk di sebelah kiri. Daftar Tag Sub-Topik akan ditampilkan secara terkelompok per Skill di sebelah kanan.</p>
                 </div>
             </div>
@@ -80,14 +80,14 @@
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     @forelse($masterCourse->skills as $s)
                         <span style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px;">
-                            ⚡ {{ $s->name }}
+                            Skill: {{ $s->name }}
                         </span>
                     @empty
                     @endforelse
 
                     @forelse($masterCourse->tags as $t)
                         <span style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px;">
-                            🏷️ {{ $t->name }}
+                            Tag: {{ $t->name }}
                         </span>
                     @empty
                     @endforelse
@@ -118,7 +118,7 @@
                                            class="skill-dynamic-checkbox" 
                                            data-skill-id="{{ $sk->id }}"
                                            {{ $masterCourse->skills->contains($sk->id) ? 'checked' : '' }}>
-                                    <span style="font-weight: 700;">⚡ {{ $sk->name }}</span>
+                                    <span style="font-weight: 700;">Skill: {{ $sk->name }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -133,7 +133,7 @@
 
                         <!-- PESAN JIKA BELUM ADA SKILL DIPILIH -->
                         <div id="no-skill-selected-notice" style="display: none; padding: 2.5rem 1rem; text-align: center; background: #FAFAFA; border: 2px dashed #CBD5E1; border-radius: 10px; color: #64748B; font-size: 13px;">
-                            📌 Centang minimal 1 Skill Induk di sebelah kiri untuk menampilkan kelompok Tag Sub-Topik yang sesuai.
+                            Centang minimal 1 Skill Induk di sebelah kiri untuk menampilkan kelompok Tag Sub-Topik yang sesuai.
                         </div>
 
                         <!-- CONTAINER KELOMPOK TAG TERPISAH PER SKILL INDUK -->

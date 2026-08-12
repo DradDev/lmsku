@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">🏛️ Internal Kampus (Kurikulum Induk)</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">Internal Kampus (Kurikulum Induk)</span>
                     <div class="flex items-baseline justify-between pt-1">
                         <h3 class="text-3xl font-extrabold text-blue-600">{{ $masterCourses->count() }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700">Akademik</span>
@@ -81,7 +81,7 @@
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-purple-600">🏢 Mitra Vendor (Sertifikasi)</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-purple-600">Mitra Vendor (Sertifikasi)</span>
                     <div class="flex items-baseline justify-between pt-1">
                         <h3 class="text-3xl font-extrabold text-purple-600">{{ $vendorCourses->count() }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">Bootcamp</span>
@@ -98,7 +98,7 @@
                             @click="tab = 'all'" 
                             :class="tab === 'all' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
                             class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
-                        <span>🌐 Semua Course</span>
+                        <span>Semua Course</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
                             {{ $masterCourses->count() + $vendorCourses->count() }}
                         </span>
@@ -108,7 +108,7 @@
                             @click="tab = 'internal'" 
                             :class="tab === 'internal' ? 'bg-blue-600 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
                             class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
-                        <span>🏛️ Internal Kampus</span>
+                        <span>Internal Kampus</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'internal' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
                             {{ $masterCourses->count() }}
                         </span>
@@ -118,7 +118,7 @@
                             @click="tab = 'vendor'" 
                             :class="tab === 'vendor' ? 'bg-purple-700 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
                             class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
-                        <span>🏢 Sertifikasi Vendor</span>
+                        <span>Sertifikasi Vendor</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'vendor' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
                             {{ $vendorCourses->count() }}
                         </span>
@@ -162,7 +162,7 @@
                             <!-- Header Badges Row -->
                             <div class="flex items-center justify-between gap-2 mb-3">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-xs font-bold">
-                                    🏛️ Internal Kampus
+                                    Internal Kampus
                                 </span>
 
                                 <span class="font-mono text-xs font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
@@ -190,7 +190,7 @@
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
-                                    📁 {{ $mc->category->name ?? 'Umum' }}
+                                    {{ $mc->category->name ?? 'Umum' }}
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
@@ -203,7 +203,7 @@
                                 <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-1.5">
                                     @foreach($mc->skills as $sk)
                                         <span class="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold rounded-md">
-                                            ⚡ {{ $sk->name }}
+                                            {{ $sk->name }}
                                         </span>
                                     @endforeach
 
@@ -225,12 +225,12 @@
                             <div class="flex items-center gap-1.5">
                                 <a href="{{ route('admin.master-courses.show', $mc) }}" 
                                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition">
-                                    <span>📄 Detail Silabus</span>
+                                    <span>Detail Silabus</span>
                                 </a>
 
                                 <a href="{{ route('admin.master-courses.edit', $mc) }}" 
                                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-xl transition">
-                                    <span>✏️ Edit</span>
+                                    <span>Edit</span>
                                 </a>
                             </div>
                         </div>
@@ -256,11 +256,11 @@
                             <!-- Header Badges Row -->
                             <div class="flex items-center justify-between gap-2 mb-3">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-bold">
-                                    🏢 Sertifikasi Vendor
+                                    Sertifikasi Vendor
                                 </span>
 
                                 <span class="font-mono text-xs font-bold text-purple-900 bg-purple-100 px-2.5 py-1 rounded-md border border-purple-200">
-                                    🏷️ {{ $vc->batch_name ?? 'Batch 1' }}
+                                    {{ $vc->batch_name ?? 'Batch 1' }}
                                 </span>
                             </div>
 
@@ -272,7 +272,7 @@
                             </h3>
 
                             <p class="text-xs font-bold text-purple-700 mt-1 flex items-center gap-1">
-                                <span>🏢 {{ $vendorName }}</span>
+                                <span>{{ $vendorName }}</span>
                             </p>
 
                             @if($vc->description)

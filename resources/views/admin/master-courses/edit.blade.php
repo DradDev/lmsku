@@ -49,9 +49,9 @@
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Level Kesulitan <span class="text-rose-500">*</span></label>
                             <select name="level" class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs font-bold bg-white" required>
                                 <option value="">-- Pilih Level --</option>
-                                <option value="Beginner" {{ old('level', $masterCourse->level) == 'Beginner' ? 'selected' : '' }}>🟢 Beginner (Dasar)</option>
-                                <option value="Intermediate" {{ old('level', $masterCourse->level) == 'Intermediate' ? 'selected' : '' }}>🟡 Intermediate (Menengah)</option>
-                                <option value="Advanced" {{ old('level', $masterCourse->level) == 'Advanced' ? 'selected' : '' }}>🔴 Advanced (Lanjut)</option>
+                                <option value="Beginner" {{ old('level', $masterCourse->level) == 'Beginner' ? 'selected' : '' }}>Beginner (Dasar)</option>
+                                <option value="Intermediate" {{ old('level', $masterCourse->level) == 'Intermediate' ? 'selected' : '' }}>Intermediate (Menengah)</option>
+                                <option value="Advanced" {{ old('level', $masterCourse->level) == 'Advanced' ? 'selected' : '' }}>Advanced (Lanjut)</option>
                             </select>
                             @error('level')
                                 <p class="text-rose-600 text-xs mt-1 font-semibold">{{ $message }}</p>
@@ -93,7 +93,7 @@
                             <option value="">-- Pilih Kategori (Opsional) --</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}" {{ old('category_id', $masterCourse->category_id) == $category->id ? 'selected' : '' }}>
-                                    📁 {{ $category->name }}
+                                    {{ $category->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -119,7 +119,7 @@
                         </a>
 
                         <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-blue-500/20 transition">
-                            💾 Simpan Perubahan
+                            Simpan Perubahan
                         </button>
                     </div>
 
