@@ -20,6 +20,8 @@ class Course extends Model
         'certificate_threshold',
         'category_id',
         'batch_name',
+        'moderation_status',
+        'moderation_note',
     ];
 
     protected $casts = [

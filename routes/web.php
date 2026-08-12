@@ -370,7 +370,13 @@ Route::middleware(['auth', 'role:admin'])
             ->name('projects.toggle-publish');
         Route::resource('projects', AdminProjectController::class)->only(['index', 'show', 'destroy']);
 
-        // Courses Audit & Emergency Moderation (Vendor & Lecturer Courses)
+        // Courses Audit & Moderation (Vendor & Lecturer Courses)
+        Route::post('/courses/{course}/suspend', [AdminCourseController::class, 'suspend'])
+            ->name('courses.suspend');
+        Route::post('/courses/{course}/revise', [AdminCourseController::class, 'revise'])
+            ->name('courses.revise');
+        Route::post('/courses/{course}/approve', [AdminCourseController::class, 'approve'])
+            ->name('courses.approve');
         Route::post('/courses/{course}/toggle-archive', [AdminCourseController::class, 'toggleArchive'])
             ->name('courses.toggle-archive');
         Route::resource('courses', AdminCourseController::class)->only(['index', 'show', 'destroy']);
