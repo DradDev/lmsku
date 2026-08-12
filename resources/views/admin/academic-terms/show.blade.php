@@ -45,6 +45,52 @@
     }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            <!-- HERO HEADER CARD FOR SEMESTER ADMINISTRATION -->
+            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <a href="{{ route('admin.academic-terms.index') }}" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center font-bold transition flex-shrink-0">
+                            ←
+                        </a>
+
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="font-extrabold text-xl text-slate-900 leading-tight">
+                                    Administrasi {{ $academicTerm->name }}
+                                </h2>
+                                @if($academicTerm->is_active)
+                                    <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        🟢 Semester Berjalan (Aktif)
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                                        ⚪ Non-Aktif
+                                    </span>
+                                @endif
+                            </div>
+                            
+                            <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                                <span>Tahun Akademik: <strong class="text-slate-800">{{ $academicTerm->academic_year ?? '2026/2027' }}</strong></span>
+                                <span>•</span>
+                                <span class="flex items-center gap-1 font-bold text-teal-700 bg-teal-50 border border-teal-100 px-2.5 py-0.5 rounded-lg">
+                                    📅 Rentang Perkuliahan: {{ $academicTerm->start_date ? $academicTerm->start_date->format('d M Y') : 'Mulai Belum Set' }} – {{ $academicTerm->end_date ? $academicTerm->end_date->format('d M Y') : 'Selesai Belum Set' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROMINENT ADD OFFERING BUTTON -->
+                    <div>
+                        <button type="button" 
+                                onclick="document.getElementById('createOfferingModal').style.display='flex'"
+                                class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-teal-500/20 transition whitespace-nowrap">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                            <span>+ Tambah / Buka Matkul di Semester Ini</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- SUCCESS / ERROR ALERTS -->
             @if (session('success'))
                 <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl shadow-sm">

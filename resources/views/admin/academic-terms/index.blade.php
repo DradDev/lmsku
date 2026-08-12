@@ -25,7 +25,7 @@
                                 Pengelolaan Periode Semester Akademik
                             </h2>
                             <p class="text-xs text-slate-500 mt-0.5">
-                                Pilih semester untuk membuka pengaturan penawaran matkul, pembuatan kelas rombel, dan penugasan dosen pengampu.
+                                Atur rentang tanggal perkuliahan semester, penawaran matkul, pembuatan rombel, dan penugasan dosen pengampu.
                             </p>
                         </div>
                     </div>
@@ -90,6 +90,20 @@
                                 </a>
                             </h3>
 
+                            <!-- START DATE & END DATE DISPLAY -->
+                            <div class="flex items-center gap-1.5 text-xs font-semibold text-teal-800 bg-teal-50/70 border border-teal-100/80 px-3 py-1.5 rounded-xl">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="text-teal-600"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                <span>
+                                    @if($term->start_date && $term->end_date)
+                                        {{ $term->start_date->format('d M Y') }} – {{ $term->end_date->format('d M Y') }}
+                                    @elseif($term->start_date)
+                                        Mulai: {{ $term->start_date->format('d M Y') }}
+                                    @else
+                                        📅 Periode Belum Diatur
+                                    @endif
+                                </span>
+                            </div>
+
                             <!-- Stats Counters -->
                             <div class="pt-2 grid grid-cols-3 gap-2 text-center text-xs border-t border-gray-100">
                                 <div class="bg-slate-50 rounded-xl p-2">
@@ -120,10 +134,10 @@
                             </a>
 
                             <div class="flex items-center gap-1">
-                                <!-- Edit Year Button -->
+                                <!-- Edit Year & Dates Button -->
                                 <button type="button" 
-                                        @click="showEditTermModal = true; editTermData = { id: {{ $term->id }}, name: '{{ addslashes($term->name) }}', academic_year: '{{ addslashes($term->academic_year ?? '') }}', term_type: '{{ $term->term_type ?? 'ganjil' }}', is_active: {{ $term->is_active ? 'true' : 'false' }}, update_url: '{{ route('admin.academic-terms.update', $term) }}' }"
-                                        title="Edit Nama / Tahun Semester"
+                                        @click="showEditTermModal = true; editTermData = { id: {{ $term->id }}, name: '{{ addslashes($term->name) }}', academic_year: '{{ addslashes($term->academic_year ?? '') }}', term_type: '{{ $term->term_type ?? 'ganjil' }}', start_date: '{{ $term->start_date ? $term->start_date->format('Y-m-d') : '' }}', end_date: '{{ $term->end_date ? $term->end_date->format('Y-m-d') : '' }}', is_active: {{ $term->is_active ? 'true' : 'false' }}, update_url: '{{ route('admin.academic-terms.update', $term) }}' }"
+                                        title="Edit Semester & Tanggal Perkuliahan"
                                         class="p-2 text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                 </button>
@@ -152,8 +166,8 @@
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden" @click.away="showEditTermModal = false">
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">✏️ Edit Periode Semester</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Perbarui nama atau tahun akademik semester.</p>
+                        <h3 class="text-base font-extrabold text-gray-900">✏️ Edit Periode Semester & Tanggal</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Perbarui nama, tahun akademik, dan rentang tanggal semester.</p>
                     </div>
                     <button type="button" @click="showEditTermModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
                 </div>
@@ -182,6 +196,18 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Mulai Perkuliahan</label>
+                            <input type="date" name="start_date" x-model="editTermData.start_date" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Selesai Perkuliahan</label>
+                            <input type="date" name="end_date" x-model="editTermData.end_date" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
+                    </div>
+
                     <div class="pt-2">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="checkbox" name="is_active" value="1" x-model="editTermData.is_active" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
@@ -203,7 +229,7 @@
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
                         <h3 class="text-base font-extrabold text-gray-900">+ Tambah Periode Semester Baru</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Buat periode semester baru (Semester Ganjil / Genap).</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Buat periode semester baru lengkap dengan jadwal perkuliahan.</p>
                     </div>
                     <button type="button" onclick="document.getElementById('createTermModal').style.display='none'" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
                 </div>
@@ -228,6 +254,18 @@
                                 <option value="ganjil" selected>Ganjil</option>
                                 <option value="genap">Genap</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Mulai Perkuliahan</label>
+                            <input type="date" name="start_date" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Selesai Perkuliahan</label>
+                            <input type="date" name="end_date" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
                         </div>
                     </div>
 
