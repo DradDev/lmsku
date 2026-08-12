@@ -1,34 +1,43 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                    </svg>
-                </div>
-
-                <div>
-                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                        Pustaka Kurikulum Master Course & Sertifikasi
-                    </h2>
-                    <p class="text-sm text-gray-500">
-                        Katalog induk seluruh kurikulum mata kuliah kampus dan program sertifikasi mitra vendor.
-                    </p>
-                </div>
-            </div>
-
-            <a href="{{ route('admin.master-courses.create') }}" 
-               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                + Master Course Baru
-            </a>
-        </div>
-    </x-slot>
-
     <div class="py-6" x-data="{ tab: 'all', search: '' }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            <!-- PAGE HERO HEADER CARD WITH PROMINENT ADD MASTER COURSE BUTTON -->
+            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/20 flex-shrink-0">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                                    Pustaka Kurikulum Induk
+                                </span>
+                            </div>
+                            <h2 class="font-extrabold text-xl text-slate-900 leading-tight mt-0.5">
+                                Katalog Master Course & Sertifikasi Vendor
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Pusat pengelolaan templat mata kuliah kurikulum kampus dan program sertifikasi mitra vendor.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PROMINENT ADD NEW MASTER COURSE BUTTON -->
+                    <div class="flex items-center gap-3">
+                        <a href="{{ route('admin.master-courses.create') }}" 
+                           class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-blue-500/20 transition whitespace-nowrap">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                            <span>+ Master Course Baru</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <!-- SUCCESS / ERROR ALERTS -->
             @if (session('success'))
