@@ -333,7 +333,7 @@
                                     <a href="{{ route('lecturer.courses.show', $offeringItem->id) }}" 
                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition"
                                        style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; text-decoration: none;">
-                                        <span>📌 {{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
+                                        <span>{{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
                                         <span style="font-size: 10px; background: #c7d2fe; color: #312e81; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
                                             {{ $offeringItem->enrollments ? $offeringItem->enrollments->count() : 0 }} Mhs
                                         </span>
@@ -361,7 +361,7 @@
                             <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
                             <div style="margin-top: auto;">
                                 <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" class="btn btn-primary w-full text-center">
-                                    🚀 Buka Gerbang Kelas
+                                    Buka Gerbang Kelas
                                 </a>
                             </div>
                         </div>
@@ -377,7 +377,7 @@
                         <div class="course-name">{{ $course->name }}</div>
 
                         <div class="text-xs text-indigo-600 mb-3 font-bold flex items-center gap-1.5">
-                            <span>⚡ Certificate Threshold:</span>
+                            <span>Certificate Threshold:</span>
                             <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
                         </div>
 
@@ -401,7 +401,7 @@
                         <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN SANGAT RAPI -->
                         <div style="margin-top: auto;">
                             <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                🚀 Buka Gerbang Kelas
+                                Buka Gerbang Kelas
                             </a>
                         </div>
                     </div>
@@ -449,7 +449,7 @@
 
                         <div style="margin-top: auto;">
                             <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                🚀 Buka Gerbang Kelas
+                                Buka Gerbang Kelas
                             </a>
                         </div>
                     </div>
