@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
+use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
@@ -145,11 +147,21 @@ class ProjectController extends Controller
             'skillProfiles.skill',
             'interestProfiles.tag',
             'joinedProjects' => function ($query) {
-                $query->with(['skills']);
-            }
+                $query->with(['skills', 'user']);
+            },
+            'enrollments.courseOffering.masterCourse.category',
+            'enrollments.courseOffering.academicTerm',
+            'enrollments.courseOffering.lecturer',
+            'enrollments.course.user',
+            'enrollments.course.category',
         ]);
 
-        return view('lecturer.projects.student_portfolio', compact('student'));
+        $certificates = Certificate::with(['courseOffering.masterCourse', 'course', 'project'])
+            ->where('user_id', $student->id)
+            ->latest()
+            ->get();
+
+        return view('student.portfolio', compact('student', 'certificates'));
     }
 
     public function show(Project $project): View
