@@ -1,36 +1,46 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                </div>
-
-                <div>
-                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                        Pengelolaan Periode Semester Akademik
-                    </h2>
-                    <p class="text-sm text-gray-500">
-                        Pilih semester untuk membuka pengaturan penawaran matkul, pembuatan kelas rombel, dan penugasan dosen.
-                    </p>
-                </div>
-            </div>
-
-            <button type="button" 
-                    onclick="document.getElementById('createTermModal').style.display='flex'"
-                    class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
-                <span>+ Periode Semester Baru</span>
-            </button>
-        </div>
-    </x-slot>
-
     <div class="py-6" x-data="{ showCreateTermModal: false, showEditTermModal: false, editTermData: {} }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            <!-- PAGE HERO HEADER CARD WITH PROMINENT ADD SEMESTER BUTTON -->
+            <div class="bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-md shadow-teal-500/20 flex-shrink-0">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-teal-50 text-teal-700 border border-teal-100">
+                                    Portal Administrasi Semester
+                                </span>
+                            </div>
+                            <h2 class="font-extrabold text-xl text-slate-900 leading-tight mt-0.5">
+                                Pengelolaan Periode Semester Akademik
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Pilih semester untuk membuka pengaturan penawaran matkul, pembuatan kelas rombel, dan penugasan dosen pengampu.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- PROMINENT ADD NEW SEMESTER BUTTON -->
+                    <div class="flex items-center gap-3">
+                        <button type="button" 
+                                onclick="document.getElementById('createTermModal').style.display='flex'"
+                                class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-teal-500/20 transition whitespace-nowrap">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                            <span>+ Periode Semester Baru</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- SUCCESS / ERROR ALERTS -->
             @if (session('success'))
@@ -80,49 +90,54 @@
                                 </a>
                             </h3>
 
-                            <!-- METRICS SUMMARY IN CARD -->
-                            <div class="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100">
-                                <div class="bg-slate-50 p-2.5 rounded-xl text-center">
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Matkul</span>
-                                    <span class="text-base font-extrabold text-slate-800">{{ $term->master_courses_count ?? 0 }}</span>
+                            <!-- Stats Counters -->
+                            <div class="pt-2 grid grid-cols-3 gap-2 text-center text-xs border-t border-gray-100">
+                                <div class="bg-slate-50 rounded-xl p-2">
+                                    <span class="block font-extrabold text-slate-900 text-sm">{{ $term->offerings_count ?? 0 }}</span>
+                                    <span class="text-[10px] text-slate-500 font-semibold">Total Matkul</span>
                                 </div>
 
-                                <div class="bg-slate-50 p-2.5 rounded-xl text-center">
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Rombel</span>
-                                    <span class="text-base font-extrabold text-blue-600">{{ $term->offerings_count ?? 0 }}</span>
+                                <div class="bg-slate-50 rounded-xl p-2">
+                                    <span class="block font-extrabold text-teal-600 text-sm">{{ $term->offerings_count ?? 0 }}</span>
+                                    <span class="text-[10px] text-slate-500 font-semibold">Rombel</span>
                                 </div>
 
-                                <div class="bg-slate-50 p-2.5 rounded-xl text-center">
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase">Dosen</span>
-                                    <span class="text-base font-extrabold text-purple-600">{{ $term->lecturers_count ?? 0 }}</span>
+                                <div class="bg-slate-50 rounded-xl p-2">
+                                    <span class="block font-extrabold text-indigo-600 text-sm">
+                                        {{ $term->offerings->pluck('lecturer_id')->unique()->filter()->count() }}
+                                    </span>
+                                    <span class="text-[10px] text-slate-500 font-semibold">Dosen</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- CARD ACTION BUTTONS -->
+                        <!-- Card Action Buttons -->
                         <div class="pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
                             <a href="{{ route('admin.academic-terms.show', $term) }}" 
-                               class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">
+                               class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition">
                                 <span>📂 Buka Pengaturan Semester</span>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                             </a>
 
-                            @if(!$term->is_active)
-                                <form action="{{ route('admin.academic-terms.toggle-active', $term->id) }}" method="POST">
+                            <div class="flex items-center gap-1">
+                                <!-- Edit Year Button -->
+                                <button type="button" 
+                                        @click="showEditTermModal = true; editTermData = { id: {{ $term->id }}, name: '{{ addslashes($term->name) }}', academic_year: '{{ addslashes($term->academic_year ?? '') }}', term_type: '{{ $term->term_type ?? 'ganjil' }}', is_active: {{ $term->is_active ? 'true' : 'false' }}, update_url: '{{ route('admin.academic-terms.update', $term) }}' }"
+                                        title="Edit Nama / Tahun Semester"
+                                        class="p-2 text-slate-500 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                </button>
+
+                                <!-- Toggle Active Status Button -->
+                                <form action="{{ route('admin.academic-terms.toggle-active', $term) }}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit" 
-                                            title="Aktifkan Semester Ini"
-                                            class="px-3 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl transition">
-                                        🟢
+                                            title="{{ $term->is_active ? 'Non-aktifkan Semester' : 'Aktifkan Semester Berjalan' }}"
+                                            class="p-2 {{ $term->is_active ? 'text-emerald-700 bg-emerald-100 hover:bg-emerald-200' : 'text-slate-400 bg-slate-100 hover:bg-slate-200' }} rounded-xl transition">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
                                     </button>
                                 </form>
-                            @endif
-
-                            <button type="button" 
-                                    @click="editTermData = { id: {{ $term->id }}, name: '{{ addslashes($term->name) }}', academic_year: '{{ $term->academic_year }}', term_type: '{{ $term->term_type }}', is_active: {{ $term->is_active ? 'true' : 'false' }} }; showEditTermModal = true"
-                                    class="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">
-                                ✏️
-                            </button>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -130,21 +145,20 @@
 
         </div>
 
-        <!-- MODAL: EDIT TAHUN AKADEMIK SEMESTER -->
+        <!-- MODAL: EDIT PERIODE SEMESTER -->
         <div x-show="showEditTermModal" 
-             x-transition.opacity
-             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4" 
              style="display: none;">
-            <div @click.away="showEditTermModal = false" class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-md overflow-hidden" @click.away="showEditTermModal = false">
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">✏️ Edit Tahun Akademik Semester</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Perbarui nama, tahun akademik, atau status aktif semester ini.</p>
+                        <h3 class="text-base font-extrabold text-gray-900">✏️ Edit Periode Semester</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Perbarui nama atau tahun akademik semester.</p>
                     </div>
                     <button type="button" @click="showEditTermModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
                 </div>
 
-                <form :action="'/admin/academic-terms/' + editTermData.id" method="POST" class="p-5 space-y-4">
+                <form :action="editTermData.update_url" method="POST" class="p-5 space-y-4">
                     @csrf
                     @method('PUT')
 
