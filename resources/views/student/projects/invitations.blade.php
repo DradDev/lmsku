@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 class="font-bold text-xl text-gray-800 leading-tight flex items-center gap-2">
-                <span>📩 Undangan Project (Project Invitations)</span>
+                <span>Undangan Project (Project Invitations)</span>
             </h2>
 
             <div class="flex items-center gap-2">
@@ -39,7 +39,7 @@
             <div class="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                     <h3 class="text-2xl font-bold text-gray-900">
-                        📩 Undangan Pengerjaan Project Industri & Dosen
+                        Undangan Pengerjaan Project Industri & Dosen
                     </h3>
                     <p class="text-sm text-gray-500 mt-1">
                         Tinjau dan konfirmasi undangan bergabung yang dikirimkan oleh Dosen Akademik atau Mitra Vendor Industri.
@@ -53,8 +53,8 @@
 
             @if ($invitedParticipations->isEmpty())
                 <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-12 text-center">
-                    <div class="mx-auto w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mb-4 text-3xl">
-                        📬
+                    <div class="mx-auto w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12c0 1.1.9 2 2 2h9"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><path d="M19 16v6"/><path d="M16 19h6"/></svg>
                     </div>
 
                     <h3 class="text-lg font-bold text-gray-800">
@@ -68,7 +68,7 @@
                     <div class="mt-6 flex justify-center gap-3">
                         <a href="{{ route('student.projects.index') }}"
                            class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition shadow-sm">
-                            🚀 Jelajahi Katalog Project
+                            Jelajahi Katalog Project
                         </a>
                     </div>
                 </div>
@@ -85,11 +85,11 @@
                                     <div class="flex items-center justify-between gap-2">
                                         @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                                🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                                External: {{ $project->user->name ?? 'Vendor' }}
                                             </span>
                                         @else
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                                🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                                Internal: {{ $project->user->name ?? 'Dosen' }}
                                             </span>
                                         @endif
 
@@ -127,14 +127,14 @@
                                         <div class="pt-2">
                                             <a href="{{ $project->brief_file_url }}" target="_blank"
                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs rounded-xl transition w-full justify-center">
-                                                📥 Download TOR Brief (PDF)
+                                                Download TOR Brief (PDF)
                                             </a>
                                         </div>
                                     @endif
 
                                     @if($project->benefits)
                                         <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl text-xs text-indigo-900">
-                                            <span class="font-bold block mb-0.5">🎁 Benefits:</span>
+                                            <span class="font-bold block mb-0.5">Benefits:</span>
                                             <span class="line-clamp-2 text-indigo-800">{{ $project->benefits }}</span>
                                         </div>
                                     @endif
@@ -145,7 +145,7 @@
                                         @csrf
                                         <button type="submit"
                                                 class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm flex items-center justify-center gap-1">
-                                            🚀 Terima Undangan
+                                            Terima Undangan
                                         </button>
                                     </form>
 

@@ -39,7 +39,7 @@
                     @if(isset($invitedParticipations) && $invitedParticipations->isNotEmpty())
                         <a href="{{ route('student.projects.invitations') }}"
                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition shadow-sm animate-pulse">
-                            <span>📩 Undangan Project</span>
+                            <span>Undangan Project</span>
                             <span class="px-2 py-0.5 rounded-full bg-white text-amber-900 text-xs font-black">
                                 {{ $invitedParticipations->count() }}
                             </span>
@@ -47,7 +47,7 @@
                     @else
                         <a href="{{ route('student.projects.invitations') }}"
                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
-                            <span>📩 Undangan Project</span>
+                            <span>Undangan Project</span>
                         </a>
                     @endif
 
@@ -90,11 +90,11 @@
                                         <div class="mb-2">
                                             @if($provType === 'external')
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                                    🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                                    External: {{ $project->user->name ?? 'Vendor' }}
                                                 </span>
                                             @else
                                                 <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                                    🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                                    Internal: {{ $project->user->name ?? 'Dosen' }}
                                                 </span>
                                             @endif
                                         </div>
@@ -177,7 +177,7 @@
                                     @elseif(!$isEligible)
                                         <a href="{{ route('student.projects.show', $project) }}"
                                            class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition">
-                                            🔒 Terkunci
+                                            Terkunci
                                         </a>
                                     @else
                                         <form action="{{ route('student.projects.join', $project) }}" method="POST">
@@ -185,7 +185,7 @@
 
                                             <button type="submit"
                                                     class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
-                                                🚀 Ambil
+                                                Ambil
                                             </button>
                                         </form>
                                     @endif

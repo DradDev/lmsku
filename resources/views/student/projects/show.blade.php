@@ -62,11 +62,11 @@
                         <div class="flex items-center gap-2 mb-2">
                             @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                    🏢 External Mitra Vendor Industri ({{ $project->user->name ?? 'Vendor' }})
+                                    External Mitra Vendor Industri ({{ $project->user->name ?? 'Vendor' }})
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                    🎓 Internal Dosen Akademik ({{ $project->user->name ?? 'Dosen' }})
+                                    Internal Dosen Akademik ({{ $project->user->name ?? 'Dosen' }})
                                 </span>
                             @endif
                         </div>
@@ -106,7 +106,7 @@
                         @if($project->brief_file_url)
                             <a href="{{ $project->brief_file_url }}" target="_blank"
                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition shadow-sm">
-                                📥 Download TOR / Brief Project (PDF)
+                                Download TOR / Brief Project (PDF)
                             </a>
                         @endif
 
@@ -130,7 +130,7 @@
 
                     @if($project->benefits)
                         <div class="mt-4 p-4 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-900 text-xs">
-                            <span class="font-bold text-sm block mb-1">🎁 Benefits & Output Mahasiswa:</span>
+                            <span class="font-bold text-sm block mb-1">Benefits & Output Mahasiswa:</span>
                             <p class="text-indigo-800 font-medium">{{ $project->benefits }}</p>
                         </div>
                     @endif
@@ -272,27 +272,27 @@
                     <div class="mb-5 p-4 rounded-xl text-xs space-y-2 {{ ($eligibility['is_eligible'] ?? false) ? 'bg-emerald-50 border border-emerald-200 text-emerald-900' : 'bg-amber-50 border border-amber-200 text-amber-900' }}">
                         <div class="font-bold flex items-center gap-1.5 text-sm">
                             @if($eligibility['is_eligible'] ?? false)
-                                <span>🟢 Status: ELIGIBLE (Memenuhi Syarat)</span>
+                                <span>Status: ELIGIBLE (Memenuhi Syarat)</span>
                             @else
-                                <span>🔒 Status: TERKUNCI (Syarat Belum Terpenuhi)</span>
+                                <span>Status: TERKUNCI (Syarat Belum Terpenuhi)</span>
                             @endif
                         </div>
 
                         <div class="space-y-1 pt-1">
                             <div class="flex items-center gap-2">
-                                <span>{{ ($eligibility['has_main_skill'] ?? false) ? '✅' : '❌' }}</span>
+                                <span class="font-bold">{{ ($eligibility['has_main_skill'] ?? false) ? '✓' : '✗' }}</span>
                                 <span>Main Skill Requirement: <strong>{{ $eligibility['main_skill_name'] ?? 'Skill' }}</strong></span>
                             </div>
 
                             <div class="flex items-center gap-2">
-                                <span>{{ ($eligibility['has_verified_certificate'] ?? false) ? '✅' : '❌' }}</span>
+                                <span class="font-bold">{{ ($eligibility['has_verified_certificate'] ?? false) ? '✓' : '✗' }}</span>
                                 <span>Sertifikat Matkul Terverifikasi (Lulus Final Quiz)</span>
                             </div>
                         </div>
 
                         @if(!($eligibility['is_eligible'] ?? false))
                             <p class="pt-2 text-amber-800 font-semibold leading-relaxed">
-                                💡 Petunjuk: Untuk membuka project ini, selesaikan Materi & Final Quiz pada Mata Kuliah pembina skill <strong>{{ $eligibility['main_skill_name'] ?? '' }}</strong> hingga lulus dan mendapatkan sertifikat!
+                                Petunjuk: Untuk membuka project ini, selesaikan Materi & Final Quiz pada Mata Kuliah pembina skill <strong>{{ $eligibility['main_skill_name'] ?? '' }}</strong> hingga lulus dan mendapatkan sertifikat!
                             </p>
                         @endif
                     </div>
@@ -307,13 +307,13 @@
                         <button type="button"
                                 class="px-5 py-2.5 bg-gray-400 text-white font-semibold text-sm rounded-xl cursor-not-allowed"
                                 disabled>
-                            🔒 Kuota Penuh
+                            Kuota Penuh
                         </button>
                     @elseif(!($eligibility['is_eligible'] ?? false))
                         <button type="button"
                                 class="px-5 py-2.5 bg-gray-300 text-gray-600 font-bold text-sm rounded-xl cursor-not-allowed border border-gray-300"
                                 disabled>
-                            🔒 Terkunci (Syarat Belum Terpenuhi)
+                            Terkunci (Syarat Belum Terpenuhi)
                         </button>
                     @else
                         <form action="{{ route('student.projects.join', $project) }}" method="POST">
@@ -321,7 +321,7 @@
 
                             <button type="submit"
                                     class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition shadow-sm">
-                                🚀 Ambil Project Ini
+                                Ambil Project Ini
                             </button>
                         </form>
                     @endif
