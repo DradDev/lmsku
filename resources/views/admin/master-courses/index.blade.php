@@ -1,21 +1,29 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-                </svg>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        Pustaka Kurikulum Master Course & Sertifikasi
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Katalog induk seluruh kurikulum mata kuliah kampus dan program sertifikasi mitra vendor.
+                    </p>
+                </div>
             </div>
 
-            <div>
-                <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                    Katalog Master Course & Sertifikasi (Pusat Pengelolaan)
-                </h2>
-                <p class="text-sm text-gray-500">
-                    Pusat pengelolaan kurikulum induk, pembukaan kelas rombel per-semester, dan sertifikasi industri.
-                </p>
-            </div>
+            <a href="{{ route('admin.master-courses.create') }}" 
+               class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                + Master Course Baru
+            </a>
         </div>
     </x-slot>
 
@@ -43,56 +51,10 @@
                 </div>
             @endif
 
-            <!-- HERO HEADER & SEMESTER SELECTOR BAR -->
-            <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 md:p-6 space-y-4">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-blue-50 text-blue-700 border border-blue-100">
-                                Pusat Katalog Master Course
-                            </span>
-                            @if($selectedTerm?->is_active)
-                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                    🟢 Semester Berjalan (Aktif)
-                                </span>
-                            @endif
-                        </div>
-                        <h3 class="text-lg font-bold text-gray-900">
-                            Kelola Master Course, Penawaran Rombel & Dosen Pengampu
-                        </h3>
-                        <p class="text-xs text-gray-500 mt-0.5">
-                            Pilih semester di sebelah kanan untuk meninjau rombel yang aktif dibuka pada semester tersebut.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                        <div class="relative">
-                            <select onchange="window.location.href='?term_id=' + this.value" 
-                                    class="w-full appearance-none bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-blue-500 font-extrabold text-slate-800 text-xs py-2.5 pl-4 pr-10 rounded-xl shadow-xs cursor-pointer">
-                                @foreach($academicTerms as $term)
-                                    <option value="{{ $term->id }}" @selected($selectedTerm?->id === $term->id)>
-                                        {{ $term->is_active ? '🟢 [AKTIF]' : '⚪ [NON-AKTIF]' }} {{ $term->name }} ({{ $term->academic_year ?? 'Akademik' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
-                            </div>
-                        </div>
-
-                        <a href="{{ route('admin.master-courses.create') }}" 
-                           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                            + Master Course Baru
-                        </a>
-                    </div>
-                </div>
-            </div>
-
             <!-- EXECUTIVE METRICS CARDS -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Katalog Master Course</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Pustaka Kurikulum</span>
                     <div class="flex items-baseline justify-between pt-1">
                         <h3 class="text-3xl font-extrabold text-gray-900">{{ $masterCourses->count() + $vendorCourses->count() }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">Katalog LMS</span>
@@ -101,7 +63,7 @@
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">🏛️ Internal Kampus (Dosen)</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600">🏛️ Internal Kampus (Kurikulum Induk)</span>
                     <div class="flex items-baseline justify-between pt-1">
                         <h3 class="text-3xl font-extrabold text-blue-600">{{ $masterCourses->count() }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700">Akademik</span>
@@ -116,15 +78,6 @@
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">Bootcamp</span>
                     </div>
                     <p class="text-[11px] text-purple-500">Course sertifikasi industri</p>
-                </div>
-
-                <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">📌 Rombel Dibuka di {{ $selectedTerm->name ?? 'Semester' }}</span>
-                    <div class="flex items-baseline justify-between pt-1">
-                        <h3 class="text-3xl font-extrabold text-emerald-600">{{ $masterCourses->sum(fn($mc) => $mc->offerings->count()) }}</h3>
-                        <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">Aktif</span>
-                    </div>
-                    <p class="text-[11px] text-emerald-600">Rombel paralel semester ini</p>
                 </div>
             </div>
 
@@ -192,11 +145,10 @@
                             'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
                         ];
                         $badgeClass = $levelBadges[$mc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
-                        $termOfferingsCount = $mc->offerings->count();
                     @endphp
 
                     <div x-show="(tab === 'all' || tab === 'internal') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
-                         class="bg-white border {{ $termOfferingsCount > 0 ? 'border-teal-200 hover:border-teal-400' : 'border-gray-200 hover:border-blue-300' }} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                         class="bg-white border border-gray-200 hover:border-blue-300 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
                         <div>
                             <!-- Header Badges Row -->
                             <div class="flex items-center justify-between gap-2 mb-3">
@@ -211,7 +163,7 @@
 
                             <!-- Course Title & Description -->
                             <h3 class="font-extrabold text-base text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
-                                <a href="{{ route('admin.master-courses.show', array_merge([$mc->id], $selectedTerm ? ['term_id' => $selectedTerm->id] : [])) }}">
+                                <a href="{{ route('admin.master-courses.show', $mc) }}">
                                     {{ $mc->name }}
                                 </a>
                             </h3>
@@ -222,21 +174,8 @@
                                 </p>
                             @endif
 
-                            <!-- Semester Offering Status Badge -->
-                            <div class="mt-3">
-                                @if($termOfferingsCount > 0)
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-extrabold rounded-lg">
-                                        🟢 Dibuka di {{ $selectedTerm->name ?? 'Semester Ini' }} ({{ $termOfferingsCount }} Rombel)
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold rounded-lg">
-                                        ⚪ Belum Dibuka di {{ $selectedTerm->name ?? 'Semester Ini' }}
-                                    </span>
-                                @endif
-                            </div>
-
                             <!-- Meta Info Badges Row -->
-                            <div class="mt-3 flex flex-wrap items-center gap-2">
+                            <div class="mt-4 flex flex-wrap items-center gap-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $badgeClass }}">
                                     {{ $mc->level }}
                                 </span>
@@ -254,6 +193,12 @@
                                             ⚡ {{ $sk->name }}
                                         </span>
                                     @endforeach
+
+                                    @foreach($mc->tags as $tg)
+                                        <span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 text-[11px] font-semibold rounded-md">
+                                            #{{ $tg->name }}
+                                        </span>
+                                    @endforeach
                                 </div>
                             @endif
                         </div>
@@ -265,10 +210,14 @@
                             </span>
 
                             <div class="flex items-center gap-1.5">
-                                <a href="{{ route('admin.master-courses.show', array_merge([$mc->id], $selectedTerm ? ['term_id' => $selectedTerm->id] : [])) }}" 
-                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                                    <span>📂 Kelola Rombel & Dosen</span>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                <a href="{{ route('admin.master-courses.show', $mc) }}" 
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition">
+                                    <span>📄 Detail Silabus</span>
+                                </a>
+
+                                <a href="{{ route('admin.master-courses.edit', $mc) }}" 
+                                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-xl transition">
+                                    <span>✏️ Edit</span>
                                 </a>
                             </div>
                         </div>

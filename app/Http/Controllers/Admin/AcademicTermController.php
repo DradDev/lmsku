@@ -10,34 +10,39 @@ use Illuminate\View\View;
 
 class AcademicTermController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
         $terms = AcademicTerm::withCount('offerings')
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('is_active')
+            ->orderByDesc('created_at')
             ->get();
 
-        $selectedTermId = $request->input('term_id');
-        $selectedTerm = $selectedTermId
-            ? $terms->firstWhere('id', $selectedTermId)
-            : ($terms->firstWhere('is_active', true) ?? $terms->first());
-
-        $groupedOfferings = collect();
-        $totalOfferingsCount = 0;
-        $totalLecturersCount = 0;
-        $totalEnrollmentsCount = 0;
-        $offeredMasterCoursesCount = 0;
-
-        if ($selectedTerm) {
-            $offerings = \App\Models\CourseOffering::with(['masterCourse.category', 'masterCourse.skills', 'masterCourse.tags', 'lecturer', 'enrollments'])
-                ->where('academic_term_id', $selectedTerm->id)
+        foreach ($terms as $term) {
+            $offerings = \App\Models\CourseOffering::with('enrollments')
+                ->where('academic_term_id', $term->id)
                 ->get();
-
-            $groupedOfferings = $offerings->groupBy('master_course_id');
-            $offeredMasterCoursesCount = $groupedOfferings->count();
-            $totalOfferingsCount = $offerings->count();
-            $totalLecturersCount = $offerings->pluck('lecturer_id')->filter()->unique()->count();
-            $totalEnrollmentsCount = $offerings->sum(fn($o) => $o->enrollments->count());
+            
+            $term->master_courses_count = $offerings->pluck('master_course_id')->unique()->count();
+            $term->lecturers_count = $offerings->pluck('lecturer_id')->filter()->unique()->count();
+            $term->enrollments_count = $offerings->sum(fn($o) => $o->enrollments->count());
         }
+
+        return view('admin.academic-terms.index', compact('terms'));
+    }
+
+    public function show(AcademicTerm $academicTerm): View
+    {
+        $academicTerm->loadCount('offerings');
+
+        $offerings = \App\Models\CourseOffering::with(['masterCourse.category', 'masterCourse.skills', 'masterCourse.tags', 'lecturer', 'enrollments'])
+            ->where('academic_term_id', $academicTerm->id)
+            ->get();
+
+        $groupedOfferings = $offerings->groupBy('master_course_id');
+        $offeredMasterCoursesCount = $groupedOfferings->count();
+        $totalOfferingsCount = $offerings->count();
+        $totalLecturersCount = $offerings->pluck('lecturer_id')->filter()->unique()->count();
+        $totalEnrollmentsCount = $offerings->sum(fn($o) => $o->enrollments->count());
 
         $allMasterCourses = \App\Models\MasterCourse::with(['category', 'skills', 'tags'])->orderBy('name')->get();
         
@@ -45,17 +50,17 @@ class AcademicTermController extends Controller
             ->orderBy('name')
             ->get();
 
-        if ($selectedTerm) {
-            foreach ($lecturers as $lec) {
-                $lec->assigned_classes_count = \App\Models\CourseOffering::where('academic_term_id', $selectedTerm->id)
-                    ->where('lecturer_id', $lec->id)
-                    ->count();
-            }
+        foreach ($lecturers as $lec) {
+            $lec->assigned_classes_count = \App\Models\CourseOffering::where('academic_term_id', $academicTerm->id)
+                ->where('lecturer_id', $lec->id)
+                ->count();
         }
 
-        return view('admin.academic-terms.index', compact(
-            'terms',
-            'selectedTerm',
+        $allTerms = AcademicTerm::orderByDesc('is_active')->orderByDesc('id')->get();
+
+        return view('admin.academic-terms.show', compact(
+            'academicTerm',
+            'allTerms',
             'groupedOfferings',
             'offeredMasterCoursesCount',
             'totalOfferingsCount',

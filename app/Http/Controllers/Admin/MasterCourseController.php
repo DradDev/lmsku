@@ -15,21 +15,9 @@ use App\Models\Course;
 
 class MasterCourseController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
-        $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')
-            ->orderByDesc('id')
-            ->get();
-
-        $selectedTermId = $request->query('term_id', $academicTerms->firstWhere('is_active', true)?->id ?? $academicTerms->first()?->id);
-        $selectedTerm = $academicTerms->firstWhere('id', $selectedTermId);
-
         $masterCourses = MasterCourse::with(['category', 'skills', 'tags', 'materials', 'quizzes'])
-            ->with(['offerings' => function ($q) use ($selectedTermId) {
-                if ($selectedTermId) {
-                    $q->where('academic_term_id', $selectedTermId)->with(['lecturer', 'enrollments']);
-                }
-            }])
             ->withCount('offerings')
             ->orderBy('name')
             ->get();
@@ -41,15 +29,7 @@ class MasterCourseController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        $lecturers = \App\Models\User::where('role', 'lecturer')->orderBy('name')->get();
-
-        return view('admin.master-courses.index', compact(
-            'masterCourses', 
-            'vendorCourses', 
-            'academicTerms', 
-            'selectedTerm', 
-            'lecturers'
-        ));
+        return view('admin.master-courses.index', compact('masterCourses', 'vendorCourses'));
     }
 
     public function create(): View

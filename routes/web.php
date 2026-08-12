@@ -357,8 +357,7 @@ Route::middleware(['auth', 'role:admin'])
         Route::delete('/academic-terms/offerings/{offering}', [AdminAcademicTermController::class, 'destroyOffering'])
             ->name('academic-terms.offerings.destroy');
 
-        Route::resource('academic-terms', AdminAcademicTermController::class)
-            ->except(['show']);
+        Route::resource('academic-terms', AdminAcademicTermController::class);
         Route::post('/academic-terms/{academicTerm}/toggle-active', [AdminAcademicTermController::class, 'toggleActive'])
             ->name('academic-terms.toggle-active');
 
