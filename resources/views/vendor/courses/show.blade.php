@@ -51,6 +51,17 @@
                 </div>
             @endif
 
+            @if($course->moderation_status === 'suspended')
+                <div class="mb-6 p-5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm space-y-1">
+                    <div class="flex items-center gap-2 font-extrabold text-sm text-rose-900">
+                        <span>⛔ Status Course: Dibekukan Sementara (Suspended) oleh Admin Kampus</span>
+                    </div>
+                    <p class="text-xs font-semibold text-rose-700 leading-relaxed">
+                        Catatan Admin: "{{ $course->moderation_note ?? 'Course sedang ditangguhkan dari katalog publik untuk peninjauan lebih lanjut.' }}"
+                    </p>
+                </div>
+            @endif
+
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
                     <a href="{{ route('vendor.courses.index') }}"

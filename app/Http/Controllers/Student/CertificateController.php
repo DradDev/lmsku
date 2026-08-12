@@ -69,7 +69,10 @@ class CertificateController extends Controller
                 $item->verified_final_attempt = $verifiedAttempt;
                 $item->certificate_record = $certificateRecord;
 
-                $threshold = $offering?->certificate_threshold ?? ($item->certificate_threshold ?? 60);
+                $threshold = $offering?->certificate_threshold 
+                    ?? $offering?->masterCourse?->certificate_threshold 
+                    ?? $item->certificate_threshold 
+                    ?? 75;
 
                 if (! $onlyMultipleChoice) {
                     $item->certificate_status_text = 'Final quiz untuk certificate harus berisi multiple choice saja.';

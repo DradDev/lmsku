@@ -90,12 +90,16 @@ class CourseController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Vendor Certification Courses
+        // Vendor Certification Courses (Hanya yang tidak diarsip & tidak dibekukan Admin)
         $vendorCourses = Course::with(['user', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
             ->whereHas('user', function ($query) {
                 $query->where('role', 'vendor');
             })
             ->where('is_archived', false)
+            ->where(function ($query) {
+                $query->whereNull('moderation_status')
+                    ->orWhere('moderation_status', 'published');
+            })
             ->latest()
             ->get();
 
@@ -116,7 +120,7 @@ class CourseController extends Controller
                     ->orderByDesc('score')
                     ->first();
 
-                $threshold = $vc->certificate_threshold ?? 75;
+                $threshold = $vc->certificate_threshold ?? $vc->masterCourse?->certificate_threshold ?? 75;
                 if ($verifiedAttempt && $verifiedAttempt->score >= $threshold) {
                     $canGetCertificate = true;
                 }
