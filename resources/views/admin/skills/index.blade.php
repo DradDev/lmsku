@@ -35,7 +35,7 @@
                     <div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem;">
                         <div style="display: flex; align-items: flex-start; gap: 1rem; flex: 1; min-width: 280px;">
                             <div style="width: 48px; height: 48px; border-radius: 12px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; flex-shrink: 0;">
-                                ⚡
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                             </div>
                             <div>
                                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -84,7 +84,7 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                             @forelse($mainSkill->tags as $tag)
                                 <span style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">
-                                    🏷️ {{ $tag->name }}
+                                    {{ $tag->name }}
                                 </span>
                             @empty
                                 <span style="font-size: 12px; color: #94A3B8; italic;">Belum ada tag. Klik <strong>Kelola Skill & Tag</strong> untuk menambah tag.</span>
