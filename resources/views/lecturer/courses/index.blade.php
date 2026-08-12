@@ -24,8 +24,8 @@
     background: none;
     border: none;
     font-size: 15px;
-    font-weight: 600;
-    color: #667085;
+    font-weight: 700;
+    color: #344054;
     cursor: pointer;
     padding: 8px 16px;
     border-radius: 8px;
@@ -38,7 +38,7 @@
 }
 
 .tab-btn.active {
-    color: #4338ca;
+    color: #312e81;
     background: #eef2ff;
 }
 
@@ -68,7 +68,7 @@
     font-weight: 700;
     letter-spacing: 1.3px;
     text-transform: uppercase;
-    color: #4f46e5;
+    color: #4338ca;
     margin-bottom: 6px;
 }
 
@@ -81,7 +81,8 @@
 
 .page-sub {
     font-size: 14px;
-    color: #667085;
+    color: #344054;
+    font-weight: 500;
     margin-top: 6px;
     max-width: 720px;
 }
@@ -116,11 +117,11 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+    box-shadow: 0 4px 14px rgba(67, 56, 202, 0.25);
 }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(67, 56, 202, 0.35); }
 
 .stat-strip {
     display: grid;
@@ -140,7 +141,7 @@
 .stat-label {
     font-size: 11px;
     font-weight: 700;
-    color: #667085;
+    color: #344054;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -184,7 +185,7 @@
 .course-tag {
     font-size: 11px;
     font-weight: 700;
-    color: #4f46e5;
+    color: #312e81;
     background: #eef2ff;
     padding: 3px 10px;
     border-radius: 100px;
@@ -208,7 +209,8 @@
 
 .course-desc {
     font-size: 13px;
-    color: #667085;
+    color: #344054;
+    font-weight: 500;
     line-height: 1.5;
     margin-bottom: 1.25rem;
     display: -webkit-box;
@@ -231,7 +233,7 @@
 .stat-mini-label {
     font-size: 10px;
     font-weight: 700;
-    color: #64748b;
+    color: #344054;
     text-transform: uppercase;
 }
 
@@ -251,7 +253,7 @@
 }
 </style>
 
-<div class="page-wrap" x-data="{ tab: 'active' }">
+<main class="page-wrap" role="main" aria-label="Manajemen Kelas Pembelajaran Dosen" x-data="{ tab: 'active' }">
     <div class="page-container">
 
         @php
@@ -275,8 +277,8 @@
         </div>
 
         @if(session('success'))
-            <div class="alert-success flex items-center gap-3">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs">✓</span>
+            <div class="alert-success flex items-center gap-3" role="alert">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-700 text-white font-bold text-xs" aria-hidden="true">✓</span>
                 <div>
                     <strong>Berhasil!</strong> {{ session('success') }}
                 </div>
@@ -302,14 +304,16 @@
             </div>
         </div>
 
-        <div class="tabs-nav">
-            <button class="tab-btn" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
+        <div class="tabs-nav" role="tablist" aria-label="Tab Pilihan Kelas Dosen">
+            <button class="tab-btn" role="tab" :aria-selected="tab === 'active'" aria-controls="tab-active-panel" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
                 Kelas Aktif ({{ $activeCourses->count() }})
             </button>
-            <button class="tab-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
+            <button class="tab-btn" role="tab" :aria-selected="tab === 'bank'" aria-controls="tab-bank-panel" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
                 Arsip / Bank Kelas ({{ $bankCourses->count() }})
             </button>
-        </div>        <div x-show="tab === 'active'">
+        </div>
+
+        <div id="tab-active-panel" role="tabpanel" aria-label="Daftar Kelas Aktif" x-show="tab === 'active'">
             <div class="courses-grid">
                 @if(isset($groupedOfferings) && $groupedOfferings->isNotEmpty())
                     @foreach($groupedOfferings as $masterCourseId => $offeringsGroup)
@@ -320,21 +324,22 @@
                         <div class="course-card">
                             <div class="course-top">
                                 <span class="course-tag">{{ $firstOffering->academicTerm->name ?? 'Semester Aktif' }}</span>
-                                <span class="course-badge text-indigo-700 bg-indigo-50 border-indigo-200 font-bold">
+                                <span class="course-badge text-indigo-900 bg-indigo-100 border-indigo-300 font-extrabold">
                                     {{ $offeringsGroup->count() }} Rombel Kelas
                                 </span>
                             </div>
 
-                            <div class="course-name">{{ $firstOffering->name }}</div>
+                            <h2 class="course-name">{{ $firstOffering->name }}</h2>
 
                             <!-- List Pill Kelas Pararel (Kelas A, B, C) yang Diampu Dosen -->
                             <div class="my-2 flex flex-wrap gap-1.5" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;">
                                 @foreach($offeringsGroup as $offeringItem)
                                     <a href="{{ route('lecturer.courses.show', $offeringItem->id) }}" 
-                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition"
-                                       style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; text-decoration: none;">
+                                       aria-label="Buka rombel {{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }} untuk {{ $firstOffering->name }}"
+                                       class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100 transition"
+                                       style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #312e81; border: 1px solid #c7d2fe; text-decoration: none;">
                                         <span>📌 {{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
-                                        <span style="font-size: 10px; background: #c7d2fe; color: #312e81; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
+                                        <span style="font-size: 10px; background: #c7d2fe; color: #1e1b4b; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
                                             {{ $offeringItem->enrollments ? $offeringItem->enrollments->count() : 0 }} Mhs
                                         </span>
                                     </a>
@@ -360,7 +365,9 @@
 
                             <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
                             <div style="margin-top: auto;">
-                                <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" class="btn btn-primary w-full text-center">
+                                <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" 
+                                   aria-label="Buka gerbang kelas {{ $firstOffering->name }}"
+                                   class="btn btn-primary w-full text-center">
                                     🚀 Buka Gerbang Kelas
                                 </a>
                             </div>
@@ -371,14 +378,14 @@
                     <div class="course-card">
                         <div class="course-top">
                             <span class="course-tag">{{ $course->academicTerm->name ?? 'Semester Aktif' }}</span>
-                            <span class="course-badge text-green-700 bg-green-50 border-green-200">Aktif</span>
+                            <span class="course-badge text-emerald-900 bg-emerald-100 border-emerald-300 font-bold">Aktif</span>
                         </div>
 
-                        <div class="course-name">{{ $course->name }}</div>
+                        <h2 class="course-name">{{ $course->name }}</h2>
 
-                        <div class="text-xs text-indigo-600 mb-3 font-bold flex items-center gap-1.5">
+                        <div class="text-xs text-indigo-900 mb-3 font-extrabold flex items-center gap-1.5">
                             <span>⚡ Certificate Threshold:</span>
-                            <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
+                            <span class="bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded-md font-extrabold border border-indigo-200">{{ $course->certificate_threshold ?? 75 }}%</span>
                         </div>
 
                         <p class="course-desc">{{ $course->description ?: 'Pengelolaan materi pembelajaran, bank kuis, dan kelulusan sertifikat.' }}</p>
@@ -400,33 +407,35 @@
 
                         <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN SANGAT RAPI -->
                         <div style="margin-top: auto;">
-                            <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
+                            <a href="{{ route('lecturer.courses.show', $course->id) }}" 
+                               aria-label="Buka gerbang kelas {{ $course->name }}"
+                               class="btn btn-primary w-full text-center">
                                 🚀 Buka Gerbang Kelas
                             </a>
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
-                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Kelas Aktif</h3>
-                        <p style="font-size: 13px; color: #64748b;">Mata kuliah dan penawaran kelas akan disiapkan dan ditugaskan oleh Admin.</p>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #101828;">Belum Ada Kelas Aktif</h3>
+                        <p style="font-size: 13px; color: #344054; font-weight: 500;">Mata kuliah dan penawaran kelas akan disiapkan dan ditugaskan oleh Admin.</p>
                     </div>
                 @endforelse
                 @endif
             </div>
-        </div> </div>
+        </div>
 
-        <div x-show="tab === 'bank'" style="display: none;">
+        <div id="tab-bank-panel" role="tabpanel" aria-label="Daftar Arsip Kelas" x-show="tab === 'bank'" style="display: none;">
             <div class="courses-grid">
                 @forelse($bankCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
                             <span class="course-tag">{{ $course->academicTerm->name ?? 'Semester Lalu' }}</span>
-                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">Arsip</span>
+                            <span class="course-badge text-slate-900 bg-slate-100 border-slate-300 font-bold">Arsip</span>
                         </div>
 
-                        <div class="course-name">{{ $course->name }}</div>
+                        <h2 class="course-name">{{ $course->name }}</h2>
 
-                        <div class="text-xs text-slate-500 mb-3 font-semibold">
+                        <div class="text-xs text-slate-700 mb-3 font-bold">
                             Threshold: {{ $course->certificate_threshold ?? 75 }}%
                         </div>
 
@@ -448,20 +457,22 @@
                         </div>
 
                         <div style="margin-top: auto;">
-                            <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
+                            <a href="{{ route('lecturer.courses.show', $course->id) }}" 
+                               aria-label="Buka gerbang kelas terarsip {{ $course->name }}"
+                               class="btn btn-primary w-full text-center">
                                 🚀 Buka Gerbang Kelas
                             </a>
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
-                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Kelas Terarsip</h3>
-                        <p style="font-size: 13px; color: #64748b;">Seluruh kelas aktif yang telah selesai akan muncul di sini.</p>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #101828;">Belum Ada Kelas Terarsip</h3>
+                        <p style="font-size: 13px; color: #344054; font-weight: 500;">Seluruh kelas aktif yang telah selesai akan muncul di sini.</p>
                     </div>
                 @endforelse
             </div>
         </div>
 
     </div>
-</div>
+</main>
 </x-app-layout>
