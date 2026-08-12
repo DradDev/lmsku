@@ -65,29 +65,30 @@
 
 
 
-        <!-- SECTION 2: TARGET SKILL & TAG KOMPETENSI CARD -->
+        <!-- SECTION 2: TARGET SKILL & TAG KOMPETENSI CARD (MASTER-DETAIL DYNAMIC FORM) -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Skill & Tag Target Kompetensi Matkul</h2>
-                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Centang Skill Induk di sebelah kiri. Daftar Tag Sub-Topik akan ditampilkan secara terkelompok per Skill di sebelah kanan.</p>
+                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Centang satu atau beberapa Skill Utama di sebelah kiri. Kelompok Tag Sub-Topik yang berhubungan dengan Skill yang dicentang akan otomatis muncul di sebelah kanan.</p>
                 </div>
             </div>
 
             <!-- ACTIVE SKILL & TAG PILLS DISPLAY -->
             <div style="margin-bottom: 1.5rem; background: #FAFAFA; border: 1px solid #F1F5F9; border-radius: 12px; padding: 1rem;">
-                <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Target Skill & Tag Aktif Saat Ini:</div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Target Skill & Tag Aktif Terpasang Saat Ini:</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     @forelse($masterCourse->skills as $s)
-                        <span style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px;">
+                        <span style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                             Skill: {{ $s->name }}
                         </span>
                     @empty
                     @endforelse
 
                     @forelse($masterCourse->tags as $t)
-                        <span style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px;">
-                            Tag: {{ $t->name }}
+                        <span style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 4px;">
+                            #{{ $t->name }}
                         </span>
                     @empty
                     @endforelse
@@ -101,24 +102,37 @@
             <!-- FORM SYNC SKILL & TAG DINAMIS DI-GROUP PER SKILL -->
             <form action="{{ route('admin.master-courses.competencies.sync', $masterCourse) }}" method="POST">
                 @csrf
-                <div style="display: grid; grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.5fr); gap: 1.5rem; margin-bottom: 1.25rem;">
+                <div style="display: grid; grid-template-columns: minmax(300px, 1fr) minmax(340px, 1.6fr); gap: 1.5rem; margin-bottom: 1.25rem;">
                     
                     <!-- LANGKAH 1: PILIH SKILL INDUK -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <label style="font-size: 12.5px; font-weight: 700; color: #334155;">1. Pilih Skill Induk (Bisa Multiple):</label>
-                            <span id="skill-count-badge" style="font-size: 11px; font-weight: 700; color: #2563EB; background: #EFF6FF; padding: 2px 8px; border-radius: 100px;">0 Terpilih</span>
+                            <label style="font-size: 12.5px; font-weight: 800; color: #1E293B;">1. Pilih Skill Utama (Bisa Multiple):</label>
+                            <span id="skill-count-badge" style="font-size: 11px; font-weight: 700; color: #2563EB; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 2px 10px; border-radius: 100px;">0 Terpilih</span>
                         </div>
-                        <div style="max-height: 380px; overflow-y: auto; border: 1px solid #CBD5E1; border-radius: 10px; padding: 10px; background: #FFF; display: flex; flex-direction: column; gap: 8px;">
+
+                        <div style="max-height: 420px; overflow-y: auto; border: 1px solid #CBD5E1; border-radius: 12px; padding: 10px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px;">
                             @foreach($allSkills as $sk)
-                                <label style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #0F172A; cursor: pointer; padding: 6px 8px; border-radius: 8px; border: 1px solid #F1F5F9; transition: background 0.15s;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
-                                    <input type="checkbox" 
-                                           name="skill_ids[]" 
-                                           value="{{ $sk->id }}" 
-                                           class="skill-dynamic-checkbox" 
-                                           data-skill-id="{{ $sk->id }}"
-                                           {{ $masterCourse->skills->contains($sk->id) ? 'checked' : '' }}>
-                                    <span style="font-weight: 700;">Skill: {{ $sk->name }}</span>
+                                @php
+                                    $subTagCount = $allTags->where('skill_id', $sk->id)->count();
+                                    $isChecked = $masterCourse->skills->contains($sk->id);
+                                @endphp
+                                <label class="skill-checkbox-card" 
+                                       data-skill-card-id="{{ $sk->id }}"
+                                       style="display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: #0F172A; cursor: pointer; padding: 10px 12px; border-radius: 10px; border: 1px solid {{ $isChecked ? '#3B82F6' : '#E2E8F0' }}; background: {{ $isChecked ? '#EFF6FF' : '#FFFFFF' }}; transition: all 0.15s ease;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" 
+                                               name="skill_ids[]" 
+                                               value="{{ $sk->id }}" 
+                                               class="skill-dynamic-checkbox" 
+                                               data-skill-id="{{ $sk->id }}"
+                                               {{ $isChecked ? 'checked' : '' }}
+                                               style="width: 16px; height: 16px; accent-color: #2563EB; cursor: pointer;">
+                                        <span style="font-weight: 700;">{{ $sk->name }}</span>
+                                    </div>
+                                    <span style="font-size: 11px; font-weight: 600; color: #64748B; background: #F1F5F9; padding: 2px 8px; border-radius: 6px; flex-shrink: 0;">
+                                        {{ $subTagCount }} Sub-Tag
+                                    </span>
                                 </label>
                             @endforeach
                         </div>
@@ -127,17 +141,19 @@
                     <!-- LANGKAH 2: DAFTAR TAG SUB-TOPIK -->
                     <div>
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <label style="font-size: 12.5px; font-weight: 700; color: #334155;">2. Tag Sub-Topik (Terpisah per Kelompok Skill):</label>
-                            <span id="tag-count-badge" style="font-size: 11px; font-weight: 700; color: #4338CA; background: #EEF2FF; padding: 2px 8px; border-radius: 100px;">0 Terpilih</span>
+                            <label style="font-size: 12.5px; font-weight: 800; color: #1E293B;">2. Tag Sub-Topik (Otomatis Tampil Per Skill):</label>
+                            <span id="tag-count-badge" style="font-size: 11px; font-weight: 700; color: #4338CA; background: #EEF2FF; border: 1px solid #C7D2FE; padding: 2px 10px; border-radius: 100px;">0 Terpilih</span>
                         </div>
 
                         <!-- PESAN JIKA BELUM ADA SKILL DIPILIH -->
-                        <div id="no-skill-selected-notice" style="display: none; padding: 2.5rem 1rem; text-align: center; background: #FAFAFA; border: 2px dashed #CBD5E1; border-radius: 10px; color: #64748B; font-size: 13px;">
-                            Centang minimal 1 Skill Induk di sebelah kiri untuk menampilkan kelompok Tag Sub-Topik yang sesuai.
+                        <div id="no-skill-selected-notice" style="display: none; padding: 3rem 1.5rem; text-align: center; background: #FAFAFA; border: 2px dashed #CBD5E1; border-radius: 12px; color: #64748B; font-size: 13px;">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="margin: 0 auto 10px auto;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                            <div style="font-weight: 700; color: #334155; margin-bottom: 4px;">Pilih Skill Utama Terlebih Dahulu</div>
+                            <span>Centang minimal 1 Skill Utama di sebelah kiri untuk menampilkan daftar kelompok Tag Sub-Topik yang sesuai.</span>
                         </div>
 
                         <!-- CONTAINER KELOMPOK TAG TERPISAH PER SKILL INDUK -->
-                        <div id="tags-grouped-wrapper" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
+                        <div id="tags-grouped-wrapper" style="max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
                             @foreach($allSkills as $sk)
                                 @php
                                     $skillTags = $allTags->where('skill_id', $sk->id);
@@ -147,22 +163,41 @@
                                      style="background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; display: none;">
                                     
                                     <!-- HEADER SKILL GROUP -->
-                                    <div style="background: #F1F5F9; padding: 8px 14px; border-bottom: 1px solid #E2E8F0; font-size: 12.5px; font-weight: 800; color: #1E293B; display: flex; align-items: center; justify-content: space-between;">
-                                        <span>⚡ KELOMPOK TAG: {{ strtoupper($sk->name) }}</span>
-                                        <span style="font-size: 11px; font-weight: 600; color: #64748B;">({{ $skillTags->count() }} Tag)</span>
+                                    <div style="background: #F8FAFC; padding: 10px 14px; border-bottom: 1px solid #E2E8F0; font-size: 12.5px; font-weight: 800; color: #1E293B; display: flex; align-items: center; justify-content: space-between;">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #2563EB; display: inline-block;"></span>
+                                            <span>TAG SUB-TOPIK: {{ strtoupper($sk->name) }}</span>
+                                        </div>
+                                        
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <button type="button" 
+                                                    onclick="toggleSelectAllTagsInGroup({{ $sk->id }}, true)"
+                                                    style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; cursor: pointer;">
+                                                Pilih Semua
+                                            </button>
+                                            <button type="button" 
+                                                    onclick="toggleSelectAllTagsInGroup({{ $sk->id }}, false)"
+                                                    style="background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; cursor: pointer;">
+                                                Batal Semua
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <!-- GRID TAG CHECKBOXES UNTUK SKILL INI -->
-                                    <div style="padding: 10px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; background: #FFF;">
+                                    <div style="padding: 12px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; background: #FFFFFF;">
                                         @forelse($skillTags as $tg)
-                                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #334155; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background 0.15s;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='transparent'">
+                                            @php
+                                                $isTagChecked = $masterCourse->tags->contains($tg->id);
+                                            @endphp
+                                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #334155; cursor: pointer; padding: 6px 8px; border-radius: 6px; border: 1px solid #F1F5F9; background: #FAFAFA; transition: background 0.15s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#FAFAFA'">
                                                 <input type="checkbox" 
                                                        name="tag_ids[]" 
                                                        value="{{ $tg->id }}" 
                                                        class="tag-dynamic-checkbox"
                                                        data-parent-skill-id="{{ $sk->id }}"
-                                                       {{ $masterCourse->tags->contains($tg->id) ? 'checked' : '' }}>
-                                                <span style="font-weight: 600;">🏷️ {{ $tg->name }}</span>
+                                                       {{ $isTagChecked ? 'checked' : '' }}
+                                                       style="width: 15px; height: 15px; accent-color: #4338CA; cursor: pointer;">
+                                                <span style="font-weight: 600;">#{{ $tg->name }}</span>
                                             </label>
                                         @empty
                                             <span style="font-size: 12px; color: #94A3B8; italic; grid-column: 1 / -1;">Belum ada tag terdaftar di bawah skill ini.</span>
@@ -175,9 +210,11 @@
                     </div>
                 </div>
 
-                <button type="submit" style="padding: 9px 22px; background: #2563EB; color: #FFF; font-weight: 700; font-size: 13px; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-                    Simpan Skill & Tag Kompetensi
-                </button>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" style="padding: 10px 24px; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 13px; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
+                        Simpan Skill & Tag Kompetensi
+                    </button>
+                </div>
             </form>
         </div>
 
@@ -266,6 +303,18 @@
 
                 skillBadge.textContent = selectedSkillIds.length + ' Skill Terpilih';
 
+                // Highlight active skill cards on left panel
+                document.querySelectorAll('.skill-checkbox-card').forEach(card => {
+                    const skillId = card.getAttribute('data-skill-card-id');
+                    if (selectedSkillIds.includes(skillId)) {
+                        card.style.background = '#EFF6FF';
+                        card.style.borderColor = '#3B82F6';
+                    } else {
+                        card.style.background = '#FFFFFF';
+                        card.style.borderColor = '#E2E8F0';
+                    }
+                });
+
                 if (selectedSkillIds.length === 0) {
                     noSkillNotice.style.display = 'block';
                     tagsWrapper.style.display = 'none';
@@ -287,7 +336,7 @@
                             });
                         } else {
                             card.style.display = 'none';
-                            // Uncheck hidden tags
+                            // Uncheck hidden tags automatically
                             tagCbs.forEach(cb => {
                                 cb.checked = false;
                             });
@@ -297,6 +346,16 @@
                     tagBadge.textContent = selectedTagCount + ' Tag Terpilih';
                 }
             }
+
+            // Global function to select or unselect all tags in a skill group
+            window.toggleSelectAllTagsInGroup = function(skillId, selectAll) {
+                const card = document.querySelector(`.skill-tag-group-card[data-parent-skill-id="${skillId}"]`);
+                if (card) {
+                    const tagCbs = card.querySelectorAll('.tag-dynamic-checkbox');
+                    tagCbs.forEach(cb => cb.checked = selectAll);
+                    updateGroupedDynamicTags();
+                }
+            };
 
             // Bind change listeners to skill checkboxes
             skillCheckboxes.forEach(cb => {
