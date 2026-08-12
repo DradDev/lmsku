@@ -10,10 +10,10 @@
 
             <div>
                 <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                    Katalog Master Course & Sertifikasi (Terpadu)
+                    Katalog Master Course & Sertifikasi (Pusat Pengelolaan)
                 </h2>
                 <p class="text-sm text-gray-500">
-                    Pengawasan terpusat katalog mata kuliah kurikulum Dosen dan course sertifikasi Mitra Vendor Industri.
+                    Pusat pengelolaan kurikulum induk, pembukaan kelas rombel per-semester, dan sertifikasi industri.
                 </p>
             </div>
         </div>
@@ -25,9 +25,7 @@
             <!-- SUCCESS / ERROR ALERTS -->
             @if (session('success'))
                 <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl shadow-sm">
-                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6 9 17l-5-5" />
-                    </svg>
+                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
                     <div>
                         <p class="font-semibold text-sm">Berhasil</p>
                         <p class="text-xs mt-0.5">{{ session('success') }}</p>
@@ -37,11 +35,7 @@
 
             @if (session('error'))
                 <div class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-2xl shadow-sm">
-                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <line x1="15" y1="9" x2="9" y2="15" />
-                        <line x1="9" y1="9" x2="15" y2="15" />
-                    </svg>
+                    <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
                     <div>
                         <p class="font-semibold text-sm">Gagal</p>
                         <p class="text-xs mt-0.5">{{ session('error') }}</p>
@@ -49,32 +43,53 @@
                 </div>
             @endif
 
-            <!-- HERO HEADER ACTION CARD -->
-            <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 md:p-6">
+            <!-- HERO HEADER & SEMESTER SELECTOR BAR -->
+            <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 md:p-6 space-y-4">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <div class="flex items-center gap-2 mb-1">
                             <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-blue-50 text-blue-700 border border-blue-100">
-                                Pusat Katalog Terpadu
+                                Pusat Katalog Master Course
                             </span>
+                            @if($selectedTerm?->is_active)
+                                <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    🟢 Semester Berjalan (Aktif)
+                                </span>
+                            @endif
                         </div>
                         <h3 class="text-lg font-bold text-gray-900">
-                            Kelola Katalog Pembelajaran Akademik & Sertifikasi Industri
+                            Kelola Master Course, Penawaran Rombel & Dosen Pengampu
                         </h3>
-                        <p class="text-xs text-gray-500 mt-1">
-                            Kelola mata kuliah induk kurikulum Dosen (Gerbang 3NF) atau pantau rincian sertifikasi dari Mitra Vendor.
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Pilih semester di sebelah kanan untuk meninjau rombel yang aktif dibuka pada semester tersebut.
                         </p>
                     </div>
 
-                    <a href="{{ route('admin.master-courses.create') }}" 
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                        Tambah Master Course Akademik
-                    </a>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <div class="relative">
+                            <select onchange="window.location.href='?term_id=' + this.value" 
+                                    class="w-full appearance-none bg-slate-50 border border-slate-300 focus:border-blue-500 focus:ring-blue-500 font-extrabold text-slate-800 text-xs py-2.5 pl-4 pr-10 rounded-xl shadow-xs cursor-pointer">
+                                @foreach($academicTerms as $term)
+                                    <option value="{{ $term->id }}" @selected($selectedTerm?->id === $term->id)>
+                                        {{ $term->is_active ? '🟢 [AKTIF]' : '⚪ [NON-AKTIF]' }} {{ $term->name }} ({{ $term->academic_year ?? 'Akademik' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                            </div>
+                        </div>
+
+                        <a href="{{ route('admin.master-courses.create') }}" 
+                           class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition whitespace-nowrap">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                            + Master Course Baru
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <!-- 4 EXECUTIVE METRIC CARDS -->
+            <!-- EXECUTIVE METRICS CARDS -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Total Katalog Master Course</span>
@@ -104,12 +119,12 @@
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">🎯 Offerings & Batches</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600">📌 Rombel Dibuka di {{ $selectedTerm->name ?? 'Semester' }}</span>
                     <div class="flex items-baseline justify-between pt-1">
-                        <h3 class="text-3xl font-extrabold text-emerald-600">{{ $masterCourses->sum('offerings_count') + $vendorCourses->count() }}</h3>
+                        <h3 class="text-3xl font-extrabold text-emerald-600">{{ $masterCourses->sum(fn($mc) => $mc->offerings->count()) }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700">Aktif</span>
                     </div>
-                    <p class="text-[11px] text-emerald-500">Kelas paralel & angkatan batch</p>
+                    <p class="text-[11px] text-emerald-600">Rombel paralel semester ini</p>
                 </div>
             </div>
 
@@ -177,10 +192,11 @@
                             'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
                         ];
                         $badgeClass = $levelBadges[$mc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+                        $termOfferingsCount = $mc->offerings->count();
                     @endphp
 
                     <div x-show="(tab === 'all' || tab === 'internal') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
-                         class="bg-white border border-gray-200 hover:border-blue-300 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+                         class="bg-white border {{ $termOfferingsCount > 0 ? 'border-teal-200 hover:border-teal-400' : 'border-gray-200 hover:border-blue-300' }} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
                         <div>
                             <!-- Header Badges Row -->
                             <div class="flex items-center justify-between gap-2 mb-3">
@@ -195,7 +211,7 @@
 
                             <!-- Course Title & Description -->
                             <h3 class="font-extrabold text-base text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
-                                <a href="{{ route('admin.master-courses.show', $mc) }}">
+                                <a href="{{ route('admin.master-courses.show', [$mc, 'term_id' => $selectedTerm->id]) }}">
                                     {{ $mc->name }}
                                 </a>
                             </h3>
@@ -206,8 +222,21 @@
                                 </p>
                             @endif
 
+                            <!-- Semester Offering Status Badge -->
+                            <div class="mt-3">
+                                @if($termOfferingsCount > 0)
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-extrabold rounded-lg">
+                                        🟢 Dibuka di {{ $selectedTerm->name ?? 'Semester Ini' }} ({{ $termOfferingsCount }} Rombel)
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold rounded-lg">
+                                        ⚪ Belum Dibuka di {{ $selectedTerm->name ?? 'Semester Ini' }}
+                                    </span>
+                                @endif
+                            </div>
+
                             <!-- Meta Info Badges Row -->
-                            <div class="mt-4 flex flex-wrap items-center gap-2">
+                            <div class="mt-3 flex flex-wrap items-center gap-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $badgeClass }}">
                                     {{ $mc->level }}
                                 </span>
@@ -215,24 +244,14 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
                                     📁 {{ $mc->category->name ?? 'Umum' }}
                                 </span>
-
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-sky-50 text-sky-800 text-xs font-bold rounded-md border border-sky-100">
-                                    📌 {{ $mc->offerings_count }} Rombel Kelas
-                                </span>
                             </div>
 
                             <!-- Skills & Tags Preview Chips -->
                             @if($mc->skills->count() > 0 || $mc->tags->count() > 0)
                                 <div class="mt-4 pt-3 border-t border-gray-100 flex flex-wrap gap-1.5">
                                     @foreach($mc->skills as $sk)
-                                        <span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-100 text-[11px] font-bold rounded-md">
+                                        <span class="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-bold rounded-md">
                                             ⚡ {{ $sk->name }}
-                                        </span>
-                                    @endforeach
-
-                                    @foreach($mc->tags as $tg)
-                                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] font-medium rounded-md">
-                                            #{{ $tg->name }}
                                         </span>
                                     @endforeach
                                 </div>
@@ -246,15 +265,9 @@
                             </span>
 
                             <div class="flex items-center gap-1.5">
-                                <a href="{{ route('admin.master-courses.edit', $mc) }}"
-                                   class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition"
-                                   title="Edit Master Course">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                                </a>
-
-                                <a href="{{ route('admin.master-courses.show', $mc) }}" 
-                                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                                    <span>Buka Gerbang</span>
+                                <a href="{{ route('admin.master-courses.show', [$mc, 'term_id' => $selectedTerm->id]) }}" 
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                                    <span>📂 Kelola Rombel & Dosen</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                                 </a>
                             </div>
@@ -315,22 +328,7 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
                                     Threshold {{ $vc->certificate_threshold ?? 75 }}%
                                 </span>
-
-                                <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
-                                    📁 {{ $vc->category->name ?? 'Bootcamp' }}
-                                </span>
                             </div>
-
-                            <!-- Skills Preview Chips -->
-                            @if($vc->skills->count() > 0)
-                                <div class="mt-4 pt-3 border-t border-purple-100 flex flex-wrap gap-1.5">
-                                    @foreach($vc->skills as $sk)
-                                        <span class="px-2 py-0.5 bg-purple-100/70 text-purple-800 border border-purple-200 text-[11px] font-bold rounded-md">
-                                            ⚡ {{ $sk->name }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @endif
                         </div>
 
                         <!-- Card Footer Action Buttons -->

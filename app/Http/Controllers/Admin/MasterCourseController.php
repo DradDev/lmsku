@@ -15,9 +15,21 @@ use App\Models\Course;
 
 class MasterCourseController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
+        $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')
+            ->orderByDesc('id')
+            ->get();
+
+        $selectedTermId = $request->query('term_id', $academicTerms->firstWhere('is_active', true)?->id ?? $academicTerms->first()?->id);
+        $selectedTerm = $academicTerms->firstWhere('id', $selectedTermId);
+
         $masterCourses = MasterCourse::with(['category', 'skills', 'tags', 'materials', 'quizzes'])
+            ->with(['offerings' => function ($q) use ($selectedTermId) {
+                if ($selectedTermId) {
+                    $q->where('academic_term_id', $selectedTermId)->with(['lecturer', 'enrollments']);
+                }
+            }])
             ->withCount('offerings')
             ->orderBy('name')
             ->get();
@@ -29,7 +41,15 @@ class MasterCourseController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return view('admin.master-courses.index', compact('masterCourses', 'vendorCourses'));
+        $lecturers = \App\Models\User::where('role', 'lecturer')->orderBy('name')->get();
+
+        return view('admin.master-courses.index', compact(
+            'masterCourses', 
+            'vendorCourses', 
+            'academicTerms', 
+            'selectedTerm', 
+            'lecturers'
+        ));
     }
 
     public function create(): View
@@ -127,6 +147,8 @@ class MasterCourseController extends Controller
 
         $activeTab = $request->query('tab', 'hierarchy');
 
+        $lecturers = \App\Models\User::where('role', 'lecturer')->orderBy('name')->get();
+
         return view('admin.master-courses.show', compact(
             'masterCourse',
             'academicTerms',
@@ -140,7 +162,8 @@ class MasterCourseController extends Controller
             'categories',
             'allSkills',
             'allTags',
-            'activeTab'
+            'activeTab',
+            'lecturers'
         ));
     }
 
