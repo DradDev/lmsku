@@ -176,6 +176,8 @@ class AcademicTermController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
             'status' => ['required', 'in:draft,published,cancelled'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
         $exists = \App\Models\CourseOffering::where('master_course_id', $validated['master_course_id'])
@@ -184,14 +186,23 @@ class AcademicTermController extends Controller
             ->exists();
 
         if ($exists) {
-            return redirect()->back()->with('error', "Rombel kelas '{$validated['section_name']}' sudah ada untuk mata kuliah ini pada semester tersebut.");
+            return redirect()
+                ->route('admin.academic-terms.show', $validated['academic_term_id'])
+                ->with('error', "Rombel kelas '{$validated['section_name']}' sudah ada untuk mata kuliah ini pada semester tersebut.");
+        }
+
+        // Inherit dates from academic term if not provided
+        $term = AcademicTerm::find($validated['academic_term_id']);
+        if ($term) {
+            $validated['start_date'] = $validated['start_date'] ?? $term->start_date?->format('Y-m-d');
+            $validated['end_date'] = $validated['end_date'] ?? $term->end_date?->format('Y-m-d');
         }
 
         \App\Models\CourseOffering::create($validated);
 
         return redirect()
-            ->route('admin.academic-terms.index', ['term_id' => $validated['academic_term_id']])
-            ->with('success', "Rombel kelas '{$validated['section_name']}' berhasil dibuka.");
+            ->route('admin.academic-terms.show', $validated['academic_term_id'])
+            ->with('success', "Rombel kelas '{$validated['section_name']}' berhasil dibuka pada semester ini.");
     }
 
     public function updateOffering(Request $request, \App\Models\CourseOffering $offering): RedirectResponse
@@ -202,12 +213,14 @@ class AcademicTermController extends Controller
             'capacity' => ['required', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
             'status' => ['required', 'in:draft,published,cancelled'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
         $offering->update($validated);
 
         return redirect()
-            ->route('admin.academic-terms.index', ['term_id' => $offering->academic_term_id])
+            ->route('admin.academic-terms.show', $offering->academic_term_id)
             ->with('success', "Rombel kelas '{$offering->section_name}' berhasil diperbarui.");
     }
 
@@ -225,7 +238,7 @@ class AcademicTermController extends Controller
         }
 
         return redirect()
-            ->route('admin.academic-terms.index', ['term_id' => $termId])
+            ->route('admin.academic-terms.show', $termId)
             ->with('success', $message);
     }
 }

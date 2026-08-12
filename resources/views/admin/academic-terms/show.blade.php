@@ -1,41 +1,4 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <a href="{{ route('admin.academic-terms.index') }}" class="w-10 h-10 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center font-bold transition">
-                    ←
-                </a>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                            Administrasi {{ $academicTerm->name }}
-                        </h2>
-                        @if($academicTerm->is_active)
-                            <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
-                                🟢 Semester Berjalan (Aktif)
-                            </span>
-                        @else
-                            <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                                ⚪ Non-Aktif
-                            </span>
-                        @endif
-                    </div>
-                    <p class="text-sm text-gray-500">
-                        Pengaturan penawaran matkul, pembukaan rombel kelas baru, dan penugasan Dosen Pengampu pada semester {{ $academicTerm->academic_year ?? '' }}.
-                    </p>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <button type="button" 
-                        onclick="document.getElementById('createOfferingModal').style.display='flex'"
-                        class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 whitespace-nowrap">
-                    <span>+ Tambah / Buka Matkul di Semester Ini</span>
-                </button>
-            </div>
-        </div>
-    </x-slot>
-
     <div class="py-6" x-data="{ 
         showCreateOfferingModal: false, 
         showEditOfferingModal: false,
@@ -82,7 +45,7 @@
                     <!-- PROMINENT ADD OFFERING BUTTON -->
                     <div>
                         <button type="button" 
-                                onclick="document.getElementById('createOfferingModal').style.display='flex'"
+                                @click="showCreateOfferingModal = true"
                                 class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white text-xs font-extrabold rounded-xl shadow-md shadow-teal-500/20 transition whitespace-nowrap">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                             <span>+ Tambah / Buka Matkul di Semester Ini</span>
@@ -154,119 +117,115 @@
             <!-- SEMESTER COURSE OFFERINGS ADMINISTRATION LIST -->
             <div class="space-y-6">
                 <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                    <h3 class="text-base font-extrabold text-gray-900 flex items-center gap-2">
-                        <span>📋 Daftar Pengaturan Matkul & Rombel Kelas Semester Ini</span>
-                    </h3>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900">📚 Penawaran Rombel Kelas Semester Ini</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Daftar kelas paralel dan penugasan Dosen Pengampu yang sedang dibuka pada {{ $academicTerm->name }}.</p>
+                    </div>
 
                     <button type="button" 
-                            onclick="document.getElementById('createOfferingModal').style.display='flex'"
-                            class="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 font-bold text-xs rounded-xl transition flex items-center gap-1.5">
+                            @click="showCreateOfferingModal = true"
+                            class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5">
                         <span>+ Buka Rombel Baru</span>
                     </button>
                 </div>
 
                 @if($groupedOfferings->isEmpty())
-                    <div class="bg-white border border-dashed border-gray-300 rounded-2xl p-12 text-center space-y-3">
-                        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                    <div class="bg-white border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center space-y-3">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto text-2xl font-bold">
+                            📖
                         </div>
-                        <h4 class="font-bold text-base text-slate-800">Belum Ada Mata Kuliah Yang Dibuka</h4>
+                        <h4 class="text-base font-extrabold text-slate-800">Belum Ada Mata Kuliah / Rombel Dibuka</h4>
                         <p class="text-xs text-slate-500 max-w-md mx-auto">
-                            Klik tombol di bawah untuk memilih Master Course dari pustaka kurikulum dan membuat rombel kelas pertama di semester ini.
+                            Klik tombol di bawah ini untuk memilih Master Course dari pustaka kurikulum dan membuka rombel kelas baru pada semester ini.
                         </p>
                         <button type="button" 
-                                onclick="document.getElementById('createOfferingModal').style.display='flex'"
-                                class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">
-                            + Tambah / Buka Matkul Pertama
+                                @click="showCreateOfferingModal = true"
+                                class="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-md shadow-teal-500/20 transition">
+                            + Tambah / Buka Matkul di Semester Ini
                         </button>
                     </div>
                 @else
-                    <div class="grid grid-cols-1 gap-6">
-                        @foreach($groupedOfferings as $masterCourseId => $offerings)
-                            @php
-                                $mc = $offerings->first()->masterCourse;
-                            @endphp
-                            <div class="bg-white border border-teal-200 shadow-sm rounded-2xl overflow-hidden">
-                                <!-- Master Course Header -->
-                                <div class="p-4 bg-teal-50/60 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div class="space-y-1">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="font-mono text-[11px] font-extrabold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-300">
-                                                {{ $mc->code ?? 'MC-' . $mc->id }}
-                                            </span>
-
-                                            <span class="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100">
-                                                📁 {{ $mc->category->name ?? 'Umum' }}
-                                            </span>
-
-                                            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">
-                                                Level: {{ $mc->level }}
-                                            </span>
-
-                                            <span class="text-xs font-extrabold text-emerald-800 bg-emerald-100 px-3 py-0.5 rounded-full border border-emerald-200">
-                                                🟢 Dibuka ({{ $offerings->count() }} Rombel)
-                                            </span>
+                    <div class="space-y-6">
+                        @foreach($groupedOfferings as $masterId => $offeringsGroup)
+                            @php $masterCourse = $offeringsGroup->first()->masterCourse; @endphp
+                            <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                                <div class="p-5 bg-slate-50 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                    <div class="flex items-center gap-3">
+                                        <span class="w-9 h-9 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+                                            📚
+                                        </span>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="px-2 py-0.5 text-[10px] font-mono font-bold bg-slate-200 text-slate-700 rounded-md">
+                                                    {{ $masterCourse->code ?? 'MC-'.$masterCourse->id }}
+                                                </span>
+                                                <h4 class="text-base font-extrabold text-slate-900">
+                                                    {{ $masterCourse->name }}
+                                                </h4>
+                                            </div>
+                                            <p class="text-xs text-slate-500 mt-0.5">
+                                                Level: <strong>{{ $masterCourse->level }}</strong> • Kategori: <strong>{{ optional($masterCourse->category)->name ?? 'Umum' }}</strong>
+                                            </p>
                                         </div>
-
-                                        <h4 class="font-extrabold text-base text-slate-900">
-                                            {{ $mc->name }}
-                                        </h4>
                                     </div>
 
-                                    <div class="flex items-center gap-2 whitespace-nowrap">
-                                        <button type="button" 
-                                                @click="selectedMasterCourseId = '{{ $mc->id }}'; selectedMasterCourseName = '{{ addslashes($mc->name) }}'; showCreateOfferingModal = true"
-                                                class="px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition flex items-center gap-1">
-                                            <span>+ Tambah Rombel Kelas</span>
-                                        </button>
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-3 py-1 bg-teal-100 text-teal-800 text-xs font-extrabold rounded-lg">
+                                            {{ $offeringsGroup->count() }} Rombel Kelas
+                                        </span>
                                     </div>
                                 </div>
 
-                                <!-- Opened Rombel Classes Table -->
                                 <div class="overflow-x-auto">
-                                    <table class="w-full text-xs text-left">
-                                        <thead>
-                                            <tr class="bg-white border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                                                <th class="px-5 py-3">Nama Rombel Kelas</th>
+                                    <table class="w-full text-left text-xs">
+                                        <thead class="bg-slate-100/70 border-b border-gray-200 text-slate-500 font-bold uppercase tracking-wider">
+                                            <tr>
+                                                <th class="px-5 py-3">Nama Rombel / Kelas</th>
                                                 <th class="px-5 py-3">Dosen Pengampu Utama</th>
-                                                <th class="px-5 py-3">Kuota Mahasiswa</th>
-                                                <th class="px-5 py-3">Threshold Kelulusan (%)</th>
-                                                <th class="px-5 py-3">Status Kelas</th>
-                                                <th class="px-5 py-3 text-right">Aksi Administrasi</th>
+                                                <th class="px-5 py-3">Terisi / Kuota</th>
+                                                <th class="px-5 py-3">Threshold</th>
+                                                <th class="px-5 py-3">Status Rombel</th>
+                                                <th class="px-5 py-3 text-right">Aksi Moderasi</th>
                                             </tr>
                                         </thead>
-
                                         <tbody class="divide-y divide-gray-100">
-                                            @foreach($offerings as $off)
-                                                @php
-                                                    $enrolledCount = $off->enrollments->count();
-                                                    $capacity = $off->capacity ?? 40;
-                                                    $pct = min(100, round(($enrolledCount / $capacity) * 100));
-                                                    $isFull = $enrolledCount >= $capacity;
+                                            @foreach($offeringsGroup as $off)
+                                                @php 
+                                                    $enrolledCount = $off->enrollments ? $off->enrollments->count() : 0;
+                                                    $cap = $off->capacity ?? 40;
+                                                    $isFull = $enrolledCount >= $cap;
+                                                    $pct = min(100, round(($enrolledCount / max(1, $cap)) * 100));
                                                 @endphp
-                                                <tr class="hover:bg-slate-50/50 transition">
-                                                    <td class="px-5 py-3.5 font-extrabold text-slate-800">
-                                                        <span class="inline-flex items-center gap-1 bg-sky-50 text-sky-800 border border-sky-200 px-2.5 py-1 rounded-lg">
-                                                            📌 {{ $off->section_name }}
-                                                        </span>
-                                                    </td>
-
-                                                    <td class="px-5 py-3.5">
-                                                        <div class="font-bold text-slate-900">👨‍🏫 {{ $off->lecturer->name ?? 'Belum Ditugaskan' }}</div>
-                                                        <div class="text-[10px] text-slate-400">{{ $off->lecturer->email ?? '-' }}</div>
-                                                    </td>
-
-                                                    <td class="px-5 py-3.5">
+                                                <tr class="hover:bg-slate-50/80 transition">
+                                                    <td class="px-5 py-3.5 font-extrabold text-slate-900">
                                                         <div class="flex items-center gap-2">
-                                                            <span class="font-extrabold {{ $isFull ? 'text-rose-600' : 'text-slate-800' }}">
-                                                                {{ $enrolledCount }} / {{ $capacity }} Mhs
-                                                            </span>
-                                                            @if($isFull)
-                                                                <span class="text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">FULL 🔒</span>
-                                                            @endif
+                                                            <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+                                                            <span>{{ $off->section_name }}</span>
                                                         </div>
+                                                    </td>
 
-                                                        <div class="w-28 bg-gray-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                                                    <td class="px-5 py-3.5">
+                                                        @if($off->lecturer)
+                                                            <div class="flex items-center gap-2">
+                                                                <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px]">
+                                                                    👨‍🏫
+                                                                </span>
+                                                                <div>
+                                                                    <p class="font-bold text-slate-900">{{ $off->lecturer->name }}</p>
+                                                                    <p class="text-[10px] text-slate-400">{{ $off->lecturer->email }}</p>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <span class="text-rose-500 italic font-semibold">Belum Ditugaskan</span>
+                                                        @endif
+                                                    </td>
+
+                                                    <td class="px-5 py-3.5">
+                                                        <div class="flex items-center justify-between gap-2 mb-1">
+                                                            <span class="font-bold text-slate-900">{{ $enrolledCount }} / {{ $cap }} Mhs</span>
+                                                            <span class="text-[10px] font-bold {{ $isFull ? 'text-rose-600' : 'text-slate-500' }}">{{ $pct }}%</span>
+                                                        </div>
+                                                        <div class="w-28 bg-slate-100 h-1.5 rounded-full overflow-hidden">
                                                             <div class="h-1.5 rounded-full {{ $isFull ? 'bg-rose-500' : 'bg-teal-500' }}" style="width: {{ $pct }}%"></div>
                                                         </div>
                                                     </td>
@@ -302,7 +261,9 @@
                                                                         lecturer_id: '{{ $off->lecturer_id }}',
                                                                         capacity: {{ $off->capacity ?? 40 }},
                                                                         certificate_threshold: {{ $off->certificate_threshold ?? 70 }},
-                                                                        status: '{{ $off->status }}'
+                                                                        status: '{{ $off->status }}',
+                                                                        start_date: '{{ $off->start_date ? $off->start_date->format('Y-m-d') : ($academicTerm->start_date ? $academicTerm->start_date->format('Y-m-d') : '') }}',
+                                                                        end_date: '{{ $off->end_date ? $off->end_date->format('Y-m-d') : ($academicTerm->end_date ? $academicTerm->end_date->format('Y-m-d') : '') }}'
                                                                     }; showEditOfferingModal = true"
                                                                     class="px-2.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-[11px] rounded-lg transition">
                                                                 ✏️ Edit Rombel
@@ -331,16 +292,16 @@
         </div>
 
         <!-- MODAL: BUKA MATKUL & CREATION OF CLASS SECTION IN THIS SEMESTER -->
-        <div id="createOfferingModal" 
-             class="fixed inset-0 z-50 items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4"
+        <div x-show="showCreateOfferingModal"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4"
              style="display: none;">
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden" @click.away="showCreateOfferingModal = false">
                 <div class="p-5 border-b border-gray-100 flex items-center justify-between">
                     <div>
-                        <h3 class="text-base font-extrabold text-gray-900">🚀 Tambah Matkul & Penugasan Dosen</h3>
+                        <h3 class="text-base font-extrabold text-gray-900">🚀 Buka Matkul & Rombel Kelas Baru</h3>
                         <p class="text-xs text-gray-500 mt-0.5">Pilih Master Course dari pustaka kurikulum dan tentukan Dosen Pengampu pada {{ $academicTerm->name }}.</p>
                     </div>
-                    <button type="button" onclick="document.getElementById('createOfferingModal').style.display='none'" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+                    <button type="button" @click="showCreateOfferingModal = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
                 </div>
 
                 <form action="{{ route('admin.academic-terms.offerings.store') }}" method="POST" class="p-5 space-y-4">
@@ -383,6 +344,18 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Mulai Rombel</label>
+                            <input type="date" name="start_date" value="{{ $academicTerm->start_date ? $academicTerm->start_date->format('Y-m-d') : '' }}" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Selesai Rombel</label>
+                            <input type="date" name="end_date" value="{{ $academicTerm->end_date ? $academicTerm->end_date->format('Y-m-d') : '' }}" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
                             <label class="block text-xs font-bold text-gray-700 mb-1.5">Threshold Kelulusan (%) <span class="text-rose-500">*</span></label>
                             <input type="number" name="certificate_threshold" value="70" min="1" max="100" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold" required>
                         </div>
@@ -397,7 +370,7 @@
                     </div>
 
                     <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
-                        <button type="button" onclick="document.getElementById('createOfferingModal').style.display='none'" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
+                        <button type="button" @click="showCreateOfferingModal = false" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition">Batal</button>
                         <button type="submit" class="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-xs rounded-xl shadow-xs transition">🚀 Simpan & Buka Rombel</button>
                     </div>
                 </form>
@@ -406,7 +379,6 @@
 
         <!-- MODAL: EDIT ROMBEL KELAS -->
         <div x-show="showEditOfferingModal" 
-             x-transition.opacity
              class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4"
              style="display: none;">
             <div @click.away="showEditOfferingModal = false" class="bg-white rounded-2xl shadow-xl border border-gray-100 w-full max-w-lg overflow-hidden">
@@ -443,6 +415,18 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Mulai Rombel</label>
+                            <input type="date" name="start_date" x-model="editOfferingData.start_date" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">Tanggal Selesai Rombel</label>
+                            <input type="date" name="end_date" x-model="editOfferingData.end_date" class="w-full rounded-xl border-gray-300 focus:border-teal-600 focus:ring-teal-600 text-xs font-bold">
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-4">
