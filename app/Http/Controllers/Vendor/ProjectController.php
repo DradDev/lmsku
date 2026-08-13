@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
 use App\Models\Skill;

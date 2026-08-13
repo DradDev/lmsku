@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Project;
 use App\Models\Skill;
