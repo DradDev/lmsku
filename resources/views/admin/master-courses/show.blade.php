@@ -55,6 +55,17 @@
                         Edit Master Course
                     </a>
 
+                    <form action="{{ route('admin.master-courses.destroy', $masterCourse) }}" method="POST" 
+                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus Master Course &quot;{{ addslashes($masterCourse->name) }}&quot;?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" 
+                                style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 10px; color: #991B1B; font-size: 12px; font-weight: 700; cursor: pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                            Hapus Master Course
+                        </button>
+                    </form>
+
                     <a href="{{ route('admin.master-courses.index') }}" 
                        style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 10px; color: #64748B; font-size: 12.5px; font-weight: 600; text-decoration: none;">
                         &larr; Kembali ke Daftar

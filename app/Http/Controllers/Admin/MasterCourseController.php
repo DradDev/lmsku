@@ -90,20 +90,33 @@ class MasterCourseController extends Controller
         $prefix = 'TK';
         $skillCode = '';
 
-        // 1. Prioritaskan Main Skill pilihan pertama Admin
         if (!empty($skillIds)) {
-            $primarySkill = Skill::find($skillIds[0]);
-            if ($primarySkill && !empty($primarySkill->name)) {
-                $words = explode(' ', trim($primarySkill->name));
+            $skills = Skill::whereIn('id', $skillIds)->get();
+            if ($skills->count() === 1) {
+                $words = explode(' ', trim($skills->first()->name));
                 if (count($words) >= 2) {
                     $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
                 } else {
                     $skillCode = strtoupper(substr($words[0], 0, 3));
                 }
+            } elseif ($skills->count() === 2) {
+                $parts = [];
+                foreach ($skills as $sk) {
+                    $words = explode(' ', trim($sk->name));
+                    if (count($words) >= 2) {
+                        $parts[] = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                    } else {
+                        $parts[] = strtoupper(substr($words[0], 0, 3));
+                    }
+                }
+                $skillCode = implode('-', $parts);
+            } else {
+                // 3 atau lebih skill -> Interdisciplinary / Multi-Skill
+                $skillCode = 'INT';
             }
         }
 
-        // 2. Fallback ke Kategori jika skill tidak dipilih
+        // Fallback ke Kategori jika skill tidak dipilih
         if (empty($skillCode) && $categoryId) {
             $category = Category::find($categoryId);
             if ($category && !empty($category->name)) {

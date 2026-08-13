@@ -232,6 +232,16 @@
                                    class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-xs font-bold rounded-xl transition">
                                     <span>Edit</span>
                                 </a>
+
+                                <form action="{{ route('admin.master-courses.destroy', $mc) }}" method="POST" 
+                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus Master Course &quot;{{ addslashes($mc->name) }}&quot;? Data penawaran yang sudah berjalan tidak dapat dihapus.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="inline-flex items-center gap-1 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-xl transition">
+                                        <span>Hapus</span>
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
