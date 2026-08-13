@@ -14,10 +14,15 @@ class CourseOfferingSeeder extends Seeder
     public function run(): void
     {
         $activeTerm = AcademicTerm::where('is_active', true)->first() ?? AcademicTerm::first();
-        $lecturer = User::where('role', 'lecturer')->first();
+        $lecturers = User::where('role', 'lecturer')->get();
+        $primaryLecturer = $lecturers->first();
+        $secondaryLecturer = $lecturers->skip(1)->first() ?? $primaryLecturer;
+
         $masterCourses = MasterCourse::all();
 
-        foreach ($masterCourses as $mc) {
+        foreach ($masterCourses as $index => $mc) {
+            $assignedLecturer = ($index % 2 === 0) ? $primaryLecturer : $secondaryLecturer;
+
             // 1. Create CourseOffering (Kelas Paralel)
             $offering = CourseOffering::updateOrCreate(
                 [
@@ -26,7 +31,7 @@ class CourseOfferingSeeder extends Seeder
                     'section_name' => 'A',
                 ],
                 [
-                    'lecturer_id' => $lecturer ? $lecturer->id : null,
+                    'lecturer_id' => $assignedLecturer ? $assignedLecturer->id : null,
                     'capacity' => 40,
                     'start_date' => now()->startOfMonth(),
                     'end_date' => now()->addMonths(4),
@@ -40,7 +45,7 @@ class CourseOfferingSeeder extends Seeder
             $course = Course::updateOrCreate(
                 [
                     'master_course_id' => $mc->id,
-                    'user_id' => $lecturer ? $lecturer->id : null,
+                    'user_id' => $assignedLecturer ? $assignedLecturer->id : null,
                     'batch_name' => 'Kelas A - ' . $activeTerm->name,
                 ],
                 [

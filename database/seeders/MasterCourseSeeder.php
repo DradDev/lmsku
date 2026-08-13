@@ -15,63 +15,79 @@ class MasterCourseSeeder extends Seeder
         $catEmbedded = Category::where('name', 'Embedded Systems & Microcontroller')->first();
         $catWeb = Category::where('name', 'Web & Software Engineering')->first();
         $catNetwork = Category::where('name', 'Network Infrastructure & Cybersecurity')->first();
+        $catAI = Category::where('name', 'Artificial Intelligence & Data Science')->first();
 
         $skillEmbedded = Skill::where('name', 'Embedded Systems & Robotics')->first();
         $skillSoftware = Skill::where('name', 'Software Engineering')->first();
         $skillNetwork = Skill::where('name', 'Networking & Security')->first();
+        $skillAI = Skill::where('name', 'Machine Learning & Artificial Intelligence')->first();
 
-        // 1. Master Course: Praktikum Sistem Tertanam & Mikroprosesor
-        $mcEmbedded = MasterCourse::updateOrCreate(
-            ['code' => 'TK-EMB-INT-001'],
-            [
-                'name' => 'Praktikum Sistem Tertanam & Mikroprosesor',
-                'level' => 'Intermediate',
-                'certificate_threshold' => 75,
-                'category_id' => $catEmbedded ? $catEmbedded->id : null,
-                'description' => "Silabus mata kuliah Praktikum Sistem Tertanam. Membahas arsitektur ESP32, penggunaan periferal GPIO, komunikasi I2C/SPI, pembacaan sensor digital/analog, serta integrasi gateway IoT.\n\nCapaian Pembelajaran (CPMK):\n1. Mampu merancang skematik perangkat keras mikroprosesor.\n2. Menguasai pemrograman C/C++ pada ESP32.\n3. Mengimplementasikan pembacaan sensor real-time.",
-            ]
-        );
-
-        if ($skillEmbedded) {
-            $mcEmbedded->skills()->sync([$skillEmbedded->id]);
-            $tags = Tag::where('skill_id', $skillEmbedded->id)->pluck('id')->toArray();
-            $mcEmbedded->tags()->sync($tags);
-        }
-
-        // 2. Master Course: Pengembangan Web Enterprise dengan Laravel
-        $mcSoftware = MasterCourse::updateOrCreate(
+        // 1. Course 1: Software Engineering
+        $mc1 = MasterCourse::updateOrCreate(
             ['code' => 'TK-SOF-ADV-001'],
             [
-                'name' => 'Pengembangan Web Enterprise dengan Laravel',
+                'name' => 'Praktikum Pemrograman Web Enterprise & Microservices',
                 'level' => 'Advanced',
                 'certificate_threshold' => 80,
                 'category_id' => $catWeb ? $catWeb->id : null,
-                'description' => "Silabus mata kuliah Pengembangan Web Enterprise. Membahas arsitektur MVC, konsumsi & pembuatan RESTful API, otentikasi JWT/Sanctum, otorisasi Role/Policy, serta optimasi query Eloquent ORM.\n\nCapaian Pembelajaran (CPMK):\n1. Mampu membangun REST API berstandar enterprise.\n2. Menguasai keamanan web dan otorisasi multi-role.",
+                'description' => "Silabus mata kuliah Pemrograman Web Enterprise. Membahas arsitektur microservices, pembuatan RESTful API, otentikasi JWT/Sanctum, otorisasi Role/Policy, serta deployment aplikasi ke cloud server.\n\nCapaian Pembelajaran (CPMK):\n1. Mampu merancang backend microservices terdistribusi.\n2. Menguasai arsitektur software dan optimasi database enterprise.",
             ]
         );
-
         if ($skillSoftware) {
-            $mcSoftware->skills()->sync([$skillSoftware->id]);
-            $tags = Tag::where('skill_id', $skillSoftware->id)->pluck('id')->toArray();
-            $mcSoftware->tags()->sync($tags);
+            $mc1->skills()->sync([$skillSoftware->id]);
+            $tags = Tag::where('skill_id', $skillSoftware->id)->whereIn('name', ['Web Development', 'Software Architecture', 'Cloud Computing', 'DevOps'])->pluck('id')->toArray();
+            $mc1->tags()->sync($tags);
         }
 
-        // 3. Master Course: Keamanan Jaringan & Infrastruktur Komputer
-        $mcNetwork = MasterCourse::updateOrCreate(
+        // 2. Course 2: Embedded Systems & Robotics
+        $mc2 = MasterCourse::updateOrCreate(
+            ['code' => 'TK-EMB-INT-001'],
+            [
+                'name' => 'Praktikum Sistem Tertanam & Mikroprosesor ESP32',
+                'level' => 'Intermediate',
+                'certificate_threshold' => 75,
+                'category_id' => $catEmbedded ? $catEmbedded->id : null,
+                'description' => "Silabus mata kuliah Praktikum Sistem Tertanam. Membahas arsitektur ESP32, penggunaan periferal GPIO, komunikasi I2C/SPI, pembacaan sensor digital/analog, serta integrasi gateway IoT industrial.\n\nCapaian Pembelajaran (CPMK):\n1. Mampu merancang skematik sistem mikrokontroler.\n2. Menguasai pemrograman sensor dan gateway telemetri.",
+            ]
+        );
+        if ($skillEmbedded) {
+            $mc2->skills()->sync([$skillEmbedded->id]);
+            $tags = Tag::where('skill_id', $skillEmbedded->id)->whereIn('name', ['Microcontrollers', 'Internet of Things (IoT)', 'Control Systems'])->pluck('id')->toArray();
+            $mc2->tags()->sync($tags);
+        }
+
+        // 3. Course 3: Networking & Security
+        $mc3 = MasterCourse::updateOrCreate(
             ['code' => 'TK-NET-BEG-001'],
             [
-                'name' => 'Keamanan Jaringan & Infrastruktur Komputer',
+                'name' => 'Keamanan Jaringan & Administrasi Server Cloud',
                 'level' => 'Beginner',
                 'certificate_threshold' => 75,
                 'category_id' => $catNetwork ? $catNetwork->id : null,
-                'description' => "Silabus mata kuliah Keamanan Jaringan. Membahas fondasi protokol TCP/IP, routing & switching Cisco, konfigurasi Firewall, dan analisis keamanan jaringan terdistribusi.",
+                'description' => "Silabus mata kuliah Keamanan Jaringan. Membahas fondasi protokol TCP/IP, routing & switching Cisco, konfigurasi Firewall, hardening server Linux, dan mitigasi ancaman cyber.",
             ]
         );
-
         if ($skillNetwork) {
-            $mcNetwork->skills()->sync([$skillNetwork->id]);
-            $tags = Tag::where('skill_id', $skillNetwork->id)->pluck('id')->toArray();
-            $mcNetwork->tags()->sync($tags);
+            $mc3->skills()->sync([$skillNetwork->id]);
+            $tags = Tag::where('skill_id', $skillNetwork->id)->whereIn('name', ['Network Administration', 'Network Security', 'Cybersecurity', 'Cloud Computing'])->pluck('id')->toArray();
+            $mc3->tags()->sync($tags);
+        }
+
+        // 4. Course 4: Machine Learning & Artificial Intelligence
+        $mc4 = MasterCourse::updateOrCreate(
+            ['code' => 'TK-MAC-ADV-001'],
+            [
+                'name' => 'Penerapan Machine Learning & Computer Vision',
+                'level' => 'Advanced',
+                'certificate_threshold' => 80,
+                'category_id' => $catAI ? $catAI->id : null,
+                'description' => "Silabus mata kuliah Machine Learning. Membahas algoritma pemrosesan citra digital, Convolutional Neural Networks (CNN), deteksi objek real-time, dan ekstraksi fitur visual.",
+            ]
+        );
+        if ($skillAI) {
+            $mc4->skills()->sync([$skillAI->id]);
+            $tags = Tag::where('skill_id', $skillAI->id)->whereIn('name', ['Machine Learning', 'Deep Learning', 'Computer Vision'])->pluck('id')->toArray();
+            $mc4->tags()->sync($tags);
         }
     }
 }

@@ -15,38 +15,38 @@ class MaterialQuizSeeder extends Seeder
     public function run(): void
     {
         $lecturer = User::where('role', 'lecturer')->first();
-        $mcEmbedded = MasterCourse::where('code', 'TK-EMB-INT-001')->first();
+        
         $mcSoftware = MasterCourse::where('code', 'TK-SOF-ADV-001')->first();
+        $mcEmbedded = MasterCourse::where('code', 'TK-EMB-INT-001')->first();
+        $mcNetwork = MasterCourse::where('code', 'TK-NET-BEG-001')->first();
 
-        $courseEmbedded = Course::where('master_course_id', $mcEmbedded ? $mcEmbedded->id : 0)->first();
-        $courseSoftware = Course::where('master_course_id', $mcSoftware ? $mcSoftware->id : 0)->first();
+        // 1. Modul Materi & Kuis untuk Course Web Enterprise
+        if ($mcSoftware) {
+            $courseSoftware = Course::where('master_course_id', $mcSoftware->id)->first();
 
-        // 1. Modul Materi untuk Praktikum Sistem Tertanam
-        if ($mcEmbedded) {
             Material::updateOrCreate(
-                ['title' => 'Modul 01 - Pengenalan Arsitektur ESP32 & Pin GPIO'],
+                ['title' => 'Modul 01 - Microservices Architecture & RESTful API Service'],
                 [
-                    'master_course_id' => $mcEmbedded->id,
-                    'course_id' => $courseEmbedded ? $courseEmbedded->id : null,
-                    'file_path' => 'materials/modul_01_esp32_gpio.pdf',
+                    'master_course_id' => $mcSoftware->id,
+                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
+                    'file_path' => 'materials/modul_01_microservices_api.pdf',
                 ]
             );
 
             Material::updateOrCreate(
-                ['title' => 'Modul 02 - Komunikasi Protokol I2C & Sensor Pembacaan Data'],
+                ['title' => 'Modul 02 - Otentikasi JWT & Otorisasi Middleware'],
                 [
-                    'master_course_id' => $mcEmbedded->id,
-                    'course_id' => $courseEmbedded ? $courseEmbedded->id : null,
-                    'file_path' => 'materials/modul_02_i2c_sensors.pdf',
+                    'master_course_id' => $mcSoftware->id,
+                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
+                    'file_path' => 'materials/modul_02_jwt_middleware.pdf',
                 ]
             );
 
-            // Kuis Modul 1
-            $quizModul1 = Quiz::updateOrCreate(
-                ['title' => 'Kuis Evaluasi Modul 01: Arsitektur Mikroprosesor'],
+            $quizSoftwareModul1 = Quiz::updateOrCreate(
+                ['title' => 'Kuis Evaluasi Modul 01: Microservices REST API'],
                 [
-                    'master_course_id' => $mcEmbedded->id,
-                    'course_id' => $courseEmbedded ? $courseEmbedded->id : null,
+                    'master_course_id' => $mcSoftware->id,
+                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
                     'time_limit' => 15,
                     'quiz_type' => 'daily',
                     'max_attempts' => 3,
@@ -54,36 +54,60 @@ class MaterialQuizSeeder extends Seeder
             );
 
             Question::updateOrCreate(
-                ['quiz_id' => $quizModul1->id, 'question' => 'Berapa jumlah pin GPIO default pada SoC ESP32-WROOM-32?'],
+                ['quiz_id' => $quizSoftwareModul1->id, 'question' => 'Method mana pada Eloquent ORM yang digunakan untuk menghindari masalah N+1 Query Problem?'],
                 [
                     'user_id' => $lecturer ? $lecturer->id : null,
                     'question_type' => 'multiple_choice',
-                    'option_a' => '16 Pin',
-                    'option_b' => '34 Pin',
-                    'option_c' => '48 Pin',
-                    'option_d' => '64 Pin',
+                    'option_a' => 'whereHas()',
+                    'option_b' => 'with() / Eager Loading',
+                    'option_c' => 'join()',
+                    'option_d' => 'lazy()',
                     'correct_answer' => 'b',
-                    'status' => 'approved',
-                    'difficulty' => 'easy',
-                ]
-            );
-
-            Question::updateOrCreate(
-                ['quiz_id' => $quizModul1->id, 'question' => 'Protokol komunikasi mana yang menggunakan dua jalur sinyal SDA dan SCL?'],
-                [
-                    'user_id' => $lecturer ? $lecturer->id : null,
-                    'question_type' => 'multiple_choice',
-                    'option_a' => 'SPI',
-                    'option_b' => 'UART',
-                    'option_c' => 'I2C',
-                    'option_d' => 'CAN Bus',
-                    'correct_answer' => 'c',
                     'status' => 'approved',
                     'difficulty' => 'medium',
                 ]
             );
 
-            // UAS Final Quiz
+            $finalQuizSoftware = Quiz::updateOrCreate(
+                ['title' => 'Final Quiz UAS: Sertifikasi Software Engineering & Microservices'],
+                [
+                    'master_course_id' => $mcSoftware->id,
+                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
+                    'time_limit' => 45,
+                    'quiz_type' => 'final',
+                    'max_attempts' => 2,
+                ]
+            );
+
+            Question::updateOrCreate(
+                ['quiz_id' => $finalQuizSoftware->id, 'question' => 'Manakah HTTP Method yang idempotently digunakan untuk memperbarui atau mengganti resource secara utuh?'],
+                [
+                    'user_id' => $lecturer ? $lecturer->id : null,
+                    'question_type' => 'multiple_choice',
+                    'option_a' => 'POST',
+                    'option_b' => 'PUT',
+                    'option_c' => 'PATCH',
+                    'option_d' => 'GET',
+                    'correct_answer' => 'b',
+                    'status' => 'approved',
+                    'difficulty' => 'easy',
+                ]
+            );
+        }
+
+        // 2. Modul Materi & Kuis untuk Praktikum Sistem Tertanam
+        if ($mcEmbedded) {
+            $courseEmbedded = Course::where('master_course_id', $mcEmbedded->id)->first();
+
+            Material::updateOrCreate(
+                ['title' => 'Modul 01 - Pengenalan Arsitektur ESP32 & Periferal GPIO'],
+                [
+                    'master_course_id' => $mcEmbedded->id,
+                    'course_id' => $courseEmbedded ? $courseEmbedded->id : null,
+                    'file_path' => 'materials/modul_01_esp32_gpio.pdf',
+                ]
+            );
+
             $finalQuizEmbedded = Quiz::updateOrCreate(
                 ['title' => 'Final Quiz UAS: Ujian Komprehensif Sertifikasi Sistem Tertanam'],
                 [
@@ -109,57 +133,44 @@ class MaterialQuizSeeder extends Seeder
                     'difficulty' => 'medium',
                 ]
             );
-
-            Question::updateOrCreate(
-                ['quiz_id' => $finalQuizEmbedded->id, 'question' => 'Manakah dari berikut yang merupakan keuntungan utama arsitektur Dual-Core pada ESP32?'],
-                [
-                    'user_id' => $lecturer ? $lecturer->id : null,
-                    'question_type' => 'multiple_choice',
-                    'option_a' => 'Menurunkan konsumsi daya menjadi nol',
-                    'option_b' => 'Memisahkan tugas stack komunikasi nirkabel dan logika program utama secara paralel',
-                    'option_c' => 'Menghilangkan kebutuhan pin masukan analog',
-                    'option_d' => 'Meningkatkan tegangan operasional dari 3.3V ke 12V',
-                    'correct_answer' => 'b',
-                    'status' => 'approved',
-                    'difficulty' => 'hard',
-                ]
-            );
         }
 
-        // 2. Modul Materi untuk Pengembangan Web Enterprise dengan Laravel
-        if ($mcSoftware) {
+        // 3. Modul Materi & Kuis untuk Keamanan Jaringan
+        if ($mcNetwork) {
+            $courseNetwork = Course::where('master_course_id', $mcNetwork->id)->first();
+
             Material::updateOrCreate(
-                ['title' => 'Modul 01 - Arsitektur MVC & RESTful API Service'],
+                ['title' => 'Modul 01 - Konfigurasi Firewall & Keamanan Jaringan TCP/IP'],
                 [
-                    'master_course_id' => $mcSoftware->id,
-                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
-                    'file_path' => 'materials/modul_01_laravel_mvc_api.pdf',
+                    'master_course_id' => $mcNetwork->id,
+                    'course_id' => $courseNetwork ? $courseNetwork->id : null,
+                    'file_path' => 'materials/modul_01_network_firewall.pdf',
                 ]
             );
 
-            $finalQuizLaravel = Quiz::updateOrCreate(
-                ['title' => 'Final Quiz UAS: Sertifikasi Laravel Enterprise Backend'],
+            $finalQuizNetwork = Quiz::updateOrCreate(
+                ['title' => 'Final Quiz UAS: Sertifikasi Administrator Jaringan & Keamanan Cloud'],
                 [
-                    'master_course_id' => $mcSoftware->id,
-                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
-                    'time_limit' => 45,
+                    'master_course_id' => $mcNetwork->id,
+                    'course_id' => $courseNetwork ? $courseNetwork->id : null,
+                    'time_limit' => 35,
                     'quiz_type' => 'final',
                     'max_attempts' => 2,
                 ]
             );
 
             Question::updateOrCreate(
-                ['quiz_id' => $finalQuizLaravel->id, 'question' => 'Method mana pada Eloquent ORM yang digunakan untuk menghindari masalah N+1 Query Problem?'],
+                ['quiz_id' => $finalQuizNetwork->id, 'question' => 'Port default berapa yang digunakan oleh protokol HTTPS terenkripsi SSL/TLS?'],
                 [
                     'user_id' => $lecturer ? $lecturer->id : null,
                     'question_type' => 'multiple_choice',
-                    'option_a' => 'whereHas()',
-                    'option_b' => 'with() / Eager Loading',
-                    'option_c' => 'join()',
-                    'option_d' => 'lazy()',
-                    'correct_answer' => 'b',
+                    'option_a' => '80',
+                    'option_b' => '22',
+                    'option_c' => '443',
+                    'option_d' => '8080',
+                    'correct_answer' => 'c',
                     'status' => 'approved',
-                    'difficulty' => 'medium',
+                    'difficulty' => 'easy',
                 ]
             );
         }
