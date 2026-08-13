@@ -16,13 +16,13 @@ class MasterCourseSeeder extends Seeder
         $catWeb = Category::where('name', 'Web & Software Engineering')->first();
         $catNetwork = Category::where('name', 'Network Infrastructure & Cybersecurity')->first();
 
-        $skillEmbedded = Skill::where('name', 'Embedded Systems & IoT')->first();
-        $skillLaravel = Skill::where('name', 'Laravel Backend Framework')->first();
-        $skillNetwork = Skill::where('name', 'Computer Networking')->first();
+        $skillEmbedded = Skill::where('name', 'Embedded Systems & Robotics')->first();
+        $skillSoftware = Skill::where('name', 'Software Engineering')->first();
+        $skillNetwork = Skill::where('name', 'Networking & Security')->first();
 
         // 1. Master Course: Praktikum Sistem Tertanam & Mikroprosesor
         $mcEmbedded = MasterCourse::updateOrCreate(
-            ['code' => 'TK-EMS-INT-001'],
+            ['code' => 'TK-EMB-INT-001'],
             [
                 'name' => 'Praktikum Sistem Tertanam & Mikroprosesor',
                 'level' => 'Intermediate',
@@ -39,8 +39,8 @@ class MasterCourseSeeder extends Seeder
         }
 
         // 2. Master Course: Pengembangan Web Enterprise dengan Laravel
-        $mcLaravel = MasterCourse::updateOrCreate(
-            ['code' => 'TK-LAB-ADV-001'],
+        $mcSoftware = MasterCourse::updateOrCreate(
+            ['code' => 'TK-SOF-ADV-001'],
             [
                 'name' => 'Pengembangan Web Enterprise dengan Laravel',
                 'level' => 'Advanced',
@@ -50,15 +50,15 @@ class MasterCourseSeeder extends Seeder
             ]
         );
 
-        if ($skillLaravel) {
-            $mcLaravel->skills()->sync([$skillLaravel->id]);
-            $tags = Tag::where('skill_id', $skillLaravel->id)->pluck('id')->toArray();
-            $mcLaravel->tags()->sync($tags);
+        if ($skillSoftware) {
+            $mcSoftware->skills()->sync([$skillSoftware->id]);
+            $tags = Tag::where('skill_id', $skillSoftware->id)->pluck('id')->toArray();
+            $mcSoftware->tags()->sync($tags);
         }
 
         // 3. Master Course: Keamanan Jaringan & Infrastruktur Komputer
         $mcNetwork = MasterCourse::updateOrCreate(
-            ['code' => 'TK-COM-BEG-001'],
+            ['code' => 'TK-NET-BEG-001'],
             [
                 'name' => 'Keamanan Jaringan & Infrastruktur Komputer',
                 'level' => 'Beginner',

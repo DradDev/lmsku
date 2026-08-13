@@ -15,11 +15,11 @@ class MaterialQuizSeeder extends Seeder
     public function run(): void
     {
         $lecturer = User::where('role', 'lecturer')->first();
-        $mcEmbedded = MasterCourse::where('code', 'TK-EMS-INT-001')->first();
-        $mcLaravel = MasterCourse::where('code', 'TK-LAB-ADV-001')->first();
+        $mcEmbedded = MasterCourse::where('code', 'TK-EMB-INT-001')->first();
+        $mcSoftware = MasterCourse::where('code', 'TK-SOF-ADV-001')->first();
 
-        $courseEmbedded = Course::where('master_course_id', $mcEmbedded->id)->first();
-        $courseLaravel = Course::where('master_course_id', $mcLaravel->id)->first();
+        $courseEmbedded = Course::where('master_course_id', $mcEmbedded ? $mcEmbedded->id : 0)->first();
+        $courseSoftware = Course::where('master_course_id', $mcSoftware ? $mcSoftware->id : 0)->first();
 
         // 1. Modul Materi untuk Praktikum Sistem Tertanam
         if ($mcEmbedded) {
@@ -41,7 +41,7 @@ class MaterialQuizSeeder extends Seeder
                 ]
             );
 
-            // Kuis Modul 1 (daily)
+            // Kuis Modul 1
             $quizModul1 = Quiz::updateOrCreate(
                 ['title' => 'Kuis Evaluasi Modul 01: Arsitektur Mikroprosesor'],
                 [
@@ -127,12 +127,12 @@ class MaterialQuizSeeder extends Seeder
         }
 
         // 2. Modul Materi untuk Pengembangan Web Enterprise dengan Laravel
-        if ($mcLaravel) {
+        if ($mcSoftware) {
             Material::updateOrCreate(
                 ['title' => 'Modul 01 - Arsitektur MVC & RESTful API Service'],
                 [
-                    'master_course_id' => $mcLaravel->id,
-                    'course_id' => $courseLaravel ? $courseLaravel->id : null,
+                    'master_course_id' => $mcSoftware->id,
+                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
                     'file_path' => 'materials/modul_01_laravel_mvc_api.pdf',
                 ]
             );
@@ -140,8 +140,8 @@ class MaterialQuizSeeder extends Seeder
             $finalQuizLaravel = Quiz::updateOrCreate(
                 ['title' => 'Final Quiz UAS: Sertifikasi Laravel Enterprise Backend'],
                 [
-                    'master_course_id' => $mcLaravel->id,
-                    'course_id' => $courseLaravel ? $courseLaravel->id : null,
+                    'master_course_id' => $mcSoftware->id,
+                    'course_id' => $courseSoftware ? $courseSoftware->id : null,
                     'time_limit' => 45,
                     'quiz_type' => 'final',
                     'max_attempts' => 2,

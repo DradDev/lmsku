@@ -19,8 +19,8 @@ class ProjectSeeder extends Seeder
         $catEmbedded = Category::where('name', 'Embedded Systems & Microcontroller')->first();
         $catWeb = Category::where('name', 'Web & Software Engineering')->first();
 
-        $skillEmbedded = Skill::where('name', 'Embedded Systems & IoT')->first();
-        $skillLaravel = Skill::where('name', 'Laravel Backend Framework')->first();
+        $skillEmbedded = Skill::where('name', 'Embedded Systems & Robotics')->first();
+        $skillSoftware = Skill::where('name', 'Software Engineering')->first();
 
         // 1. Proyek Industri dari Vendor (PT Telkom - External)
         $p1 = Project::updateOrCreate(
@@ -60,9 +60,9 @@ class ProjectSeeder extends Seeder
             ]
         );
 
-        if ($skillLaravel) {
-            $p2->skills()->sync([$skillLaravel->id]);
-            $tags = Tag::where('skill_id', $skillLaravel->id)->pluck('id')->toArray();
+        if ($skillSoftware) {
+            $p2->skills()->sync([$skillSoftware->id]);
+            $tags = Tag::where('skill_id', $skillSoftware->id)->pluck('id')->toArray();
             $p2->tags()->sync($tags);
         }
     }
