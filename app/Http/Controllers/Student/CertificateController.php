@@ -114,7 +114,20 @@ class CertificateController extends Controller
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
-        $credentialCode = 'CERT-CRS-' . ($attempt->created_at ? $attempt->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
+        $certificateRecord = Certificate::where('user_id', $student->id)
+            ->where(function ($q) use ($courseOffering, $course) {
+                if ($courseOffering) {
+                    $q->where('course_offering_id', $courseOffering->id);
+                } else {
+                    $q->where('course_id', $course->id);
+                }
+            })->first();
+
+        $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
+            'user_id' => $student->id,
+            'course_id' => $course->id,
+            'course_offering_id' => $courseOffering?->id,
+        ]))->generateCredentialCode();
 
         return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'));
     }
@@ -126,7 +139,20 @@ class CertificateController extends Controller
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
-        $credentialCode = 'CERT-CRS-' . ($attempt->created_at ? $attempt->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $course->id) . '-' . sprintf('%04d', $student->id);
+        $certificateRecord = Certificate::where('user_id', $student->id)
+            ->where(function ($q) use ($courseOffering, $course) {
+                if ($courseOffering) {
+                    $q->where('course_offering_id', $courseOffering->id);
+                } else {
+                    $q->where('course_id', $course->id);
+                }
+            })->first();
+
+        $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
+            'user_id' => $student->id,
+            'course_id' => $course->id,
+            'course_offering_id' => $courseOffering?->id,
+        ]))->generateCredentialCode();
 
         $pdf = Pdf::loadView('student.certificate_pdf', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'))
             ->setPaper('a4', 'landscape');

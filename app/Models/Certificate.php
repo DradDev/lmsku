@@ -11,6 +11,7 @@ class Certificate extends Model
         'course_id',
         'course_offering_id',
         'project_id',
+        'credential_code',
         'score',
         'blockchain_hash',
         'blockchain_id',
@@ -67,6 +68,54 @@ class Certificate extends Model
     public function isRejected(): bool
     {
         return $this->status === 'rejected';
+    }
+
+    /**
+     * Formulasi Otomatis Credential ID Unik: CERT/[KODE_MASTER_COURSE]/[TAHUN_SEMESTER]/[USER_ID]
+     */
+    public function generateCredentialCode(): string
+    {
+        $userIdFormatted = sprintf('%04d', $this->user_id);
+
+        if ($this->project_id) {
+            $prjCode = sprintf('PRJ-%04d', $this->project_id);
+            $year = $this->completed_at ? $this->completed_at->format('Y') : date('Y');
+            return "CERT/{$prjCode}/{$year}/{$userIdFormatted}";
+        }
+
+        // Kode Master Course (Teknik Komputer / Academic)
+        $courseCode = $this->courseOffering?->masterCourse?->code
+            ?? $this->course?->masterCourse?->code
+            ?? $this->course?->code
+            ?? 'TK-SE-001';
+
+        // Tahun & Semester (Ganjil = 1, Genap = 2)
+        $termObj = $this->courseOffering?->academicTerm;
+        $year = date('Y');
+        $termSuffix = '1'; // Default Ganjil
+
+        if ($termObj) {
+            if ($termObj->start_date) {
+                $year = $termObj->start_date->format('Y');
+            } elseif ($termObj->academic_year) {
+                $year = substr($termObj->academic_year, 0, 4);
+            }
+            if (strtolower($termObj->term_type) === 'genap' || strtolower($termObj->term_type) === 'even') {
+                $termSuffix = '2';
+            }
+        }
+
+        $termCode = "{$year}{$termSuffix}";
+
+        return "CERT/{$courseCode}/{$termCode}/{$userIdFormatted}";
+    }
+
+    public function getCredentialCodeAttribute($value): string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+        return $this->generateCredentialCode();
     }
 
     public function getStatusLabelAttribute(): string
