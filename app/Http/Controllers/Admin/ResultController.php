@@ -11,6 +11,7 @@ use Illuminate\View\View;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ResultController extends Controller
 {
@@ -18,16 +19,22 @@ class ResultController extends Controller
     {
         $activeTab = $request->query('tab', 'quiz');
 
-        // Tab 1: Final Quiz Results - Hanya yang memenuhi nilai minimum (Threshold >= 75) untuk diapprove Admin
-        $baseQuery = QuizAttempt::whereHas('quiz', function ($query) {
-            $query->where('quiz_type', 'final');
-        })->where(function ($q) {
-            $q->where('score', '>=', 75)->orWhere('is_verified', true);
-        });
+        // Tab 1: Final Quiz Results - Deduplikasi Attempt Terbaik (Nilai Tertinggi) per User & Quiz
+        $bestAttemptIds = QuizAttempt::whereHas('quiz', function ($query) {
+                $query->where('quiz_type', 'final');
+            })
+            ->where(function ($q) {
+                $q->where('score', '>=', 75)->orWhere('is_verified', true);
+            })
+            ->select(DB::raw('MAX(id) as id'))
+            ->groupBy('user_id', 'quiz_id')
+            ->pluck('id');
+
+        $baseQuery = QuizAttempt::whereIn('id', $bestAttemptIds);
 
         $results = (clone $baseQuery)
             ->with(['user', 'quiz.course'])
-            ->latest()
+            ->latest('id')
             ->get();
 
         $totalQuizResults  = (clone $baseQuery)->count();
