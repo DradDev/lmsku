@@ -319,14 +319,14 @@
                 @forelse($activeCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
-                            <span class="course-tag">🏢 Vendor Certified</span>
+                            <span class="course-tag">Vendor Certified</span>
                             <span class="course-badge text-emerald-900 bg-emerald-100 border-emerald-300 font-extrabold">Aktif Dipublikasikan</span>
                         </div>
 
                         <h2 class="course-name">{{ $course->name }}</h2>
 
                         <div class="text-xs text-purple-900 mb-3 font-extrabold flex items-center gap-1.5">
-                            <span>⚡ Certificate Threshold:</span>
+                            <span>Certificate Threshold:</span>
                             <span class="bg-purple-100 text-purple-950 px-2 py-0.5 rounded-md font-black border border-purple-200">{{ $course->certificate_threshold ?? 75 }}%</span>
                         </div>
 
@@ -351,7 +351,7 @@
                             <a href="{{ route('vendor.courses.show', $course->id) }}" 
                                aria-label="Kelola course sertifikasi {{ $course->name }}" 
                                class="btn btn-primary w-full text-center">
-                                🚀 Kelola Course Sertifikasi
+                                Kelola Course Sertifikasi
                             </a>
                         </div>
                     </div>
@@ -370,8 +370,8 @@
                 @forelse($bankCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
-                            <span class="course-tag">🏢 Draft Vendor</span>
-                            <span class="course-badge text-slate-900 bg-slate-100 border-slate-300 font-bold">🔴 Archived / Draft</span>
+                            <span class="course-tag">Draft Vendor</span>
+                            <span class="course-badge text-slate-900 bg-slate-100 border-slate-300 font-bold">Archived / Draft</span>
                         </div>
 
                         <h2 class="course-name">{{ $course->name }}</h2>
@@ -401,9 +401,10 @@
                             <a href="{{ route('vendor.courses.show', $course->id) }}" 
                                aria-label="Pratinjau dan edit draft course {{ $course->name }}" 
                                class="btn btn-primary w-full text-center">
-                                🚀 Pratinjau & Edit Course
+                                Pratinjau & Edit Course
                             </a>
                         </div>
+                    </div>
                     </div>
                 @empty
                     <div class="empty-state">

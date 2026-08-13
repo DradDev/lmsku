@@ -350,8 +350,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::resource('master-courses', AdminMasterCourseController::class);
 
         // Academic Terms
-        Route::resource('academic-terms', AdminAcademicTermController::class)
-            ->except(['show']);
+        Route::post('/academic-terms/offerings', [AdminAcademicTermController::class, 'storeOffering'])
+            ->name('academic-terms.offerings.store');
+        Route::put('/academic-terms/offerings/{offering}', [AdminAcademicTermController::class, 'updateOffering'])
+            ->name('academic-terms.offerings.update');
+        Route::delete('/academic-terms/offerings/{offering}', [AdminAcademicTermController::class, 'destroyOffering'])
+            ->name('academic-terms.offerings.destroy');
+
+        Route::resource('academic-terms', AdminAcademicTermController::class);
         Route::post('/academic-terms/{academicTerm}/toggle-active', [AdminAcademicTermController::class, 'toggleActive'])
             ->name('academic-terms.toggle-active');
 
@@ -364,7 +370,11 @@ Route::middleware(['auth', 'role:admin'])
             ->name('projects.toggle-publish');
         Route::resource('projects', AdminProjectController::class)->only(['index', 'show', 'destroy']);
 
-        // Courses Audit & Emergency Moderation (Vendor & Lecturer Courses)
+        // Courses Audit & Moderation (Vendor & Lecturer Courses)
+        Route::post('/courses/{course}/suspend', [AdminCourseController::class, 'suspend'])
+            ->name('courses.suspend');
+        Route::post('/courses/{course}/approve', [AdminCourseController::class, 'approve'])
+            ->name('courses.approve');
         Route::post('/courses/{course}/toggle-archive', [AdminCourseController::class, 'toggleArchive'])
             ->name('courses.toggle-archive');
         Route::resource('courses', AdminCourseController::class)->only(['index', 'show', 'destroy']);
@@ -383,6 +393,7 @@ Route::middleware(['auth', 'role:vendor'])
 
         // Industry Certified Courses
         Route::post('/courses/{course}/toggle-archive', [VendorCourseController::class, 'toggleArchive'])->name('courses.toggle-archive');
+        Route::post('/courses/{course}/launch-batch', [VendorCourseController::class, 'launchBatch'])->name('courses.launch-batch');
         Route::resource('courses', VendorCourseController::class);
 
         // Course Materials & Quizzes

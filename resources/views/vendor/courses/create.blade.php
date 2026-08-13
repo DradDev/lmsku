@@ -44,7 +44,7 @@
                 </p>
 
                 <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">
-                    ➕ Buat Course Sertifikasi Industri Baru
+                    Buat Course Sertifikasi Industri Baru
                 </h1>
                 <p class="mt-1 text-sm text-slate-500">
                     Rancang silabus pelatihan mandiri, kriteria passing grade sertifikat, angkatan batch, serta target kompetensi mahasiswa.
@@ -55,6 +55,7 @@
             <div class="mb-8 p-5 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl shadow-sm space-y-2">
                 <div class="flex items-center gap-2 font-extrabold text-sm text-blue-900">
                     <span>💡 Otonomi Author Mitra Vendor Industri</span>
+                </div>
                 </div>
                 <p class="text-xs text-blue-800 leading-relaxed font-medium">
                     Sebagai Author Mitra Vendor, Anda memiliki otonomi penuh atas penentuan <strong class="font-bold text-blue-950">Angkatan Batch Sertifikasi</strong> dan <strong class="font-bold text-blue-950">Threshold Kelulusan (%)</strong>. Mahasiswa yang lulus Kuis Akhir pada course ini akan otomatis menerima <strong class="font-bold text-blue-950">Sertifikat Digital Verifikasi Vendor dengan Hash Blockchain & QR Code</strong>.
@@ -69,7 +70,7 @@
                     <!-- GROUP 1: INFORMASI UTAMA -->
                     <div class="space-y-4">
                         <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
-                            📋 1. Informasi Utama Pelatihan & Batch Angkatan
+                            1. Informasi Utama Pelatihan & Batch Angkatan
                         </h3>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -85,7 +86,7 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    🏷️ Batch / Angkatan Sertifikasi <span class="text-rose-500">*</span>
+                                    Batch / Angkatan Sertifikasi <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="text" name="batch_name" value="{{ old('batch_name', 'Batch 1 - 2026') }}" required
                                        placeholder="Contoh: Batch 1 - 2026"
@@ -148,8 +149,8 @@
                                     Status Publikasi Course Initial
                                 </label>
                                 <select name="is_archived" class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-purple-900">
-                                    <option value="0" @selected(old('is_archived') == '0')>🟢 Active Course (Terbuka Dipublikasikan)</option>
-                                    <option value="1" @selected(old('is_archived') == '1')>🔴 Project Bank (Draft Internal)</option>
+                                    <option value="0" @selected(old('is_archived') == '0')>Active Course (Terbuka Dipublikasikan)</option>
+                                    <option value="1" @selected(old('is_archived') == '1')>Project Bank (Draft Internal)</option>
                                 </select>
                                 <p class="text-[11px] text-slate-500 mt-1">Dapat diubah kapan saja via halaman detail course.</p>
                             </div>
@@ -159,7 +160,7 @@
                     <!-- GROUP 2: DESKRIPSI & SILABUS -->
                     <div class="space-y-4 pt-2">
                         <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
-                            📖 2. Deskripsi & Silabus Pelatihan
+                            2. Deskripsi & Silabus Pelatihan
                         </h3>
 
                         <div>
@@ -180,7 +181,7 @@
                     <div class="space-y-4 pt-2">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                <span>⚡ 3. Target Main Skills Utama (Pilih 2 atau Lebih) <span class="text-rose-500">*</span></span>
+                                <span>3. Target Main Skills Utama (Pilih 2 atau Lebih) <span class="text-rose-500">*</span></span>
                             </h3>
                             <span id="selected_skills_count" class="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1 rounded-full border border-purple-200">
                                 {{ count($selectedSkillIds) }} Main Skill Terpilih
@@ -205,7 +206,7 @@
                                             data-skill-name="{{ $sk->name }}"
                                             onclick="toggleSkillChip(this)"
                                             class="skill-chip inline-flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-extrabold border transition-all text-left cursor-pointer {{ $isSkillSelected ? 'bg-purple-700 text-white border-purple-700 shadow-md ring-2 ring-purple-300' : 'bg-white text-slate-800 border-slate-200 hover:border-purple-400 hover:bg-purple-50' }}">
-                                        <span>⚡ {{ $sk->name }}</span>
+                                        <span>{{ $sk->name }}</span>
                                         <span class="chip-status text-xs font-black ml-1.5">{{ $isSkillSelected ? '✓' : '+' }}</span>
                                     </button>
                                 @endforeach
@@ -221,7 +222,7 @@
                     <div class="space-y-4 pt-2">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
                             <h3 class="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
-                                🏷️ 4. Specialty Tags (Tersaring Otomatis dari Main Skill Terpilih)
+                                4. Specialty Tags (Tersaring Otomatis dari Main Skill Terpilih)
                             </h3>
                             <span id="selected_tags_count" class="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">
                                 {{ count($selectedTagIds) }} Tag Terpilih
@@ -252,7 +253,7 @@
                             </div>
 
                             <p id="no_skills_selected_notice" class="hidden text-xs text-slate-400 italic text-center py-3">
-                                💡 Pilih setidaknya 1 Main Skill pada bagian (3) di atas untuk menampilkan Specialty Tags yang relevan.
+                                Pilih setidaknya 1 Main Skill pada bagian (3) di atas untuk menampilkan Specialty Tags yang relevan.
                             </p>
                         </div>
                     </div>
@@ -362,7 +363,7 @@
                         </a>
                         <button type="submit" 
                                 class="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition">
-                            🚀 Publikasikan Course Sertifikasi
+                            Publikasikan Course Sertifikasi
                         </button>
                     </div>
                 </form>

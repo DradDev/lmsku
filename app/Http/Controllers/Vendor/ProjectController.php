@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
 use App\Models\Skill;
@@ -52,7 +53,8 @@ class ProjectController extends Controller
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
             'is_published' => ['nullable', 'boolean'],
-            'main_skill_id' => ['required', 'exists:skills,id'],
+            'skill_ids' => ['required', 'array', 'min:1'],
+            'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'],
@@ -77,8 +79,12 @@ class ProjectController extends Controller
             'provider_type' => 'external',
         ]);
 
-        // Main Skill
-        $project->skills()->attach($validated['main_skill_id'], ['is_main' => true]);
+        // Main Skills (Multi-selection)
+        $skillsData = [];
+        foreach ($validated['skill_ids'] as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
+        }
+        $project->skills()->sync($skillsData);
 
         // Specialty Tags
         if (!empty($validated['tag_ids'])) {
@@ -132,9 +138,9 @@ class ProjectController extends Controller
 
         $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
-        $projectMainSkillId = $project->skills->firstWhere('pivot.is_main', true)?->id;
+        $projectSkillIds = $project->skills->pluck('id')->toArray();
 
-        return view('vendor.projects.edit', compact('project', 'mainSkills', 'tags', 'projectMainSkillId'));
+        return view('vendor.projects.edit', compact('project', 'mainSkills', 'tags', 'projectSkillIds'));
     }
 
     public function update(Request $request, Project $project): RedirectResponse
@@ -151,7 +157,8 @@ class ProjectController extends Controller
             'duration_days' => ['required', 'integer', 'min:1'],
             'max_students' => ['required', 'integer', 'min:1'],
             'is_published' => ['nullable', 'boolean'],
-            'main_skill_id' => ['required', 'exists:skills,id'],
+            'skill_ids' => ['required', 'array', 'min:1'],
+            'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'],
@@ -163,12 +170,16 @@ class ProjectController extends Controller
         }
 
         $validated['is_published'] = $request->boolean('is_published');
-        unset($validated['main_skill_id'], $validated['tag_ids'], $validated['brief_file']);
+        unset($validated['skill_ids'], $validated['tag_ids'], $validated['brief_file']);
 
         $project->update($validated);
 
-        // Sync main skill
-        $project->skills()->sync([$request->main_skill_id => ['is_main' => true]]);
+        // Sync main skills
+        $skillsData = [];
+        foreach ($request->skill_ids as $sId) {
+            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
+        }
+        $project->skills()->sync($skillsData);
 
         // Sync tags
         if (isset($request->tag_ids)) {
@@ -272,13 +283,56 @@ class ProjectController extends Controller
     public function studentPortfolio(User $student): View
     {
         $student->load([
-            'skillProfiles.skill',
-            'interestProfiles.tag',
             'joinedProjects' => function ($query) {
-                $query->with(['skills', 'creator']);
-            }
+                $query->with(['skills', 'tags', 'user']);
+            },
+            'enrollments.courseOffering.masterCourse.skills',
+            'enrollments.courseOffering.masterCourse.tags',
+            'enrollments.course.skills',
+            'enrollments.course.tags',
         ]);
 
-        return view('vendor.projects.student_portfolio', compact('student'));
+        $certificates = Certificate::where('user_id', $student->id)->get();
+
+        $acquiredSkillsMap = [];
+        foreach ($student->enrollments as $enrollment) {
+            $courseObj = $enrollment->courseOffering?->masterCourse ?? $enrollment->course;
+            if (!$courseObj) continue;
+
+            $courseName = $courseObj->name ?? 'Course';
+            $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
+            $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
+                return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
+                    || ($cert->course_id && $cert->course_id === $enrollment->course_id);
+            });
+
+            foreach ($courseObj->skills as $skill) {
+                if (!isset($acquiredSkillsMap[$skill->id])) {
+                    $acquiredSkillsMap[$skill->id] = [
+                        'skill' => $skill,
+                        'courses' => [],
+                        'tags' => collect(),
+                        'has_verified_cert' => false,
+                        'is_completed' => false,
+                    ];
+                }
+
+                $acquiredSkillsMap[$skill->id]['courses'][] = $courseName;
+                if ($hasVerifiedCert) $acquiredSkillsMap[$skill->id]['has_verified_cert'] = true;
+                if ($isCompleted) $acquiredSkillsMap[$skill->id]['is_completed'] = true;
+
+                foreach ($courseObj->tags as $tag) {
+                    if ($tag->skill_id === $skill->id || !$tag->skill_id) {
+                        if (!$acquiredSkillsMap[$skill->id]['tags']->contains('id', $tag->id)) {
+                            $acquiredSkillsMap[$skill->id]['tags']->push($tag);
+                        }
+                    }
+                }
+            }
+        }
+
+        $acquiredSkills = collect($acquiredSkillsMap);
+
+        return view('vendor.projects.student_portfolio', compact('student', 'acquiredSkills', 'certificates'));
     }
 }

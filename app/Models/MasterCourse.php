@@ -7,12 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 class MasterCourse extends Model
 {
     protected $fillable = [
+        'user_id',
         'code',
         'name',
         'description',
         'level',
+        'certificate_threshold',
         'category_id',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function courses()
+    {
+        return $this->hasMany(Course::class, 'master_course_id');
+    }
 
     public function category()
     {

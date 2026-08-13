@@ -36,24 +36,14 @@ class UserController extends Controller
         return view('admin.users.show', compact('user'));
     }
 
-    public function edit(User $user): View
+    public function edit(User $user): RedirectResponse
     {
-        return view('admin.users.edit', compact('user'));
+        return redirect()->route('admin.users.index')->with('info', 'Data pengguna bersifat mutlak dan dikelola mandiri oleh masing-masing pengguna.');
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'role' => ['required', Rule::in(['admin', 'lecturer', 'student', 'vendor'])],
-        ]);
-
-        $user->update([
-            'role' => $validated['role'],
-        ]);
-
-        return redirect()
-            ->route('admin.users.index')
-            ->with('success', 'Role pengguna ' . $user->name . ' berhasil diubah.');
+        return redirect()->route('admin.users.index')->with('info', 'Data pengguna bersifat mutlak dan dikelola mandiri oleh masing-masing pengguna.');
     }
 
     public function approve(Request $request, User $user): RedirectResponse

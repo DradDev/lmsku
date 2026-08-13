@@ -553,9 +553,15 @@
                                         </select>
                                     </div>
 
-                                    <button type="submit" class="btn btn-success">
-                                        🎓 Ambil Kelas Ini
-                                    </button>
+                                    <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                        <a href="{{ route('student.courses.show', $firstAvailable->id) }}" class="btn" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; width: 100%; justify-content: center;">
+                                            👁️ Preview Silabus
+                                        </a>
+
+                                        <button type="submit" class="btn btn-success" style="width: 100%;">
+                                            🎓 Ambil Kelas
+                                        </button>
+                                    </div>
                                 </form>
                             @else
                                 <div style="width: 100%;">
@@ -582,6 +588,92 @@
                     Mata kuliah akan muncul setelah Admin membuka rombel kelas pada semester aktif.
                 </div>
             </div>
+            @endif
+
+            <!-- VENDOR CERTIFICATION COURSES SECTION -->
+            @php $vendorCourses = $vendorCourses ?? collect(); @endphp
+            @if($vendorCourses->count() > 0)
+                <div style="margin-top: 3rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #e9d5ff; padding-bottom: 12px; margin-bottom: 1.5rem;">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 700; uppercase; tracking-wider; color: #7c3aed; background: #f3e8ff; padding: 3px 10px; border-radius: 6px;">
+                                🏢 Sertifikasi Industri Mitra Vendor
+                            </span>
+                            <h2 style="font-size: 20px; font-weight: 800; color: #4c1d95; margin-top: 4px;">
+                                Bootcamp & Pelatihan Sertifikasi Vendor
+                            </h2>
+                            <p style="font-size: 13px; color: #6b21a8; margin-top: 2px;">
+                                Pelatihan kompetensi langsung dari mitra industri dengan verifikasi Sertifikat Digital Blockchain.
+                            </p>
+                        </div>
+                        <span style="font-size: 12px; font-weight: 800; color: #6b21a8; background: #f3e8ff; padding: 6px 14px; border-radius: 100px; border: 1px solid #e9d5ff;">
+                            {{ $vendorCourses->count() }} Course Sertifikasi
+                        </span>
+                    </div>
+
+                    <div class="courses-grid">
+                        @foreach($vendorCourses as $vc)
+                            <div class="course-card" style="border-color: #e9d5ff; background: #faf5ff;">
+                                <div class="badge-row">
+                                    <span style="background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 100px;">
+                                        🏢 {{ $vc->user->name ?? 'Mitra Vendor' }}
+                                    </span>
+                                    <span style="background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px;">
+                                        🏷️ {{ $vc->batch_name ?? 'Batch 1 - 2026' }}
+                                    </span>
+                                    <span style="background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 100px;">
+                                        Threshold: {{ $vc->certificate_threshold ?? 75 }}%
+                                    </span>
+                                </div>
+
+                                <h3 class="course-title" style="color: #4c1d95;">
+                                    {{ $vc->name }}
+                                </h3>
+
+                                <p class="course-description" style="color: #6b21a8;">
+                                    {{ Str::limit($vc->description, 100) }}
+                                </p>
+
+                                <div style="margin-top: 1rem; margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; gap: 6px;">
+                                    @foreach($vc->skills as $sk)
+                                        <span style="font-size: 11px; font-weight: 800; color: #5b21b6; background: #ffffff; border: 1px solid #ddd6fe; padding: 3px 8px; border-radius: 6px;">
+                                            ⚡ {{ $sk->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+
+                                <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid #f3e8ff;">
+                                    @if($vc->is_enrolled)
+                                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                                            @if($vc->can_get_certificate)
+                                                <a href="{{ route('student.certificate.show', $vc->id) }}" class="btn btn-cert" style="text-align: center;">
+                                                    🎓 Klaim Sertifikat Vendor ↗
+                                                </a>
+                                            @else
+                                                <a href="{{ route('student.courses.show', $vc->id) }}" class="btn btn-primary" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); text-align: center;">
+                                                    🚀 Buka Course & Kuis ({{ $vc->progress }}%)
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <div style="display: flex; gap: 8px;">
+                                            <a href="{{ route('student.courses.show', $vc->id) }}" class="btn" style="background: #ffffff; color: #6b21a8; border: 1px solid #ddd6fe; width: 100%; justify-content: center;">
+                                                👁️ Preview Detail
+                                            </a>
+
+                                            <form action="{{ route('student.courses.enroll', $vc->id) }}" method="POST" style="width: 100%;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-success" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); width: 100%;">
+                                                    ✨ Ambil Sertifikasi
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             @endif
 
         </div>

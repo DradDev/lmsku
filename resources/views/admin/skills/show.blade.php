@@ -13,7 +13,7 @@
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display: flex; align-items: flex-start; gap: 1.25rem; flex: 1; min-width: 300px;">
                 <div style="width: 56px; height: 56px; border-radius: 14px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; flex-shrink: 0;">
-                    ⚡
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
                 </div>
                 <div>
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -73,7 +73,7 @@
             <div style="display: flex; flex-wrap: wrap; gap: 10px;">
                 @forelse($skill->tags as $tag)
                     <div style="background: #EEF2FF; border: 1px solid #C7D2FE; color: #3730A3; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 8px;">
-                        <span>🏷️ {{ $tag->name }}</span>
+                        <span>{{ $tag->name }}</span>
                         <form action="{{ route('admin.tags.destroy', $tag) }}" method="POST" onsubmit="return confirm('Hapus tag {{ $tag->name }}?')" style="display: inline;">
                             @csrf
                             @method('DELETE')

@@ -10,6 +10,7 @@ class Course extends Model
         'name',
         'description',
         'user_id',
+        'master_course_id',
         'level',
         'progress',
         'duration_weeks',
@@ -19,6 +20,8 @@ class Course extends Model
         'certificate_threshold',
         'category_id',
         'batch_name',
+        'moderation_status',
+        'moderation_note',
     ];
 
     protected $casts = [
@@ -119,6 +122,11 @@ class Course extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function masterCourse()
+    {
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
     }
 
     public function offerings()

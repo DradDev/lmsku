@@ -59,19 +59,19 @@
                         </div>
 
                         <div>
-                            <label class="block mb-2 text-sm font-medium text-slate-700">🎯 Target Scope Distribusi Modul</label>
+                            <label class="block mb-2 text-sm font-medium text-slate-700">Target Scope Distribusi Modul</label>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <label class="flex items-center gap-3 p-3.5 border border-indigo-200 rounded-2xl bg-indigo-50/50 cursor-pointer hover:border-indigo-400 transition">
                                     <input type="radio" name="target_scope" value="all" checked class="text-indigo-600 focus:ring-indigo-500">
                                     <div>
-                                        <span class="block font-bold text-indigo-950 text-xs">🌐 Semua Kelas Pararel (Master)</span>
+                                        <span class="block font-bold text-indigo-950 text-xs">Semua Kelas Pararel (Master)</span>
                                         <span class="block text-[11px] text-slate-500">Modul berlaku untuk seluruh Kelas A, B, C, dst.</span>
                                     </div>
                                 </label>
                                 <label class="flex items-center gap-3 p-3.5 border border-slate-200 rounded-2xl bg-white cursor-pointer hover:border-indigo-400 transition">
                                     <input type="radio" name="target_scope" value="class" class="text-indigo-600 focus:ring-indigo-500">
                                     <div>
-                                        <span class="block font-bold text-slate-800 text-xs">📌 Khusus {{ $course->section_name ?: 'Kelas Ini' }}</span>
+                                        <span class="block font-bold text-slate-800 text-xs">Khusus {{ $course->section_name ?: 'Kelas Ini' }}</span>
                                         <span class="block text-[11px] text-slate-500">Modul/Catatan khusus rombel kelas ini.</span>
                                     </div>
                                 </label>

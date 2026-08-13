@@ -12,8 +12,10 @@
         'completed' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
     ];
 
-    $courseStudents = $students ?? collect();
-    $completedStudentCount = $courseStudents->filter(fn($s) => ($s->pivot->status ?? '') === 'completed')->count();
+    $students = $students ?? $course->students ?? collect();
+    $materials = $materials ?? $course->materials ?? collect();
+    $quizzes = $quizzes ?? $course->quizzes ?? collect();
+    $completedStudentCount = $completedStudentCount ?? $students->filter(fn($s) => ($s->pivot->status ?? '') === 'completed')->count();
     @endphp
 
     <div class="min-h-screen bg-slate-50 py-10">
@@ -49,6 +51,17 @@
                 </div>
             @endif
 
+            @if($course->moderation_status === 'suspended')
+                <div class="mb-6 p-5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm space-y-1">
+                    <div class="flex items-center gap-2 font-extrabold text-sm text-rose-900">
+                        <span>Status Course: Dibekukan Sementara (Suspended) oleh Admin Kampus</span>
+                    </div>
+                    <p class="text-xs font-semibold text-rose-700 leading-relaxed">
+                        Catatan Admin: "{{ $course->moderation_note ?? 'Course sedang ditangguhkan dari katalog publik untuk peninjauan lebih lanjut.' }}"
+                    </p>
+                </div>
+            @endif
+
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
                     <a href="{{ route('vendor.courses.index') }}"
@@ -57,20 +70,27 @@
                     </a>
 
                     <div class="flex items-center gap-2">
+                        <!-- BUTTON LAUNCH BATCH BARU (3NF BATCH OFFERING) -->
+                        <button type="button" 
+                                onclick="document.getElementById('launch_batch_modal').classList.remove('hidden')"
+                                class="px-4 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                            <span>Launch Batch Baru</span>
+                        </button>
+
                         <a href="{{ route('vendor.courses.edit', $course) }}" 
                            class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
-                            ✏️ Edit Course
+                            Edit Course
                         </a>
 
                         <form action="{{ route('vendor.courses.toggle-archive', $course) }}" method="POST" onsubmit="return confirm('Ubah status publikasi/draft course ini?')">
                             @csrf
                             @if($course->is_archived)
                                 <button type="submit" class="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                    <span>🟢 Dipublikasikan (Aktif)</span>
+                                    <span>Dipublikasikan (Aktif)</span>
                                 </button>
                             @else
                                 <button type="submit" class="px-4 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                                    <span>🔴 Simpan ke Draft Bank</span>
+                                    <span>Simpan ke Draft Bank</span>
                                 </button>
                             @endif
                         </form>
@@ -80,7 +100,7 @@
                 <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600 mb-2">
-                            Portal Author Mitra Vendor &bull; Manajemen Sertifikasi Industri
+                            Portal Author Mitra Vendor &bull; Manajemen Sertifikasi Industri 3NF
                         </p>
 
                         <h1 class="text-3xl font-bold tracking-tight text-slate-900">
@@ -93,7 +113,7 @@
 
                         <div class="mt-4 flex flex-wrap gap-2 text-sm">
                             <span class="rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200 px-3.5 py-1 font-black">
-                                🏷️ {{ $course->batch_name ?? 'Batch 1 - 2026' }}
+                                {{ $course->batch_name ?? 'Batch 1 - 2026' }}
                             </span>
 
                             <span class="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-700">
@@ -109,10 +129,109 @@
                             </span>
 
                             <span class="rounded-full {{ $course->is_archived ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300' }} px-3.5 py-1 font-bold">
-                                Status: {{ $course->is_archived ? '🔴 Project Bank (Draft Internal)' : '🟢 Active Course (Terbuka Dipublikasikan)' }}
+                                Status: {{ $course->is_archived ? 'Project Bank (Draft Internal)' : 'Active Course (Terbuka Dipublikasikan)' }}
                             </span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- BATCH SWITCHER CARD (DUPLIKASI/WARISAN ANGKATAN 3NF) -->
+            @php $otherBatches = $otherBatches ?? collect(); @endphp
+            <div class="rounded-3xl border border-indigo-200 bg-white p-5 shadow-sm mb-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-100">
+                                Angkatan Batch Rilis (Kurikulum Induk #MC-{{ $course->master_course_id ?? $course->id }})
+                            </span>
+                        </div>
+                        <h3 class="text-sm font-extrabold text-slate-900">
+                            Kelola Angkatan Batch & Warisan Modul/Kuis Pembelajaran
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            Seluruh materi & kuis pada kurikulum ini diwariskan otomatis antar batch tanpa duplikasi file fisik server (Strict 3NF).
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-bold text-slate-400">Batch Aktif Saat Ini:</span>
+                        <span class="px-3.5 py-1.5 rounded-xl bg-purple-700 text-white font-extrabold text-xs shadow-sm ring-2 ring-purple-300">
+                            ✓ {{ $course->batch_name ?? 'Batch 1 - 2026' }}
+                        </span>
+
+                        @foreach($otherBatches as $ob)
+                            <a href="{{ route('vendor.courses.show', $ob) }}" 
+                               class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-purple-100 hover:text-purple-900 text-slate-700 font-bold text-xs border border-slate-200 transition">
+                                Switch ke {{ $ob->batch_name }}
+                            </a>
+                        @endforeach
+
+                        <button type="button" 
+                                onclick="document.getElementById('launch_batch_modal').classList.remove('hidden')"
+                                class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs border border-indigo-200 transition cursor-pointer">
+                            + Launch Batch Baru
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL LAUNCH BATCH BARU -->
+            <div id="launch_batch_modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-5 animate-in fade-in zoom-in duration-200">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                            <span>Launch Angkatan Batch Baru</span>
+                        </h3>
+                        <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
+                            ✕
+                        </button>
+                    </div>
+
+                    <form action="{{ route('vendor.courses.launch-batch', $course) }}" method="POST" class="space-y-4">
+                        @csrf
+                        
+                        <div class="p-4 bg-purple-50 rounded-2xl border border-purple-100 text-xs text-purple-900 leading-relaxed">
+                            **Efisiensi Kurikulum 3NF**: Seluruh modul materi (PDF/Video) dan bank kuis dari **{{ $course->name }}** akan otomatis diwariskan ke batch baru ini tanpa perlu di-upload ulang.
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Nama Batch Angkatan Baru <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" name="batch_name" required placeholder="Contoh: Batch 2 - Intake Q3 2026"
+                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-extrabold text-purple-900">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Threshold Sertifikat (%) <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="number" name="certificate_threshold" value="{{ $course->certificate_threshold ?? 75 }}" min="0" max="100" required
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-slate-900">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Durasi (Minggu)
+                                </label>
+                                <input type="number" name="duration_weeks" value="{{ $course->duration_weeks ?? 4 }}" min="1" required
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-slate-900">
+                            </div>
+                        </div>
+
+                        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                            <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')"
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                    class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md transition">
+                                Rilis Batch Baru Sekarang
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -121,7 +240,7 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                            <span>⚡ Threshold Kelulusan Sertifikat Industri</span>
+                            <span>Threshold Kelulusan Sertifikat Industri</span>
                             <span class="text-xs font-bold text-purple-600 bg-purple-100 px-2.5 py-0.5 rounded-full">Otonomi Vendor</span>
                         </h2>
                         <p class="text-xs text-slate-500 mt-1 leading-relaxed max-w-2xl">
@@ -215,7 +334,7 @@
                         <!-- FORM INLINE BUAT KUIS BARU (SAMA PERSIS DENGAN LECTURER) -->
                         <div id="create-quiz-form-vendor" class="hidden mb-6 p-5 bg-purple-50/50 border border-purple-200 rounded-2xl transition">
                             <h3 class="text-sm font-extrabold text-purple-900 mb-3 flex items-center gap-2">
-                                📝 Form Buat Kuis Pembelajaran Baru
+                                Form Buat Kuis Pembelajaran Baru
                             </h3>
                             <form method="POST" action="{{ route('vendor.quizzes.store', $course->id) }}" class="space-y-4 text-xs">
                                 @csrf
@@ -228,9 +347,9 @@
                                     <div>
                                         <label class="block font-bold text-slate-700 mb-1">Tipe Kuis Pembelajaran</label>
                                         <select name="quiz_type" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-bold text-purple-900 bg-white" required>
-                                            <option value="daily">📝 Kuis Biasa / Harian (Section Quiz)</option>
-                                            <option value="weekly">📅 Kuis Mingguan / Evaluasi Bab</option>
-                                            <option value="final">🏆 Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
+                                            <option value="daily">Kuis Biasa / Harian (Section Quiz)</option>
+                                            <option value="weekly">Kuis Mingguan / Evaluasi Bab</option>
+                                            <option value="final">Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
                                         </select>
                                     </div>
 
@@ -245,7 +364,7 @@
                                             <input type="number" id="max_attempts_input_vendor" name="max_attempts" value="1" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold bg-white">
                                             <label class="inline-flex items-center gap-1.5 px-2.5 py-2.5 bg-slate-100 border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-200 transition whitespace-nowrap">
                                                 <input type="checkbox" name="is_unlimited" value="1" onchange="document.getElementById('max_attempts_input_vendor').disabled = this.checked; if(this.checked){ document.getElementById('max_attempts_input_vendor').value = 0; }" class="rounded text-purple-600 focus:ring-purple-500">
-                                                <span class="text-[11px] font-bold text-slate-700">♾️ Unlimited</span>
+                                                <span class="text-[11px] font-bold text-slate-700">Unlimited</span>
                                             </label>
                                         </div>
                                     </div>
@@ -261,19 +380,19 @@
                                     </div>
 
                                     <div class="md:col-span-2 mt-2 pt-2 border-t border-purple-100">
-                                        <label class="block font-bold text-slate-700 mb-1.5">🎯 Target Scope Distribusi Kuis:</label>
+                                        <label class="block font-bold text-slate-700 mb-1.5">Target Scope Distribusi Kuis:</label>
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
                                             <label class="flex items-center gap-2.5 p-2.5 border border-purple-200 rounded-xl bg-white cursor-pointer hover:border-purple-400 transition">
                                                 <input type="radio" name="target_scope" value="all" checked class="text-purple-600 focus:ring-purple-500">
                                                 <div>
-                                                    <span class="block font-bold text-purple-950 text-xs">🌐 Semua Peserta Course Sertifikasi</span>
+                                                    <span class="block font-bold text-purple-950 text-xs">Semua Peserta Course Sertifikasi</span>
                                                     <span class="block text-[11px] text-slate-500">Kuis akan berlaku otomatis untuk seluruh mahasiswa terdaftar.</span>
                                                 </div>
                                             </label>
                                             <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white cursor-pointer hover:border-purple-400 transition">
                                                 <input type="radio" name="target_scope" value="class" class="text-purple-600 focus:ring-purple-500">
                                                 <div>
-                                                    <span class="block font-bold text-slate-800 text-xs">📌 Khusus Batch / Kelompok Ini</span>
+                                                    <span class="block font-bold text-slate-800 text-xs">Khusus Batch / Kelompok Ini</span>
                                                     <span class="block text-[11px] text-slate-500">Kuis khusus/remedial untuk batch peserta saat ini.</span>
                                                 </div>
                                             </label>
@@ -300,7 +419,7 @@
                                                 </h3>
 
                                                 <span class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 text-purple-800 px-3 py-1 text-xs font-semibold">
-                                                    {{ $quiz->quiz_type === 'final' ? '🏆 Final Quiz' : ($quiz->quiz_type === 'weekly' ? '📅 Weekly Quiz' : '📝 Daily Quiz') }}
+                                                    {{ $quiz->quiz_type === 'final' ? 'Final Quiz' : ($quiz->quiz_type === 'weekly' ? 'Weekly Quiz' : 'Daily Quiz') }}
                                                 </span>
                                             </div>
 
@@ -320,14 +439,14 @@
 
                                             @if (($quiz->quiz_type ?? '') === 'final')
                                                 <p class="mt-2 text-xs font-extrabold text-emerald-700 flex items-center gap-1">
-                                                    <span>🏆 Kuis Akhir Penentu Kelulusan Sertifikat Digital & Hash Blockchain.</span>
+                                                    <span>Kuis Akhir Penentu Kelulusan Sertifikat Digital & Hash Blockchain.</span>
                                                 </p>
                                             @endif
                                         </div>
 
                                         <div class="flex flex-wrap gap-2">
                                             <button type="button" onclick="document.getElementById('edit-quiz-form-vendor-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-700 px-3.5 py-2 text-xs font-semibold hover:bg-amber-100 transition">
-                                                ⚙️ Waktu & Durasi
+                                                Waktu & Durasi
                                             </button>
 
                                             <a href="{{ route('vendor.quizzes.show', $quiz) }}"
@@ -417,7 +536,7 @@
                         <!-- FORM INLINE UPLOAD MATERI -->
                         <div id="upload-material-form-vendor" class="hidden mb-6 p-5 bg-purple-50/50 border border-purple-200 rounded-2xl transition">
                             <h3 class="text-sm font-extrabold text-purple-900 mb-3 flex items-center gap-2">
-                                📑 Form Upload Modul Pembelajaran Baru
+                                Form Upload Modul Pembelajaran Baru
                             </h3>
                             <form action="{{ route('vendor.materials.store', $course) }}" method="POST" enctype="multipart/form-data" class="space-y-3 text-xs">
                                 @csrf
@@ -433,7 +552,7 @@
                                 </div>
                                 <div class="flex justify-end gap-2 pt-2 border-t border-purple-200">
                                     <button type="button" onclick="document.getElementById('upload-material-form-vendor').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Batal</button>
-                                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">🚀 Upload Materi</button>
+                                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">Upload Materi</button>
                                 </div>
                             </form>
                         </div>

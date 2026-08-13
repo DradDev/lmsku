@@ -73,6 +73,30 @@ class CourseController extends Controller
         return view('admin.courses.show', compact('course'));
     }
 
+    public function suspend(Request $request, Course $course): RedirectResponse
+    {
+        $validated = $request->validate([
+            'moderation_note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $course->update([
+            'moderation_status' => 'suspended',
+            'moderation_note' => $validated['moderation_note'] ?? 'Course dibekukan sementara oleh Admin untuk peninjauan lebih lanjut.',
+        ]);
+
+        return back()->with('success', "Course Vendor '{$course->name}' berhasil dibekukan (Suspended) oleh Admin.");
+    }
+
+    public function approve(Request $request, Course $course): RedirectResponse
+    {
+        $course->update([
+            'moderation_status' => 'published',
+            'moderation_note' => null,
+        ]);
+
+        return back()->with('success', "Course Vendor '{$course->name}' telah dipulihkan kembali ke status Published.");
+    }
+
     public function toggleArchive(Course $course): RedirectResponse
     {
         $newStatus = !$course->is_archived;

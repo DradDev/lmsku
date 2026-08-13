@@ -137,7 +137,6 @@
                     <div class="border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-purple-50/30 rounded-2xl p-5 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <label class="block text-sm font-bold text-gray-800 flex items-center gap-2">
-                                <span class="text-amber-500 text-base">★</span>
                                 <span>Primary Skill Requirement (Main Skill Utama)</span>
                             </label>
                             <span class="text-[11px] font-bold text-indigo-700 bg-indigo-100/70 px-2.5 py-1 rounded-md border border-indigo-200">
@@ -155,7 +154,7 @@
                                 @foreach ($mainSkills as $mainSkill)
                                     <option value="{{ $mainSkill->id }}"
                                             @selected((int) $mainSkillId === (int) $mainSkill->id)>
-                                        ★ {{ $mainSkill->name }}
+                                        {{ $mainSkill->name }}
                                     </option>
                                 @endforeach
                             </select>
@@ -176,7 +175,7 @@
                         <div id="no_course_warning" class="hidden p-4 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 space-y-1 shadow-sm">
                             <div class="flex items-center gap-2 font-bold text-amber-950">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-amber-600"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y3="13"/><line x1="12" y1="17" x2="12.01" y3="17"/></svg>
-                                <span>⚠️ Peringatan: Belum Ada Course Aktif untuk Main Skill Ini</span>
+                                <span>Peringatan: Belum Ada Course Aktif untuk Main Skill Ini</span>
                             </div>
                             <p class="leading-relaxed">
                                 Belum terdapat Course aktif di sistem yang menguji kompetensi Main Skill ini. Project tetap bisa disajikan, namun mahasiswa belum dapat mendaftar sebelum Course pembina skill dibuat.
@@ -189,7 +188,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
                             <div>
                                 <label class="block text-sm font-bold text-gray-800">
-                                    🏷️ Tag Spesialisasi Project (Project Specialty Tags)
+                                    Tag Spesialisasi Project (Project Specialty Tags)
                                 </label>
                                 <p class="text-xs text-gray-500 mt-0.5">Pilih tag teknologi / spesialisasi pendukung untuk pencocokan talent pool.</p>
                             </div>

@@ -54,7 +54,7 @@
                         @if(isset($invitedParticipations) && $invitedParticipations->isNotEmpty())
                             <a href="{{ route('student.projects.invitations') }}"
                                class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl transition shadow-sm animate-pulse">
-                                <span>📩 Undangan Project</span>
+                                <span>Undangan Project</span>
                                 <span class="px-2 py-0.5 rounded-full bg-white text-amber-900 text-xs font-black">
                                     {{ $invitedParticipations->count() }}
                                 </span>
@@ -62,7 +62,7 @@
                         @else
                             <a href="{{ route('student.projects.invitations') }}"
                                class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition">
-                                <span>📩 Undangan Project</span>
+                                <span>Undangan Project</span>
                             </a>
                         @endif
 
@@ -76,8 +76,8 @@
 
             @if ($participations->isEmpty())
             <div class="bg-white shadow rounded p-8 text-center">
-                <div class="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                    <span class="text-2xl">📁</span>
+                <div class="mx-auto w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                 </div>
 
                 <h3 class="text-lg font-semibold text-gray-900">
@@ -109,11 +109,11 @@
                                 <div class="mb-1.5">
                                     @if(($project->provider_type ?? 'internal') === 'external' || ($project->user->role ?? '') === 'vendor')
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                                            🏢 External: {{ $project->user->name ?? 'Vendor' }}
+                                            External: {{ $project->user->name ?? 'Vendor' }}
                                         </span>
                                     @else
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                            🎓 Internal: {{ $project->user->name ?? 'Dosen' }}
+                                            Internal: {{ $project->user->name ?? 'Dosen' }}
                                         </span>
                                     @endif
                                 </div>
@@ -140,7 +140,7 @@
                         @if($project && $project->brief_file_url)
                             <div class="mb-4">
                                 <a href="{{ $project->brief_file_url }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs rounded-xl transition">
-                                    📥 Download TOR / Brief PDF
+                                    Download TOR / Brief PDF
                                 </a>
                             </div>
                         @endif

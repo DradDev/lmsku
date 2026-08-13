@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Project;
 use App\Models\Skill;
@@ -398,14 +399,57 @@ class ProjectController extends Controller
     public function studentPortfolio(\App\Models\User $student): View
     {
         $student->load([
-            'skillProfiles.skill',
-            'interestProfiles.tag',
             'joinedProjects' => function ($query) {
-                $query->with(['skills', 'creator']);
-            }
+                $query->with(['skills', 'tags', 'user']);
+            },
+            'enrollments.courseOffering.masterCourse.skills',
+            'enrollments.courseOffering.masterCourse.tags',
+            'enrollments.course.skills',
+            'enrollments.course.tags',
         ]);
 
-        return view('lecturer.projects.student_portfolio', compact('student'));
+        $certificates = Certificate::where('user_id', $student->id)->get();
+
+        $acquiredSkillsMap = [];
+        foreach ($student->enrollments as $enrollment) {
+            $courseObj = $enrollment->courseOffering?->masterCourse ?? $enrollment->course;
+            if (!$courseObj) continue;
+
+            $courseName = $courseObj->name ?? 'Course';
+            $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
+            $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
+                return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
+                    || ($cert->course_id && $cert->course_id === $enrollment->course_id);
+            });
+
+            foreach ($courseObj->skills as $skill) {
+                if (!isset($acquiredSkillsMap[$skill->id])) {
+                    $acquiredSkillsMap[$skill->id] = [
+                        'skill' => $skill,
+                        'courses' => [],
+                        'tags' => collect(),
+                        'has_verified_cert' => false,
+                        'is_completed' => false,
+                    ];
+                }
+
+                $acquiredSkillsMap[$skill->id]['courses'][] = $courseName;
+                if ($hasVerifiedCert) $acquiredSkillsMap[$skill->id]['has_verified_cert'] = true;
+                if ($isCompleted) $acquiredSkillsMap[$skill->id]['is_completed'] = true;
+
+                foreach ($courseObj->tags as $tag) {
+                    if ($tag->skill_id === $skill->id || !$tag->skill_id) {
+                        if (!$acquiredSkillsMap[$skill->id]['tags']->contains('id', $tag->id)) {
+                            $acquiredSkillsMap[$skill->id]['tags']->push($tag);
+                        }
+                    }
+                }
+            }
+        }
+
+        $acquiredSkills = collect($acquiredSkillsMap);
+
+        return view('lecturer.projects.student_portfolio', compact('student', 'acquiredSkills', 'certificates'));
     }
 
     public function inviteTalent(Project $project, \App\Models\User $user): RedirectResponse

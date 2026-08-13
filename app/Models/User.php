@@ -152,30 +152,62 @@ class User extends Authenticatable
 
     public function calculateTalentMatchScore(Project $project): int
     {
-        // 1. Skill Match Score (50%)
+        // 1. Competency Skill Match Score (50%)
         $projectSkillIds = $project->skills->pluck('id')->toArray();
+        
+        $this->loadMissing([
+            'enrollments.courseOffering.masterCourse.skills',
+            'enrollments.course.skills',
+            'interestProfiles.tag',
+        ]);
+
+        $studentAcquiredSkillIds = [];
+        $completedSkillIds = [];
+
+        foreach ($this->enrollments as $enrollment) {
+            $courseObj = $enrollment->courseOffering?->masterCourse ?? $enrollment->course;
+            if ($courseObj) {
+                $isDone = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
+                foreach ($courseObj->skills as $s) {
+                    $studentAcquiredSkillIds[] = $s->id;
+                    if ($isDone) {
+                        $completedSkillIds[] = $s->id;
+                    }
+                }
+            }
+        }
+
+        $studentAcquiredSkillIds = array_unique($studentAcquiredSkillIds);
+        $completedSkillIds = array_unique($completedSkillIds);
+
+        $skillMatchScore = 50;
         if (!empty($projectSkillIds)) {
-            $userSkillScores = $this->skillProfiles()
-                ->whereIn('skill_id', $projectSkillIds)
-                ->pluck('avg_score');
-            $skillMatch = $userSkillScores->count() > 0 ? $userSkillScores->avg() : 40;
+            $matchingSkills = array_intersect($projectSkillIds, $studentAcquiredSkillIds);
+            $matchingCompleted = array_intersect($projectSkillIds, $completedSkillIds);
+
+            if (!empty($matchingCompleted)) {
+                $skillMatchScore = 100;
+            } elseif (!empty($matchingSkills)) {
+                $skillMatchScore = 75;
+            } else {
+                $skillMatchScore = 30;
+            }
         } else {
-            $avgSkill = $this->skillProfiles()->avg('avg_score');
-            $skillMatch = $avgSkill ?: 50;
+            $skillMatchScore = !empty($studentAcquiredSkillIds) ? 80 : 50;
         }
 
         // 2. Interest Match Score (30%)
         $projectTagIds = $project->tags->pluck('id')->toArray();
+        $interestMatch = 50;
+
         if (!empty($projectTagIds)) {
-            $userInterestScores = $this->interestProfiles()
-                ->whereIn('tag_id', $projectTagIds)
-                ->pluck('interest_score');
-            $interestMatch = $userInterestScores->count() > 0 ? $userInterestScores->avg() : 50;
-        } else {
-            $interestMatch = 50;
+            $studentTagIds = $this->interestProfiles->pluck('tag_id')->toArray();
+            $matchingTags = array_intersect($projectTagIds, $studentTagIds);
+            if (!empty($matchingTags)) {
+                $interestMatch = 90;
+            }
         }
 
-        // Bonus if student's peminatan matches project category
         if ($this->peminatan && $project->category && stripos($project->category->name, $this->peminatan) !== false) {
             $interestMatch = min(100, $interestMatch + 20);
         }
@@ -184,8 +216,8 @@ class User extends Authenticatable
         $completedCount = $this->completedProjects()->count();
         $expMatch = min(100, $completedCount * 25 + 30);
 
-        $totalScore = (0.50 * $skillMatch) + (0.30 * $interestMatch) + (0.20 * $expMatch);
+        $totalScore = (0.50 * $skillMatchScore) + (0.30 * $interestMatch) + (0.20 * $expMatch);
 
-        return (int) round(min(100, max(20, $totalScore)));
+        return (int) round(min(100, max(30, $totalScore)));
     }
 }
