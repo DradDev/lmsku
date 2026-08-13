@@ -93,8 +93,7 @@ class MasterCourseController extends Controller
         if (!empty($skillIds)) {
             $skills = Skill::whereIn('id', $skillIds)->get();
             if ($skills->count() === 1) {
-                $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $skills->first()->name);
-                $words = array_values(array_filter(explode(' ', trim($cleanName))));
+                $words = explode(' ', trim($skills->first()->name));
                 if (count($words) >= 2) {
                     $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
                 } else {
@@ -103,8 +102,7 @@ class MasterCourseController extends Controller
             } elseif ($skills->count() === 2) {
                 $parts = [];
                 foreach ($skills as $sk) {
-                    $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $sk->name);
-                    $words = array_values(array_filter(explode(' ', trim($cleanName))));
+                    $words = explode(' ', trim($sk->name));
                     if (count($words) >= 2) {
                         $parts[] = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
                     } else {
