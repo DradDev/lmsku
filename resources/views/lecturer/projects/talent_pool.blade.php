@@ -206,7 +206,7 @@
 
                         <!-- Action Buttons -->
                         <div class="pt-3 border-t border-gray-100 flex items-center gap-2">
-                            <a href="{{ route('lecturer.students.portfolio', $student) }}" target="_blank"
+                            <a href="{{ route('lecturer.students.portfolio', $student) }}"
                                class="flex-1 text-center py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition border border-gray-200">
                                 Portofolio
                             </a>

@@ -441,7 +441,7 @@
                                         </div>
 
                                         <div class="flex items-center gap-1.5 pt-1 border-t border-white/10">
-                                            <a href="{{ route('lecturer.students.portfolio', $recStudent) }}" target="_blank"
+                                            <a href="{{ route('lecturer.students.portfolio', $recStudent) }}"
                                                class="flex-1 text-center py-1 px-2 bg-white/20 hover:bg-white/30 text-white font-semibold text-[10px] rounded-md transition">
                                                 Portofolio
                                             </a>
