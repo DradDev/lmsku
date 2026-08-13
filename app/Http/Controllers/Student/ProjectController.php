@@ -50,6 +50,41 @@ class ProjectController extends Controller
         return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors', 'invitedParticipations'));
     }
 
+    public function show(Project $project): View
+    {
+        $student = Auth::user();
+
+        $project->load([
+            'user',
+            'skills',
+            'tags',
+            'category',
+            'participations.user',
+            'comments.user',
+            'comments.replies.user',
+        ]);
+
+        $participation = ProjectParticipation::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        $eligibility = $this->checkStudentEligibility($student, $project);
+
+        $statusHistories = ProjectStatusHistory::with('user')
+            ->where('project_id', $project->id)
+            ->where(function ($q) use ($participation) {
+                if ($participation) {
+                    $q->where('project_participation_id', $participation->id);
+                } else {
+                    $q->whereNull('project_participation_id');
+                }
+            })
+            ->latest()
+            ->get();
+
+        return view('student.projects.show', compact('project', 'participation', 'eligibility', 'statusHistories'));
+    }
+
     public function myProjects(): View
     {
         $participations = ProjectParticipation::with([
