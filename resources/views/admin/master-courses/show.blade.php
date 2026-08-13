@@ -16,6 +16,23 @@
             </div>
         @endif
 
+        <!-- TOP NAVIGATION / BACK BUTTON ROW -->
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+            <a href="{{ route('admin.master-courses.index') }}" 
+               style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: all 0.2s;"
+               onmouseover="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1';"
+               onmouseout="this.style.background='#FFFFFF'; this.style.borderColor='#E2E8F0';">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>Kembali ke Katalog Master Course</span>
+            </a>
+
+            <span style="font-size: 12px; font-weight: 600; color: #64748B;">
+                Kode: <strong style="color: #0F172A;">{{ $masterCourse->code }}</strong>
+            </span>
+        </div>
+
         <!-- TOP BANNER CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="display: flex; align-items: flex-start; gap: 1.25rem; flex: 1; min-width: 300px;">
