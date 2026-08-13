@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
