@@ -109,7 +109,7 @@
                     </div>
 
                     <p class="mt-1.5 text-xs text-gray-500">
-                        Select one or multiple initial interests. Saved as <span class="font-medium text-amber-700">(Competency Pending)</span> until verified.
+                        Preferensi bidang awal (Opsional). Skill kompetensi riil Anda akan otomatis terbentuk dari Course yang Anda ikuti.
                     </p>
 
                 </div>

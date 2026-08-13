@@ -18,12 +18,10 @@
     </x-slot>
 
     @php
-        $topSkillProfile = $student->skillProfiles->sortByDesc('highest_score')->first();
-        $hasCompetency = $topSkillProfile && $topSkillProfile->skill;
         $totalCourses = $student->enrollments->count();
         $totalProjects = $student->joinedProjects->count();
         $verifiedCertificates = $certificates->where('status', 'verified')->count();
-        $highestScore = $topSkillProfile ? round($topSkillProfile->highest_score ?? $topSkillProfile->avg_score) : 0;
+        $totalAcquiredSkills = $acquiredSkills->count();
     @endphp
 
     <div class="py-6">
@@ -53,13 +51,17 @@
                                 </p>
                             </div>
 
-                            @if($hasCompetency)
-                                <span class="px-4 py-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-extrabold self-center sm:self-auto">
-                                    Verified Specialization: {{ $topSkillProfile->skill->name }}
-                                </span>
+                            @if($totalAcquiredSkills > 0)
+                                <div class="flex flex-wrap gap-1.5 justify-center sm:justify-end">
+                                    @foreach($acquiredSkills->take(3) as $item)
+                                        <span class="px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-xl text-xs font-bold">
+                                            ✓ {{ $item['skill']->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             @else
-                                <span class="px-4 py-2 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold self-center sm:self-auto">
-                                    Peminatan: {{ $student->peminatan ?? 'Teknologi Komputer & Software' }}
+                                <span class="px-4 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold self-center sm:self-auto">
+                                    Akademik Talent LMS
                                 </span>
                             @endif
                         </div>
@@ -82,8 +84,8 @@
                             </div>
 
                             <div class="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-center lg:text-left">
-                                <span class="text-[11px] font-bold text-indigo-700 block uppercase">Skor Kompetensi Utama</span>
-                                <span class="text-xl font-black text-indigo-950 mt-0.5 block">{{ $highestScore }} / 100</span>
+                                <span class="text-[11px] font-bold text-indigo-700 block uppercase">Skill Dikuasai</span>
+                                <span class="text-xl font-black text-indigo-950 mt-0.5 block">{{ $totalAcquiredSkills }} Main Skill</span>
                             </div>
                         </div>
                     </div>
@@ -137,7 +139,7 @@
 
                                         @if($cert->score)
                                             <span class="px-2 py-0.5 bg-purple-100 text-purple-800 font-extrabold text-[10px] rounded-md">
-                                                Nilai: {{ $cert->score }}/100
+                                                Nilai Kelulusan: {{ $cert->score }}
                                             </span>
                                         @endif
                                     </div>
@@ -180,7 +182,104 @@
                 @endif
             </div>
 
-            <!-- 3. TRACK RECORD PROJECT INDUSTRI & AKADEMIK (PROJECTS TAKEN) -->
+            <!-- 3. SKILL COMPETENCY MATRIX (COURSE-BASED ACQUIRED MULTI-SKILL MATRIX) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
+                <div class="border-b border-gray-100 pb-4">
+                    <h4 class="text-xl font-black text-gray-900">
+                        Skill Competency Matrix (Course-Based Acquired Skills)
+                    </h4>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Kompetensi skill dan spesialisasi riil yang diperoleh Mahasiswa dari mata kuliah yang telah diambil dan diselesaikan.
+                    </p>
+                </div>
+
+                @if($acquiredSkills->isEmpty())
+                    <div class="p-8 bg-slate-50 border border-slate-200/80 rounded-xl text-center space-y-2">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <p class="text-sm font-bold text-slate-700">Belum ada skill terdaftar dari course</p>
+                        <p class="text-xs text-slate-500 max-w-md mx-auto">
+                            Skill akan otomatis terbentuk dan bertambah pada matriks ini begitu Anda mendaftar dan mempelajari Course.
+                        </p>
+                    </div>
+                @else
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        @foreach($acquiredSkills as $item)
+                            @php
+                                $skill = $item['skill'];
+                                $courses = array_unique($item['courses']);
+                                $tags = $item['tags'];
+                                $hasCert = $item['has_verified_cert'];
+                                $isCompleted = $item['is_completed'];
+                            @endphp
+
+                            <div class="border border-gray-200 hover:border-purple-300 rounded-2xl p-5 bg-slate-50/50 hover:bg-white transition flex flex-col justify-between space-y-4 shadow-xs">
+                                <div class="space-y-3">
+                                    <!-- Main Skill Header & Status Badge -->
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div>
+                                            <span class="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Main Skill</span>
+                                            <h5 class="font-extrabold text-base text-gray-900 leading-tight mt-0.5">
+                                                {{ $skill->name }}
+                                            </h5>
+                                        </div>
+
+                                        @if($hasCert)
+                                            <span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-full font-extrabold text-[10px] whitespace-nowrap shadow-2xs">
+                                                ✓ Sertifikat Terverifikasi
+                                            </span>
+                                        @elseif($isCompleted)
+                                            <span class="px-2.5 py-1 bg-blue-100 text-blue-800 border border-blue-200 rounded-full font-bold text-[10px] whitespace-nowrap">
+                                                Course Selesai
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-1 bg-purple-100 text-purple-800 border border-purple-200 rounded-full font-semibold text-[10px] whitespace-nowrap">
+                                                Dalam Pembelajaran
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Diperoleh Dari Course -->
+                                    <div class="space-y-1 pt-1">
+                                        <span class="text-[11px] font-bold text-gray-500 uppercase block">Diperoleh Dari Course:</span>
+                                        <ul class="space-y-1">
+                                            @foreach($courses as $cName)
+                                                <li class="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-600 flex-shrink-0"></span>
+                                                    <span>{{ $cName }}</span>
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+
+                                    <!-- Sub-Tag Spesialisasi -->
+                                    @if($tags->isNotEmpty())
+                                        <div class="space-y-1.5 pt-2 border-t border-gray-100">
+                                            <span class="text-[11px] font-bold text-gray-500 uppercase block">Tag Kompetensi:</span>
+                                            <div class="flex flex-wrap gap-1.5">
+                                                @foreach($tags as $tag)
+                                                    <span class="px-2.5 py-1 bg-white border border-purple-200 text-purple-900 rounded-lg text-[11px] font-semibold">
+                                                        #{{ $tag->name }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="pt-2 text-right">
+                                    <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
+                                        Kompetensi Siap Proyek
+                                    </span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            <!-- 4. TRACK RECORD PROJECT INDUSTRI & AKADEMIK (PROJECTS TAKEN) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
                     <div>
@@ -278,7 +377,7 @@
                 @endif
             </div>
 
-            <!-- 4. DAFTAR COURSE & PELATIHAN YANG DIIKUTI (ENROLLED COURSES) -->
+            <!-- 5. DAFTAR COURSE & PELATIHAN YANG DIIKUTI (ENROLLED COURSES) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
                     <div>
@@ -326,7 +425,7 @@
                                         </span>
 
                                         <span class="px-2 py-0.5 bg-slate-100 text-slate-700 font-bold text-[10px] rounded-md">
-                                            Progress: {{ $progress }}%
+                                            Progress Pembelajaran: {{ $progress }}%
                                         </span>
                                     </div>
 
@@ -353,76 +452,6 @@
                         @endforeach
                     </div>
                 @endif
-            </div>
-
-            <!-- 5. PROFIL KOMPETENSI SKILL & TAGS SPESIALISASI -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-                <!-- Left Column: Skill Competency Score Profiles (7 Cols) -->
-                <div class="lg:col-span-7 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
-                    <div>
-                        <h4 class="text-xl font-black text-gray-900">
-                            Skor Kompetensi Skill Terverifikasi
-                        </h4>
-                        <p class="text-xs text-gray-500 mt-0.5">
-                            Hasil evaluasi otomatis penguasaan skill berdasarkan akumulasi kuis dan karya project.
-                        </p>
-                    </div>
-
-                    @if($student->skillProfiles->isEmpty())
-                        <div class="p-6 bg-slate-50 border border-slate-200/80 rounded-xl text-center text-xs text-gray-500">
-                            Belum ada skor kompetensi skill terdaftar.
-                        </div>
-                    @else
-                        <div class="space-y-3">
-                            @foreach($student->skillProfiles as $sp)
-                                @php
-                                    $score = round($sp->avg_score);
-                                    $barColor = $score >= 80 ? 'bg-emerald-500' : ($score >= 60 ? 'bg-indigo-600' : 'bg-amber-500');
-                                @endphp
-
-                                <div class="border border-gray-100 rounded-xl p-3.5 bg-slate-50/70 hover:bg-white transition space-y-1.5">
-                                    <div class="flex justify-between items-center text-xs">
-                                        <span class="font-extrabold text-gray-900">{{ $sp->skill->name ?? 'Skill' }}</span>
-                                        <span class="font-black text-indigo-700">{{ $score }} / 100</span>
-                                    </div>
-
-                                    <div class="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                        <div class="{{ $barColor }} h-2.5 rounded-full transition-all" style="width: {{ $score }}%"></div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Right Column: Specialty & Interest Tags (5 Cols) -->
-                <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
-                    <div>
-                        <h4 class="text-xl font-black text-gray-900">
-                            Tag Minat & Spesialisasi
-                        </h4>
-                        <p class="text-xs text-gray-500 mt-0.5">
-                            Fokus spesialisasi dan minat teknologi yang diminati dalam pencocokan project.
-                        </p>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2 pt-1">
-                        <span class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-xs">
-                            Peminatan: {{ $student->peminatan ?? 'Teknologi Komputer' }}
-                        </span>
-
-                        @forelse($student->interestProfiles as $ip)
-                            <span class="px-3 py-1.5 bg-purple-50 border border-purple-200 text-purple-800 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                                <span>#{{ $ip->tag->name ?? 'Tag' }}</span>
-                                <span class="px-1.5 py-0.5 bg-purple-200 text-purple-950 rounded-md text-[10px] font-black">{{ round($ip->interest_score ?? 50) }}</span>
-                            </span>
-                        @empty
-                            <span class="text-gray-400 italic text-xs block py-2">Belum ada tag spesialisasi terdaftar.</span>
-                        @endforelse
-                    </div>
-                </div>
-
             </div>
 
         </div>

@@ -39,9 +39,9 @@ class RegisteredUserController extends Controller
             'role' => ['required', 'in:student,lecturer,vendor'],
         ];
 
-        // Peminatan wajib diisi jika role = student (bisa 1 atau banyak pilihan)
+        // Peminatan opsional jika role = student (hanya catatan preferensi awal)
         if ($request->role === 'student') {
-            $rules['peminatan'] = ['required'];
+            $rules['peminatan'] = ['nullable'];
         }
 
         $request->validate($rules);

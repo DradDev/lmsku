@@ -147,12 +147,14 @@ class ProjectController extends Controller
             'skillProfiles.skill',
             'interestProfiles.tag',
             'joinedProjects' => function ($query) {
-                $query->with(['skills', 'user']);
+                $query->with(['skills', 'tags', 'user']);
             },
-            'enrollments.courseOffering.masterCourse.category',
+            'enrollments.courseOffering.masterCourse.skills',
+            'enrollments.courseOffering.masterCourse.tags',
             'enrollments.courseOffering.academicTerm',
             'enrollments.courseOffering.lecturer',
-            'enrollments.course.user',
+            'enrollments.course.skills',
+            'enrollments.course.tags',
             'enrollments.course.category',
         ]);
 
@@ -161,123 +163,90 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        return view('student.portfolio', compact('student', 'certificates'));
-    }
+        // Build Course-Based Acquired Multi-Skill Matrix
+        $acquiredSkillsMap = [];
 
-    public function show(Project $project): View
-    {
-        abort_unless($project->is_published, 404);
+        foreach ($student->enrollments as $enrollment) {
+            $masterCourse = $enrollment->courseOffering?->masterCourse;
+            $courseObj = $masterCourse ?? $enrollment->course;
 
-        $student = Auth::user();
-        $student->load('skillProfiles');
+            if (!$courseObj) {
+                continue;
+            }
 
-        $project->load([
-            'skills',
-            'tags',
-            'user',
-            'comments' => function ($query) {
-                $query->with('user')->latest();
-            },
-        ]);
+            $courseName = $masterCourse->name ?? ($enrollment->course->name ?? 'Course');
+            $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
+            $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment, $courseObj) {
+                return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
+                    || ($cert->course_id && $cert->course_id === $enrollment->course_id);
+            });
 
-        LearningActivityLog::create([
-            'user_id' => $student->id,
-            'project_id' => $project->id,
-            'activity_type' => 'view_project',
-            'activity_value' => 1,
-            'occurred_at' => now(),
-        ]);
+            foreach ($courseObj->skills as $skill) {
+                if (!isset($acquiredSkillsMap[$skill->id])) {
+                    $acquiredSkillsMap[$skill->id] = [
+                        'skill' => $skill,
+                        'courses' => [],
+                        'tags' => collect(),
+                        'has_verified_cert' => false,
+                        'is_completed' => false,
+                    ];
+                }
 
-        $participation = ProjectParticipation::where('user_id', $student->id)
-            ->where('project_id', $project->id)
-            ->first();
+                $acquiredSkillsMap[$skill->id]['courses'][] = $courseName;
+                if ($hasVerifiedCert) {
+                    $acquiredSkillsMap[$skill->id]['has_verified_cert'] = true;
+                }
+                if ($isCompleted) {
+                    $acquiredSkillsMap[$skill->id]['is_completed'] = true;
+                }
 
-        $canComment = $participation !== null;
-        $eligibility = $this->checkStudentEligibility($student, $project);
-
-        return view('student.projects.show', compact(
-            'project',
-            'participation',
-            'canComment',
-            'eligibility'
-        ));
-    }
-
-    public function join(Project $project): RedirectResponse
-    {
-        abort_unless($project->is_published, 404);
-        $student = Auth::user();
-        $student->load('skillProfiles');
-
-        $alreadyJoined = ProjectParticipation::where('user_id', $student->id)
-            ->where('project_id', $project->id)
-            ->exists();
-
-        if ($alreadyJoined) {
-            return redirect()
-                ->route('student.projects.my')
-                ->with('success', 'Kamu sudah mengambil project ini.');
+                // Add tags belonging to this skill
+                foreach ($courseObj->tags as $tag) {
+                    if ($tag->skill_id === $skill->id || !$tag->skill_id) {
+                        if (!$acquiredSkillsMap[$skill->id]['tags']->contains('id', $tag->id)) {
+                            $acquiredSkillsMap[$skill->id]['tags']->push($tag);
+                        }
+                    }
+                }
+            }
         }
 
-        $joinedCount = ProjectParticipation::where('project_id', $project->id)
-            ->count();
+        $acquiredSkills = collect($acquiredSkillsMap);
 
-        if ($joinedCount >= ($project->max_students ?? 1)) {
-            return redirect()
-                ->route('student.projects.show', $project)
-                ->with('error', 'Project quota is full.');
-        }
-
-        // Strict Check: Certificate Verified + Main Skill Competency
-        $eligibility = $this->checkStudentEligibility($student, $project);
-
-        if (!$eligibility['is_eligible']) {
-            $reasonMsg = implode(' ', $eligibility['reasons']);
-            return redirect()
-                ->route('student.projects.show', $project)
-                ->with('error', "Pendaftaran ditolak. Anda belum memenuhi kriteria kelayakan project ini: {$reasonMsg}");
-        }
-
-        $participation = ProjectParticipation::create([
-            'user_id' => $student->id,
-            'project_id' => $project->id,
-            'status' => 'in_progress',
-            'progress_percent' => 0,
-            'started_at' => now(),
-            'last_activity_at' => now(),
-        ]);
-
-        LearningActivityLog::create([
-            'user_id' => $student->id,
-            'project_id' => $project->id,
-            'activity_type' => 'join_project',
-            'activity_value' => 1,
-            'metadata' => [
-                'participation_id' => $participation->id,
-            ],
-            'occurred_at' => now(),
-        ]);
-
-        return redirect()
-            ->route('student.projects.show', $project)
-            ->with('success', 'Project successfully joined.');
+        return view('student.portfolio', compact('student', 'certificates', 'acquiredSkills'));
     }
 
     public function checkStudentEligibility(User $student, Project $project): array
     {
-        $mainSkill = $project->skills->firstWhere('pivot.is_main', true) ?? $project->skills->first();
-        $requiredSkillIds = $project->skills->pluck('id')->toArray();
+        $requiredSkills = $project->skills;
+        $requiredSkillIds = $requiredSkills->pluck('id')->toArray();
 
-        $hasMainSkill = false;
+        // Collect all skill IDs student acquired from enrolled courses
+        $student->loadMissing([
+            'enrollments.courseOffering.masterCourse.skills',
+            'enrollments.course.skills',
+        ]);
+
+        $studentAcquiredSkillIds = [];
+        foreach ($student->enrollments as $enrollment) {
+            $courseObj = $enrollment->courseOffering?->masterCourse ?? $enrollment->course;
+            if ($courseObj) {
+                foreach ($courseObj->skills as $s) {
+                    $studentAcquiredSkillIds[] = $s->id;
+                }
+            }
+        }
+        $studentAcquiredSkillIds = array_unique($studentAcquiredSkillIds);
+
+        $hasRequiredSkills = false;
         if (!empty($requiredSkillIds)) {
-            $userSkillIds = $student->skillProfiles->pluck('skill_id')->toArray();
-            $hasMainSkill = !empty(array_intersect($requiredSkillIds, $userSkillIds));
+            $hasRequiredSkills = !empty(array_intersect($requiredSkillIds, $studentAcquiredSkillIds));
         } else {
-            $hasMainSkill = true; // No skill requirement
+            $hasRequiredSkills = true; // No skill requirement
         }
 
         // Certificate check: Student must have at least 1 verified certificate or verified final quiz attempt
-        $hasVerifiedCertificate = \App\Models\Certificate::where('user_id', $student->id)
+        $hasVerifiedCertificate = Certificate::where('user_id', $student->id)
             ->where('status', 'verified')
             ->exists();
 
@@ -288,12 +257,12 @@ class ProjectController extends Controller
                 ->exists();
         }
 
-        $isEligible = $hasMainSkill && $hasVerifiedCertificate;
+        $isEligible = $hasRequiredSkills && $hasVerifiedCertificate;
 
         $reasons = [];
-        if (!$hasMainSkill) {
+        if (!$hasRequiredSkills) {
             $skillNames = $project->skills->pluck('name')->implode(', ');
-            $reasons[] = "Belum memiliki Target Main Skill: " . ($skillNames ?: 'General Skill') . ".";
+            $reasons[] = "Belum mengambil Course yang membekali Skill: " . ($skillNames ?: 'General Skill') . ".";
         }
 
         if (!$hasVerifiedCertificate) {
@@ -302,7 +271,7 @@ class ProjectController extends Controller
 
         return [
             'is_eligible' => $isEligible,
-            'has_main_skill' => $hasMainSkill,
+            'has_main_skill' => $hasRequiredSkills,
             'has_verified_certificate' => $hasVerifiedCertificate,
             'main_skill_name' => $project->skills->pluck('name')->implode(', ') ?: 'General Skill',
             'reasons' => $reasons,
