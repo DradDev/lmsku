@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-900 flex items-center justify-center font-extrabold text-lg shadow-sm flex-shrink-0" aria-hidden="true">
                     🏢
                 </div>
                 <div>
-                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                    <h2 class="font-extrabold text-xl text-gray-900 leading-tight">
                         Vendor & Industry Partner Portal
                     </h2>
-                    <p class="text-sm text-gray-500">
+                    <p class="text-xs font-semibold text-slate-700 mt-0.5">
                         Kelola sertifikasi industri, publikasikan project real client, dan rekrut talenta mahasiswa.
                     </p>
                 </div>
@@ -17,16 +17,18 @@
 
             <div class="flex items-center gap-2">
                 <a href="{{ route('vendor.courses.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   aria-label="Buat Course Sertifikasi Baru"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-extrabold rounded-xl shadow-sm transition">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
                     </svg>
                     + Buat Course Sertifikasi
                 </a>
 
                 <a href="{{ route('vendor.projects.create') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                   aria-label="Publikasikan Project Industri Baru"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-extrabold rounded-xl shadow-sm transition">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                     </svg>
                     + Publikasikan Project
@@ -35,27 +37,30 @@
         </div>
     </x-slot>
 
-    <div class="py-6">
+    <main class="py-6" role="main" aria-label="Portal Vendor & Partner Industri">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
             {{-- Alerts --}}
             @if(session('success'))
-                <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm text-sm font-medium">
-                    <svg class="mt-0.5 flex-shrink-0 text-emerald-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-300 text-emerald-950 rounded-2xl shadow-sm text-xs font-bold" role="alert">
+                    <svg class="mt-0.5 flex-shrink-0 text-emerald-700" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M20 6 9 17l-5-5"/>
                     </svg>
                     <div>
-                        <p class="font-bold">Berhasil</p>
-                        <p class="mt-0.5 text-emerald-700">{{ session('success') }}</p>
+                        <p class="font-extrabold">Berhasil</p>
+                        <p class="mt-0.5 text-emerald-900 font-semibold">{{ session('success') }}</p>
                     </div>
                 </div>
             @endif
 
-            {{-- Compact Tabs Nav (Identical to Lecturer Dashboard) --}}
-            <div class="flex items-center gap-1.5 p-1.5 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto">
+            {{-- Compact Tabs Nav --}}
+            <nav class="flex items-center gap-1.5 p-1.5 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto" role="tablist" aria-label="Tab Navigasi Dashboard Vendor">
                 <a href="{{ route('vendor.dashboard', ['tab' => 'overview']) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'overview' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   role="tab"
+                   aria-selected="{{ $tab === 'overview' ? 'true' : 'false' }}"
+                   aria-label="Tab Overview Dashboard Vendor"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition whitespace-nowrap {{ $tab === 'overview' ? 'bg-purple-700 text-white shadow-sm' : 'text-slate-700 hover:text-gray-900 hover:bg-gray-50' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <rect x="3" y="3" width="7" height="7" rx="1"/>
                         <rect x="14" y="3" width="7" height="7" rx="1"/>
                         <rect x="14" y="14" width="7" height="7" rx="1"/>
@@ -64,64 +69,70 @@
                     Overview
                 </a>
                 <a href="{{ route('vendor.dashboard', ['tab' => 'materials']) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'materials' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   role="tab"
+                   aria-selected="{{ $tab === 'materials' ? 'true' : 'false' }}"
+                   aria-label="Tab Learning Materials Modul Vendor"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition whitespace-nowrap {{ $tab === 'materials' ? 'bg-purple-700 text-white shadow-sm' : 'text-slate-700 hover:text-gray-900 hover:bg-gray-50' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14,2 14,8 20,8"/>
                     </svg>
                     Learning Materials ({{ $materials->count() }})
                 </a>
                 <a href="{{ route('vendor.dashboard', ['tab' => 'quizzes']) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'quizzes' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                   role="tab"
+                   aria-selected="{{ $tab === 'quizzes' ? 'true' : 'false' }}"
+                   aria-label="Tab Kuis dan Evaluasi Vendor"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition whitespace-nowrap {{ $tab === 'quizzes' ? 'bg-purple-700 text-white shadow-sm' : 'text-slate-700 hover:text-gray-900 hover:bg-gray-50' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
                         <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
                     Kuis & Evaluasi ({{ $quizzes->count() }})
                 </a>
-            </div>
+            </nav>
 
             {{-- ==================== OVERVIEW TAB ==================== --}}
             @if($tab === 'overview')
                 <!-- Executive Stat Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-xl font-extrabold" aria-hidden="true">
                             🎓
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Course Sertifikasi</span>
+                            <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">Course Sertifikasi</span>
                             <span class="text-2xl font-black text-gray-900">{{ $totalCourses }}</span>
                         </div>
                     </div>
 
                     <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center text-xl font-extrabold" aria-hidden="true">
                             📁
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Project Industri</span>
+                            <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">Project Industri</span>
                             <span class="text-2xl font-black text-gray-900">{{ $totalProjects }}</span>
                         </div>
                     </div>
 
                     <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl font-extrabold" aria-hidden="true">
                             👨‍🎓
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Mahasiswa Enrolled</span>
+                            <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">Mahasiswa Enrolled</span>
                             <span class="text-2xl font-black text-gray-900">{{ $totalEnrolledStudents }}</span>
                         </div>
                     </div>
 
                     <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center text-xl font-extrabold" aria-hidden="true">
                             🎯
                         </div>
                         <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Talent Rekrutmen</span>
+                            <span class="text-xs font-extrabold text-slate-700 uppercase tracking-wider block">Talent Rekrutmen</span>
                             <span class="text-2xl font-black text-gray-900">{{ $totalProjectStudents }}</span>
                         </div>
                     </div>
@@ -137,17 +148,17 @@
                                 <h3 class="font-extrabold text-base text-gray-900 flex items-center gap-2">
                                     <span>🎓 Course Sertifikasi Industri</span>
                                 </h3>
-                                <p class="text-xs text-gray-500">Pelatihan kompetensi & sertifikasi profesional mitra.</p>
+                                <p class="text-xs font-semibold text-slate-700 mt-0.5">Pelatihan kompetensi & sertifikasi profesional mitra.</p>
                             </div>
-                            <a href="{{ route('vendor.courses.index') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                            <a href="{{ route('vendor.courses.index') }}" aria-label="Lihat semua course sertifikasi industri" class="text-xs font-extrabold text-indigo-800 hover:text-indigo-950">
                                 Lihat Semua →
                             </a>
                         </div>
 
                         @if($courses->isEmpty())
                             <div class="p-6 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center space-y-2">
-                                <p class="text-xs text-gray-500 font-medium">Belum ada course sertifikasi industri yang dibuat.</p>
-                                <a href="{{ route('vendor.courses.create') }}" class="inline-block px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-lg">
+                                <p class="text-xs text-slate-700 font-semibold">Belum ada course sertifikasi industri yang dibuat.</p>
+                                <a href="{{ route('vendor.courses.create') }}" aria-label="Buat Course Pertama Sertifikasi" class="inline-block px-3.5 py-2 bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm">
                                     + Buat Course Pertama
                                 </a>
                             </div>
@@ -156,12 +167,12 @@
                                 @foreach($courses->take(4) as $course)
                                     <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-100/80 transition">
                                         <div>
-                                            <h4 class="font-bold text-xs text-gray-900">{{ $course->name }}</h4>
-                                            <p class="text-[11px] text-gray-500 mt-0.5">
+                                            <h4 class="font-extrabold text-xs text-gray-900">{{ $course->name }}</h4>
+                                            <p class="text-[11px] font-semibold text-slate-700 mt-0.5">
                                                 Level: {{ $course->level }} | 👥 {{ $course->students_count }} Mahasiswa
                                             </p>
                                         </div>
-                                        <a href="{{ route('vendor.courses.show', $course) }}" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-lg transition">
+                                        <a href="{{ route('vendor.courses.show', $course) }}" aria-label="Kelola course {{ $course->name }}" class="px-3.5 py-1.5 bg-indigo-50 text-indigo-900 border border-indigo-200 hover:bg-indigo-100 font-extrabold text-xs rounded-xl transition">
                                             Kelola →
                                         </a>
                                     </div>
@@ -177,17 +188,17 @@
                                 <h3 class="font-extrabold text-base text-gray-900 flex items-center gap-2">
                                     <span>📁 Project Real Client Industri</span>
                                 </h3>
-                                <p class="text-xs text-gray-500">Studi kasus nyata industri & seleksi talenta.</p>
+                                <p class="text-xs font-semibold text-slate-700 mt-0.5">Studi kasus nyata industri & seleksi talenta.</p>
                             </div>
-                            <a href="{{ route('vendor.projects.index') }}" class="text-xs font-bold text-purple-600 hover:text-purple-800">
+                            <a href="{{ route('vendor.projects.index') }}" aria-label="Lihat semua project real client industri" class="text-xs font-extrabold text-purple-800 hover:text-purple-950">
                                 Lihat Semua →
                             </a>
                         </div>
 
                         @if($projects->isEmpty())
                             <div class="p-6 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center space-y-2">
-                                <p class="text-xs text-gray-500 font-medium">Belum ada project industri dipublikasikan.</p>
-                                <a href="{{ route('vendor.projects.create') }}" class="inline-block px-3 py-1.5 bg-purple-600 text-white font-bold text-xs rounded-lg">
+                                <p class="text-xs text-slate-700 font-semibold">Belum ada project industri dipublikasikan.</p>
+                                <a href="{{ route('vendor.projects.create') }}" aria-label="Publikasikan project pertama" class="inline-block px-3.5 py-2 bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm">
                                     + Publikasikan Project
                                 </a>
                             </div>
@@ -196,16 +207,16 @@
                                 @foreach($projects->take(4) as $proj)
                                     <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-100/80 transition">
                                         <div>
-                                            <h4 class="font-bold text-xs text-gray-900">{{ $proj->title }}</h4>
-                                            <p class="text-[11px] text-gray-500 mt-0.5">
+                                            <h4 class="font-extrabold text-xs text-gray-900">{{ $proj->title }}</h4>
+                                            <p class="text-[11px] font-semibold text-slate-700 mt-0.5">
                                                 Tipe: {{ ucfirst($proj->type ?? 'General') }} | 🎯 {{ $proj->participations_count }} Pelamar
                                             </p>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <a href="{{ route('vendor.projects.talent-pool', $proj) }}" class="px-2.5 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold text-xs rounded-lg transition">
+                                            <a href="{{ route('vendor.projects.talent-pool', $proj) }}" aria-label="Buka talent pool untuk project {{ $proj->title }}" class="px-2.5 py-1.5 bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 font-extrabold text-xs rounded-xl transition">
                                                 Talent Pool
                                             </a>
-                                            <a href="{{ route('vendor.projects.show', $proj) }}" class="px-2.5 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold text-xs rounded-lg transition">
+                                            <a href="{{ route('vendor.projects.show', $proj) }}" aria-label="Buka detail project {{ $proj->title }}" class="px-2.5 py-1.5 bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100 font-extrabold text-xs rounded-xl transition">
                                                 Detail →
                                             </a>
                                         </div>

@@ -1,6 +1,6 @@
 <x-app-layout>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -24,8 +24,8 @@
     background: none;
     border: none;
     font-size: 15px;
-    font-weight: 600;
-    color: #667085;
+    font-weight: 700;
+    color: #344054;
     cursor: pointer;
     padding: 8px 16px;
     border-radius: 8px;
@@ -38,8 +38,9 @@
 }
 
 .tab-btn.active {
-    color: #6b21a8;
+    color: #581c87;
     background: #f3e8ff;
+    font-weight: 800;
 }
 
 .page-container {
@@ -65,7 +66,7 @@
 
 .page-eyebrow {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 1.3px;
     text-transform: uppercase;
     color: #6b21a8;
@@ -81,7 +82,8 @@
 
 .page-sub {
     font-size: 14px;
-    color: #667085;
+    color: #344054;
+    font-weight: 500;
     margin-top: 6px;
     max-width: 720px;
 }
@@ -90,11 +92,11 @@
     padding: 12px 16px;
     border-radius: 14px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 1.5rem;
     background: #ecfdf3;
     border: 1px solid #abefc6;
-    color: #067647;
+    color: #065f46;
 }
 
 .btn {
@@ -140,7 +142,7 @@
 .stat-label {
     font-size: 11px;
     font-weight: 700;
-    color: #667085;
+    color: #344054;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -183,8 +185,8 @@
 
 .course-tag {
     font-size: 11px;
-    font-weight: 700;
-    color: #6b21a8;
+    font-weight: 800;
+    color: #581c87;
     background: #f3e8ff;
     padding: 3px 10px;
     border-radius: 100px;
@@ -192,7 +194,7 @@
 
 .course-badge {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 800;
     padding: 3px 10px;
     border-radius: 100px;
     border: 1px solid transparent;
@@ -208,7 +210,8 @@
 
 .course-desc {
     font-size: 13px;
-    color: #667085;
+    color: #344054;
+    font-weight: 500;
     line-height: 1.5;
     margin-bottom: 1.25rem;
     display: -webkit-box;
@@ -231,7 +234,7 @@
 .stat-mini-label {
     font-size: 10px;
     font-weight: 700;
-    color: #64748b;
+    color: #344054;
     text-transform: uppercase;
 }
 
@@ -251,7 +254,7 @@
 }
 </style>
 
-<div class="page-wrap" x-data="{ tab: 'active' }">
+<main class="page-wrap" role="main" aria-label="Manajemen Sertifikasi Industri Mitra Vendor" x-data="{ tab: 'active' }">
     <div class="page-container">
 
         @php
@@ -268,14 +271,14 @@
                 <p class="page-sub">Kelola materi modul, bank kuis evaluasi, dan kelulusan sertifikat industri mahasiswa secara mandiri.</p>
             </div>
 
-            <a href="{{ route('vendor.courses.create') }}" class="btn btn-primary">
+            <a href="{{ route('vendor.courses.create') }}" aria-label="Buat Course Sertifikasi Baru" class="btn btn-primary">
                 + Buat Course Sertifikasi Baru
             </a>
         </div>
 
         @if(session('success'))
-            <div class="alert-success flex items-center gap-3">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs">✓</span>
+            <div class="alert-success flex items-center gap-3" role="alert">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-700 text-white font-bold text-xs" aria-hidden="true">✓</span>
                 <div>
                     <strong>Berhasil!</strong> {{ session('success') }}
                 </div>
@@ -301,30 +304,30 @@
             </div>
         </div>
 
-        <div class="tabs-nav">
-            <button class="tab-btn" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
+        <div class="tabs-nav" role="tablist" aria-label="Tab Pilihan Course Vendor">
+            <button class="tab-btn" role="tab" :aria-selected="tab === 'active'" aria-controls="tab-active-panel" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
                 Course Aktif ({{ $activeCourses->count() }})
             </button>
-            <button class="tab-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
+            <button class="tab-btn" role="tab" :aria-selected="tab === 'bank'" aria-controls="tab-bank-panel" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
                 Draft Bank / Arsip ({{ $bankCourses->count() }})
             </button>
         </div>
 
         <!-- TAB 1: ACTIVE COURSES -->
-        <div x-show="tab === 'active'">
+        <div id="tab-active-panel" role="tabpanel" aria-label="Daftar Course Sertifikasi Aktif" x-show="tab === 'active'">
             <div class="courses-grid">
                 @forelse($activeCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
                             <span class="course-tag">🏢 Vendor Certified</span>
-                            <span class="course-badge text-green-700 bg-green-50 border-green-200">Aktif Dipublikasikan</span>
+                            <span class="course-badge text-emerald-900 bg-emerald-100 border-emerald-300 font-extrabold">Aktif Dipublikasikan</span>
                         </div>
 
-                        <div class="course-name">{{ $course->name }}</div>
+                        <h2 class="course-name">{{ $course->name }}</h2>
 
-                        <div class="text-xs text-purple-700 mb-3 font-bold flex items-center gap-1.5">
+                        <div class="text-xs text-purple-900 mb-3 font-extrabold flex items-center gap-1.5">
                             <span>⚡ Certificate Threshold:</span>
-                            <span class="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
+                            <span class="bg-purple-100 text-purple-950 px-2 py-0.5 rounded-md font-black border border-purple-200">{{ $course->certificate_threshold ?? 75 }}%</span>
                         </div>
 
                         <p class="course-desc">{{ $course->description ?: 'Pengelolaan materi modul, kuis evaluasi, dan kelulusan sertifikat industri.' }}</p>
@@ -345,33 +348,35 @@
                         </div>
 
                         <div style="margin-top: auto;">
-                            <a href="{{ route('vendor.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
+                            <a href="{{ route('vendor.courses.show', $course->id) }}" 
+                               aria-label="Kelola course sertifikasi {{ $course->name }}" 
+                               class="btn btn-primary w-full text-center">
                                 🚀 Kelola Course Sertifikasi
                             </a>
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
-                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Course Sertifikasi Aktif</h3>
-                        <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Klik tombol "+ Buat Course Sertifikasi Baru" di atas untuk menerbitkan silabus mandiri pertama Anda.</p>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #101828;">Belum Ada Course Sertifikasi Aktif</h3>
+                        <p style="font-size: 13px; color: #344054; margin-top: 4px; font-weight: 500;">Klik tombol "+ Buat Course Sertifikasi Baru" di atas untuk menerbitkan silabus mandiri pertama Anda.</p>
                     </div>
                 @endforelse
             </div>
         </div>
 
         <!-- TAB 2: BANK COURSES (DRAFTS) -->
-        <div x-show="tab === 'bank'" style="display: none;">
+        <div id="tab-bank-panel" role="tabpanel" aria-label="Daftar Draft Course Sertifikasi Vendor" x-show="tab === 'bank'" style="display: none;">
             <div class="courses-grid">
                 @forelse($bankCourses as $course)
                     <div class="course-card">
                         <div class="course-top">
                             <span class="course-tag">🏢 Draft Vendor</span>
-                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">🔴 Archived / Draft</span>
+                            <span class="course-badge text-slate-900 bg-slate-100 border-slate-300 font-bold">🔴 Archived / Draft</span>
                         </div>
 
-                        <div class="course-name">{{ $course->name }}</div>
+                        <h2 class="course-name">{{ $course->name }}</h2>
 
-                        <div class="text-xs text-slate-500 mb-3 font-semibold">
+                        <div class="text-xs text-slate-700 mb-3 font-extrabold">
                             Threshold: {{ $course->certificate_threshold ?? 75 }}%
                         </div>
 
@@ -393,20 +398,22 @@
                         </div>
 
                         <div style="margin-top: auto;">
-                            <a href="{{ route('vendor.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
+                            <a href="{{ route('vendor.courses.show', $course->id) }}" 
+                               aria-label="Pratinjau dan edit draft course {{ $course->name }}" 
+                               class="btn btn-primary w-full text-center">
                                 🚀 Pratinjau & Edit Course
                             </a>
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
-                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Draft Course di Bank</h3>
-                        <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Seluruh course yang diarsipkan atau belum dipublikasikan akan muncul di sini.</p>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #101828;">Belum Ada Draft Course di Bank</h3>
+                        <p style="font-size: 13px; color: #344054; margin-top: 4px; font-weight: 500;">Seluruh course yang diarsipkan atau belum dipublikasikan akan muncul di sini.</p>
                     </div>
                 @endforelse
             </div>
         </div>
 
     </div>
-</div>
+</main>
 </x-app-layout>

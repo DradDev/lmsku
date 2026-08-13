@@ -1,67 +1,67 @@
 <x-app-layout>
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <main style="display: flex; flex-direction: column; gap: 1.5rem;" role="main" aria-label="Manajemen Pengguna System dan Partner Vendor">
 
         <!-- ALERTS -->
         @if(session('success'))
-            <div style="padding: 1rem 1.25rem; background: #ECFDF5; border: 1px solid #A7F3D0; color: #047857; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+            <div style="padding: 1rem 1.25rem; background: #ECFDF5; border: 1px solid #A7F3D0; color: #065F46; border-radius: 12px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 10px;" role="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
 
         @if(session('info'))
-            <div style="padding: 1rem 1.25rem; background: #EFF6FF; border: 1px solid #BFDBFE; color: #1D4ED8; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div style="padding: 1rem 1.25rem; background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; border-radius: 12px; font-size: 13.5px; font-weight: 700; display: flex; align-items: center; gap: 10px;" role="alert">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 <span>{{ session('info') }}</span>
             </div>
         @endif
 
         <!-- HERO HEADER CARD -->
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <span style="background: #EFF6FF; color: #2563EB; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-text-transform: uppercase;">Pengelolaan Hak Akses & Peran</span>
+                    <span style="background: #EFF6FF; color: #1E40AF; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; border: 1px solid #93C5FD; text-transform: uppercase;">Pengelolaan Hak Akses & Peran</span>
                 </div>
-                <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">Manajemen Pengguna System</h1>
-                <p style="font-size: 13px; color: #64748B; margin: 4px 0 0 0;">
-                    Kelola akun Dosen, Mahasiswa, status verifikasi pendaftaran, dan hak akses aplikasi.
+                <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">Manajemen Pengguna System & Partner Vendor</h1>
+                <p style="font-size: 13px; color: #334155; margin: 4px 0 0 0; font-weight: 500;">
+                    Kelola akun Dosen, Mahasiswa, Mitra Vendor, status verifikasi pendaftaran, dan hak akses aplikasi.
                 </p>
             </div>
 
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                <div style="background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Total User</div>
+                <div style="background: #FAFAFA; border: 1px solid #CBD5E1; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 700; color: #334155; text-transform: uppercase;">Total User</div>
                     <div style="font-size: 16px; font-weight: 800; color: #0F172A;">{{ $users->count() }}</div>
                 </div>
 
-                <div style="background: #DCFCE7; border: 1px solid #BBF7D0; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 700; color: #15803D; text-transform: uppercase;">Mahasiswa</div>
-                    <div style="font-size: 16px; font-weight: 800; color: #166534;">{{ $users->where('role', 'student')->count() }}</div>
+                <div style="background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 800; color: #14532D; text-transform: uppercase;">Mahasiswa</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #14532D;">{{ $users->where('role', 'student')->count() }}</div>
                 </div>
 
-                <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 700; color: #1D4ED8; text-transform: uppercase;">Dosen Pengampu</div>
+                <div style="background: #EFF6FF; border: 1px solid #93C5FD; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 800; color: #1E40AF; text-transform: uppercase;">Dosen Pengampu</div>
                     <div style="font-size: 16px; font-weight: 800; color: #1E40AF;">{{ $users->where('role', 'lecturer')->count() }}</div>
                 </div>
 
-                <div style="background: #F3E8FF; border: 1px solid #E9D5FF; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 700; color: #6B21A8; text-transform: uppercase;">🏢 Mitra Vendor</div>
+                <div style="background: #F3E8FF; border: 1px solid #D8B4FE; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 800; color: #6B21A8; text-transform: uppercase;">🏢 Mitra Vendor</div>
                     <div style="font-size: 16px; font-weight: 800; color: #581C87;">{{ $users->where('role', 'vendor')->count() }}</div>
                 </div>
 
-                <div style="background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 12px; padding: 8px 14px; text-align: center;">
-                    <div style="font-size: 10px; font-weight: 700; color: #B45309; text-transform: uppercase;">Pending</div>
-                    <div style="font-size: 16px; font-weight: 800; color: #92400E;">{{ $users->where('registration_status', 'pending')->count() }}</div>
+                <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 12px; padding: 8px 14px; text-align: center;">
+                    <div style="font-size: 10px; font-weight: 800; color: #78350F; text-transform: uppercase;">Pending</div>
+                    <div style="font-size: 16px; font-weight: 800; color: #78350F;">{{ $users->where('registration_status', 'pending')->count() }}</div>
                 </div>
             </div>
         </div>
 
         <!-- USERS TABLE CARD -->
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+        <div style="background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
                     <thead>
-                        <tr style="background: #FAFAFA; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <tr style="background: #FAFAFA; border-bottom: 1px solid #CBD5E1; color: #1E293B; font-size: 11.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
                             <th style="padding: 14px 20px;">Pengguna</th>
                             <th style="padding: 14px 20px;">Email</th>
                             <th style="padding: 14px 20px;">Peran (Role)</th>
@@ -85,18 +85,18 @@
                                                 default => 'linear-gradient(135deg, #047857, #10B981)',
                                             };
                                         @endphp
-                                        <div style="width: 38px; height: 38px; border-radius: 50%; background: {{ $avatarBg }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0;">
+                                        <div style="width: 38px; height: 38px; border-radius: 50%; background: {{ $avatarBg }}; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0;" aria-hidden="true">
                                             {{ strtoupper(substr($user->name, 0, 1)) }}
                                         </div>
                                         <div>
                                             <div style="font-size: 14px; font-weight: 800; color: #0F172A;">{{ $user->name }}</div>
-                                            <div style="font-size: 11.5px; color: #64748B;">ID: #{{ $user->id }}</div>
+                                            <div style="font-size: 11.5px; color: #475569; font-weight: 500;">ID: #{{ $user->id }}</div>
                                         </div>
                                     </div>
                                 </td>
 
                                 <!-- EMAIL -->
-                                <td style="padding: 16px 20px; color: #334155; font-weight: 500;">
+                                <td style="padding: 16px 20px; color: #1E293B; font-weight: 600;">
                                     {{ $user->email }}
                                 </td>
 
@@ -104,13 +104,13 @@
                                 <td style="padding: 16px 20px;">
                                     @php
                                         $roleBadges = match($user->role) {
-                                            'admin' => ['bg' => '#F3E8FF', 'color' => '#7E22CE', 'label' => 'Administrator'],
-                                            'lecturer' => ['bg' => '#EFF6FF', 'color' => '#2563EB', 'label' => 'Dosen Pengampu'],
-                                            'vendor' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => '🏢 Mitra Vendor'],
-                                            default => ['bg' => '#DCFCE7', 'color' => '#15803D', 'label' => 'Mahasiswa'],
+                                            'admin' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => 'Administrator'],
+                                            'lecturer' => ['bg' => '#EFF6FF', 'color' => '#1E40AF', 'label' => 'Dosen Pengampu'],
+                                            'vendor' => ['bg' => '#F3E8FF', 'color' => '#581C87', 'label' => '🏢 Mitra Vendor'],
+                                            default => ['bg' => '#DCFCE7', 'color' => '#14532D', 'label' => 'Mahasiswa'],
                                         };
                                     @endphp
-                                    <span style="background: {{ $roleBadges['bg'] }}; color: {{ $roleBadges['color'] }}; font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
+                                    <span style="background: {{ $roleBadges['bg'] }}; color: {{ $roleBadges['color'] }}; font-size: 11.5px; font-weight: 800; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
                                         {{ $roleBadges['label'] }}
                                     </span>
                                 </td>
@@ -119,22 +119,22 @@
                                 <td style="padding: 16px 20px;">
                                     @php
                                         $statusBadges = match($user->registration_status) {
-                                            'approved' => ['bg' => '#ECFDF5', 'color' => '#047857', 'dot' => '#059669', 'label' => 'Disetujui'],
-                                            'rejected' => ['bg' => '#FFE4E6', 'color' => '#BE123C', 'dot' => '#E11D48', 'label' => 'Ditolak'],
-                                            default => ['bg' => '#FEF3C7', 'color' => '#B45309', 'dot' => '#D97706', 'label' => 'Menunggu Approval'],
+                                            'approved' => ['bg' => '#ECFDF5', 'color' => '#065F46', 'dot' => '#059669', 'label' => 'Disetujui'],
+                                            'rejected' => ['bg' => '#FFE4E6', 'color' => '#991B1B', 'dot' => '#E11D48', 'label' => 'Ditolak'],
+                                            default => ['bg' => '#FEF3C7', 'color' => '#78350F', 'dot' => '#D97706', 'label' => 'Menunggu Approval'],
                                         };
                                     @endphp
-                                    <span style="background: {{ $statusBadges['bg'] }}; color: {{ $statusBadges['color'] }}; font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 6px;">
-                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ $statusBadges['dot'] }};"></span>
+                                    <span style="background: {{ $statusBadges['bg'] }}; color: {{ $statusBadges['color'] }}; font-size: 11.5px; font-weight: 800; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 6px;">
+                                        <span style="width: 6px; height: 6px; border-radius: 50%; background: {{ $statusBadges['dot'] }};" aria-hidden="true"></span>
                                         {{ $statusBadges['label'] }}
                                     </span>
                                     @if($user->registration_note)
-                                        <p style="font-size: 11px; color: #94A3B8; margin: 3px 0 0 0;">{{ Str::limit($user->registration_note, 35) }}</p>
+                                        <p style="font-size: 11px; color: #475569; margin: 3px 0 0 0; font-weight: 500;">{{ Str::limit($user->registration_note, 35) }}</p>
                                     @endif
                                 </td>
 
                                 <!-- CREATED DATE -->
-                                <td style="padding: 16px 20px; color: #64748B; font-size: 12.5px;">
+                                <td style="padding: 16px 20px; color: #334155; font-size: 12.5px; font-weight: 600;">
                                     {{ optional($user->created_at)->format('d M Y') ?? '-' }}
                                 </td>
 
@@ -146,8 +146,9 @@
                                             <form action="{{ route('admin.users.approve', $user->id) }}" method="POST">
                                                 @csrf
                                                 <button type="submit" 
-                                                        style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #10B981; color: #FFF; font-size: 12px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer;">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                                                        aria-label="Setujui pendaftaran pengguna {{ $user->name }}"
+                                                        style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #059669; color: #FFF; font-size: 12px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer;">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
                                                     Setujui
                                                 </button>
                                             </form>
@@ -156,8 +157,9 @@
                                             <form action="{{ route('admin.users.reject', $user->id) }}" method="POST">
                                                 @csrf
                                                 <button type="submit" 
-                                                        style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #F59E0B; color: #FFF; font-size: 12px; font-weight: 700; border-radius: 8px; border: none; cursor: pointer;">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                        aria-label="Tolak pendaftaran pengguna {{ $user->name }}"
+                                                        style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: #D97706; color: #FFF; font-size: 12px; font-weight: 800; border-radius: 8px; border: none; cursor: pointer;">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                                     Tolak
                                                 </button>
                                             </form>
@@ -165,16 +167,18 @@
 
                                         <!-- VIEW DETAIL BUTTON -->
                                         <a href="{{ route('admin.users.show', $user->id) }}" 
-                                           style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #2563EB; color: #FFFFFF; font-size: 12px; font-weight: 700; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                           aria-label="Lihat detail pengguna {{ $user->name }}"
+                                           style="display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: #1D4ED8; color: #FFFFFF; font-size: 12px; font-weight: 800; border-radius: 8px; text-decoration: none; box-shadow: 0 2px 6px rgba(29,78,216,0.2);">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                                             Detail
                                         </a>
 
                                         <!-- CHANGE ROLE BUTTON -->
                                         <a href="{{ route('admin.users.edit', $user->id) }}" 
+                                           aria-label="Ubah peran role pengguna {{ $user->name }}"
                                            title="Ubah Peran (Role)"
-                                           style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #475569; text-decoration: none;">
-                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                           style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #1E293B; text-decoration: none;">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                         </a>
 
                                         <!-- DELETE BUTTON -->
@@ -183,9 +187,10 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
+                                                        aria-label="Hapus pengguna {{ $user->name }}"
                                                         title="Hapus User"
-                                                        style="all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 8px; border: 1px solid #FCA5A5; background: #FEF2F2; display: flex; align-items: center; justify-content: center; color: #EF4444;">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                                        style="all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 8px; border: 1px solid #FCA5A5; background: #FEF2F2; display: flex; align-items: center; justify-content: center; color: #991B1B;">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                                 </button>
                                             </form>
                                         @endif
@@ -194,7 +199,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="padding: 3rem; text-align: center; color: #94A3B8;">
+                                <td colspan="6" style="padding: 3rem; text-align: center; color: #334155; font-weight: 600;">
                                     Belum ada pengguna terdaftar dalam sistem.
                                 </td>
                             </tr>
@@ -204,5 +209,5 @@
             </div>
         </div>
 
-    </div>
+    </main>
 </x-app-layout>
