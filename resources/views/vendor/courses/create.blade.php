@@ -53,11 +53,14 @@
 
             <!-- INFO BANNER SANGAT INFORMATIF -->
             <div class="mb-8 p-5 bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-3xl shadow-md border border-purple-800/50 space-y-2">
-                <div class="flex items-center gap-2 font-extrabold text-sm text-purple-200">
+                <div class="flex items-center justify-between gap-2 font-extrabold text-sm text-purple-200">
                     <span>Otonomi Author Mitra Vendor Industri</span>
+                    <span class="px-3 py-1 bg-purple-800/80 border border-purple-700/80 rounded-xl text-xs font-mono text-purple-200">
+                        Kode Unik Otomatis Berbasis Inisial Vendor
+                    </span>
                 </div>
                 <p class="text-xs text-purple-100 leading-relaxed">
-                    Sebagai Author Mitra Vendor, Anda memiliki otonomi penuh atas penentuan **Angkatan Batch Sertifikasi** dan **Threshold Kelulusan (%)**. Mahasiswa yang lulus Kuis Akhir pada course ini akan otomatis menerima **Sertifikat Digital Verifikasi Vendor dengan Hash Blockchain & QR Code**.
+                    Sebagai Author Mitra Vendor, Anda memiliki otonomi penuh atas penentuan **Angkatan Batch Sertifikasi** dan **Threshold Kelulusan (%)**. Kode unik course akan **dihasilkan secara otomatis** dari inisial nama perusahaan vendor Anda, kombinasi skill, serta level pelatihan.
                 </p>
             </div>
 

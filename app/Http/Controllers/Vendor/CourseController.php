@@ -72,16 +72,20 @@ class CourseController extends Controller
         ]);
 
         // Create or find parent MasterCourse for Vendor (Strict 3NF)
+        $vendorUser = Auth::user();
+        $vendorCode = $this->generateVendorCourseCode($vendorUser, $validated['category_id'] ?? null, $validated['skill_ids'], $validated['level']);
+
         $masterCourse = MasterCourse::firstOrCreate(
             [
                 'name' => $validated['name'],
-                'user_id' => Auth::id(),
+                'user_id' => $vendorUser->id,
             ],
             [
-                'code' => 'VMC-' . strtoupper(Str::random(6)),
+                'code' => $vendorCode,
                 'description' => $validated['description'],
                 'level' => $validated['level'],
-                'category_id' => $validated['category_id'],
+                'category_id' => $validated['category_id'] ?? null,
+                'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
             ]
         );
 
@@ -111,7 +115,119 @@ class CourseController extends Controller
 
         return redirect()
             ->route('vendor.courses.show', $course)
-            ->with('success', 'Course Sertifikasi Industri & Kurikulum Induk berhasil dipublikasikan.');
+            ->with('success', 'Course Sertifikasi Industri (' . $masterCourse->code . ') berhasil dipublikasikan.');
+    }
+
+    private function generateVendorCourseCode($vendor, ?int $categoryId, array $skillIds, string $level): string
+    {
+        $vendorAcronym = $this->extractVendorAcronym($vendor->name ?? 'Vendor');
+        $skillCode = '';
+
+        if (!empty($skillIds)) {
+            $skills = Skill::whereIn('id', $skillIds)->get();
+            if ($skills->count() === 1) {
+                $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $skills->first()->name);
+                $words = array_values(array_filter(explode(' ', trim($cleanName))));
+                if (count($words) >= 2) {
+                    $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                } else {
+                    $skillCode = strtoupper(substr($words[0], 0, 3));
+                }
+            } elseif ($skills->count() === 2) {
+                $parts = [];
+                foreach ($skills as $sk) {
+                    $cleanName = preg_replace('/[^a-zA-Z0-9\s]/', '', $sk->name);
+                    $words = array_values(array_filter(explode(' ', trim($cleanName))));
+                    if (count($words) >= 2) {
+                        $parts[] = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                    } else {
+                        $parts[] = strtoupper(substr($words[0], 0, 3));
+                    }
+                }
+                $skillCode = implode('-', $parts);
+            } else {
+                $skillCode = 'INT';
+            }
+        }
+
+        if (empty($skillCode) && $categoryId) {
+            $category = Category::find($categoryId);
+            if ($category && !empty($category->name)) {
+                $words = explode(' ', trim($category->name));
+                if (count($words) >= 2) {
+                    $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
+                } else {
+                    $skillCode = strtoupper(substr($words[0], 0, 3));
+                }
+            }
+        }
+
+        if (empty($skillCode)) {
+            $skillCode = 'GEN';
+        }
+
+        $levelCode = match(strtolower($level)) {
+            'beginner' => 'BEG',
+            'intermediate' => 'INT',
+            'advanced' => 'ADV',
+            default => 'BEG',
+        };
+
+        $base = "{$vendorAcronym}-{$skillCode}-{$levelCode}";
+        $count = MasterCourse::where('code', 'LIKE', "{$base}-%")->count() + 1;
+        $code = "{$base}-" . sprintf('%03d', $count);
+
+        while (MasterCourse::where('code', $code)->exists()) {
+            $count++;
+            $code = "{$base}-" . sprintf('%03d', $count);
+        }
+
+        return $code;
+    }
+
+    private function extractVendorAcronym(string $name): string
+    {
+        $cleaned = preg_replace('/\b(PT|CV|Tbk|Inc|Ltd|Persero|Corporate|Group)\b/i', '', $name);
+        $cleaned = trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $cleaned));
+
+        if (empty($cleaned)) {
+            $cleaned = trim(preg_replace('/[^a-zA-Z0-9\s]/', '', $name));
+        }
+
+        $words = array_values(array_filter(explode(' ', $cleaned)));
+
+        if (!empty($words[0])) {
+            $w0Lower = strtolower($words[0]);
+            if ($w0Lower === 'telkom') return 'TLK';
+            if ($w0Lower === 'gudang' && isset($words[1]) && strtolower($words[1]) === 'garam') return 'GDG';
+            if ($w0Lower === 'google') return 'GOOG';
+            if ($w0Lower === 'shopee') return 'SHP';
+            if ($w0Lower === 'dicoding') return 'DCD';
+        }
+
+        if (count($words) >= 3) {
+            return strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 1) . substr($words[2], 0, 1));
+        } elseif (count($words) === 2) {
+            $w1 = $words[0];
+            $w2 = $words[1];
+            $c1 = preg_replace('/[aeiouAEIOU]/', '', $w1);
+            if (strlen($c1) >= 2) {
+                return strtoupper(substr($c1, 0, 2) . substr($w2, 0, 1));
+            }
+            return strtoupper(substr($w1, 0, 1) . substr($w2, 0, 2));
+        } elseif (count($words) === 1 && !empty($words[0])) {
+            $w = $words[0];
+            if (strlen($w) <= 4) {
+                return strtoupper($w);
+            }
+            $consonants = preg_replace('/[aeiouAEIOU]/', '', $w);
+            if (strlen($consonants) >= 3) {
+                return strtoupper(substr($consonants, 0, 3));
+            }
+            return strtoupper(substr($w, 0, 3));
+        }
+
+        return 'VND';
     }
 
     public function show(Course $course): View
