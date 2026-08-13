@@ -166,7 +166,7 @@
                     <span>Verified Project Track Record</span>
                 </h4>
                 <p class="text-sm text-gray-500 mb-6">
-                    List of real-world projects completed and approved by Author/Vendor.
+                    List of real-world projects completed and approved by Lecturer/Vendor.
                 </p>
 
                 @if($student->joinedProjects->isEmpty())

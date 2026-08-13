@@ -12,7 +12,7 @@
                 </div>
                 <div>
                     <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                        Author Dashboard
+                        Lecturer Dashboard
                     </h2>
                     <p class="text-sm text-gray-500">
                         Kelola materi pembelajaran, kuis, soal, dan pengajaran Anda.
