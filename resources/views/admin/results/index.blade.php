@@ -63,10 +63,17 @@
             @if($activeTab === 'quiz')
                 <div class="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                     <div class="border-b border-slate-200 px-6 py-5">
-                        <h2 class="text-xl font-semibold text-slate-900">Final Quiz Attempts</h2>
-                        <p class="mt-1 text-sm text-slate-500">
-                            Hanya hasil Final Quiz yang tampil ditampilkan — dasar penerbitan sertifikat course & pencatatan blockchain.
-                        </p>
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                                <h2 class="text-xl font-semibold text-slate-900">Antrean Verifikasi Sertifikat & Blockchain</h2>
+                                <p class="mt-1 text-sm text-slate-500">
+                                    Hanya menampilkan peserta yang <strong>lulus nilai minimum (Passing Grade Threshold ≥ 75)</strong> — siap di-approve Admin & dicatat ke Blockchain.
+                                </p>
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold self-start sm:self-auto">
+                                Filter Nilai Minimum (Lulus Threshold)
+                            </span>
+                        </div>
                     </div>
 
                     @if($results->count())
@@ -82,11 +89,11 @@
 
                                                 @if($result->is_verified)
                                                     <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                                        Verified
+                                                        ✓ Verified & Blockchain Registered
                                                     </span>
                                                 @else
                                                     <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                                        Pending
+                                                        Pending Admin Approval
                                                     </span>
                                                 @endif
                                             </div>
@@ -112,24 +119,25 @@
                                         </div>
 
                                         <div class="flex flex-col sm:flex-row sm:items-center gap-3 xl:justify-end">
-                                            <div class="rounded-2xl bg-indigo-50 border border-indigo-100 px-5 py-3 min-w-[120px] text-center">
-                                                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Score</p>
-                                                <p class="mt-1 text-2xl font-bold text-indigo-600">{{ $result->score }}</p>
+                                            <div class="rounded-2xl bg-emerald-50 border border-emerald-200 px-5 py-3 min-w-[120px] text-center">
+                                                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Nilai Final (Lulus)</p>
+                                                <p class="mt-0.5 text-2xl font-black text-emerald-800">{{ $result->score }}</p>
                                             </div>
 
                                             <div class="flex flex-wrap gap-2">
                                                 <a href="{{ route('admin.results.show', $result->id) }}"
                                                    class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition">
-                                                    View Details
+                                                    Detail Hasil
                                                 </a>
 
                                                 @if(!$result->is_verified)
-                                                    <form method="POST" action="{{ route('admin.results.verify', $result->id) }}">
+                                                    <form method="POST" action="{{ route('admin.results.verify', $result->id) }}"
+                                                          onsubmit="return confirm('Approve sertifikat & catat data kelulusan {{ addslashes($result->user->name ?? 'Mahasiswa') }} ke Blockchain?');">
                                                         @csrf
                                                         <button
                                                             type="submit"
-                                                            class="inline-flex items-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition">
-                                                            Verify
+                                                            class="inline-flex items-center rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition">
+                                                            Approve & Catat ke Blockchain
                                                         </button>
                                                     </form>
                                                 @endif

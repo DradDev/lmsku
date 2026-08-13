@@ -18,9 +18,11 @@ class ResultController extends Controller
     {
         $activeTab = $request->query('tab', 'quiz');
 
-        // Tab 1: Final Quiz Results
+        // Tab 1: Final Quiz Results - Hanya yang memenuhi nilai minimum (Threshold >= 75) untuk diapprove Admin
         $baseQuery = QuizAttempt::whereHas('quiz', function ($query) {
             $query->where('quiz_type', 'final');
+        })->where(function ($q) {
+            $q->where('score', '>=', 75)->orWhere('is_verified', true);
         });
 
         $results = (clone $baseQuery)
