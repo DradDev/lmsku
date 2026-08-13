@@ -145,7 +145,7 @@ class ProjectController extends Controller
         $student = Auth::user();
         $student->load([
             'skillProfiles.skill',
-            'interestProfiles.tag',
+            'interestProfiles.tag.skill',
             'joinedProjects' => function ($query) {
                 $query->with(['skills', 'tags', 'user']);
             },
@@ -163,7 +163,7 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        // Build Course-Based Acquired Multi-Skill Matrix
+        // 1. Build Course-Based Acquired Multi-Skill Competency Matrix
         $acquiredSkillsMap = [];
 
         foreach ($student->enrollments as $enrollment) {
@@ -176,7 +176,7 @@ class ProjectController extends Controller
 
             $courseName = $masterCourse->name ?? ($enrollment->course->name ?? 'Course');
             $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
-            $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment, $courseObj) {
+            $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
                 return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
                     || ($cert->course_id && $cert->course_id === $enrollment->course_id);
             });
@@ -200,7 +200,6 @@ class ProjectController extends Controller
                     $acquiredSkillsMap[$skill->id]['is_completed'] = true;
                 }
 
-                // Add tags belonging to this skill
                 foreach ($courseObj->tags as $tag) {
                     if ($tag->skill_id === $skill->id || !$tag->skill_id) {
                         if (!$acquiredSkillsMap[$skill->id]['tags']->contains('id', $tag->id)) {
@@ -213,7 +212,15 @@ class ProjectController extends Controller
 
         $acquiredSkills = collect($acquiredSkillsMap);
 
-        return view('student.portfolio', compact('student', 'certificates', 'acquiredSkills'));
+        // 2. Build Student Interest & Preference Profile (Minat)
+        $interestTags = $student->interestProfiles->map(function ($ip) {
+            return [
+                'tag' => $ip->tag,
+                'skill_name' => $ip->tag?->skill?->name ?? 'General Category',
+            ];
+        });
+
+        return view('student.portfolio', compact('student', 'certificates', 'acquiredSkills', 'interestTags'));
     }
 
     public function checkStudentEligibility(User $student, Project $project): array

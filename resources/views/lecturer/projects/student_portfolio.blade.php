@@ -34,9 +34,15 @@
                         </div>
 
                         <div class="flex flex-wrap gap-2 justify-center md:justify-start pt-1">
+                            @if($student->peminatan)
+                                <span class="px-3.5 py-1 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-full text-xs font-bold">
+                                    Fokus Minat: {{ $student->peminatan }}
+                                </span>
+                            @endif
+
                             @forelse($acquiredSkills as $item)
                                 <span class="px-3.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full text-xs font-bold">
-                                    ✓ {{ $item['skill']->name }}
+                                    ✓ Kompetensi: {{ $item['skill']->name }}
                                 </span>
                             @empty
                                 <span class="px-3.5 py-1 bg-slate-100 border border-slate-200 text-slate-700 rounded-full text-xs font-bold">
@@ -62,14 +68,14 @@
                 </div>
             </div>
 
-            <!-- Skill Competency Matrix Grid (No Percentage) -->
+            <!-- 1. PENGELOLAAN KOMPETENSI SKILL RIIL (COURSE-BASED MATRIX) -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
                 <div>
                     <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <span>Course-Based Skill Competency Matrix</span>
+                        <span>Course-Based Skill Competency Matrix (Kompetensi)</span>
                     </h4>
                     <p class="text-xs text-gray-500">
-                        Matriks kompetensi skill riil mahasiswa yang diperoleh dari course dan kelas perkuliahan yang diikuti.
+                        Matriks penguasaan skill riil mahasiswa yang diperoleh dari course dan kelas perkuliahan yang diikuti.
                     </p>
                 </div>
 
@@ -126,6 +132,32 @@
                     @endforeach
                 </div>
                 @endif
+            </div>
+
+            <!-- 2. PENGELOLAAN PROFIL MINAT (INTEREST PROFILE) -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-3">
+                <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <span>Student Interest & Specialty Profile (Minat)</span>
+                </h4>
+                <p class="text-xs text-gray-500">
+                    Preferensi minat teknologi dan spesialisasi eksplorasi yang diminati mahasiswa.
+                </p>
+
+                <div class="flex flex-wrap gap-2 pt-2">
+                    @if($student->peminatan)
+                        <span class="px-3.5 py-1.5 bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-lg text-xs font-extrabold">
+                            Fokus Minat: {{ $student->peminatan }}
+                        </span>
+                    @endif
+
+                    @forelse($student->interestProfiles as $ip)
+                        <span class="px-3 py-1.5 bg-purple-50 border border-purple-200 text-purple-800 rounded-lg text-xs font-semibold">
+                            #{{ $ip->tag->name ?? 'Tag Minat' }}
+                        </span>
+                    @empty
+                        <span class="text-gray-400 italic text-xs block">Belum ada tag minat spesialisasi terdaftar.</span>
+                    @endforelse
+                </div>
             </div>
 
             <!-- Completed Projects & Track Record Portfolio -->

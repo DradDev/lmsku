@@ -6,7 +6,7 @@
                     Digital Talent Portfolio & Academic Resume
                 </h2>
                 <p class="text-sm text-gray-500 mt-1">
-                    Portofolio kompetensi digital terverifikasi, sertifikat kelulusan, dan rekam jejak project real-world.
+                    Pengelolaan Minat & Matriks Kompetensi Digital Terverifikasi Mahasiswa
                 </p>
             </div>
 
@@ -51,19 +51,19 @@
                                 </p>
                             </div>
 
-                            @if($totalAcquiredSkills > 0)
-                                <div class="flex flex-wrap gap-1.5 justify-center sm:justify-end">
-                                    @foreach($acquiredSkills->take(3) as $item)
-                                        <span class="px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200 rounded-xl text-xs font-bold">
-                                            ✓ {{ $item['skill']->name }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @else
-                                <span class="px-4 py-2 bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold self-center sm:self-auto">
-                                    Akademik Talent LMS
-                                </span>
-                            @endif
+                            <div class="flex flex-wrap gap-1.5 justify-center sm:justify-end">
+                                @if($student->peminatan)
+                                    <span class="px-3.5 py-1 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-xl text-xs font-bold">
+                                        Fokus Minat: {{ $student->peminatan }}
+                                    </span>
+                                @endif
+                                
+                                @foreach($acquiredSkills->take(2) as $item)
+                                    <span class="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold">
+                                        ✓ Kompetensi: {{ $item['skill']->name }}
+                                    </span>
+                                @endforeach
+                            </div>
                         </div>
 
                         <!-- Quick Executive Metrics Grid -->
@@ -84,7 +84,7 @@
                             </div>
 
                             <div class="p-3.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-center lg:text-left">
-                                <span class="text-[11px] font-bold text-indigo-700 block uppercase">Skill Dikuasai</span>
+                                <span class="text-[11px] font-bold text-indigo-700 block uppercase">Kompetensi Skill</span>
                                 <span class="text-xl font-black text-indigo-950 mt-0.5 block">{{ $totalAcquiredSkills }} Main Skill</span>
                             </div>
                         </div>
@@ -182,15 +182,20 @@
                 @endif
             </div>
 
-            <!-- 3. SKILL COMPETENCY MATRIX (COURSE-BASED ACQUIRED MULTI-SKILL MATRIX) -->
+            <!-- 3. PENGELOLAAN KOMPETENSI SKILL RIIL (COURSE-BASED MULTI-SKILL MATRIX) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
-                <div class="border-b border-gray-100 pb-4">
-                    <h4 class="text-xl font-black text-gray-900">
-                        Skill Competency Matrix (Course-Based Acquired Skills)
-                    </h4>
-                    <p class="text-xs text-gray-500 mt-0.5">
-                        Kompetensi skill dan spesialisasi riil yang diperoleh Mahasiswa dari mata kuliah yang telah diambil dan diselesaikan.
-                    </p>
+                <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xl font-black text-gray-900">
+                            Pengelolaan Matriks Kompetensi Skill (Course-Based)
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Matriks penguasaan skill riil Mahasiswa yang diperoleh dan terverifikasi dari mata kuliah yang telah diambil.
+                        </p>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-bold self-start sm:self-auto">
+                        Output Pembelajaran Riil
+                    </span>
                 </div>
 
                 @if($acquiredSkills->isEmpty())
@@ -198,9 +203,9 @@
                         <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center mx-auto">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                         </div>
-                        <p class="text-sm font-bold text-slate-700">Belum ada skill terdaftar dari course</p>
+                        <p class="text-sm font-bold text-slate-700">Belum ada kompetensi terdaftar dari course</p>
                         <p class="text-xs text-slate-500 max-w-md mx-auto">
-                            Skill akan otomatis terbentuk dan bertambah pada matriks ini begitu Anda mendaftar dan mempelajari Course.
+                            Kompetensi skill akan otomatis terbentuk dan bertambah pada matriks ini begitu Anda mendaftar dan mempelajari Course.
                         </p>
                     </div>
                 @else
@@ -219,7 +224,7 @@
                                     <!-- Main Skill Header & Status Badge -->
                                     <div class="flex items-start justify-between gap-2">
                                         <div>
-                                            <span class="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Main Skill</span>
+                                            <span class="text-[10px] font-bold text-purple-700 uppercase tracking-wider block">Main Skill Kompetensi</span>
                                             <h5 class="font-extrabold text-base text-gray-900 leading-tight mt-0.5">
                                                 {{ $skill->name }}
                                             </h5>
@@ -279,7 +284,55 @@
                 @endif
             </div>
 
-            <!-- 4. TRACK RECORD PROJECT INDUSTRI & AKADEMIK (PROJECTS TAKEN) -->
+            <!-- 4. PENGELOLAAN PROFIL MINAT & PREFERENSI TEKNOLOGI (INTEREST MANAGEMENT) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
+                <div class="border-b border-gray-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                        <h4 class="text-xl font-black text-gray-900">
+                            Pengelolaan Profil Minat & Preferensi Teknologi
+                        </h4>
+                        <p class="text-xs text-gray-500 mt-0.5">
+                            Preferensi kecenderungan minat dan eksplorasi bidang teknologi yang disukai Mahasiswa.
+                        </p>
+                    </div>
+                    <span class="px-3 py-1 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-lg text-xs font-bold self-start sm:self-auto">
+                        Input Preferensi Mahasiswa
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <!-- Main Focus Interest Card -->
+                    <div class="lg:col-span-4 p-5 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl space-y-3">
+                        <span class="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider block">Fokus Minat Utamanya:</span>
+                        <h5 class="text-lg font-black text-indigo-950">
+                            {{ $student->peminatan ?? 'Teknologi Informasi & Software Engineering' }}
+                        </h5>
+                        <p class="text-xs text-indigo-800 leading-relaxed">
+                            Preferensi awal ini digunakan sistem untuk merekomendasikan katalog Course dan memberikan pembotot kecocokan (*Match Score*) pada Proyek Industri.
+                        </p>
+                    </div>
+
+                    <!-- Interest Specialty Tags Grid -->
+                    <div class="lg:col-span-8 space-y-3">
+                        <span class="text-[11px] font-bold text-gray-500 uppercase block">Tag Minat Spesialisasi Yang Diikuti:</span>
+                        <div class="flex flex-wrap gap-2">
+                            @forelse($interestTags as $item)
+                                <div class="px-3.5 py-2 bg-white border border-indigo-200 hover:border-indigo-400 rounded-xl text-xs font-bold text-indigo-900 shadow-2xs flex items-center gap-2 transition">
+                                    <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                                    <span>#{{ $item['tag']->name ?? 'Tag Minat' }}</span>
+                                    <span class="text-[10px] font-medium text-gray-500">({{ $item['skill_name'] }})</span>
+                                </div>
+                            @empty
+                                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 italic w-full">
+                                    Belum ada tag minat spesialisasi terdaftar. Pilihan minat dapat disesuaikan pada pengaturan profil Anda.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. TRACK RECORD PROJECT INDUSTRI & AKADEMIK (PROJECTS TAKEN) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
                     <div>
@@ -377,7 +430,7 @@
                 @endif
             </div>
 
-            <!-- 5. DAFTAR COURSE & PELATIHAN YANG DIIKUTI (ENROLLED COURSES) -->
+            <!-- 6. DAFTAR COURSE & PELATIHAN YANG DIIKUTI (ENROLLED COURSES) -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-4">
                     <div>

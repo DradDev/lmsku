@@ -152,11 +152,13 @@ class User extends Authenticatable
 
     public function calculateTalentMatchScore(Project $project): int
     {
+        // 1. Competency Skill Match Score (50%)
         $projectSkillIds = $project->skills->pluck('id')->toArray();
         
         $this->loadMissing([
             'enrollments.courseOffering.masterCourse.skills',
             'enrollments.course.skills',
+            'interestProfiles.tag',
         ]);
 
         $studentAcquiredSkillIds = [];
@@ -194,11 +196,27 @@ class User extends Authenticatable
             $skillMatchScore = !empty($studentAcquiredSkillIds) ? 80 : 50;
         }
 
-        // Project Track Record Match (40%)
-        $completedCount = $this->completedProjects()->count();
-        $expMatch = min(100, $completedCount * 25 + 40);
+        // 2. Interest Match Score (30%)
+        $projectTagIds = $project->tags->pluck('id')->toArray();
+        $interestMatch = 50;
 
-        $totalScore = (0.60 * $skillMatchScore) + (0.40 * $expMatch);
+        if (!empty($projectTagIds)) {
+            $studentTagIds = $this->interestProfiles->pluck('tag_id')->toArray();
+            $matchingTags = array_intersect($projectTagIds, $studentTagIds);
+            if (!empty($matchingTags)) {
+                $interestMatch = 90;
+            }
+        }
+
+        if ($this->peminatan && $project->category && stripos($project->category->name, $this->peminatan) !== false) {
+            $interestMatch = min(100, $interestMatch + 20);
+        }
+
+        // 3. Project Experience (20%)
+        $completedCount = $this->completedProjects()->count();
+        $expMatch = min(100, $completedCount * 25 + 30);
+
+        $totalScore = (0.50 * $skillMatchScore) + (0.30 * $interestMatch) + (0.20 * $expMatch);
 
         return (int) round(min(100, max(30, $totalScore)));
     }
