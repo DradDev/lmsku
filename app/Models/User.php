@@ -20,6 +20,8 @@ class User extends Authenticatable
         'role',
         'avatar',
         'peminatan',
+        'institution_id',
+        'institution_type',
         'registration_status',
         'registration_note',
     ];
@@ -28,6 +30,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
     public function createdCourses()
     {

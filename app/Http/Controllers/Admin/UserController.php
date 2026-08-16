@@ -15,6 +15,7 @@ class UserController extends Controller
     public function index(): View
     {
         $users = User::query()
+            ->with(['institution'])
             ->latest()
             ->get();
 
@@ -33,6 +34,7 @@ class UserController extends Controller
 
     public function show(User $user): View
     {
+        $user->load('institution');
         return view('admin.users.show', compact('user'));
     }
 

@@ -34,6 +34,28 @@
                             {{ optional($user->created_at)->format('d M Y, H:i') ?? '-' }}
                         </p>
                     </div>
+
+                    @if($user->role === 'vendor')
+                        <div class="rounded-xl bg-purple-50 border border-purple-200 p-4 md:col-span-2">
+                            <p class="text-xs font-bold uppercase tracking-wider text-purple-700 mb-2">Profil Kemitraan Vendor</p>
+                            @if($user->institution)
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900">🏢 {{ $user->institution->name }}</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">Tipe: Badan Usaha (PT / CV / Lembaga)</p>
+                                    </div>
+                                    <span class="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-mono font-bold">
+                                        Kode: {{ $user->institution->code }}
+                                    </span>
+                                </div>
+                            @elseif($user->institution_type === 'individual')
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">👤 Praktisi Perorangan / Independen</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Kredensial sertifikat: Format IND (Independent Mentor)</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <div class="mt-6 flex gap-3">
