@@ -41,7 +41,7 @@
                             @if($user->institution)
                                 <div class="flex items-center justify-between">
                                     <div>
-                                        <p class="text-sm font-bold text-slate-900">🏢 {{ $user->institution->name }}</p>
+                                        <p class="text-sm font-bold text-slate-900">{{ $user->institution->name }}</p>
                                         <p class="text-xs text-slate-500 mt-0.5">Tipe: Badan Usaha (PT / CV / Lembaga)</p>
                                     </div>
                                     <span class="px-3 py-1 bg-purple-600 text-white rounded-lg text-xs font-mono font-bold">
@@ -50,7 +50,7 @@
                                 </div>
                             @elseif($user->institution_type === 'individual')
                                 <div>
-                                    <p class="text-sm font-bold text-slate-900">👤 Praktisi Perorangan / Independen</p>
+                                    <p class="text-sm font-bold text-slate-900">Praktisi Perorangan / Independen</p>
                                     <p class="text-xs text-slate-500 mt-0.5">Kredensial sertifikat: Format IND (Independent Mentor)</p>
                                 </div>
                             @endif

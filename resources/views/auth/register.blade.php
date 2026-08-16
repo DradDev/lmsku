@@ -30,19 +30,12 @@
              }">
 
             <div class="text-center mb-6">
-
-                <div class="w-16 h-16 mx-auto bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center text-white text-2xl">
-                    🎓
-                </div>
-
-                <h1 class="text-2xl font-bold mt-4">
+                <h1 class="text-2xl font-bold text-gray-900">
                     Diponegoro University
                 </h1>
-
                 <p class="text-gray-500 text-sm">
                     COMPRO TEKKOM
                 </p>
-
             </div>
 
             {{-- Validation Errors --}}
@@ -127,45 +120,36 @@
                 </div>
 
                 <!-- SECTION KHUSUS VENDOR / MITRA INDUSTRI -->
-                <div class="mt-4 p-4 border border-purple-200 bg-purple-50/50 rounded-xl space-y-4" x-show="role === 'vendor'" x-transition>
-                    <div class="flex items-center gap-2 pb-2 border-b border-purple-200">
-                        <span class="text-lg">🏢</span>
-                        <div>
-                            <h3 class="text-sm font-bold text-purple-900">Profil Kemitraan Vendor</h3>
-                            <p class="text-xs text-purple-700">Tentukan jenis entitas penerbit sertifikat industri Anda.</p>
-                        </div>
-                    </div>
-
-                    <!-- Jenis Entitas Vendor -->
+                <div class="mt-4 p-4 border border-gray-200 bg-gray-50/50 rounded-xl space-y-4" x-show="role === 'vendor'" x-transition>
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
                             Jenis Mitra Industri:
                         </label>
                         <div class="grid grid-cols-2 gap-3">
-                            <label class="flex items-center justify-center gap-2 p-3 bg-white border rounded-lg cursor-pointer transition-all shadow-sm text-xs font-semibold"
-                                   :class="vendorType === 'company' ? 'border-purple-600 bg-purple-50 text-purple-900 ring-2 ring-purple-400' : 'border-gray-200 text-gray-700 hover:border-purple-300'">
+                            <label class="flex items-center justify-center p-3 bg-white border rounded-lg cursor-pointer transition-all shadow-sm text-xs font-semibold"
+                                   :class="vendorType === 'company' ? 'border-indigo-600 bg-indigo-50 text-indigo-900 ring-1 ring-indigo-500' : 'border-gray-200 text-gray-700 hover:border-indigo-300'">
                                 <input type="radio" name="vendor_type" value="company" x-model="vendorType" class="hidden">
-                                <span>🏢 Badan Usaha / PT / CV</span>
+                                <span>Badan Usaha (PT / CV / Lembaga)</span>
                             </label>
 
-                            <label class="flex items-center justify-center gap-2 p-3 bg-white border rounded-lg cursor-pointer transition-all shadow-sm text-xs font-semibold"
-                                   :class="vendorType === 'individual' ? 'border-purple-600 bg-purple-50 text-purple-900 ring-2 ring-purple-400' : 'border-gray-200 text-gray-700 hover:border-purple-300'">
+                            <label class="flex items-center justify-center p-3 bg-white border rounded-lg cursor-pointer transition-all shadow-sm text-xs font-semibold"
+                                   :class="vendorType === 'individual' ? 'border-indigo-600 bg-indigo-50 text-indigo-900 ring-1 ring-indigo-500' : 'border-gray-200 text-gray-700 hover:border-indigo-300'">
                                 <input type="radio" name="vendor_type" value="individual" x-model="vendorType" class="hidden">
-                                <span>👤 Perorangan / Independen</span>
+                                <span>Perorangan / Independen</span>
                             </label>
                         </div>
                     </div>
 
                     <!-- JIKA BADAN USAHA (PT/CV) -->
-                    <div x-show="vendorType === 'company'" class="space-y-3 pt-2" x-transition>
+                    <div x-show="vendorType === 'company'" class="space-y-3 pt-1" x-transition>
                         @if($institutions->isNotEmpty())
                             <div class="flex items-center gap-4 text-xs font-semibold text-gray-700 mb-1">
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                                    <input type="radio" name="institution_mode" value="existing" x-model="institutionMode" class="text-purple-600 focus:ring-purple-500">
+                                    <input type="radio" name="institution_mode" value="existing" x-model="institutionMode" class="text-indigo-600 focus:ring-indigo-500">
                                     <span>Pilih Perusahaan Terdaftar</span>
                                 </label>
                                 <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                                    <input type="radio" name="institution_mode" value="new" x-model="institutionMode" class="text-purple-600 focus:ring-purple-500">
+                                    <input type="radio" name="institution_mode" value="new" x-model="institutionMode" class="text-indigo-600 focus:ring-indigo-500">
                                     <span>+ Daftarkan Perusahaan Baru</span>
                                 </label>
                             </div>
@@ -173,13 +157,13 @@
                             <!-- Dropdown Existing -->
                             <div x-show="institutionMode === 'existing'" x-transition>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">
-                                    Pilih Nama Perusahaan / Lembaga:
+                                    Nama Perusahaan / Lembaga:
                                 </label>
-                                <select name="institution_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm">
+                                <select name="institution_id" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">
                                     <option value="">-- Pilih Perusahaan Mitra --</option>
                                     @foreach ($institutions as $inst)
                                         <option value="{{ $inst->id }}" {{ old('institution_id') == $inst->id ? 'selected' : '' }}>
-                                            {{ $inst->name }} (Kode: {{ $inst->code }})
+                                            {{ $inst->name }} ({{ $inst->code }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -192,14 +176,14 @@
                         <div x-show="institutionMode === 'new' || {{ $institutions->isEmpty() ? 'true' : 'false' }}" class="space-y-3" x-transition>
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">
-                                    Nama Resmi Perusahaan / PT / CV / Startup:
+                                    Nama Resmi Perusahaan / PT / CV:
                                 </label>
                                 <input type="text"
                                     name="new_institution_name"
                                     x-model="newInstName"
                                     @input="generateCode()"
                                     value="{{ old('new_institution_name') }}"
-                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm"
+                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
                                     placeholder="Contoh: PT Telkom Indonesia">
                             </div>
 
@@ -212,20 +196,10 @@
                                     x-model="newInstCode"
                                     value="{{ old('new_institution_code') }}"
                                     maxlength="10"
-                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 text-sm uppercase font-mono font-bold tracking-wider"
+                                    class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm uppercase font-mono font-bold tracking-wider"
                                     placeholder="Contoh: TLKM">
-                                <p class="text-[11px] text-gray-500 mt-1">
-                                    💡 Kode ini menjadi identitas resmi penerbit sertifikat (contoh: <code class="font-bold text-purple-700">CERT/IND-PRJ-<span x-text="newInstCode || 'KODE'"></span>-0001/...</code>).
-                                </p>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- JIKA PERORANGAN / INDEPENDEN -->
-                    <div x-show="vendorType === 'individual'" class="p-3 bg-white border border-gray-200 rounded-lg text-xs text-gray-600 leading-relaxed" x-transition>
-                        <p>
-                            ℹ️ Sebagai <strong>Praktisi Perorangan / Mentor Independen</strong>, sertifikat proyek yang Anda bimbing akan menggunakan identitas kredensial mandiri (<code class="font-bold text-purple-700">CERT/IND-PRJ-IND...</code>).
-                        </p>
                     </div>
                 </div>
 
