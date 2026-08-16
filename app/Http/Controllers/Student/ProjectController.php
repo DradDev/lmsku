@@ -193,7 +193,12 @@ class ProjectController extends Controller
             'enrollments.course.category',
         ]);
 
-        $certificates = Certificate::with(['courseOffering.masterCourse', 'course', 'project'])
+        $certificates = Certificate::with([
+            'courseOffering.masterCourse.skills',
+            'course.skills',
+            'project.creator.institution',
+            'project.skills'
+        ])
             ->where('user_id', $student->id)
             ->latest()
             ->get();

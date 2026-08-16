@@ -101,7 +101,12 @@ class CertificateController extends Controller
             ->get();
 
         foreach ($projects as $project) {
-            $project->credential_code = 'CERT-PRJ-' . ($project->created_at ? $project->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $project->id) . '-' . sprintf('%04d', $student->id);
+            $cert = Certificate::where('user_id', $student->id)->where('project_id', $project->id)->first();
+            $project->credential_code = $cert?->credential_code ?? (new Certificate([
+                'user_id' => $student->id,
+                'project_id' => $project->id,
+                'completed_at' => $project->created_at ?? now(),
+            ]))->generateCredentialCode();
         }
 
         return view('student.certificates.index', compact('courses', 'projects'));
@@ -174,9 +179,17 @@ class CertificateController extends Controller
 
         abort_unless($isJoined, 403, 'Kamu belum diterima atau tidak terdaftar di project ini.');
 
-        $project->load(['user', 'skills']);
+        $project->load(['creator.institution', 'skills']);
 
-        $credentialCode = 'CERT-PRJ-' . ($project->created_at ? $project->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $project->id) . '-' . sprintf('%04d', $student->id);
+        $certificateRecord = Certificate::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
+            'user_id' => $student->id,
+            'project_id' => $project->id,
+            'completed_at' => $project->created_at ?? now(),
+        ]))->generateCredentialCode();
 
         return view('student.certificate_project', compact('project', 'student', 'credentialCode'));
     }
@@ -193,9 +206,17 @@ class CertificateController extends Controller
 
         abort_unless($isJoined, 403, 'Kamu belum diterima atau tidak terdaftar di project ini.');
 
-        $project->load(['user', 'skills']);
+        $project->load(['creator.institution', 'skills']);
 
-        $credentialCode = 'CERT-PRJ-' . ($project->created_at ? $project->created_at->format('Ym') : date('Ym')) . '-' . sprintf('%04d', $project->id) . '-' . sprintf('%04d', $student->id);
+        $certificateRecord = Certificate::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
+            'user_id' => $student->id,
+            'project_id' => $project->id,
+            'completed_at' => $project->created_at ?? now(),
+        ]))->generateCredentialCode();
 
         $pdf = Pdf::loadView('student.certificate_project_pdf', compact('project', 'student', 'credentialCode'))
             ->setPaper('a4', 'landscape');
