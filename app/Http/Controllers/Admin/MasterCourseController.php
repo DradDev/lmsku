@@ -208,9 +208,17 @@ class MasterCourseController extends Controller
             ->with('success', 'Skill & Tag Target Kompetensi berhasil diperbarui.');
     }
 
-    public function show(MasterCourse $masterCourse, Request $request): View
+    public function show(MasterCourse $masterCourse, Request $request)
     {
-        $masterCourse->load(['category', 'materials', 'quizzes', 'skills', 'tags']);
+        // If this Master Course belongs to a Vendor and has batches, route to the dedicated Admin Vendor Course & Batch view
+        if ($masterCourse->user && $masterCourse->user->role === 'vendor') {
+            $latestBatch = $masterCourse->courses()->latest()->first();
+            if ($latestBatch) {
+                return redirect()->route('admin.courses.show', $latestBatch);
+            }
+        }
+
+        $masterCourse->load(['category', 'materials', 'quizzes', 'skills', 'tags', 'courses.enrollments.user']);
 
         // Semesters (Academic Terms)
         $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')

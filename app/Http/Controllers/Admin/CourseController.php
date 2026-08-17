@@ -68,9 +68,25 @@ class CourseController extends Controller
 
     public function show(Course $course): View
     {
-        $course->load(['user', 'category', 'materials', 'quizzes.questions', 'students', 'skills']);
+        $course->load([
+            'user',
+            'category',
+            'materials',
+            'quizzes.questions',
+            'students',
+            'skills',
+            'enrollments.user',
+            'masterCourse.courses.enrollments.user',
+        ]);
 
-        return view('admin.courses.show', compact('course'));
+        $allBatches = $course->masterCourse
+            ? $course->masterCourse->courses()->with(['enrollments.user'])->orderBy('id')->get()
+            : collect([$course]);
+
+        $completedCount = $course->enrollments->where('status', 'completed')->count();
+        $inProgressCount = $course->enrollments->where('status', 'in_progress')->count();
+
+        return view('admin.courses.show', compact('course', 'allBatches', 'completedCount', 'inProgressCount'));
     }
 
     public function suspend(Request $request, Course $course): RedirectResponse

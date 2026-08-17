@@ -8,9 +8,10 @@ $kernel->bootstrap();
 use App\Models\MasterCourse;
 use App\Models\Course;
 use App\Models\User;
+use App\Models\Enrollment;
 use Illuminate\Support\Facades\Auth;
 
-echo "=== TESTING ADMIN MASTER COURSES VENDOR 3NF DEDUPLICATION ===\n\n";
+echo "=== TESTING ADMIN MASTER COURSES VENDOR 3NF DEDUPLICATION & BATCH DETAIL ===\n\n";
 
 // 1. Login as Admin
 $admin = User::where('role', 'admin')->first();
@@ -46,8 +47,34 @@ foreach ($vendorMasterCourses as $vmc) {
     }
 }
 
+// 4. Test Admin viewing Vendor Course Show (Checking Batches List & Enrolled Students Roster)
+echo "\n4. Testing Admin Vendor Course Show (Batch List & Enrolled Students Roster)...\n";
+$targetMasterCourse = $vendorMasterCourses->firstWhere('code', 'VMC-0ZYM4Q') ?? $vendorMasterCourses->first();
+$batch1 = $targetMasterCourse->courses->first();
+$batch2 = $targetMasterCourse->courses->skip(1)->first() ?? $batch1;
+
+$student = User::where('role', 'student')->first();
+Enrollment::updateOrCreate(
+    ['user_id' => $student->id, 'course_id' => $batch1->id],
+    ['status' => 'completed', 'progress_percent' => 95]
+);
+
+$adminCourseController = new \App\Http\Controllers\Admin\CourseController();
+$showView = $adminCourseController->show($batch1);
+$renderedShow = $showView->render();
+
+if (strpos($renderedShow, 'Daftar Seluruh Angkatan Batch Terdaftar') !== false &&
+    strpos($renderedShow, 'Mahasiswa Terdaftar pada Angkatan') !== false &&
+    strpos($renderedShow, $student->name) !== false &&
+    strpos($renderedShow, 'Memenuhi Syarat') !== false) {
+    echo "   [OK] Admin Vendor Course Show displays all batches, enrolled students, progress, and certification qualification cleanly!\n";
+} else {
+    echo "   [FAIL] Admin Vendor Course Show content missing expected batch/student details.\n";
+    $duplicated = true;
+}
+
 if (!$duplicated) {
-    echo "\n=== ALL ADMIN MASTER COURSE VENDOR 3NF TESTS PASSED 100%! ===\n";
+    echo "\n=== ALL ADMIN MASTER COURSE & BATCH DETAIL TESTS PASSED 100%! ===\n";
 } else {
     echo "\n=== SOME TESTS FAILED ===\n";
     exit(1);
