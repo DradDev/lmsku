@@ -18,18 +18,33 @@ class MasterCourseController extends Controller
     public function index(): View
     {
         $masterCourses = MasterCourse::with(['category', 'skills', 'tags', 'materials', 'quizzes'])
+            ->where(function ($q) {
+                $q->whereNull('user_id')
+                  ->orWhereHas('user', fn($u) => $u->where('role', '!=', 'vendor'));
+            })
             ->withCount('offerings')
             ->orderBy('name')
             ->get();
 
-        $vendorCourses = Course::with(['user', 'category', 'skills', 'tags', 'materials', 'quizzes', 'masterCourse'])
-            ->whereHas('user', function ($query) {
-                $query->where('role', 'vendor');
-            })
-            ->orderByDesc('created_at')
-            ->get();
+        $vendorMasterCourses = MasterCourse::with([
+            'user',
+            'category',
+            'skills',
+            'tags',
+            'materials',
+            'quizzes',
+            'courses.enrollments',
+        ])
+        ->whereHas('user', function ($query) {
+            $query->where('role', 'vendor');
+        })
+        ->withCount('courses')
+        ->orderByDesc('created_at')
+        ->get();
 
-        return view('admin.master-courses.index', compact('masterCourses', 'vendorCourses'));
+        $vendorCourses = $vendorMasterCourses;
+
+        return view('admin.master-courses.index', compact('masterCourses', 'vendorMasterCourses', 'vendorCourses'));
     }
 
     public function create(): View
