@@ -105,17 +105,6 @@
                         class="inline-flex items-center text-sm font-semibold text-slate-500 hover:text-slate-700">
                         ← Kembali ke Daftar Kelas
                     </a>
-
-                    @if($isTermActive ?? true)
-                        <div class="flex items-center gap-2">
-                            <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Ubah status aktif kelas ini?')">
-                                @csrf
-                                <button type="submit" class="rounded-xl border px-4 py-2 text-sm font-semibold transition {{ ($course->status ?? 'active') === 'active' ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' }}">
-                                    {{ ($course->status ?? 'active') === 'active' ? 'Arsipkan Kelas' : 'Aktifkan Kelas' }}
-                                </button>
-                            </form>
-                        </div>
-                    @endif
                 </div>
 
                 <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">

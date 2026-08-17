@@ -21,35 +21,27 @@ class CourseController extends Controller
     {
         $lecturerId = Auth::id();
 
-        // 3NF CourseOfferings yang ditugaskan ke Dosen
+        // CourseOfferings pada Semester Aktif yang ditugaskan ke Dosen
         $offerings = CourseOffering::with(['masterCourse', 'academicTerm', 'materials', 'quizzes', 'enrollments'])
             ->where('lecturer_id', $lecturerId)
+            ->whereHas('academicTerm', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->whereNotIn('status', ['expired', 'cancelled'])
             ->latest()
             ->get();
 
         // Fallback ke legacy Courses jika ada
         $legacyCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags', 'category'])
             ->where('user_id', $lecturerId)
+            ->where('is_archived', false)
             ->latest()
             ->get();
 
-        // Pisahkan menjadi Active (Semester Aktif & Tidak Diarsipkan) vs Bank (Semester Non-Aktif / Diarsipkan / Expired)
-        $activeOfferings = $offerings->filter(function ($o) {
-            $isTermActive = $o->academicTerm ? (bool)$o->academicTerm->is_active : true;
-            return $isTermActive && $o->status !== 'expired' && $o->status !== 'cancelled' && !$o->is_archived;
-        });
+        $activeCourses = $offerings->count() > 0 ? $offerings : $legacyCourses;
+        $groupedOfferings = $offerings->groupBy('master_course_id');
 
-        $bankOfferings = $offerings->filter(function ($o) {
-            $isTermActive = $o->academicTerm ? (bool)$o->academicTerm->is_active : true;
-            return !$isTermActive || $o->status === 'expired' || $o->status === 'cancelled' || $o->is_archived;
-        });
-
-        $groupedOfferings = $activeOfferings->groupBy('master_course_id');
-
-        $activeCourses = $activeOfferings->count() > 0 ? $activeOfferings : $legacyCourses->filter(fn($c) => !$c->is_archived);
-        $bankCourses = $bankOfferings->count() > 0 ? $bankOfferings : $legacyCourses->filter(fn($c) => $c->is_archived);
-
-        return view('lecturer.courses.index', compact('activeCourses', 'bankCourses', 'offerings', 'groupedOfferings'));
+        return view('lecturer.courses.index', compact('activeCourses', 'offerings', 'groupedOfferings'));
     }
 
     public function show($id): View
