@@ -194,6 +194,12 @@
 
                                     <td class="px-5 py-3.5 text-right">
                                         <div class="flex items-center justify-end gap-1.5">
+                                            <a href="{{ route('admin.course-offerings.show', $offering) }}"
+                                               class="inline-flex items-center px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition border border-blue-200"
+                                               title="Lihat riwayat mahasiswa terdaftar di rombel ini">
+                                                Peserta ({{ $offering->enrollments_count }})
+                                            </a>
+
                                             <a href="{{ route('admin.course-offerings.edit', $offering) }}"
                                                class="inline-flex items-center px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition border border-slate-200">
                                                 Edit

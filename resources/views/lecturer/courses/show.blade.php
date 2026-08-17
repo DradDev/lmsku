@@ -573,38 +573,79 @@
                     </div>
                 </div>
 
-                <!-- DAFTAR MAHASISWA TERDAFTAR -->
+                <!-- DAFTAR MAHASISWA TERDAFTAR / RIWAYAT PESERTA KELAS -->
                 <div class="space-y-6">
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h2 class="text-xl font-semibold text-slate-900 mb-5">
-                            Mahasiswa Terdaftar
-                        </h2>
+                        <div class="flex items-center justify-between gap-2 mb-5">
+                            <div>
+                                <h2 class="text-xl font-semibold text-slate-900">
+                                    {{ !($isTermActive ?? true) ? 'Riwayat Peserta Mahasiswa' : 'Mahasiswa Terdaftar' }}
+                                </h2>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    Total <strong>{{ $courseEnrollments->count() }}</strong> mahasiswa terdaftar
+                                </p>
+                            </div>
+
+                            @if(!($isTermActive ?? true))
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-100 text-slate-600 border border-slate-200">
+                                    Arsip
+                                </span>
+                            @endif
+                        </div>
 
                         @if ($courseEnrollments->count())
                         <div class="space-y-3">
                             @foreach ($courseEnrollments as $enrollment)
-                            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div>
-                                        <p class="font-semibold text-slate-900">
-                                            {{ $enrollment->user->name ?? 'Unknown User' }}
-                                        </p>
+                                @php
+                                    $studentUser = $enrollment->user;
+                                    $progress = $enrollment->progress_percent ?? 0;
+                                    $isPassed = $progress >= ($course->certificate_threshold ?? 75);
+                                @endphp
+                                <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 hover:border-indigo-200 transition">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-800 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                                {{ strtoupper(substr($studentUser->name ?? 'M', 0, 1)) }}
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-slate-900 text-sm">
+                                                    {{ $studentUser->name ?? 'Unknown Student' }}
+                                                </p>
+                                                <p class="text-xs text-slate-500">
+                                                    {{ $studentUser->email ?? 'No email' }}
+                                                </p>
+                                            </div>
+                                        </div>
 
-                                        <p class="mt-1 text-sm text-slate-500">
-                                            {{ $enrollment->user->email ?? 'No email' }}
-                                        </p>
+                                        <span class="text-xs font-bold px-2 py-0.5 rounded-full {{ $enrollment->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : ($enrollment->status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-700') }}">
+                                            {{ $enrollment->status === 'completed' ? 'Completed' : ($enrollment->status === 'in_progress' ? 'In Progress' : 'Not Started') }}
+                                        </span>
                                     </div>
 
-                                    <span class="text-sm font-semibold text-indigo-700">
-                                        {{ $enrollment->progress_percent ?? 0 }}%
-                                    </span>
+                                    <div class="mt-3 pt-3 border-t border-slate-200/70">
+                                        <div class="flex items-center justify-between text-[11px] font-semibold mb-1">
+                                            <span class="text-slate-500">Progres Belajar</span>
+                                            <span class="font-bold {{ $isPassed ? 'text-emerald-700' : 'text-slate-800' }}">{{ $progress }}%</span>
+                                        </div>
+                                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                            <div class="h-1.5 rounded-full {{ $isPassed ? 'bg-emerald-500' : 'bg-indigo-600' }}" style="width: {{ min(100, max(0, $progress)) }}%"></div>
+                                        </div>
+
+                                        <div class="flex items-center justify-between mt-2 pt-1 text-[10px] text-slate-400">
+                                            <span>Terdaftar: {{ $enrollment->created_at ? $enrollment->created_at->format('d M Y') : '-' }}</span>
+                                            @if($studentUser)
+                                                <a href="{{ route('lecturer.students.portfolio', $studentUser->id) }}" class="text-indigo-600 font-bold hover:underline">
+                                                    Lihat Portofolio →
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
                             @endforeach
                         </div>
                         @else
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
-                            Belum ada mahasiswa yang terdaftar.
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
+                            Belum ada mahasiswa yang terdaftar di rombel kelas ini.
                         </div>
                         @endif
                     </div>
