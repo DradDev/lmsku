@@ -164,25 +164,25 @@
                             <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
                                 @if ($alreadyJoined)
                                     <a href="{{ route('student.projects.show', $project) }}"
-                                       class="text-sm text-blue-600 hover:text-blue-700 font-bold">
+                                       class="text-sm text-indigo-600 hover:text-indigo-700 font-bold">
                                         Buka Proyek →
                                     </a>
                                     <span class="text-xs font-bold text-emerald-700">
                                         ✓ Terdaftar
                                     </span>
                                 @elseif(!$isEligible)
-                                    <span class="text-xs text-slate-400 font-medium flex items-center gap-1 cursor-not-allowed" title="{{ implode(' ', $project->eligibility['reasons'] ?? []) }}">
-                                        🔒 Syarat Belum Terpenuhi
-                                    </span>
-                                    <button type="button"
-                                            class="inline-flex items-center justify-center px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 text-xs font-bold rounded-lg cursor-not-allowed opacity-75"
-                                            title="{{ implode(' ', $project->eligibility['reasons'] ?? []) }}"
-                                            disabled>
-                                        Terkunci
-                                    </button>
+                                    <a href="{{ route('student.projects.show', $project) }}"
+                                       class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
+                                        Lihat Prasyarat →
+                                    </a>
+                                    <a href="{{ route('student.projects.show', $project) }}"
+                                       class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition shadow-xs"
+                                       title="Lihat mata kuliah prasyarat untuk membuka proyek ini">
+                                        🔒 Terkunci (Syarat)
+                                    </a>
                                 @elseif ($isFull)
                                     <a href="{{ route('student.projects.show', $project) }}"
-                                       class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                       class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
                                         Detail Project →
                                     </a>
                                     <button type="button"
@@ -192,13 +192,13 @@
                                     </button>
                                 @else
                                     <a href="{{ route('student.projects.show', $project) }}"
-                                       class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                       class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
                                         Detail Project →
                                     </a>
                                     <form action="{{ route('student.projects.join', $project) }}" method="POST">
                                         @csrf
                                         <button type="submit"
-                                                class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
+                                                class="inline-flex items-center justify-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
                                             Ambil
                                         </button>
                                     </form>

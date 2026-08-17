@@ -50,23 +50,9 @@ class ProjectController extends Controller
         return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors', 'invitedParticipations'));
     }
 
-    public function show(Project $project): View|RedirectResponse
+    public function show(Project $project): View
     {
         $student = Auth::user();
-
-        $participation = ProjectParticipation::where('user_id', $student->id)
-            ->where('project_id', $project->id)
-            ->first();
-
-        $eligibility = $this->checkStudentEligibility($student, $project);
-
-        // BLOKIR TOTAL (Pilihan A): Jika mahasiswa belum bergabung dan belum memenuhi syarat kelayakan
-        if (!$participation && !($eligibility['is_eligible'] ?? false)) {
-            $reasonsText = implode(' ', $eligibility['reasons'] ?? []);
-            return redirect()
-                ->route('student.projects.index')
-                ->with('error', "Akses Ditolak: Proyek '{$project->title}' saat ini terkunci. " . $reasonsText);
-        }
 
         $project->load([
             'user.institution',
@@ -78,6 +64,19 @@ class ProjectController extends Controller
             'comments.user',
             'comments.replies.user',
         ]);
+
+        $participation = ProjectParticipation::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        $eligibility = $this->checkStudentEligibility($student, $project);
+
+        $skillIds = $project->skills->pluck('id')->toArray();
+        $prerequisiteCourses = \App\Models\MasterCourse::with(['skills', 'category'])
+            ->whereHas('skills', function ($q) use ($skillIds) {
+                $q->whereIn('skills.id', $skillIds);
+            })
+            ->get();
 
         $statusHistories = ProjectStatusHistory::with('user')
             ->where('project_id', $project->id)
@@ -91,7 +90,7 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        return view('student.projects.show', compact('project', 'participation', 'eligibility', 'statusHistories'));
+        return view('student.projects.show', compact('project', 'participation', 'eligibility', 'statusHistories', 'prerequisiteCourses'));
     }
 
     public function myProjects(): View
