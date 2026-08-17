@@ -50,12 +50,27 @@ class ProjectController extends Controller
         return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors', 'invitedParticipations'));
     }
 
-    public function show(Project $project): View
+    public function show(Project $project): View|RedirectResponse
     {
         $student = Auth::user();
 
+        $participation = ProjectParticipation::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        $eligibility = $this->checkStudentEligibility($student, $project);
+
+        // BLOKIR TOTAL (Pilihan A): Jika mahasiswa belum bergabung dan belum memenuhi syarat kelayakan
+        if (!$participation && !($eligibility['is_eligible'] ?? false)) {
+            $reasonsText = implode(' ', $eligibility['reasons'] ?? []);
+            return redirect()
+                ->route('student.projects.index')
+                ->with('error', "Akses Ditolak: Proyek '{$project->title}' saat ini terkunci. " . $reasonsText);
+        }
+
         $project->load([
-            'user',
+            'user.institution',
+            'creator.institution',
             'skills',
             'tags',
             'category',
@@ -63,12 +78,6 @@ class ProjectController extends Controller
             'comments.user',
             'comments.replies.user',
         ]);
-
-        $participation = ProjectParticipation::where('user_id', $student->id)
-            ->where('project_id', $project->id)
-            ->first();
-
-        $eligibility = $this->checkStudentEligibility($student, $project);
 
         $statusHistories = ProjectStatusHistory::with('user')
             ->where('project_id', $project->id)
@@ -432,6 +441,15 @@ class ProjectController extends Controller
     public function join(Project $project): RedirectResponse
     {
         $student = Auth::user();
+
+        // Cek kelayakan kompetensi sebelum join
+        $eligibility = $this->checkStudentEligibility($student, $project);
+        if (!($eligibility['is_eligible'] ?? false)) {
+            $reasonsText = implode(' ', $eligibility['reasons'] ?? []);
+            return redirect()
+                ->route('student.projects.index')
+                ->with('error', "Gagal mengambil proyek: Proyek '{$project->title}' saat ini terkunci. " . $reasonsText);
+        }
 
         $existingParticipation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)

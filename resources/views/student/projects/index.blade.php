@@ -104,8 +104,12 @@
                                     </div>
 
                                     @if ($alreadyJoined)
-                                        <span class="shrink-0 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
+                                        <span class="shrink-0 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200">
                                             Diambil
+                                        </span>
+                                    @elseif(!$isEligible)
+                                        <span class="shrink-0 px-2.5 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200">
+                                            🔒 Terkunci
                                         </span>
                                     @endif
                                 </div>
@@ -158,38 +162,47 @@
                             </div>
 
                             <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
-                                <a href="{{ route('student.projects.show', $project) }}"
-                                   class="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                                    Detail Project →
-                                </a>
-
-                                <div>
-                                    @if ($alreadyJoined)
-                                        <span class="text-xs font-medium text-gray-500">
-                                            Sudah Bergabung
-                                        </span>
-                                    @elseif ($isFull)
-                                        <button type="button"
-                                                class="inline-flex items-center justify-center px-3 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
-                                                disabled>
-                                            Kuota Penuh
+                                @if ($alreadyJoined)
+                                    <a href="{{ route('student.projects.show', $project) }}"
+                                       class="text-sm text-blue-600 hover:text-blue-700 font-bold">
+                                        Buka Proyek →
+                                    </a>
+                                    <span class="text-xs font-bold text-emerald-700">
+                                        ✓ Terdaftar
+                                    </span>
+                                @elseif(!$isEligible)
+                                    <span class="text-xs text-slate-400 font-medium flex items-center gap-1 cursor-not-allowed" title="{{ implode(' ', $project->eligibility['reasons'] ?? []) }}">
+                                        🔒 Syarat Belum Terpenuhi
+                                    </span>
+                                    <button type="button"
+                                            class="inline-flex items-center justify-center px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 text-xs font-bold rounded-lg cursor-not-allowed opacity-75"
+                                            title="{{ implode(' ', $project->eligibility['reasons'] ?? []) }}"
+                                            disabled>
+                                        Terkunci
+                                    </button>
+                                @elseif ($isFull)
+                                    <a href="{{ route('student.projects.show', $project) }}"
+                                       class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                        Detail Project →
+                                    </a>
+                                    <button type="button"
+                                            class="inline-flex items-center justify-center px-3 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+                                            disabled>
+                                        Kuota Penuh
+                                    </button>
+                                @else
+                                    <a href="{{ route('student.projects.show', $project) }}"
+                                       class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                                        Detail Project →
+                                    </a>
+                                    <form action="{{ route('student.projects.join', $project) }}" method="POST">
+                                        @csrf
+                                        <button type="submit"
+                                                class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
+                                            Ambil
                                         </button>
-                                    @elseif(!$isEligible)
-                                        <a href="{{ route('student.projects.show', $project) }}"
-                                           class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition">
-                                            Terkunci
-                                        </a>
-                                    @else
-                                        <form action="{{ route('student.projects.join', $project) }}" method="POST">
-                                            @csrf
-
-                                            <button type="submit"
-                                                    class="inline-flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition shadow-sm">
-                                                Ambil
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     @endforeach
