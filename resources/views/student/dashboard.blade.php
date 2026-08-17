@@ -37,10 +37,10 @@
 
 .dash-sub {
     font-size: 14px;
-    color: #475569;
+    color: #334155;
     margin-top: 5px;
+    font-weight: 500;
 }
-
 .alert {
     padding: 11px 16px;
     border-radius: 12px;
@@ -277,7 +277,29 @@
 .mini-sub {
     font-size: 12px;
     color: #334155;
+}
+
+.muted-box {
+    margin-top: 10px;
+    border-radius: 12px;
+    background: #f7f8fc;
+    border: 1px solid #eef0f8;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #334155;
     line-height: 1.6;
+}
+    line-height: 1.6;
+}
+
+.muted-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: #6366f1;
+    margin-bottom: 5px;
 }
 
 .activity-list {
@@ -321,13 +343,6 @@
     white-space: nowrap;
 }
 
-.two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 2rem;
-}
-
 .list-card-item {
     padding: 0 0 14px;
     margin: 0 0 14px;
@@ -360,29 +375,11 @@
     margin-bottom: 10px;
 }
 
-.result-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 2rem;
-}
-
 .result-score {
     font-size: 34px;
     font-weight: 700;
     color: #4f46e5;
     margin-bottom: 6px;
-}
-
-.muted-box {
-    margin-top: 10px;
-    border-radius: 12px;
-    background: #f7f8fc;
-    border: 1px solid #eef0f8;
-    padding: 12px 14px;
-    font-size: 13px;
-    color: #334155;
-    line-height: 1.6;
 }
 
 .muted-label {
@@ -394,11 +391,6 @@
     color: #4f46e5;
     margin-bottom: 5px;
 }
-
-.chart-card canvas {
-    margin-top: 4px;
-}
-
 .empty-text {
     font-size: 13px;
     color: #475569;
@@ -414,28 +406,25 @@
     .dash-container { padding: 0 1rem; }
     .stat-grid,
     .courses-grid,
-    .two-col,
-    .result-grid,
+    .dashboard-two-column,
     .info-kpi { grid-template-columns: 1fr; }
 }
 
-.dashboard-two-column{
+.dashboard-two-column {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 24px;
     margin-bottom: 2rem;
 }
 
-.dashboard-two-column .card{
+.dashboard-two-column .card {
     height: 100%;
 }
-
 @media (max-width:768px){
     .dashboard-two-column{
         grid-template-columns:1fr;
     }
 }
-
 </style>
 
 <main class="dash-wrap" role="main" aria-label="Student Dashboard Utama">
@@ -445,18 +434,9 @@
             $certificateReadyCount = $courses->where('can_get_certificate', true)->count();
         @endphp
 
-        <div class="dash-header flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <p class="dash-eyebrow">Student Portal</p>
-                <h1 class="dash-title">Student Dashboard</h1>
-            </div>
-            @if(auth()->user()->peminatan)
-            <div class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 shadow-xs max-w-md">
-                <span class="font-bold text-amber-950 block">Initial Registered Interest:</span>
-                <span class="font-medium text-amber-800">{{ auth()->user()->peminatan }}</span>
-                <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-200 text-amber-900 inline-block">Competency Pending</span>
-            </div>
-            @endif
+        <div class="dash-header">
+            <p class="dash-eyebrow">Student Portal</p>
+            <h1 class="dash-title">Student Dashboard</h1>
         </div>
 
         @if(session('success'))
@@ -467,6 +447,7 @@
             <div class="alert alert-error" role="alert">{{ session('error') }}</div>
         @endif
 
+        <!-- TOP STATS -->
         <div class="stat-grid">
             <div class="stat-card">
                 <div class="stat-label">Total Courses</div>
@@ -481,8 +462,8 @@
                 <div class="stat-value">{{ $completed }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Certificates</div>
-                <div class="stat-value">{{ $certificateReadyCount }}</div>
+                <div class="stat-label">Active Projects</div>
+                <div class="stat-value">{{ $totalJoinedProjectsCount ?? 0 }}</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Latest Quiz Score</div>
@@ -498,7 +479,9 @@
             </div>
         </div>
 
+        <!-- MAIN GRID: COURSES (LEFT) & SIDE STACK (RIGHT) -->
         <div class="main-grid">
+            <!-- LEFT: CONTINUE LEARNING COURSES -->
             <div class="card">
                 <div class="section-header">
                     <h2 class="section-title">Continue Learning</h2>
@@ -508,11 +491,16 @@
                 @if($courses->count() > 0)
                     <div class="courses-grid">
                         @foreach($courses->take(4) as $course)
-                            @php $progress = $course->progress ?? 0; @endphp
+                            @php 
+                                $progress = $course->progress ?? 0;
+                                $instructorName = $course->user->name 
+                                    ?? ($course->lecturer->name ?? 'Dosen Pengampu');
+                                $courseId = $course->id;
+                            @endphp
 
                             <div class="course-card">
-                                <div class="course-name">{{ $course->name }}</div>
-                                <div class="course-instructor">{{ $course->user->name ?? 'Unknown Lecturer' }}</div>
+                                <div class="course-name">{{ $course->name ?? ($course->masterCourse->name ?? 'Course') }}</div>
+                                <div class="course-instructor">{{ $instructorName }}</div>
 
                                 <div class="progress-wrap">
                                     <div class="progress-top">
@@ -550,7 +538,84 @@
                 @endif
             </div>
 
+            <!-- RIGHT STACK: CERTIFICATES, PROYEK AKTIF, & RECENT ACTIVITY -->
             <div class="side-stack">
+                <!-- 1. PROYEK & PORTOFOLIO AKTIF (PENGGANTI GRAFIK DUMMY) -->
+                <div class="card">
+                    <div class="section-header">
+                        <div class="flex items-center gap-2">
+                            <h2 class="section-title">Proyek Aktif</h2>
+                            @if(($pendingInvitationsCount ?? 0) > 0)
+                                <a href="{{ route('student.projects.invitations') }}" class="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-bold rounded-full hover:bg-rose-200 transition-all">
+                                    {{ $pendingInvitationsCount }} Undangan
+                                </a>
+                            @endif
+                        </div>
+                        <a href="{{ route('student.projects.my') }}" class="section-meta">Lihat Semua →</a>
+                    </div>
+
+                    @if(($activeParticipations ?? collect())->count() > 0)
+                        <div class="space-y-3">
+                            @foreach($activeParticipations as $part)
+                                @php
+                                    $prj = $part->project;
+                                    if (!$prj) continue;
+                                    $statusColor = match($part->status) {
+                                        'completed' => ['bg' => '#edfaf4', 'text' => '#1a7a4a', 'border' => '#a7e9c8', 'label' => 'Selesai'],
+                                        'review' => ['bg' => '#f5f3ff', 'text' => '#7c3aed', 'border' => '#ddd6fe', 'label' => 'Review'],
+                                        'development' => ['bg' => '#eff6ff', 'text' => '#2563eb', 'border' => '#bfdbfe', 'label' => 'Development'],
+                                        default => ['bg' => '#fffbeb', 'text' => '#b45309', 'border' => '#fde68a', 'label' => 'In Progress'],
+                                    };
+                                @endphp
+                                <div class="p-3 bg-[#f8faff] border border-[#e5eaf7] rounded-xl flex flex-col gap-2">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="font-bold text-xs text-[#1e2435] truncate">{{ $prj->title }}</div>
+                                            <div class="text-[11px] text-[#9399b0] truncate mt-0.5">
+                                                {{ $prj->creator->name ?? 'Pembimbing' }}
+                                                @if($prj->creator?->institution)
+                                                    • {{ $prj->creator->institution->name }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <span style="background: {{ $statusColor['bg'] }}; color: {{ $statusColor['text'] }}; border: 1px solid {{ $statusColor['border'] }};" class="px-2 py-0.5 text-[10px] font-bold rounded-full shrink-0">
+                                            {{ $statusColor['label'] }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Progress bar -->
+                                    <div>
+                                        <div class="flex items-center justify-between text-[10px] font-semibold mb-1">
+                                            <span class="text-[#9399b0]">Progres</span>
+                                            <span class="text-[#6366f1] font-bold">{{ $part->progress_percent ?? 0 }}%</span>
+                                        </div>
+                                        <div class="h-1.5 w-full bg-[#e9edf8] rounded-full overflow-hidden">
+                                            <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full" style="width: {{ $part->progress_percent ?? 0 }}%"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between pt-1">
+                                        <span class="text-[10px] font-medium text-slate-500">
+                                            {{ $prj->provider_type === 'internal' ? 'Kampus (Dosen)' : 'Mitra Industri' }}
+                                        </span>
+                                        <a href="{{ route('student.projects.show', $prj->id) }}" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800">
+                                            Detail →
+                                        </a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                            <p class="text-xs text-slate-500 mb-2">Belum ada proyek yang diambil.</p>
+                            <a href="{{ route('student.projects.index') }}" class="btn btn-secondary text-xs py-1 px-3">
+                                Jelajahi Proyek →
+                            </a>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- 2. CERTIFICATES OVERVIEW -->
                 <div class="card">
                     <div class="section-header">
                         <h2 class="section-title">Certificates</h2>
@@ -573,18 +638,18 @@
                         @if($certificateReadyCount > 0)
                             You have certificates ready to be viewed or downloaded.
                         @else
-                            No certificates ready yet. Complete the final quiz and wait for admin verification.
+                            No certificates ready yet. Complete final quizzes or projects to unlock certificates.
                         @endif
                     </div>
                 </div>
 
+                <!-- 3. RECENT ACTIVITY -->
                 <div class="card">
                     <div class="section-header">
                         <h2 class="section-title">Recent Activity</h2>
                     </div>
 
                     <ul class="activity-list">
-
                         @if($latestQuiz)
                             <li class="activity-item">
                                 <div class="activity-left">
@@ -603,25 +668,16 @@
                             </li>
                         @endif
 
-                        @if(!empty($latestEssayAnswer))
-                            <li class="activity-item">
-                                <div class="activity-left">
-                                    <span class="activity-dot" style="background:#8b5cf6;"></span>
-                                    <div class="activity-text">Essay graded by lecturer</div>
-                                </div>
-                                <div class="activity-meta">Score: {{ $latestEssayAnswer->score }}</div>
-                            </li>
-                        @endif
-
                         <li class="activity-item">
                             <div class="activity-left">
                                 <span class="activity-dot" style="background:#3b82f6;"></span>
-                                <div class="activity-text">Logged into LMS</div>
+                                <div class="activity-text">Active on LMS Platform</div>
                             </div>
                             <div class="activity-meta">Today</div>
                         </li>
                     </ul>
                 </div>
+<<<<<<< HEAD
 
                 <div class="card chart-card">
                     <div class="section-header">
@@ -629,9 +685,12 @@
                     </div>
                     <canvas id="progressChart" height="120" role="img" aria-label="Grafik Progres Pembelajaran Mingguan"></canvas>
                 </div>
+=======
+>>>>>>> origin/feat/lecturer-portal-3nf-class-switcher
             </div>
         </div>
 
+        <!-- BOTTOM TWO COLUMN: AVAILABLE QUIZZES & LATEST QUIZ RESULT -->
         <div class="dashboard-two-column">
             <div class="card">
                 <div class="section-header">
@@ -668,25 +727,19 @@
                 </div>
 
                 @if(($latestQuizResults ?? collect())->count() > 0)
-
                     @foreach($latestQuizResults as $quiz)
-
                         <div class="result-score">
                             {{ $quiz->score }}
                         </div>
 
                         <div class="muted-box">
-                            <span class="muted-label">
-                                Status
-                            </span>
-
-                            Quiz result verified by admin.
+                            <span class="muted-label">Status</span>
+                            {{ $quiz->quiz->title ?? 'Quiz' }} — Verified by Admin.
                         </div>
 
                         @if(!$loop->last)
-                            <hr style="margin:15px 0;">
+                            <hr style="margin:15px 0; border: none; border-top: 1px solid #f0f2f9;">
                         @endif
-
                     @endforeach
                 @elseif(!empty($pendingQuiz))
                     <div class="result-score" style="font-size:24px; color:#b45309;">Pending</div>
@@ -702,51 +755,4 @@
 
     </div>
 </main>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-const ctx = document.getElementById('progressChart');
-if (ctx) {
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],
-            datasets: [{
-                label: 'Learning Progress',
-                data: [60, 65, 70, 80, 85],
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79,70,229,0.07)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#4f46e5',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#475569',
-                        font: { family: 'Inter', size: 12 }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { color: '#475569', font: { family: 'Inter', size: 11 } }
-                },
-                y: {
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { color: '#475569', font: { family: 'Inter', size: 11 } }
-                }
-            }
-        }
-    });
-}
-</script>
 </x-app-layout>

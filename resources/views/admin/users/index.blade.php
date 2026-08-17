@@ -113,6 +113,17 @@
                                     <span style="background: {{ $roleBadges['bg'] }}; color: {{ $roleBadges['color'] }}; font-size: 11.5px; font-weight: 800; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
                                         {{ $roleBadges['label'] }}
                                     </span>
+                                    @if($user->role === 'vendor')
+                                        @if($user->institution)
+                                            <div style="font-size: 11px; font-weight: 700; color: #334155; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                                <span>{{ $user->institution->name }}</span> <span style="background: #F3E8FF; color: #7E22CE; padding: 1px 6px; border-radius: 4px; font-size: 10px;">{{ $user->institution->code }}</span>
+                                            </div>
+                                        @elseif($user->institution_type === 'individual')
+                                            <div style="font-size: 11px; font-weight: 600; color: #64748B; margin-top: 4px;">
+                                                Praktisi Perorangan
+                                            </div>
+                                        @endif
+                                    @endif
                                 </td>
 
                                 <!-- STATUS BADGE -->

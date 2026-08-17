@@ -63,7 +63,12 @@ class ProfileController extends Controller
             'email' => $validated['email'],
         ];
 
-        if ($request->hasFile('avatar')) {
+        if ($request->boolean('remove_avatar')) {
+            if (! empty($user->avatar) && Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $updateData['avatar'] = null;
+        } elseif ($request->hasFile('avatar')) {
             if (! empty($user->avatar) && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
             }

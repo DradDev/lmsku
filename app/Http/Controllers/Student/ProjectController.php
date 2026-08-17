@@ -55,7 +55,8 @@ class ProjectController extends Controller
         $student = Auth::user();
 
         $project->load([
-            'user',
+            'user.institution',
+            'creator.institution',
             'skills',
             'tags',
             'category',
@@ -70,6 +71,13 @@ class ProjectController extends Controller
 
         $eligibility = $this->checkStudentEligibility($student, $project);
 
+        $skillIds = $project->skills->pluck('id')->toArray();
+        $prerequisiteCourses = \App\Models\MasterCourse::with(['skills', 'category'])
+            ->whereHas('skills', function ($q) use ($skillIds) {
+                $q->whereIn('skills.id', $skillIds);
+            })
+            ->get();
+
         $statusHistories = ProjectStatusHistory::with('user')
             ->where('project_id', $project->id)
             ->where(function ($q) use ($participation) {
@@ -82,7 +90,7 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        return view('student.projects.show', compact('project', 'participation', 'eligibility', 'statusHistories'));
+        return view('student.projects.show', compact('project', 'participation', 'eligibility', 'statusHistories', 'prerequisiteCourses'));
     }
 
     public function myProjects(): View
@@ -193,7 +201,12 @@ class ProjectController extends Controller
             'enrollments.course.category',
         ]);
 
-        $certificates = Certificate::with(['courseOffering.masterCourse', 'course', 'project'])
+        $certificates = Certificate::with([
+            'courseOffering.masterCourse.skills',
+            'course.skills',
+            'project.creator.institution',
+            'project.skills'
+        ])
             ->where('user_id', $student->id)
             ->latest()
             ->get();
@@ -422,5 +435,72 @@ class ProjectController extends Controller
         return redirect()
             ->route('student.projects.show', $project)
             ->with('success', 'Progress project berhasil diperbarui.');
+    }
+
+    public function join(Project $project): RedirectResponse
+    {
+        $student = Auth::user();
+
+        // Cek kelayakan kompetensi sebelum join
+        $eligibility = $this->checkStudentEligibility($student, $project);
+        if (!($eligibility['is_eligible'] ?? false)) {
+            $reasonsText = implode(' ', $eligibility['reasons'] ?? []);
+            return redirect()
+                ->route('student.projects.index')
+                ->with('error', "Gagal mengambil proyek: Proyek '{$project->title}' saat ini terkunci. " . $reasonsText);
+        }
+
+        $existingParticipation = ProjectParticipation::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        if ($existingParticipation) {
+            if ($existingParticipation->status === 'invited') {
+                return redirect()
+                    ->route('student.projects.my')
+                    ->with('info', "Anda memiliki undangan pending untuk project '{$project->title}'. Silakan konfirmasi pada daftar undangan.");
+            }
+
+            if (in_array($existingParticipation->status, ['in_progress', 'development', 'review', 'completed'])) {
+                return redirect()
+                    ->route('student.projects.show', $project)
+                    ->with('info', "Anda sudah terdaftar dan sedang mengerjakan project '{$project->title}'.");
+            }
+        }
+
+        $participation = ProjectParticipation::create([
+            'project_id' => $project->id,
+            'user_id' => $student->id,
+            'status' => 'in_progress',
+            'progress_percent' => 0,
+            'started_at' => now(),
+            'last_activity_at' => now(),
+        ]);
+
+        ProjectStatusHistory::create([
+            'project_id' => $project->id,
+            'project_participation_id' => $participation->id,
+            'user_id' => $student->id,
+            'old_status' => null,
+            'new_status' => 'in_progress',
+            'old_progress_percent' => 0,
+            'new_progress_percent' => 0,
+            'note' => 'Mahasiswa berhasil mendaftar dan mulai mengerjakan project industri.',
+        ]);
+
+        LearningActivityLog::create([
+            'user_id' => $student->id,
+            'project_id' => $project->id,
+            'activity_type' => 'join_project',
+            'activity_value' => 1,
+            'metadata' => [
+                'participation_id' => $participation->id,
+            ],
+            'occurred_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('student.projects.my')
+            ->with('success', "Selamat! Anda berhasil mengambil project '{$project->title}'. Silakan mulai pengerjaan tugas & milestone.");
     }
 }

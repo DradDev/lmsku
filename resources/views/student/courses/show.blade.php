@@ -254,19 +254,47 @@
                                         </h3>
 
                                         @if ($quiz->quiz_type === 'final')
-                                        <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                        <span class="inline-flex rounded-full bg-emerald-100 px-3 py-0.5 text-xs font-bold text-emerald-700">
                                             Final Quiz
                                         </span>
+                                        @elseif ($quiz->quiz_type === 'weekly')
+                                        <span class="inline-flex rounded-full bg-blue-100 px-3 py-0.5 text-xs font-bold text-blue-700">
+                                            Weekly Quiz
+                                        </span>
+                                        @endif
+
+                                        @if ($quiz->start_date && now()->lt($quiz->start_date))
+                                            <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
+                                                Belum Dibuka
+                                            </span>
+                                        @elseif ($quiz->end_date && now()->gt($quiz->end_date))
+                                            <span class="inline-flex rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-bold text-slate-700">
+                                                Waktu Berakhir
+                                            </span>
+                                        @else
+                                            <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+                                                Terbuka
+                                            </span>
                                         @endif
                                     </div>
 
-                                    <p class="text-sm text-slate-500 mt-1">
-                                        {{ $quiz->questions->count() ?? 0 }} questions
-                                    </p>
+                                    <div class="text-xs text-slate-500 mt-1.5 space-y-0.5">
+                                        <p>
+                                            {{ $quiz->questions->count() ?? 0 }} Soal &bull;
+                                            Durasi: {{ $quiz->time_limit ? $quiz->time_limit . ' Menit' : 'Tanpa Batas' }} &bull;
+                                            Sisa Kesempatan: {{ $quiz->max_attempts === 0 ? 'Unlimited' : $quiz->remainingAttempts(Auth::id()) . 'x' }}
+                                        </p>
+                                        @if($quiz->start_date)
+                                            <p>Jadwal Mulai: <span class="font-semibold text-slate-700">{{ $quiz->start_date->format('d M Y, H:i') }}</span></p>
+                                        @endif
+                                        @if($quiz->end_date)
+                                            <p>Batas Deadline: <span class="font-semibold {{ now()->gt($quiz->end_date) ? 'text-rose-600 font-bold' : 'text-slate-700' }}">{{ $quiz->end_date->format('d M Y, H:i') }}</span></p>
+                                        @endif
+                                    </div>
 
                                     @if ($quiz->quiz_type === 'final')
-                                    <p class="text-xs text-emerald-600 font-medium mt-2">
-                                        Quiz ini digunakan untuk menentukan certificate.
+                                    <p class="text-xs text-emerald-700 font-semibold mt-2">
+                                        Kuis ini digunakan sebagai penentu penerbitan sertifikat kelulusan.
                                     </p>
                                     @endif
                                 </div>
@@ -274,25 +302,37 @@
                                 <div class="flex items-center gap-3">
                                     @if(!$enrollment)
                                         <span class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-500 border border-slate-200">
-                                            🔒 Terkunci (Ambil Course)
+                                            Terkunci (Ambil Course)
                                         </span>
+                                    @elseif ($quiz->start_date && now()->lt($quiz->start_date))
+                                        <button type="button" disabled class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-400 border border-slate-200 cursor-not-allowed">
+                                            Belum Dibuka ({{ $quiz->start_date->format('d M H:i') }})
+                                        </button>
+                                    @elseif ($quiz->end_date && now()->gt($quiz->end_date))
+                                        <button type="button" disabled class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-400 border border-slate-200 cursor-not-allowed">
+                                            Waktu Berakhir
+                                        </button>
                                     @elseif ($quiz->quiz_type === 'final' && $verifiedFinalAttempt && $verifiedFinalAttempt->score < 70 && !$quiz->canAttempt(Auth::id()))
                                         @if ($retakeRequest && $retakeRequest->status === 'pending')
                                             <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold rounded-xl">
-                                                ⏳ Request Retake Pending
+                                                Request Retake Pending
                                             </span>
                                         @else
                                             <form method="POST" action="{{ route('student.quiz.request-retake', $quiz) }}">
                                                 @csrf
                                                 <button type="submit" onclick="return confirm('Kirim permintaan retake Final Quiz ke Author?')" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-sm transition">
-                                                    📩 Request Retake Final Quiz
+                                                    Request Retake Final Quiz
                                                 </button>
                                             </form>
                                         @endif
+                                    @elseif (!$quiz->canAttempt(Auth::id()))
+                                        <button type="button" disabled class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-400 border border-slate-200 cursor-not-allowed">
+                                            Kesempatan Habis
+                                        </button>
                                     @else
                                         <a href="{{ route('student.quiz.show', $quiz) }}"
-                                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
-                                            Start Quiz
+                                            class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700 shadow-sm transition">
+                                            Mulai Kuis
                                         </a>
                                     @endif
                                 </div>

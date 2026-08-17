@@ -336,128 +336,132 @@
                 <div class="lg:col-span-4 space-y-6">
 
                     <!-- Quick Actions Card -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-3">
-                        <h4 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider">
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 space-y-3">
+                        <h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider">
                             Quick Controls
                         </h4>
 
                         <a href="{{ route('lecturer.projects.talent-pool', $project) }}"
-                           class="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-sm transition">
+                           class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6z"/></svg>
                             <span>Buka Talent Screening Engine</span>
                         </a>
 
                         <div class="grid grid-cols-2 gap-2 pt-1">
                             <a href="{{ route('lecturer.projects.edit', $project) }}"
-                               class="text-center py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition">
+                               class="text-center py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition border border-slate-200">
                                 Edit Project
                             </a>
 
                             <a href="{{ route('lecturer.projects.index') }}"
-                               class="text-center py-2 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition">
+                               class="text-center py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition border border-slate-200">
                                 ← Kembali
                             </a>
                         </div>
                     </div>
 
                     <!-- Skills & Tags Qualifications Card -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 space-y-4">
-                        <h4 class="font-extrabold text-sm text-gray-900 uppercase tracking-wider">
+                    <div class="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 space-y-4">
+                        <h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider">
                             Qualification Requirements
                         </h4>
 
                         <!-- Main Skill Card -->
-                        <div class="p-3.5 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl space-y-1.5">
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-600 block">Primary Skill Requirement</span>
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">Primary Skill Requirement</span>
                             @forelse ($project->skills as $skill)
                                 @if($skill->pivot->is_main)
-                                    <div class="font-black text-sm text-indigo-950 flex items-center gap-1.5">
+                                    <div class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
                                         <span>{{ $skill->name }}</span>
                                     </div>
                                 @endif
                             @empty
-                                <span class="text-xs text-gray-400 italic">No main skill specified.</span>
+                                <span class="text-xs text-slate-400 italic">No main skill specified.</span>
                             @endforelse
                         </div>
 
                         <!-- Specialty Tags -->
                         <div>
-                            <span class="text-xs font-bold text-gray-700 block mb-1.5">Specialty Tags:</span>
+                            <span class="text-xs font-bold text-slate-700 block mb-1.5">Specialty Tags:</span>
                             <div class="flex flex-wrap gap-1.5">
                                 @forelse ($project->tags as $tag)
-                                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold rounded-lg text-xs">
+                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 font-semibold rounded-lg text-xs">
                                         #{{ $tag->name }}
                                     </span>
                                 @empty
-                                    <span class="text-xs text-gray-400 italic">No specialty tags.</span>
+                                    <span class="text-xs text-slate-400 italic">No specialty tags.</span>
                                 @endforelse
                             </div>
                         </div>
                     </div>
 
-                    <!-- Compact AI Talent Match Screening Widget (Sidebar Version) -->
-                    <div class="bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-950 rounded-2xl p-5 shadow-md text-white space-y-4 border border-indigo-800/50">
-                        <div class="flex items-center justify-between border-b border-indigo-800/60 pb-3">
+                    <!-- Talent Match Screening Widget (Sidebar Version) -->
+                    <div class="bg-white rounded-2xl p-5 shadow-xs text-slate-900 space-y-4 border border-slate-200">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                             <div>
-                                <span class="text-[10px] font-black uppercase tracking-widest text-indigo-400 block">COMPRO Screening</span>
-                                <h4 class="font-black text-base text-white">Top Candidate Match</h4>
+                                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 block">Talent Screening</span>
+                                <h4 class="font-bold text-sm text-slate-900">Kandidat Teratas</h4>
                             </div>
 
                             <a href="{{ route('lecturer.projects.talent-pool', $project) }}"
-                               class="text-[11px] font-bold text-indigo-300 hover:text-white underline">
+                               class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition">
                                 Lihat Semua →
                             </a>
                         </div>
 
                         @if(!isset($recommendedStudents) || $recommendedStudents->isEmpty())
-                            <p class="text-xs text-indigo-200 italic">Belum ada mahasiswa yang memenuhi kualifikasi talent pool.</p>
+                            <p class="text-xs text-slate-400">Belum ada mahasiswa yang memenuhi kualifikasi talent pool.</p>
                         @else
                             <div class="space-y-3">
                                 @foreach($recommendedStudents as $index => $recStudent)
                                     @php
                                         $mScore = $recStudent->match_score;
-                                        $scoreColor = $mScore >= 80 ? 'bg-emerald-500 text-white' : ($mScore >= 60 ? 'bg-indigo-400 text-white' : 'bg-amber-400 text-amber-950');
+                                        $scoreColor = $mScore >= 80 
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                                            : ($mScore >= 60 
+                                                ? 'bg-indigo-50 text-indigo-800 border-indigo-200' 
+                                                : 'bg-slate-100 text-slate-800 border-slate-200');
                                     @endphp
 
-                                    <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-xl p-3 space-y-2.5">
+                                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2.5">
                                         <div class="flex items-center justify-between gap-2">
                                             <div class="flex items-center gap-2">
                                                 @if($recStudent->avatar_url)
-                                                    <img src="{{ $recStudent->avatar_url }}" class="w-8 h-8 rounded-full object-cover border border-white/20">
+                                                    <img src="{{ $recStudent->avatar_url }}" class="w-8 h-8 rounded-full object-cover object-center border border-slate-200">
                                                 @else
-                                                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-black text-xs border border-white/20">
+                                                    <div class="w-8 h-8 rounded-full bg-slate-800 text-white flex items-center justify-center font-bold text-xs border border-slate-200">
                                                         {{ strtoupper(substr($recStudent->name, 0, 1)) }}
                                                     </div>
                                                 @endif
                                                 <div class="overflow-hidden">
-                                                    <h5 class="font-bold text-xs text-white truncate max-w-[110px]">{{ $recStudent->name }}</h5>
-                                                    <span class="text-[10px] text-indigo-200 font-medium block truncate max-w-[110px]">{{ $recStudent->peminatan ?? 'General' }}</span>
+                                                    <h5 class="font-bold text-xs text-slate-900 truncate max-w-[110px]">{{ $recStudent->name }}</h5>
+                                                    <span class="text-[10px] text-slate-500 font-medium block truncate max-w-[110px]">{{ $recStudent->peminatan ?? 'General' }}</span>
                                                 </div>
                                             </div>
 
-                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-black {{ $scoreColor }}">
+                                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border {{ $scoreColor }}">
                                                 {{ $mScore }}%
                                             </span>
                                         </div>
 
-                                        <div class="flex items-center gap-1.5 pt-1 border-t border-white/10">
+                                        <div class="flex items-center gap-1.5 pt-1 border-t border-slate-200">
                                             <a href="{{ route('lecturer.students.portfolio', $recStudent) }}"
-                                               class="flex-1 text-center py-1 px-2 bg-white/20 hover:bg-white/30 text-white font-semibold text-[10px] rounded-md transition">
+                                               class="flex-1 text-center py-1 px-2 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-[10px] rounded-md transition border border-slate-200">
                                                 Portofolio
                                             </a>
 
                                             @if($recStudent->invitation_status === 'invited')
-                                                <span class="py-1 px-2 bg-amber-400/20 text-amber-200 font-bold text-[10px] rounded-md">
+                                                <span class="py-1 px-2 bg-amber-50 text-amber-800 border border-amber-200 font-bold text-[10px] rounded-md">
                                                     Pending
                                                 </span>
                                             @elseif(in_array($recStudent->invitation_status, ['in_progress', 'development', 'review', 'completed']))
-                                                <span class="py-1 px-2 bg-emerald-400/20 text-emerald-200 font-bold text-[10px] rounded-md">
+                                                <span class="py-1 px-2 bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold text-[10px] rounded-md">
                                                     Joined
                                                 </span>
                                             @else
                                                 <form action="{{ route('lecturer.projects.invite', [$project, $recStudent]) }}" method="POST">
                                                     @csrf
-                                                    <button type="submit" class="py-1 px-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[10px] rounded-md transition shadow-sm">
+                                                    <button type="submit" class="py-1 px-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[10px] rounded-md transition shadow-xs">
                                                         + Invite
                                                     </button>
                                                 </form>
