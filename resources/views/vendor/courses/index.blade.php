@@ -84,7 +84,7 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    margin-bottom: 2rem;
+    margin-bottom: 2.25rem;
 }
 
 @media (min-width: 1024px) {
@@ -136,44 +136,22 @@
     font-size: 20px;
 }
 
-.tabs-nav-modern {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 1.75rem;
-    border-bottom: 1.5px solid #e2e8f0;
-    padding-bottom: 12px;
-}
-
-.tab-nav-btn {
-    background: transparent;
-    border: none;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: #64748b;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 10px;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.tab-nav-btn:hover {
-    color: #0f172a;
-    background: #f1f5f9;
-}
-
-.tab-nav-btn.active {
-    color: #7c3aed;
-    background: #f5f3ff;
-    border: 1px solid #ddd6fe;
-}
-
 .program-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .program-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1200px) {
+    .program-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .program-card {
@@ -181,17 +159,16 @@
     border: 1px solid #e2e8f0;
     border-radius: 22px;
     padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
 }
 
 .program-card:hover {
+    border-color: #cbd5e1;
     transform: translateY(-3px);
-    border-color: #c4b5fd;
-    box-shadow: 0 12px 28px -6px rgba(124, 58, 237, 0.1);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.07);
 }
 
 .program-badge-row {
@@ -383,7 +360,7 @@
 }
 </style>
 
-<div class="vendor-wrap" x-data="{ tab: 'active' }">
+<div class="vendor-wrap">
     <div class="vendor-container">
 
         @php
@@ -460,166 +437,93 @@
             </div>
         </div>
 
-        <!-- TABS NAV -->
-        <div class="tabs-nav-modern">
-            <button class="tab-nav-btn" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
-                <span>Program Aktif</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-extrabold {{ $activeMasterCourses->count() > 0 ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700' }}">{{ $activeMasterCourses->count() }}</span>
-            </button>
-            <button class="tab-nav-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
-                <span>Draft / Arsip</span>
-                <span class="px-2 py-0.5 rounded-full text-xs font-extrabold bg-slate-200 text-slate-700">{{ $archivedMasterCourses->count() }}</span>
-            </button>
-        </div>
+        <!-- PROGRAM CARDS GRID (DIRECT CLEAN REPOSITORY VIEW) -->
+        <div class="program-cards-grid">
+            @forelse($masterCourses as $mc)
+                @php
+                    $latestBatch = $mc->courses->where('is_archived', false)->first() ?? $mc->courses->first();
+                    $mcStudentCount = $mc->courses->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
+                @endphp
+                <div class="program-card">
+                    <div class="program-badge-row">
+                        <span class="badge-category">{{ $mc->category->name ?? 'Sertifikasi Industri' }}</span>
+                        <span class="badge-batches-count">
+                            {{ $mc->courses->count() }} Angkatan Batch
+                        </span>
+                    </div>
 
-        <!-- TAB 1: ACTIVE PROGRAMS -->
-        <div x-show="tab === 'active'">
-            <div class="program-cards-grid">
-                @forelse($activeMasterCourses as $mc)
-                    @php
-                        $latestBatch = $mc->courses->where('is_archived', false)->first() ?? $mc->courses->first();
-                        $mcStudentCount = $mc->courses->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
-                    @endphp
-                    <div class="program-card">
-                        <div class="program-badge-row">
-                            <span class="badge-category">{{ $mc->category->name ?? 'Sertifikasi Industri' }}</span>
-                            <span class="badge-batches-count">
-                                {{ $mc->courses->count() }} Angkatan Batch
+                    <h3 class="program-name">{{ $mc->name }}</h3>
+
+                    <div class="program-meta-chips">
+                        <span class="meta-chip bg-slate-100 text-slate-700">
+                            Level: <strong>{{ $mc->level ?? 'Beginner' }}</strong>
+                        </span>
+                        @if($mc->code)
+                            <span class="meta-chip bg-slate-50 text-slate-500 border border-slate-200">
+                                {{ $mc->code }}
                             </span>
+                        @endif
+                    </div>
+
+                    <p class="program-desc">{{ $mc->description ?: 'Kurikulum sertifikasi terpusat dengan modul materi dan kuis terintegrasi blockchain.' }}</p>
+
+                    <!-- BATCHES CONTAINER -->
+                    <div class="batch-box-container">
+                        <div class="batch-box-header">
+                            <span class="batch-box-title">Angkatan Terdaftar:</span>
+                            <span class="text-[11px] font-bold text-purple-700">{{ $mc->courses->count() }} Batch</span>
                         </div>
-
-                        <h3 class="program-name">{{ $mc->name }}</h3>
-
-                        <div class="program-meta-chips">
-                            <span class="meta-chip bg-purple-50 text-purple-800 border border-purple-200">
-                                Threshold: <strong>{{ $mc->certificate_threshold ?? 75 }}%</strong>
-                            </span>
-                            <span class="meta-chip bg-slate-100 text-slate-700">
-                                Level: <strong>{{ $mc->level ?? 'Beginner' }}</strong>
-                            </span>
-                            @if($mc->code)
-                                <span class="meta-chip bg-slate-50 text-slate-500 border border-slate-200">
-                                    {{ $mc->code }}
-                                </span>
-                            @endif
-                        </div>
-
-                        <p class="program-desc">{{ $mc->description ?: 'Kurikulum sertifikasi terpusat dengan modul materi dan kuis terintegrasi blockchain.' }}</p>
-
-                        <!-- BATCHES CONTAINER -->
-                        <div class="batch-box-container">
-                            <div class="batch-box-header">
-                                <span class="batch-box-title">Angkatan Terdaftar:</span>
-                                <span class="text-[11px] font-bold text-purple-700">{{ $mc->courses->count() }} Batch</span>
-                            </div>
-                            <div class="batch-pills-list">
-                                @forelse($mc->courses as $batchItem)
-                                    <a href="{{ route('vendor.courses.show', $batchItem->id) }}" 
-                                       class="batch-pill-item {{ $batchItem->is_archived ? 'batch-pill-archived' : 'batch-pill-active' }}"
-                                       title="Buka {{ $batchItem->batch_name }}">
-                                        <span>{{ $batchItem->batch_name ?: 'Batch ' . $loop->iteration }}</span>
-                                        <span class="batch-pill-count">
-                                            {{ $batchItem->enrollments ? $batchItem->enrollments->count() : 0 }} Mhs
-                                        </span>
-                                    </a>
-                                @empty
-                                    <span class="text-xs text-slate-400">Belum ada angkatan batch dibuka</span>
-                                @endforelse
-                            </div>
-                        </div>
-
-                        <!-- METRICS -->
-                        <div class="metrics-strip">
-                            <div>
-                                <div class="metric-item-label">Materi</div>
-                                <div class="metric-item-val">{{ $mc->materials ? $mc->materials->count() : 0 }}</div>
-                            </div>
-                            <div>
-                                <div class="metric-item-label">Kuis</div>
-                                <div class="metric-item-val">{{ $mc->quizzes ? $mc->quizzes->count() : 0 }}</div>
-                            </div>
-                            <div>
-                                <div class="metric-item-label">Total Peserta</div>
-                                <div class="metric-item-val text-purple-700">{{ $mcStudentCount }}</div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: auto;">
-                            @if($latestBatch)
-                                <a href="{{ route('vendor.courses.show', $latestBatch->id) }}" class="btn-card-action">
-                                    Kelola Program & Angkatan →
+                        <div class="batch-pills-list">
+                            @forelse($mc->courses as $batchItem)
+                                <a href="{{ route('vendor.courses.show', $batchItem->id) }}" 
+                                   class="batch-pill-item {{ $batchItem->is_archived ? 'batch-pill-archived' : 'batch-pill-active' }}"
+                                   title="Buka {{ $batchItem->batch_name }}">
+                                    <span>{{ $batchItem->batch_name ?: 'Batch ' . $loop->iteration }}</span>
+                                    <span class="batch-pill-count">
+                                        {{ $batchItem->enrollments ? $batchItem->enrollments->count() : 0 }} Mhs
+                                    </span>
                                 </a>
-                            @else
-                                <a href="{{ route('vendor.courses.create') }}" class="btn-card-action">
-                                    + Buka Batch Perdana
-                                </a>
-                            @endif
+                            @empty
+                                <span class="text-xs text-slate-400">Belum ada angkatan batch dibuka</span>
+                            @endforelse
                         </div>
                     </div>
-                @empty
-                    <div class="empty-state-box">
-                        <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-3 text-2xl">📜</div>
-                        <h3 class="text-base font-extrabold text-slate-900">Belum Ada Program Sertifikasi Aktif</h3>
-                        <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Klik tombol "+ Buat Program Sertifikasi" di atas untuk menerbitkan silabus mandiri pertama Anda.</p>
-                    </div>
-                @endforelse
-            </div>
-        </div>
 
-        <!-- TAB 2: BANK / ARCHIVED PROGRAMS -->
-        <div x-show="tab === 'bank'" style="display: none;">
-            <div class="program-cards-grid">
-                @forelse($archivedMasterCourses as $mc)
-                    @php
-                        $latestBatch = $mc->courses->first();
-                        $mcStudentCount = $mc->courses->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
-                    @endphp
-                    <div class="program-card">
-                        <div class="program-badge-row">
-                            <span class="badge-category">{{ $mc->category->name ?? 'Draft Vendor' }}</span>
-                            <span class="badge-batches-count text-slate-500">Arsip / Draft</span>
+                    <!-- METRICS -->
+                    <div class="metrics-strip">
+                        <div>
+                            <div class="metric-item-label">Materi</div>
+                            <div class="metric-item-val">{{ $mc->materials ? $mc->materials->count() : 0 }}</div>
                         </div>
-
-                        <h3 class="program-name">{{ $mc->name }}</h3>
-
-                        <div class="program-meta-chips">
-                            <span class="meta-chip bg-slate-100 text-slate-600">
-                                Threshold: <strong>{{ $mc->certificate_threshold ?? 75 }}%</strong>
-                            </span>
+                        <div>
+                            <div class="metric-item-label">Kuis</div>
+                            <div class="metric-item-val">{{ $mc->quizzes ? $mc->quizzes->count() : 0 }}</div>
                         </div>
-
-                        <p class="program-desc">{{ $mc->description ?: 'Program sertifikasi industri diarsipkan / draft internal.' }}</p>
-
-                        <div class="metrics-strip">
-                            <div>
-                                <div class="metric-item-label">Materi</div>
-                                <div class="metric-item-val">{{ $mc->materials ? $mc->materials->count() : 0 }}</div>
-                            </div>
-                            <div>
-                                <div class="metric-item-label">Kuis</div>
-                                <div class="metric-item-val">{{ $mc->quizzes ? $mc->quizzes->count() : 0 }}</div>
-                            </div>
-                            <div>
-                                <div class="metric-item-label">Total Peserta</div>
-                                <div class="metric-item-val">{{ $mcStudentCount }}</div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: auto;">
-                            @if($latestBatch)
-                                <a href="{{ route('vendor.courses.show', $latestBatch->id) }}" class="btn-card-action">
-                                    Pratinjau & Buka Batch →
-                                </a>
-                            @endif
+                        <div>
+                            <div class="metric-item-label">Total Peserta</div>
+                            <div class="metric-item-val text-purple-700">{{ $mcStudentCount }}</div>
                         </div>
                     </div>
-                @empty
-                    <div class="empty-state-box">
-                        <h3 class="text-base font-extrabold text-slate-900">Belum Ada Program Draft di Bank</h3>
-                        <p class="text-xs text-slate-500 mt-1">Seluruh program yang diarsipkan akan tersimpan di sini.</p>
+
+                    <div style="margin-top: auto;">
+                        @if($latestBatch)
+                            <a href="{{ route('vendor.courses.show', $latestBatch->id) }}" class="btn-card-action">
+                                Kelola Program & Angkatan →
+                            </a>
+                        @else
+                            <a href="{{ route('vendor.courses.create') }}" class="btn-card-action">
+                                + Buka Batch Perdana
+                            </a>
+                        @endif
                     </div>
-                @endforelse
-            </div>
+                </div>
+            @empty
+                <div class="empty-state-box">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-3 text-2xl">📜</div>
+                    <h3 class="text-base font-extrabold text-slate-900">Belum Ada Program Sertifikasi</h3>
+                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Klik tombol "+ Buat Program Sertifikasi" di atas untuk menerbitkan kurikulum mandiri pertama Anda.</p>
+                </div>
+            @endforelse
         </div>
 
     </div>
