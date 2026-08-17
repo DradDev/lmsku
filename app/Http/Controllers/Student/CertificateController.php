@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\Project;
+use App\Models\ProjectParticipation;
 use App\Models\QuizAttempt;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Response;
@@ -21,8 +22,18 @@ class CertificateController extends Controller
     {
         $student = Auth::user();
 
-        // 3NF Offerings where student is enrolled
-        $enrollments = Enrollment::with(['courseOffering.masterCourse.quizzes.questions', 'courseOffering.lecturer', 'course.quizzes.questions', 'course.user'])
+        // 1. Ambil Seluruh Kursus Mahasiswa (3NF CourseOfferings & Legacy Course)
+        $enrollments = Enrollment::with([
+            'courseOffering.masterCourse.quizzes.questions',
+            'courseOffering.masterCourse.skills',
+            'courseOffering.masterCourse.category',
+            'courseOffering.lecturer.institution',
+            'courseOffering.academicTerm',
+            'course.quizzes.questions',
+            'course.skills',
+            'course.user.institution',
+            'course.category',
+        ])
             ->where('user_id', $student->id)
             ->latest()
             ->get();
@@ -39,8 +50,33 @@ class CertificateController extends Controller
             $item->can_get_certificate = false;
             $item->certificate_status_text = 'Certificate belum tersedia karena final quiz belum ditentukan.';
             $item->verified_final_attempt = null;
-            $item->final_quiz = $courseObj->quizzes->firstWhere('quiz_type', 'final');
-            $item->credential_code = 'CERT-CRS-' . date('Ym') . '-' . sprintf('%04d', $item->id) . '-' . sprintf('%04d', $student->id);
+
+            $quizzes = $courseObj->quizzes ?? collect();
+            if ($quizzes->isEmpty() && isset($courseObj->masterCourse)) {
+                $quizzes = $courseObj->masterCourse->quizzes ?? collect();
+            }
+
+            $item->final_quiz = $quizzes->firstWhere('quiz_type', 'final');
+
+            $certificateRecord = Certificate::where('user_id', $student->id)
+                ->where(function ($q) use ($enrollment, $item) {
+                    if ($enrollment->course_offering_id) {
+                        $q->where('course_offering_id', $enrollment->course_offering_id);
+                    } else {
+                        $q->where('course_id', $item->id);
+                    }
+                })
+                ->first();
+
+            $item->certificate_record = $certificateRecord;
+
+            $tempCert = new Certificate([
+                'user_id' => $student->id,
+                'course_offering_id' => $enrollment->course_offering_id,
+                'course_id' => $enrollment->course_id,
+                'completed_at' => $enrollment->updated_at ?? now(),
+            ]);
+            $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
 
             if ($item->final_quiz) {
                 $approvedQuestions = $item->final_quiz->questions->where('status', 'approved');
@@ -56,18 +92,7 @@ class CertificateController extends Controller
                     ->orderByDesc('score')
                     ->first();
 
-                $certificateRecord = Certificate::where('user_id', $student->id)
-                    ->where(function ($q) use ($enrollment, $item) {
-                        if ($enrollment->course_offering_id) {
-                            $q->where('course_offering_id', $enrollment->course_offering_id);
-                        } else {
-                            $q->where('course_id', $item->id);
-                        }
-                    })
-                    ->first();
-
                 $item->verified_final_attempt = $verifiedAttempt;
-                $item->certificate_record = $certificateRecord;
 
                 $threshold = $offering?->certificate_threshold 
                     ?? $offering?->masterCourse?->certificate_threshold 
@@ -82,31 +107,73 @@ class CertificateController extends Controller
                 } elseif ($certificateRecord && $certificateRecord->status === 'pending') {
                     $item->certificate_status_text = 'Sertifikat sedang dalam proses verifikasi oleh Admin.';
                 } elseif (! $verifiedAttempt) {
-                    $item->certificate_status_text = 'Kerjakan final quiz dan capai nilai minimal ' . $threshold . '.';
+                    $item->certificate_status_text = 'Kerjakan final quiz dan capai nilai minimal ' . $threshold . '%.';
                 } elseif ($verifiedAttempt->score < $threshold) {
-                    $item->certificate_status_text = 'Nilai final quiz minimal ' . $threshold . ' untuk membuka certificate (Nilai Anda: ' . $verifiedAttempt->score . ').';
+                    $item->certificate_status_text = 'Nilai final quiz minimal ' . $threshold . '% untuk membuka certificate (Nilai Anda: ' . $verifiedAttempt->score . ').';
                 } else {
-                    $item->certificate_status_text = 'Sertifikat sedang disiapkan untuk verifikasi Admin.';
+                    $item->can_get_certificate = true;
+                    $item->certificate_status_text = 'Sertifikat lulus evaluasi dan siap diunduh.';
                 }
             }
 
             $courses->push($item);
         }
 
-        // Fetch Joined Accepted Projects for Project Certificates
-        $projects = $student->joinedProjects()
-            ->with(['user', 'skills'])
-            ->wherePivot('status', 'accepted')
-            ->latest()
+        // 2. Ambil Seluruh Proyek yang Diikuti Mahasiswa (Internal Dosen & Eksternal Vendor)
+        $participations = ProjectParticipation::with([
+            'project.creator.institution',
+            'project.user.institution',
+            'project.skills',
+            'project.category',
+            'project.tags',
+        ])
+            ->where('user_id', $student->id)
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
+            ->latest('updated_at')
             ->get();
 
-        foreach ($projects as $project) {
-            $cert = Certificate::where('user_id', $student->id)->where('project_id', $project->id)->first();
-            $project->credential_code = $cert?->credential_code ?? (new Certificate([
+        $projects = collect();
+
+        foreach ($participations as $part) {
+            $prj = $part->project;
+            if (!$prj) continue;
+
+            $item = clone $prj;
+            $item->participation = $part;
+
+            $certificateRecord = Certificate::where('user_id', $student->id)
+                ->where('project_id', $prj->id)
+                ->first();
+
+            $item->certificate_record = $certificateRecord;
+
+            $tempCert = new Certificate([
                 'user_id' => $student->id,
-                'project_id' => $project->id,
-                'completed_at' => $project->created_at ?? now(),
-            ]))->generateCredentialCode();
+                'project_id' => $prj->id,
+                'completed_at' => $part->completed_at ?? $part->updated_at ?? now(),
+            ]);
+            $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
+
+            // Cek kelayakan sertifikat proyek
+            $isCompleted = ($part->status === 'completed') || ($part->progress_percent >= 100);
+            $isVerified = ($certificateRecord && $certificateRecord->status === 'verified');
+            $isPending = ($certificateRecord && $certificateRecord->status === 'pending');
+
+            if ($isCompleted || $isVerified) {
+                $item->can_get_certificate = true;
+                $item->certificate_status_text = 'Sertifikat Project sudah selesai diverifikasi dan siap diunduh.';
+                $item->status_badge = 'Verified';
+            } elseif ($isPending || $part->status === 'review') {
+                $item->can_get_certificate = false;
+                $item->certificate_status_text = 'Proyek sedang dalam tahap evaluasi/review akhir oleh Pembimbing.';
+                $item->status_badge = 'Review';
+            } else {
+                $item->can_get_certificate = false;
+                $item->certificate_status_text = 'Progres pengerjaan ' . ($part->progress_percent ?? 0) . '%. Selesaikan proyek hingga 100% untuk membuka sertifikat.';
+                $item->status_badge = 'In Progress';
+            }
+
+            $projects->push($item);
         }
 
         return view('student.certificates.index', compact('courses', 'projects'));
@@ -171,54 +238,56 @@ class CertificateController extends Controller
     {
         $student = Auth::user();
 
-        $isJoined = DB::table('project_participations')
-            ->where('user_id', $student->id)
+        $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
-            ->where('status', 'accepted')
-            ->exists();
-
-        abort_unless($isJoined, 403, 'Kamu belum diterima atau tidak terdaftar di project ini.');
-
-        $project->load(['creator.institution', 'skills']);
+            ->first();
 
         $certificateRecord = Certificate::where('user_id', $student->id)
             ->where('project_id', $project->id)
             ->first();
 
+        $isEligible = ($participation && ($participation->status === 'completed' || $participation->progress_percent >= 100))
+            || ($certificateRecord && $certificateRecord->status === 'verified');
+
+        abort_unless($isEligible, 403, 'Sertifikat project belum dapat diakses. Selesaikan seluruh tugas proyek hingga 100% terlebih dahulu.');
+
+        $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
+
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
             'project_id' => $project->id,
-            'completed_at' => $project->created_at ?? now(),
+            'completed_at' => $participation?->completed_at ?? $project->created_at ?? now(),
         ]))->generateCredentialCode();
 
-        return view('student.certificate_project', compact('project', 'student', 'credentialCode'));
+        return view('student.certificate_project', compact('project', 'student', 'credentialCode', 'participation', 'certificateRecord'));
     }
 
     public function downloadProject(Project $project): Response
     {
         $student = Auth::user();
 
-        $isJoined = DB::table('project_participations')
-            ->where('user_id', $student->id)
+        $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
-            ->where('status', 'accepted')
-            ->exists();
-
-        abort_unless($isJoined, 403, 'Kamu belum diterima atau tidak terdaftar di project ini.');
-
-        $project->load(['creator.institution', 'skills']);
+            ->first();
 
         $certificateRecord = Certificate::where('user_id', $student->id)
             ->where('project_id', $project->id)
             ->first();
 
+        $isEligible = ($participation && ($participation->status === 'completed' || $participation->progress_percent >= 100))
+            || ($certificateRecord && $certificateRecord->status === 'verified');
+
+        abort_unless($isEligible, 403, 'Sertifikat project belum dapat diakses. Selesaikan seluruh tugas proyek hingga 100% terlebih dahulu.');
+
+        $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
+
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
             'project_id' => $project->id,
-            'completed_at' => $project->created_at ?? now(),
+            'completed_at' => $participation?->completed_at ?? $project->created_at ?? now(),
         ]))->generateCredentialCode();
 
-        $pdf = Pdf::loadView('student.certificate_project_pdf', compact('project', 'student', 'credentialCode'))
+        $pdf = Pdf::loadView('student.certificate_project_pdf', compact('project', 'student', 'credentialCode', 'participation', 'certificateRecord'))
             ->setPaper('a4', 'landscape');
 
         $filename = 'certificate-project-' . $project->id . '-' . $student->id . '.pdf';
@@ -248,12 +317,17 @@ class CertificateController extends Controller
 
         $course->load(['quizzes.questions']);
         if ($isOffering) {
-            $course->load('lecturer');
+            $course->load(['lecturer.institution', 'masterCourse']);
         } else {
-            $course->load('user');
+            $course->load(['user.institution']);
         }
 
-        $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
+        $quizzes = $course->quizzes ?? collect();
+        if ($quizzes->isEmpty() && isset($course->masterCourse)) {
+            $quizzes = $course->masterCourse->quizzes ?? collect();
+        }
+
+        $finalQuiz = $quizzes->firstWhere('quiz_type', 'final');
 
         abort_if(!$finalQuiz, 403, 'Certificate belum tersedia karena final quiz belum ditentukan.');
 
@@ -266,10 +340,10 @@ class CertificateController extends Controller
             ->orderByDesc('score')
             ->first();
 
-        $threshold = $course->certificate_threshold ?? 60;
+        $threshold = $course->certificate_threshold ?? ($course->masterCourse?->certificate_threshold ?? 60);
 
         abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
-        abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '.');
+        abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '%.');
 
         $certificateRecord = Certificate::where('user_id', $student->id)
             ->where(function ($q) use ($isOffering, $course) {
