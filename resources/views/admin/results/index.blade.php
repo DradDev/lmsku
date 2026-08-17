@@ -22,25 +22,20 @@
             @endif
 
             {{-- STATS CARDS --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Results</p>
                     <p class="mt-3 text-3xl font-bold text-slate-900">{{ $totalResults }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
+                <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-xs">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Verified</p>
                     <p class="mt-3 text-3xl font-bold text-emerald-600">{{ $verifiedCount }}</p>
                 </div>
 
-                <div class="rounded-2xl border border-amber-200 bg-white p-5 shadow-sm">
+                <div class="rounded-2xl border border-amber-200 bg-white p-5 shadow-xs">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending</p>
                     <p class="mt-3 text-3xl font-bold text-amber-500">{{ $pendingCount }}</p>
-                </div>
-
-                <div class="rounded-2xl border border-indigo-200 bg-white p-5 shadow-sm">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Average Score</p>
-                    <p class="mt-3 text-3xl font-bold text-indigo-600">{{ $activeTab === 'project' ? '100.00' : $averageScore }}</p>
                 </div>
             </div>
 

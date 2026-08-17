@@ -362,8 +362,7 @@ Route::middleware(['auth', 'role:admin'])
             ->name('academic-terms.toggle-active');
 
         // Course Offerings
-        Route::resource('course-offerings', AdminCourseOfferingController::class)
-            ->except(['show']);
+        Route::resource('course-offerings', AdminCourseOfferingController::class);
 
         // Projects Audit & Emergency Moderation
         Route::post('/projects/{project}/toggle-publish', [AdminProjectController::class, 'togglePublish'])

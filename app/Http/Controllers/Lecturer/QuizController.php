@@ -16,8 +16,13 @@ class QuizController extends Controller
     public function store(Request $request, $course): RedirectResponse
     {
         $courseObj = is_numeric($course)
-            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            ? (\App\Models\CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
             : $course;
+
+        if ($courseObj instanceof \App\Models\CourseOffering && $courseObj->academicTerm && !$courseObj->academicTerm->is_active) {
+            return redirect()->back()
+                ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Pembuatan kuis ditolak (Read-Only).');
+        }
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -114,12 +119,17 @@ class QuizController extends Controller
     public function update(Request $request, $course, Quiz $quiz): RedirectResponse
     {
         $courseObj = is_numeric($course)
-            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            ? (\App\Models\CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
             : $course;
 
         $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
         if ($lecturerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Kamu tidak memiliki akses ke course ini.');
+        }
+
+        if ($courseObj instanceof \App\Models\CourseOffering && $courseObj->academicTerm && !$courseObj->academicTerm->is_active) {
+            return redirect()->back()
+                ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Perubahan kuis ditolak (Read-Only).');
         }
 
         $validated = $request->validate([
@@ -192,11 +202,16 @@ class QuizController extends Controller
     public function destroy($course, Quiz $quiz): RedirectResponse
     {
         $courseObj = is_numeric($course)
-            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            ? (\App\Models\CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
             : $course;
 
         $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
         abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Kamu tidak memiliki akses ke course ini.');
+
+        if ($courseObj instanceof \App\Models\CourseOffering && $courseObj->academicTerm && !$courseObj->academicTerm->is_active) {
+            return redirect()->back()
+                ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penghapusan kuis ditolak (Read-Only).');
+        }
 
         \App\Models\OfferingQuiz::where('quiz_id', $quiz->id)->delete();
         $quiz->delete();

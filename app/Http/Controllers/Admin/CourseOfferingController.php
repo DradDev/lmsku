@@ -80,6 +80,18 @@ class CourseOfferingController extends Controller
             ->with('success', 'Kelas penawaran berhasil dibuka.');
     }
 
+    public function show(CourseOffering $courseOffering): View
+    {
+        $courseOffering->load([
+            'masterCourse.category',
+            'academicTerm',
+            'lecturer',
+            'enrollments.user',
+        ]);
+
+        return view('admin.course-offerings.show', compact('courseOffering'));
+    }
+
     public function edit(CourseOffering $courseOffering): View
     {
         $masterCourses = MasterCourse::orderBy('name')->get();

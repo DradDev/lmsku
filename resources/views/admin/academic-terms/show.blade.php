@@ -258,6 +258,12 @@
 
                                                     <td class="px-5 py-3.5 text-right">
                                                         <div class="flex items-center justify-end gap-1.5">
+                                                            <a href="{{ route('admin.course-offerings.show', $off->id) }}"
+                                                               class="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] rounded-lg transition border border-blue-200"
+                                                               title="Lihat riwayat mahasiswa terdaftar">
+                                                                Peserta ({{ $enrolledCount }})
+                                                            </a>
+
                                                             <button type="button" 
                                                                     @click="editOfferingData = {
                                                                         id: {{ $off->id }},

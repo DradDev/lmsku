@@ -45,6 +45,10 @@ if (!$offering) {
         'section_name' => 'Kelas Test Schedule',
     ]);
 }
+if ($offering->academicTerm) {
+    $offering->academicTerm->update(['is_active' => true]);
+}
+$offering->update(['status' => 'published']);
 
 $quiz = Quiz::create([
     'master_course_id' => $offering->master_course_id,
