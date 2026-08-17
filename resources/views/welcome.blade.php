@@ -571,36 +571,12 @@
       Official Computer Engineering platform for competency courses, evaluation quizzes, real-world industry projects, and verified digital credentials.
     </p>
 
-    <!-- Interactive Blockchain Validator Card on Hero -->
-    <div style="position: relative; width: 100%; max-width: 780px; margin-bottom: 36px; z-index: 10;">
-      <div style="background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; padding: 20px 24px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); text-align: left;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #EFF6FF; border-radius: 8px; color: #2563EB;">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 8v8"/><path d="M8 10.5l4 2.5 4-2.5"/></svg>
-            </span>
-            <span style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 14px; color: #0F172A;">
-              Cek & Validasi Hash Blockchain Sertifikat
-            </span>
-          </div>
-          <span style="font-size: 11px; font-weight: 700; color: #059669; background: #ECFDF5; padding: 3px 10px; border-radius: 100px; border: 1px solid #A7F3D0;">
-            ✓ Public Ledger Verification
-          </span>
-        </div>
-
-        <form action="{{ route('blockchain.verify.check') }}" method="POST" style="display: flex; gap: 10px; flex-wrap: wrap;">
-          @csrf
-          <input type="text" name="hash" required placeholder="Masukkan Hash Blockchain (0x...), Credential ID, atau TxID..." style="flex: 1; min-width: 260px; padding: 12px 16px; border: 1.5px solid #CBD5E1; border-radius: 10px; font-size: 13px; font-family: monospace; outline: none; background: #F8FAFC; color: #0F172A;">
-          <button type="submit" style="padding: 12px 24px; background: #2563EB; color: white; border: none; border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background .15s; white-space: nowrap;">
-            <span>🔍 Validasi Sekarang</span>
-          </button>
-        </form>
-      </div>
-    </div>
-
-    <div class="hero-cta" style="margin-bottom: 30px;">
+    <div class="hero-cta">
       <a href="{{ route('login') }}" class="btn-hero-primary">Start Learning Now</a>
-      <a href="{{ route('blockchain.verify.index') }}" class="btn-hero-ghost">Public Verification Tool</a>
+      <a href="{{ route('blockchain.verify.index') }}" class="btn-hero-ghost" style="display: inline-flex; align-items: center; gap: 8px;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 8v8"/><path d="M8 10.5l4 2.5 4-2.5"/></svg>
+        Validasi Certificate
+      </a>
     </div>
     <div class="hero-checklist">
       <span class="check-item"><span class="check-dot"></span>Personalized skill pathways</span>

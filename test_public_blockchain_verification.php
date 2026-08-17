@@ -104,9 +104,9 @@ echo "   [OK] Tampered / Fake hash correctly rejected: '{$data6['message']}'\n\n
 // 8. Test Welcome Page View Rendering
 echo "8. Testing Welcome Landing Page View Rendering...\n";
 $welcomeHtml = view('welcome')->render();
-assert(str_contains($welcomeHtml, 'Cek & Validasi Hash Blockchain Sertifikat'), "Welcome page must contain blockchain verification form");
+assert(str_contains($welcomeHtml, 'Validasi Certificate'), "Welcome page must contain Validasi Certificate link");
 assert(str_contains($welcomeHtml, 'Mitra Industri / Vendor'), "Welcome page must contain Vendor portal card");
 assert(str_contains($welcomeHtml, 'Administrator LP3M'), "Welcome page must contain Admin portal card");
-echo "   [OK] Welcome landing page renders interactive validator and all portal cards!\n\n";
+echo "   [OK] Welcome landing page renders Validasi Certificate link and all portal cards!\n\n";
 
 echo "=== ALL PUBLIC BLOCKCHAIN VERIFICATION TESTS PASSED 100%! ===\n";
