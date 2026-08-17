@@ -341,21 +341,34 @@
                                             <span class="inline-flex items-center rounded-full border {{ $quiz->quiz_type_badge_class }} px-3 py-1 text-xs font-semibold">
                                                 {{ $quiz->quiz_type_label }}
                                             </span>
+
+                                            @if($quiz->start_date && now()->lt($quiz->start_date))
+                                                <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 text-amber-800 px-2.5 py-0.5 text-[11px] font-bold">
+                                                    Terjadwal (Belum Dibuka)
+                                                </span>
+                                            @elseif($quiz->end_date && now()->gt($quiz->end_date))
+                                                <span class="inline-flex items-center rounded-full border border-slate-300 bg-slate-200 text-slate-700 px-2.5 py-0.5 text-[11px] font-bold">
+                                                    Ditutup (Expired)
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-800 px-2.5 py-0.5 text-[11px] font-bold">
+                                                    Aktif & Terbuka
+                                                </span>
+                                            @endif
                                         </div>
 
-                                        <p class="mt-2 text-sm text-slate-500">
-                                            Time Limit:
-                                            <span class="text-slate-700">
-                                                {{ $quiz->time_limit ? $quiz->time_limit . ' minutes' : 'No limit' }}
-                                            </span>
-                                        </p>
-
-                                        <p class="mt-1 text-sm text-slate-500">
-                                            Attempts Allowed:
-                                            <span class="text-slate-700">
-                                                {{ $quiz->max_attempts }}
-                                            </span>
-                                        </p>
+                                        <div class="mt-2 space-y-1 text-xs text-slate-600">
+                                            <p>
+                                                Durasi: <span class="font-bold text-slate-800">{{ $quiz->time_limit ? $quiz->time_limit . ' Menit' : 'Tanpa Batas Durasi' }}</span>
+                                                &bull; Percobaan: <span class="font-bold text-slate-800">{{ $quiz->max_attempts === 0 ? 'Unlimited' : $quiz->max_attempts . 'x' }}</span>
+                                            </p>
+                                            <p>
+                                                Mulai Dibuka: <span class="font-semibold text-slate-800">{{ $quiz->start_date ? $quiz->start_date->format('d M Y, H:i') : 'Langsung Dibuka' }}</span>
+                                            </p>
+                                            <p>
+                                                Batas Deadline: <span class="font-semibold {{ $quiz->end_date && now()->gt($quiz->end_date) ? 'text-rose-600 font-bold' : 'text-slate-800' }}">{{ $quiz->end_date ? $quiz->end_date->format('d M Y, H:i') : 'Tidak Ada Batas Waktu' }}</span>
+                                            </p>
+                                        </div>
 
                                         @if ($quiz->isFinal())
                                         <p class="mt-2 text-xs font-extrabold text-emerald-700 flex items-center gap-1">
@@ -365,17 +378,17 @@
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
-                                        <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-700 px-3.5 py-2 text-xs font-semibold hover:bg-amber-100 transition">
+                                        <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-2 text-xs font-bold hover:bg-amber-100 transition shadow-xs">
                                             Waktu & Durasi
                                         </button>
 
                                         <a href="{{ route('lecturer.courses.quizzes.results.index', [$course->id, $quiz->id]) }}"
-                                            class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700">
+                                            class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-indigo-700 shadow-xs">
                                             Lihat Hasil
                                         </a>
 
                                         <a href="{{ route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id]) }}"
-                                            class="rounded-xl bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-700">
+                                            class="rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700 shadow-xs">
                                             + Kelola Soal ({{ $quiz->questions_count ?? $quiz->questions()->count() }})
                                         </a>
                                         <form method="POST"
@@ -385,7 +398,7 @@
                                             @method('DELETE')
 
                                             <button type="submit"
-                                                class="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">
+                                                class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700 shadow-xs">
                                                 Hapus
                                             </button>
                                         </form>
@@ -393,38 +406,44 @@
                                 </div>
 
                                 <div id="edit-quiz-form-{{ $quiz->id }}" class="hidden mt-4 pt-4 border-t border-slate-200">
-                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-amber-50/40 p-4 rounded-xl border border-amber-200">
                                         @csrf
                                         @method('PUT')
 
                                         <div>
                                             <label class="block font-bold text-slate-700 mb-1">Judul Quiz</label>
-                                            <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
+                                            <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold" required>
                                         </div>
 
                                         <div>
                                             <label class="block font-bold text-slate-700 mb-1">Durasi (Menit)</label>
-                                            <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tidak ada batas" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                            <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tanpa batas durasi" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
                                         </div>
 
                                         <div>
-                                            <label class="block font-bold text-slate-700 mb-1">Max Attempts</label>
-                                            <input type="number" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="1" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs" required>
+                                            <label class="block font-bold text-slate-700 mb-1">Max Attempts (Percobaan)</label>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" id="edit_max_attempts_{{ $quiz->id }}" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
+                                                <label class="inline-flex items-center gap-1.5 px-2.5 py-2 bg-white border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
+                                                    <input type="checkbox" name="is_unlimited" value="1" @checked($quiz->max_attempts === 0) onchange="document.getElementById('edit_max_attempts_{{ $quiz->id }}').disabled = this.checked; if(this.checked){ document.getElementById('edit_max_attempts_{{ $quiz->id }}').value = 0; }" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                                    <span class="text-[11px] font-bold text-slate-700">Unlimited</span>
+                                                </label>
+                                            </div>
                                         </div>
 
                                         <div>
-                                            <label class="block font-bold text-slate-700 mb-1">Start Date</label>
-                                            <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                            <label class="block font-bold text-slate-700 mb-1">Tanggal & Waktu Mulai (Start Date)</label>
+                                            <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
                                         </div>
 
                                         <div class="md:col-span-2">
-                                            <label class="block font-bold text-slate-700 mb-1">End Date / Deadline</label>
-                                            <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs">
+                                            <label class="block font-bold text-slate-700 mb-1">Batas Akhir / Deadline (End Date)</label>
+                                            <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
                                         </div>
 
-                                        <div class="md:col-span-2 flex justify-end gap-2 pt-2">
-                                            <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg">Batal</button>
-                                            <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
+                                        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-amber-200">
+                                            <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg">Batal</button>
+                                            <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
                                         </div>
                                     </form>
                                 </div>

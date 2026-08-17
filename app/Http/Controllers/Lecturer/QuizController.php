@@ -57,8 +57,8 @@ class QuizController extends Controller
             'time_limit' => $validated['time_limit'] ?? null,
             'quiz_type' => $validated['quiz_type'],
             'max_attempts' => $maxAttemptsValue,
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
+            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
+            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
         ]);
 
         // Sinkronkan ke offering_quizzes berdasarkan target scope
@@ -111,35 +111,55 @@ class QuizController extends Controller
             ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat {$scopeLabel}! Silakan buat soal-soal untuk quiz ini.");
     }
 
-    public function update(Request $request, Course $course, Quiz $quiz): RedirectResponse
+    public function update(Request $request, $course, Quiz $quiz): RedirectResponse
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
-        abort_unless($quiz->course_id === $course->id, 403, 'Quiz tidak valid.');
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            : $course;
+
+        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
+        if ($lecturerId !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403, 'Kamu tidak memiliki akses ke course ini.');
+        }
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'time_limit' => ['nullable', 'integer', 'min:1'],
-            'max_attempts' => ['required', 'integer', 'min:1', 'max:100'],
+            'max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'is_unlimited' => ['nullable', 'boolean'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
+        $isUnlimited = $request->boolean('is_unlimited');
+        $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
+
         $quiz->update([
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
-            'max_attempts' => $validated['max_attempts'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
+            'max_attempts' => $maxAttemptsValue,
+            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
+            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
+        ]);
+
+        // Update offering_quizzes jika ada
+        \App\Models\OfferingQuiz::where('quiz_id', $quiz->id)->update([
+            'start_date' => $quiz->start_date,
+            'end_date' => $quiz->end_date,
+            'time_limit' => $quiz->time_limit,
+            'max_attempts' => $quiz->max_attempts,
         ]);
 
         return redirect()
             ->back()
-            ->with('success', "Waktu dan pengaturan Quiz '{$quiz->title}' berhasil diperbarui!");
+            ->with('success', "Waktu rilis dan deadline Kuis '{$quiz->title}' berhasil diperbarui!");
     }
 
     public function approveRetake(QuizRetakeRequest $retakeRequest): RedirectResponse
     {
-        abort_unless($retakeRequest->course->user_id === Auth::id(), 403, 'Akses ditolak.');
+        $courseObj = $retakeRequest->course;
+        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
+        abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
 
         $retakeRequest->update([
             'status' => 'approved',
@@ -154,7 +174,9 @@ class QuizController extends Controller
 
     public function rejectRetake(QuizRetakeRequest $retakeRequest): RedirectResponse
     {
-        abort_unless($retakeRequest->course->user_id === Auth::id(), 403, 'Akses ditolak.');
+        $courseObj = $retakeRequest->course;
+        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
+        abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
 
         $retakeRequest->update([
             'status' => 'rejected',
@@ -167,11 +189,16 @@ class QuizController extends Controller
             ->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' ditolak.");
     }
 
-    public function destroy(Course $course, Quiz $quiz): RedirectResponse
+    public function destroy($course, Quiz $quiz): RedirectResponse
     {
-        abort_unless($course->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke course ini.');
-        abort_unless($quiz->course_id === $course->id, 403, 'Quiz tidak valid.');
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            : $course;
 
+        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
+        abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Kamu tidak memiliki akses ke course ini.');
+
+        \App\Models\OfferingQuiz::where('quiz_id', $quiz->id)->delete();
         $quiz->delete();
 
         return redirect()

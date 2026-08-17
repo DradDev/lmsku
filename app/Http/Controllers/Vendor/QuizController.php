@@ -13,9 +13,11 @@ use Illuminate\View\View;
 
 class QuizController extends Controller
 {
-    public function store(Request $request, Course $course): RedirectResponse
+    public function store(Request $request, $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        $courseObj = is_numeric($course) ? Course::findOrFail($course) : $course;
+
+        if ($courseObj->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -23,49 +25,58 @@ class QuizController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'quiz_type' => ['required', 'in:daily,weekly,final'],
             'time_limit' => ['nullable', 'integer', 'min:1'],
-            'max_attempts' => ['nullable', 'integer', 'min:0'],
+            'max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
             'is_unlimited' => ['nullable', 'boolean'],
             'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
 
-        if ($request->boolean('is_unlimited')) {
-            $validated['max_attempts'] = 0;
-        } elseif (empty($validated['max_attempts'])) {
-            $validated['max_attempts'] = 1;
-        }
+        $isUnlimited = $request->boolean('is_unlimited');
+        $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
-        unset($validated['is_unlimited']);
-        $validated['course_id'] = $course->id;
-
-        $quiz = Quiz::create($validated);
+        $quiz = Quiz::create([
+            'course_id' => $courseObj->id,
+            'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
+            'title' => $validated['title'],
+            'quiz_type' => $validated['quiz_type'],
+            'time_limit' => $validated['time_limit'] ?? null,
+            'max_attempts' => $maxAttemptsValue,
+            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
+            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
+        ]);
 
         return back()->with('success', "Kuis '{$quiz->title}' berhasil dibuat. Silakan tambahkan soal evaluasi.");
     }
 
-    public function update(Request $request, Course $course, Quiz $quiz): RedirectResponse
+    public function update(Request $request, $course, Quiz $quiz): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        $courseObj = is_numeric($course) ? Course::findOrFail($course) : $course;
+
+        if ($courseObj->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course ini.');
         }
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'time_limit' => ['nullable', 'integer', 'min:1'],
-            'max_attempts' => ['required', 'integer', 'min:1', 'max:100'],
+            'max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'is_unlimited' => ['nullable', 'boolean'],
             'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
         ]);
+
+        $isUnlimited = $request->boolean('is_unlimited');
+        $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
         $quiz->update([
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
-            'max_attempts' => $validated['max_attempts'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
+            'max_attempts' => $maxAttemptsValue,
+            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
+            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
         ]);
 
-        return back()->with('success', "Waktu dan pengaturan Kuis '{$quiz->title}' berhasil diperbarui!");
+        return back()->with('success', "Waktu rilis dan deadline Kuis '{$quiz->title}' berhasil diperbarui!");
     }
 
     public function show(Quiz $quiz): View
