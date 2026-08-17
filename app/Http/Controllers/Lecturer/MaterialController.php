@@ -50,10 +50,29 @@ class MaterialController extends Controller
         abort(403, 'Kamu tidak memiliki akses ke materi ini.');
     }
 
+    private function checkTermActive(?Material $material = null, $courseObj = null): void
+    {
+        if ($courseObj instanceof CourseOffering) {
+            $term = $courseObj->academicTerm;
+            if ($term && !$term->is_active) {
+                abort(403, 'Semester untuk kelas ini telah non-aktif / ditutup. Modifikasi materi tidak diizinkan.');
+            }
+        }
+        if ($material) {
+            $offeringId = $material->course_offering_id ?? $material->course_id;
+            if ($offeringId) {
+                $offering = CourseOffering::with('academicTerm')->find($offeringId);
+                if ($offering && $offering->academicTerm && !$offering->academicTerm->is_active) {
+                    abort(403, 'Semester untuk kelas ini telah non-aktif / ditutup. Modifikasi materi tidak diizinkan.');
+                }
+            }
+        }
+    }
+
     public function create($course)
     {
         $courseObj = is_numeric($course)
-            ? (CourseOffering::find($course) ?? Course::findOrFail($course))
+            ? (CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
             : $course;
 
         $lecturerId = Auth::id();
@@ -61,6 +80,10 @@ class MaterialController extends Controller
 
         if ($courseObj instanceof CourseOffering) {
             $isLecturer = (int)$courseObj->lecturer_id === (int)$lecturerId;
+            if ($courseObj->academicTerm && !$courseObj->academicTerm->is_active) {
+                return redirect()->route('lecturer.courses.show', $courseObj->id)
+                    ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan materi dikunci (Read-Only).');
+            }
         } else {
             $isLecturer = (int)$courseObj->user_id === (int)$lecturerId;
         }
@@ -73,7 +96,7 @@ class MaterialController extends Controller
     public function store(Request $request, $course)
     {
         $courseObj = is_numeric($course)
-            ? (CourseOffering::find($course) ?? Course::findOrFail($course))
+            ? (CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
             : $course;
 
         $lecturerId = Auth::id();
@@ -81,6 +104,10 @@ class MaterialController extends Controller
 
         if ($courseObj instanceof CourseOffering) {
             $isLecturer = (int)$courseObj->lecturer_id === (int)$lecturerId;
+            if ($courseObj->academicTerm && !$courseObj->academicTerm->is_active) {
+                return redirect()->back()
+                    ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan materi ditolak.');
+            }
         } else {
             $isLecturer = (int)$courseObj->user_id === (int)$lecturerId;
         }
@@ -128,6 +155,7 @@ class MaterialController extends Controller
     public function edit(Material $material)
     {
         $this->authorizeLecturer($material);
+        $this->checkTermActive($material);
 
         return view('lecturer.materials.edit', compact('material'));
     }
@@ -135,6 +163,7 @@ class MaterialController extends Controller
     public function update(Request $request, Material $material)
     {
         $this->authorizeLecturer($material);
+        $this->checkTermActive($material);
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -174,6 +203,7 @@ class MaterialController extends Controller
     public function destroy(Material $material)
     {
         $this->authorizeLecturer($material);
+        $this->checkTermActive($material);
 
         $redirectId = $material->course_offering_id ?? $material->course_id;
 

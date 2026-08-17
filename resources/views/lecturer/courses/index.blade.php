@@ -421,7 +421,9 @@
                     <div class="course-card">
                         <div class="course-top">
                             <span class="course-tag">{{ $course->academicTerm->name ?? 'Semester Lalu' }}</span>
-                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">Arsip</span>
+                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">
+                                {{ ($course->academicTerm && !$course->academicTerm->is_active) ? 'Semester Non-Aktif (Arsip)' : 'Arsip' }}
+                            </span>
                         </div>
 
                         <div class="course-name">{{ $course->name }}</div>
@@ -448,15 +450,15 @@
                         </div>
 
                         <div style="margin-top: auto;">
-                            <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                Buka Gerbang Kelas
+                            <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn w-full text-center" style="background: #475569; color: #fff;">
+                                Buka Arsip Kelas (Read-Only)
                             </a>
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
                         <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Kelas Terarsip</h3>
-                        <p style="font-size: 13px; color: #64748b;">Seluruh kelas aktif yang telah selesai akan muncul di sini.</p>
+                        <p style="font-size: 13px; color: #64748b;">Seluruh kelas dari semester yang telah non-aktif atau diarsipkan akan muncul di sini.</p>
                     </div>
                 @endforelse
             </div>

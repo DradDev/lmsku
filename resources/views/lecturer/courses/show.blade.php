@@ -56,6 +56,23 @@
                 </div>
             @endif
 
+            @if(!($isTermActive ?? true))
+                <div class="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl flex items-center justify-between gap-3 shadow-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold flex-shrink-0">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm text-amber-950">Semester Non-Aktif (Mode Arsip & Read-Only)</p>
+                            <p class="text-xs text-amber-800">Periode <strong>{{ $course->academicTerm->name ?? 'Semester Ini' }}</strong> saat ini berstatus non-aktif. Seluruh modul materi, kuis, dan threshold kelas dikunci untuk arsip dan tidak dapat dimodifikasi.</p>
+                        </div>
+                    </div>
+                    <span class="px-3 py-1 bg-amber-200/80 text-amber-900 rounded-xl text-xs font-extrabold whitespace-nowrap">
+                        Terkunci (Read-Only)
+                    </span>
+                </div>
+            @endif
+
             <div class="mb-8">
                 @if(isset($siblingOfferings) && $siblingOfferings->count() > 1)
                     <div class="mb-6 p-4 bg-slate-900 border border-indigo-500/30 rounded-2xl shadow-md text-white flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -64,8 +81,8 @@
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                             </div>
                             <div>
-                                <h3 class="font-bold text-sm text-slate-100">Beralih Kelola Kelas Pararel</h3>
-                                <p class="text-xs text-slate-400">Anda mengampu {{ $siblingOfferings->count() }} kelas untuk mata kuliah ini. Pilih kelas untuk melihat data & nilainya:</p>
+                                <h3 class="font-bold text-sm text-slate-100">Beralih Kelola Kelas Pararel ({{ $course->academicTerm->name ?? 'Semester Berjalan' }})</h3>
+                                <p class="text-xs text-slate-400">Anda mengampu {{ $siblingOfferings->count() }} rombel kelas pada semester ini. Pilih rombel untuk mengelola:</p>
                             </div>
                         </div>
 
@@ -89,21 +106,30 @@
                         ← Kembali ke Daftar Kelas
                     </a>
 
-                    <div class="flex items-center gap-2">
-                        <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Ubah status aktif kelas ini?')">
-                            @csrf
-                            <button type="submit" class="rounded-xl border px-4 py-2 text-sm font-semibold transition {{ ($course->status ?? 'active') === 'active' ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' }}">
-                                {{ ($course->status ?? 'active') === 'active' ? 'Arsipkan Kelas' : 'Aktifkan Kelas' }}
-                            </button>
-                        </form>
-                    </div>
+                    @if($isTermActive ?? true)
+                        <div class="flex items-center gap-2">
+                            <form action="{{ route('lecturer.courses.archive', $course->id) }}" method="POST" onsubmit="return confirm('Ubah status aktif kelas ini?')">
+                                @csrf
+                                <button type="submit" class="rounded-xl border px-4 py-2 text-sm font-semibold transition {{ ($course->status ?? 'active') === 'active' ? 'border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100' : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100' }}">
+                                    {{ ($course->status ?? 'active') === 'active' ? 'Arsipkan Kelas' : 'Aktifkan Kelas' }}
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-6">
                     <div>
-                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
-                            Portal Dosen &bull; Manajemen Kelas Pembelajaran
-                        </p>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600">
+                                Portal Dosen &bull; Manajemen Kelas Pembelajaran
+                            </span>
+                            @if(!($isTermActive ?? true))
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-slate-200 text-slate-700">
+                                    Semester Non-Aktif
+                                </span>
+                            @endif
+                        </div>
 
                         <h1 class="text-3xl font-bold tracking-tight text-slate-900">
                             {{ $course->name }}
@@ -125,12 +151,18 @@
                             <span class="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-700">
                                 Threshold Sertifikat: {{ $course->certificate_threshold ?? 75 }}%
                             </span>
+
+                            @if(isset($course->academicTerm))
+                                <span class="rounded-full {{ ($isTermActive ?? true) ? 'bg-blue-50 text-blue-700' : 'bg-slate-200 text-slate-700' }} px-3 py-1 font-semibold">
+                                    {{ $course->academicTerm->name }}
+                                </span>
+                            @endif
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- CARD PENGATURAN THRESHOLD SANGAT PRAKTIS LANGSUNG DI VIEW -->
+            <!-- CARD PENGATURAN THRESHOLD -->
             <div class="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50/50 via-white to-indigo-50/30 p-6 shadow-sm mb-8">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -139,28 +171,35 @@
                             <span class="text-xs font-bold text-indigo-600 bg-indigo-100 px-2.5 py-0.5 rounded-full">Otonomi Dosen</span>
                         </h2>
                         <p class="text-xs text-slate-500 mt-1 leading-relaxed max-w-2xl">
-                            Tentukan batas nilai minimal (%) pada Kuis Akhir yang harus dicapai mahasiswa agar Sertifikat Digital & Hash Blockchain otomatis diterbitkan.
+                            Batas nilai minimal (%) pada Kuis Akhir yang harus dicapai mahasiswa agar Sertifikat Digital & Hash Blockchain otomatis diterbitkan.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <form action="{{ route('lecturer.courses.update', $course->id) }}" method="POST" class="flex items-center gap-2">
-                            @csrf
-                            @method('PUT')
-                            <div class="relative">
-                                <input type="number" 
-                                       name="certificate_threshold" 
-                                       value="{{ old('certificate_threshold', $course->certificate_threshold ?? 75) }}" 
-                                       min="0" 
-                                       max="100" 
-                                       class="w-24 rounded-xl border-slate-300 text-sm font-extrabold text-indigo-900 text-center focus:border-indigo-500 focus:ring-indigo-500 py-2" 
-                                       required>
-                                <span class="absolute right-2 top-2.5 text-xs font-bold text-slate-400">%</span>
+                        @if($isTermActive ?? true)
+                            <form action="{{ route('lecturer.courses.update', $course->id) }}" method="POST" class="flex items-center gap-2">
+                                @csrf
+                                @method('PUT')
+                                <div class="relative">
+                                    <input type="number" 
+                                           name="certificate_threshold" 
+                                           value="{{ old('certificate_threshold', $course->certificate_threshold ?? 75) }}" 
+                                           min="0" 
+                                           max="100" 
+                                           class="w-24 rounded-xl border-slate-300 text-sm font-extrabold text-indigo-900 text-center focus:border-indigo-500 focus:ring-indigo-500 py-2" 
+                                           required>
+                                    <span class="absolute right-2 top-2.5 text-xs font-bold text-slate-400">%</span>
+                                </div>
+                                <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition whitespace-nowrap">
+                                    Simpan Threshold
+                                </button>
+                            </form>
+                        @else
+                            <div class="flex items-center gap-2 bg-slate-100 border border-slate-200 px-4 py-2 rounded-xl text-slate-600">
+                                <span class="text-xs font-bold">Threshold Terkunci:</span>
+                                <span class="text-sm font-black text-slate-800">{{ $course->certificate_threshold ?? 75 }}%</span>
                             </div>
-                            <button type="submit" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition whitespace-nowrap">
-                                Simpan Threshold
-                            </button>
-                        </form>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -244,88 +283,92 @@
                                 </p>
                             </div>
 
-                            <button type="button" 
-                                    onclick="document.getElementById('create-quiz-form-container').classList.toggle('hidden')" 
-                                    class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 shadow-md transition whitespace-nowrap">
-                                + Buat Kuis Baru
-                            </button>
+                            @if($isTermActive ?? true)
+                                <button type="button" 
+                                        onclick="document.getElementById('create-quiz-form-container').classList.toggle('hidden')" 
+                                        class="inline-flex items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-700 shadow-md transition whitespace-nowrap">
+                                    + Buat Kuis Baru
+                                </button>
+                            @endif
                         </div>
 
                         <!-- FORM INLINE BUAT KUIS BARU (DENGAN PILIHAN KUIS BIASA VS KUIS AKHIR) -->
-                        <div id="create-quiz-form-container" class="hidden mb-6 p-5 bg-indigo-50/50 border border-indigo-200 rounded-2xl transition">
-                            <h3 class="text-sm font-extrabold text-indigo-900 mb-3 flex items-center gap-2">
-                                Form Buat Kuis Pembelajaran Baru
-                            </h3>
-                            <form method="POST" action="{{ route('lecturer.courses.quizzes.store', $course->id) }}" class="space-y-4 text-xs">
-                                @csrf
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Judul Kuis</label>
-                                        <input type="text" name="title" placeholder="Contoh: Kuis Akhir - Final Certification Exam" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold" required>
-                                    </div>
+                        @if($isTermActive ?? true)
+                            <div id="create-quiz-form-container" class="hidden mb-6 p-5 bg-indigo-50/50 border border-indigo-200 rounded-2xl transition">
+                                <h3 class="text-sm font-extrabold text-indigo-900 mb-3 flex items-center gap-2">
+                                    Form Buat Kuis Pembelajaran Baru
+                                </h3>
+                                <form method="POST" action="{{ route('lecturer.courses.quizzes.store', $course->id) }}" class="space-y-4 text-xs">
+                                    @csrf
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Judul Kuis</label>
+                                            <input type="text" name="title" placeholder="Contoh: Kuis Akhir - Final Certification Exam" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold" required>
+                                        </div>
 
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Tipe Kuis Pembelajaran</label>
-                                        <select name="quiz_type" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-bold text-indigo-900 bg-white" required>
-                                            <option value="daily">Kuis Biasa / Harian (Section Quiz)</option>
-                                            <option value="weekly">Kuis Mingguan / Evaluasi Bab</option>
-                                            <option value="final">Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
-                                        </select>
-                                    </div>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Tipe Kuis Pembelajaran</label>
+                                            <select name="quiz_type" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-bold text-indigo-900 bg-white" required>
+                                                <option value="daily">Kuis Biasa / Harian (Section Quiz)</option>
+                                                <option value="weekly">Kuis Mingguan / Evaluasi Bab</option>
+                                                <option value="final">Kuis Akhir (Final Quiz / Penentu Sertifikat)</option>
+                                            </select>
+                                        </div>
 
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Durasi Pengerjaan (Menit)</label>
-                                        <input type="number" name="time_limit" min="1" placeholder="Contoh: 60 (kosongkan jika tanpa batas)" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
-                                    </div>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Durasi Pengerjaan (Menit)</label>
+                                            <input type="number" name="time_limit" min="1" placeholder="Contoh: 60 (kosongkan jika tanpa batas)" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                        </div>
 
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Maksimal Percobaan (Attempts)</label>
-                                        <div class="flex items-center gap-2">
-                                            <input type="number" id="max_attempts_input" name="max_attempts" value="1" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
-                                            <label class="inline-flex items-center gap-1.5 px-2.5 py-2.5 bg-slate-100 border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-200 transition whitespace-nowrap">
-                                                <input type="checkbox" name="is_unlimited" value="1" onchange="document.getElementById('max_attempts_input').disabled = this.checked; if(this.checked){ document.getElementById('max_attempts_input').value = 0; }" class="rounded text-indigo-600 focus:ring-indigo-500">
-                                                <span class="text-[11px] font-bold text-slate-700">Unlimited</span>
-                                            </label>
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Maksimal Percobaan (Attempts)</label>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" id="max_attempts_input" name="max_attempts" value="1" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                                <label class="inline-flex items-center gap-1.5 px-2.5 py-2.5 bg-slate-100 border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-200 transition whitespace-nowrap">
+                                                    <input type="checkbox" name="is_unlimited" value="1" onchange="document.getElementById('max_attempts_input').disabled = this.checked; if(this.checked){ document.getElementById('max_attempts_input').value = 0; }" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                                    <span class="text-[11px] font-bold text-slate-700">Unlimited</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Tanggal Rilis (Opsional)</label>
+                                            <input type="datetime-local" name="start_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-bold text-slate-700 mb-1">Deadline Selesai (Opsional)</label>
+                                            <input type="datetime-local" name="end_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                        </div>
+
+                                        <div class="md:col-span-2 mt-2 pt-2 border-t border-indigo-100">
+                                            <label class="block font-bold text-slate-700 mb-1.5">Target Scope Distribusi Kuis:</label>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                <label class="flex items-center gap-2.5 p-2.5 border border-indigo-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
+                                                    <input type="radio" name="target_scope" value="all" checked class="text-indigo-600 focus:ring-indigo-500">
+                                                    <div>
+                                                        <span class="block font-bold text-indigo-950 text-xs">Semua Kelas Pararel (Master)</span>
+                                                        <span class="block text-[11px] text-slate-500">Kuis akan otomatis berlaku untuk Kelas A, B, C, dst.</span>
+                                                    </div>
+                                                </label>
+                                                <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
+                                                    <input type="radio" name="target_scope" value="class" class="text-indigo-600 focus:ring-indigo-500">
+                                                    <div>
+                                                        <span class="block font-bold text-slate-800 text-xs">Khusus {{ $course->section_name ?: 'Kelas Ini' }}</span>
+                                                        <span class="block text-[11px] text-slate-500">Kuis khusus/remedial hanya untuk rombel kelas ini.</span>
+                                                    </div>
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Tanggal Rilis (Opsional)</label>
-                                        <input type="datetime-local" name="start_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
+                                    <div class="flex justify-end gap-2 pt-2 border-t border-indigo-200">
+                                        <button type="button" onclick="document.getElementById('create-quiz-form-container').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Batal</button>
+                                        <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md">Simpan Kuis & Lanjut Buat Soal</button>
                                     </div>
-
-                                    <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Deadline Selesai (Opsional)</label>
-                                        <input type="datetime-local" name="end_date" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold">
-                                    </div>
-
-                                    <div class="md:col-span-2 mt-2 pt-2 border-t border-indigo-100">
-                                        <label class="block font-bold text-slate-700 mb-1.5">Target Scope Distribusi Kuis:</label>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                            <label class="flex items-center gap-2.5 p-2.5 border border-indigo-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
-                                                <input type="radio" name="target_scope" value="all" checked class="text-indigo-600 focus:ring-indigo-500">
-                                                <div>
-                                                    <span class="block font-bold text-indigo-950 text-xs">Semua Kelas Pararel (Master)</span>
-                                                    <span class="block text-[11px] text-slate-500">Kuis akan otomatis berlaku untuk Kelas A, B, C, dst.</span>
-                                                </div>
-                                            </label>
-                                            <label class="flex items-center gap-2.5 p-2.5 border border-slate-200 rounded-xl bg-white cursor-pointer hover:border-indigo-400 transition">
-                                                <input type="radio" name="target_scope" value="class" class="text-indigo-600 focus:ring-indigo-500">
-                                                <div>
-                                                    <span class="block font-bold text-slate-800 text-xs">Khusus {{ $course->section_name ?: 'Kelas Ini' }}</span>
-                                                    <span class="block text-[11px] text-slate-500">Kuis khusus/remedial hanya untuk rombel kelas ini.</span>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex justify-end gap-2 pt-2 border-t border-indigo-200">
-                                    <button type="button" onclick="document.getElementById('create-quiz-form-container').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs">Batal</button>
-                                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-md">Simpan Kuis & Lanjut Buat Soal</button>
-                                </div>
-                            </form>
-                        </div>
+                                </form>
+                            </div>
+                        @endif
 
                         <!-- DAFTAR KUIS -->
                         <div class="space-y-4">
@@ -378,75 +421,81 @@
                                     </div>
 
                                     <div class="flex flex-wrap gap-2">
-                                        <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-2 text-xs font-bold hover:bg-amber-100 transition shadow-xs">
-                                            Waktu & Durasi
-                                        </button>
+                                        @if($isTermActive ?? true)
+                                            <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.toggle('hidden')" class="rounded-xl bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-2 text-xs font-bold hover:bg-amber-100 transition shadow-xs">
+                                                Waktu & Durasi
+                                            </button>
+                                        @endif
 
                                         <a href="{{ route('lecturer.courses.quizzes.results.index', [$course->id, $quiz->id]) }}"
                                             class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-indigo-700 shadow-xs">
                                             Lihat Hasil
                                         </a>
 
-                                        <a href="{{ route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id]) }}"
-                                            class="rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700 shadow-xs">
-                                            + Kelola Soal ({{ $quiz->questions_count ?? $quiz->questions()->count() }})
-                                        </a>
-                                        <form method="POST"
-                                            action="{{ route('lecturer.courses.quizzes.destroy', [$course->id, $quiz->id]) }}"
-                                            onsubmit="return confirm('Yakin ingin menghapus quiz ini?')">
-                                            @csrf
-                                            @method('DELETE')
+                                        @if($isTermActive ?? true)
+                                            <a href="{{ route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id]) }}"
+                                                class="rounded-xl bg-violet-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-violet-700 shadow-xs">
+                                                + Kelola Soal ({{ $quiz->questions_count ?? $quiz->questions()->count() }})
+                                            </a>
+                                            <form method="POST"
+                                                action="{{ route('lecturer.courses.quizzes.destroy', [$course->id, $quiz->id]) }}"
+                                                onsubmit="return confirm('Yakin ingin menghapus quiz ini?')">
+                                                @csrf
+                                                @method('DELETE')
 
-                                            <button type="submit"
-                                                class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700 shadow-xs">
-                                                Hapus
-                                            </button>
-                                        </form>
+                                                <button type="submit"
+                                                    class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-700 shadow-xs">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </div>
 
-                                <div id="edit-quiz-form-{{ $quiz->id }}" class="hidden mt-4 pt-4 border-t border-slate-200">
-                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-amber-50/40 p-4 rounded-xl border border-amber-200">
-                                        @csrf
-                                        @method('PUT')
+                                @if($isTermActive ?? true)
+                                    <div id="edit-quiz-form-{{ $quiz->id }}" class="hidden mt-4 pt-4 border-t border-slate-200">
+                                        <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$course->id, $quiz->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-amber-50/40 p-4 rounded-xl border border-amber-200">
+                                            @csrf
+                                            @method('PUT')
 
-                                        <div>
-                                            <label class="block font-bold text-slate-700 mb-1">Judul Quiz</label>
-                                            <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold" required>
-                                        </div>
-
-                                        <div>
-                                            <label class="block font-bold text-slate-700 mb-1">Durasi (Menit)</label>
-                                            <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tanpa batas durasi" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
-                                        </div>
-
-                                        <div>
-                                            <label class="block font-bold text-slate-700 mb-1">Max Attempts (Percobaan)</label>
-                                            <div class="flex items-center gap-2">
-                                                <input type="number" id="edit_max_attempts_{{ $quiz->id }}" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
-                                                <label class="inline-flex items-center gap-1.5 px-2.5 py-2 bg-white border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
-                                                    <input type="checkbox" name="is_unlimited" value="1" @checked($quiz->max_attempts === 0) onchange="document.getElementById('edit_max_attempts_{{ $quiz->id }}').disabled = this.checked; if(this.checked){ document.getElementById('edit_max_attempts_{{ $quiz->id }}').value = 0; }" class="rounded text-indigo-600 focus:ring-indigo-500">
-                                                    <span class="text-[11px] font-bold text-slate-700">Unlimited</span>
-                                                </label>
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Judul Quiz</label>
+                                                <input type="text" name="title" value="{{ old('title', $quiz->title) }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold" required>
                                             </div>
-                                        </div>
 
-                                        <div>
-                                            <label class="block font-bold text-slate-700 mb-1">Tanggal & Waktu Mulai (Start Date)</label>
-                                            <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
-                                        </div>
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Durasi (Menit)</label>
+                                                <input type="number" name="time_limit" value="{{ old('time_limit', $quiz->time_limit) }}" min="1" placeholder="Kosongkan jika tanpa batas durasi" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
+                                            </div>
 
-                                        <div class="md:col-span-2">
-                                            <label class="block font-bold text-slate-700 mb-1">Batas Akhir / Deadline (End Date)</label>
-                                            <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
-                                        </div>
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Max Attempts (Percobaan)</label>
+                                                <div class="flex items-center gap-2">
+                                                    <input type="number" id="edit_max_attempts_{{ $quiz->id }}" name="max_attempts" value="{{ old('max_attempts', $quiz->max_attempts) }}" min="0" max="100" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
+                                                    <label class="inline-flex items-center gap-1.5 px-2.5 py-2 bg-white border border-slate-300 rounded-xl cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
+                                                        <input type="checkbox" name="is_unlimited" value="1" @checked($quiz->max_attempts === 0) onchange="document.getElementById('edit_max_attempts_{{ $quiz->id }}').disabled = this.checked; if(this.checked){ document.getElementById('edit_max_attempts_{{ $quiz->id }}').value = 0; }" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                                        <span class="text-[11px] font-bold text-slate-700">Unlimited</span>
+                                                    </label>
+                                                </div>
+                                            </div>
 
-                                        <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-amber-200">
-                                            <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg">Batal</button>
-                                            <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
-                                        </div>
-                                    </form>
-                                </div>
+                                            <div>
+                                                <label class="block font-bold text-slate-700 mb-1">Tanggal & Waktu Mulai (Start Date)</label>
+                                                <input type="datetime-local" name="start_date" value="{{ $quiz->start_date ? \Carbon\Carbon::parse($quiz->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
+                                            </div>
+
+                                            <div class="md:col-span-2">
+                                                <label class="block font-bold text-slate-700 mb-1">Batas Akhir / Deadline (End Date)</label>
+                                                <input type="datetime-local" name="end_date" value="{{ $quiz->end_date ? \Carbon\Carbon::parse($quiz->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-slate-300 p-2 text-xs font-semibold">
+                                            </div>
+
+                                            <div class="md:col-span-2 flex justify-end gap-2 pt-2 border-t border-amber-200">
+                                                <button type="button" onclick="document.getElementById('edit-quiz-form-{{ $quiz->id }}').classList.add('hidden')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg">Batal</button>
+                                                <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg shadow-sm">Simpan Waktu & Pengaturan</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @endif
                             </div>
                             @empty
                             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
@@ -469,10 +518,12 @@
                                 </p>
                             </div>
 
-                            <a href="{{ route('lecturer.materials.create', $course->id) }}"
-                                class="inline-flex items-center rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 whitespace-nowrap">
-                                + Add Material
-                            </a>
+                            @if($isTermActive ?? true)
+                                <a href="{{ route('lecturer.materials.create', $course->id) }}"
+                                    class="inline-flex items-center rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 whitespace-nowrap">
+                                    + Add Material
+                                </a>
+                            @endif
                         </div>
 
                         @if ($materials->count())
@@ -493,28 +544,30 @@
                                         View
                                     </a>
 
-                                    <a href="{{ route('lecturer.materials.edit', $material->id) }}"
-                                        class="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-                                        Edit
-                                    </a>
+                                    @if($isTermActive ?? true)
+                                        <a href="{{ route('lecturer.materials.edit', $material->id) }}"
+                                            class="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
+                                            Edit
+                                        </a>
 
-                                    <form action="{{ route('lecturer.materials.destroy', $material->id) }}"
-                                          method="POST"
-                                          onsubmit="return confirm('Yakin hapus materi ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="inline-flex rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
-                                            Delete
-                                        </button>
-                                    </form>
+                                        <form action="{{ route('lecturer.materials.destroy', $material->id) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Yakin hapus materi ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-flex rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">
+                                                Delete
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                             @endforeach
                         </div>
                         @else
                         <div class="rounded-2xl border border-slate-200 bg-slate-50 p-8 text-center text-slate-500">
-                            Belum ada materi untuk course ini. Klik "+ Add Material" untuk mulai upload.
+                            Belum ada materi untuk course ini.
                         </div>
                         @endif
                     </div>

@@ -33,9 +33,16 @@ class CourseController extends Controller
             ->latest()
             ->get();
 
-        // Pisahkan menjadi Active vs Bank (Archived/Expired)
-        $activeOfferings = $offerings->filter(fn($o) => $o->status !== 'expired' && $o->status !== 'cancelled' && !$o->is_archived);
-        $bankOfferings = $offerings->filter(fn($o) => $o->status === 'expired' || $o->status === 'cancelled' || $o->is_archived);
+        // Pisahkan menjadi Active (Semester Aktif & Tidak Diarsipkan) vs Bank (Semester Non-Aktif / Diarsipkan / Expired)
+        $activeOfferings = $offerings->filter(function ($o) {
+            $isTermActive = $o->academicTerm ? (bool)$o->academicTerm->is_active : true;
+            return $isTermActive && $o->status !== 'expired' && $o->status !== 'cancelled' && !$o->is_archived;
+        });
+
+        $bankOfferings = $offerings->filter(function ($o) {
+            $isTermActive = $o->academicTerm ? (bool)$o->academicTerm->is_active : true;
+            return !$isTermActive || $o->status === 'expired' || $o->status === 'cancelled' || $o->is_archived;
+        });
 
         $groupedOfferings = $activeOfferings->groupBy('master_course_id');
 
@@ -62,9 +69,12 @@ class CourseController extends Controller
         ->find($id);
 
         if ($offering) {
+            $isTermActive = $offering->academicTerm ? (bool)$offering->academicTerm->is_active : true;
+
             $siblingOfferings = CourseOffering::with(['academicTerm', 'enrollments'])
                 ->where('lecturer_id', $lecturerId)
                 ->where('master_course_id', $offering->master_course_id)
+                ->where('academic_term_id', $offering->academic_term_id)
                 ->get();
 
             $course = $offering;
@@ -93,7 +103,8 @@ class CourseController extends Controller
                 'enrollments',
                 'categories',
                 'retakeRequests',
-                'siblingOfferings'
+                'siblingOfferings',
+                'isTermActive'
             ));
         }
 
@@ -111,6 +122,7 @@ class CourseController extends Controller
         ->where('user_id', $lecturerId)
         ->findOrFail($id);
 
+        $isTermActive = true;
         $materials = $course->materials;
         $quizzes = $course->quizzes;
         $students = $course->students;
@@ -128,20 +140,26 @@ class CourseController extends Controller
             'students',
             'enrollments',
             'categories',
-            'retakeRequests'
+            'retakeRequests',
+            'isTermActive'
         ));
     }
 
-    public function edit($id): View
+    public function edit($id)
     {
         $lecturerId = Auth::id();
 
         // Check if CourseOffering 3NF
-        $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'materials'])
+        $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'materials', 'academicTerm'])
             ->where('lecturer_id', $lecturerId)
             ->find($id);
 
         if ($offering) {
+            if ($offering->academicTerm && !$offering->academicTerm->is_active) {
+                return redirect()->route('lecturer.courses.show', $offering->id)
+                    ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Pengaturan kelas dikunci (Mode Read-Only).');
+            }
+
             $course = $offering;
             $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
             $tags = Tag::with('skill')->orderBy('name')->get();
@@ -165,8 +183,13 @@ class CourseController extends Controller
         $lecturerId = Auth::id();
 
         // 1. Coba update CourseOffering 3NF
-        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        $offering = CourseOffering::with('academicTerm')->where('lecturer_id', $lecturerId)->find($id);
         if ($offering) {
+            if ($offering->academicTerm && !$offering->academicTerm->is_active) {
+                return redirect()->back()
+                    ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Perubahan pengaturan atau threshold tidak diizinkan.');
+            }
+
             $validated = $request->validate([
                 'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
                 'capacity' => ['nullable', 'integer', 'min:1'],
