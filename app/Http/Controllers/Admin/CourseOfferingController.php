@@ -33,7 +33,10 @@ class CourseOfferingController extends Controller
 
     public function create(Request $request): View
     {
-        $masterCourses = MasterCourse::orderBy('name')->get();
+        $masterCourses = MasterCourse::where(function ($q) {
+            $q->whereNull('user_id')
+              ->orWhereHas('user', fn($u) => $u->where('role', '!=', 'vendor'));
+        })->orderBy('name')->get();
         $terms = AcademicTerm::orderBy('created_at', 'desc')->get();
         $lecturers = User::where('role', 'lecturer')->orderBy('name')->get();
 

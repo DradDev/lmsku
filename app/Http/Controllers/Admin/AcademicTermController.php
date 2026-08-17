@@ -44,7 +44,10 @@ class AcademicTermController extends Controller
         $totalLecturersCount = $offerings->pluck('lecturer_id')->filter()->unique()->count();
         $totalEnrollmentsCount = $offerings->sum(fn($o) => $o->enrollments->count());
 
-        $allMasterCourses = \App\Models\MasterCourse::with(['category', 'skills', 'tags'])->orderBy('name')->get();
+        $allMasterCourses = \App\Models\MasterCourse::where(function ($q) {
+            $q->whereNull('user_id')
+              ->orWhereHas('user', fn($u) => $u->where('role', '!=', 'vendor'));
+        })->with(['category', 'skills', 'tags'])->orderBy('name')->get();
         
         $lecturers = \App\Models\User::where('role', 'lecturer')
             ->orderBy('name')

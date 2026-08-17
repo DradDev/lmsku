@@ -81,12 +81,12 @@
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-purple-600">Mitra Vendor (Sertifikasi)</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-purple-600">Eksternal (Mitra Vendor)</span>
                     <div class="flex items-baseline justify-between pt-1">
                         <h3 class="text-3xl font-extrabold text-purple-600">{{ $vendorCourses->count() }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">Bootcamp</span>
                     </div>
-                    <p class="text-[11px] text-purple-500">Course sertifikasi industri</p>
+                    <p class="text-[11px] text-purple-500">Course sertifikasi industri mitra</p>
                 </div>
             </div>
 
@@ -118,7 +118,7 @@
                             @click="tab = 'vendor'" 
                             :class="tab === 'vendor' ? 'bg-purple-700 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
                             class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
-                        <span>Sertifikasi Vendor</span>
+                        <span>Eksternal (Mitra Vendor)</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'vendor' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
                             {{ $vendorCourses->count() }}
                         </span>
