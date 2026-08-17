@@ -91,7 +91,7 @@ class CourseController extends Controller
             ->get();
 
         // Vendor Certification Courses (Hanya yang tidak diarsip & tidak dibekukan Admin)
-        $vendorCourses = Course::with(['user', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
+        $vendorCourses = Course::with(['user.institution', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
             ->whereHas('user', function ($query) {
                 $query->where('role', 'vendor');
             })
@@ -101,6 +101,11 @@ class CourseController extends Controller
                     ->orWhere('moderation_status', 'published');
             })
             ->latest()
+            ->get();
+
+        $vendors = User::with('institution')
+            ->whereIn('id', $vendorCourses->pluck('user_id')->filter()->unique())
+            ->orderBy('name')
             ->get();
 
         foreach ($vendorCourses as $vc) {
@@ -128,7 +133,7 @@ class CourseController extends Controller
             $vc->can_get_certificate = $canGetCertificate;
         }
 
-        return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors'));
+        return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors', 'vendors'));
     }
 
     public function show(string $id)
