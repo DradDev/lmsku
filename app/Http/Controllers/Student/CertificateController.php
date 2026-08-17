@@ -155,15 +155,18 @@ class CertificateController extends Controller
             $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
 
             // Cek kelayakan sertifikat proyek
-            $isCompleted = ($part->status === 'completed') || ($part->progress_percent >= 100);
-            $isVerified = ($certificateRecord && $certificateRecord->status === 'verified');
-            $isPending = ($certificateRecord && $certificateRecord->status === 'pending');
+            $isVerified = ($certificateRecord && $certificateRecord->status === 'verified' && !empty($certificateRecord->blockchain_hash));
+            $isPending = ($certificateRecord && $certificateRecord->status === 'pending') || (!$certificateRecord && $part->status === 'completed');
 
-            if ($isCompleted || $isVerified) {
+            if ($isVerified) {
                 $item->can_get_certificate = true;
-                $item->certificate_status_text = 'Sertifikat Project sudah selesai diverifikasi dan siap diunduh.';
+                $item->certificate_status_text = 'Sertifikat Project resmi telah diverifikasi Admin & tercatat di Blockchain.';
                 $item->status_badge = 'Verified';
-            } elseif ($isPending || $part->status === 'review') {
+            } elseif ($isPending) {
+                $item->can_get_certificate = false;
+                $item->certificate_status_text = 'Pengerjaan selesai & disetujui. Menunggu verifikasi integritas & penerbitan hash blockchain oleh Admin.';
+                $item->status_badge = 'Pending';
+            } elseif ($part->status === 'review') {
                 $item->can_get_certificate = false;
                 $item->certificate_status_text = 'Proyek sedang dalam tahap evaluasi/review akhir oleh Pembimbing.';
                 $item->status_badge = 'Review';
@@ -246,10 +249,13 @@ class CertificateController extends Controller
             ->where('project_id', $project->id)
             ->first();
 
-        $isEligible = ($participation && ($participation->status === 'completed' || $participation->progress_percent >= 100))
-            || ($certificateRecord && $certificateRecord->status === 'verified');
+        $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
 
-        abort_unless($isEligible, 403, 'Sertifikat project belum dapat diakses. Selesaikan seluruh tugas proyek hingga 100% terlebih dahulu.');
+        abort_unless(
+            $isEligible,
+            403,
+            'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
+        );
 
         $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
 
@@ -274,10 +280,13 @@ class CertificateController extends Controller
             ->where('project_id', $project->id)
             ->first();
 
-        $isEligible = ($participation && ($participation->status === 'completed' || $participation->progress_percent >= 100))
-            || ($certificateRecord && $certificateRecord->status === 'verified');
+        $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
 
-        abort_unless($isEligible, 403, 'Sertifikat project belum dapat diakses. Selesaikan seluruh tugas proyek hingga 100% terlebih dahulu.');
+        abort_unless(
+            $isEligible,
+            403,
+            'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
+        );
 
         $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
 

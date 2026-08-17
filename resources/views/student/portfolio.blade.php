@@ -381,51 +381,68 @@
                                     'development' => 'bg-blue-100 text-blue-800 border border-blue-200',
                                     default => 'bg-amber-100 text-amber-800 border border-amber-200',
                                 };
+
+                                $projectCert = $certificates->firstWhere('project_id', $project->id);
+                                $isCertVerified = $projectCert && $projectCert->is_verified && !empty($projectCert->blockchain_hash);
                             @endphp
 
-                            <div class="border border-gray-200 hover:border-purple-300 rounded-xl p-5 bg-white shadow-xs space-y-3 transition flex flex-col justify-between">
-                                <div class="space-y-2">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $provType === 'external' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-50 text-blue-700 border border-blue-200' }}">
-                                            {{ $provType === 'external' ? 'External: Mitra Vendor' : 'Internal: Dosen Akademik' }}
-                                        </span>
+                                <div class="border border-gray-200 hover:border-purple-300 rounded-xl p-5 bg-white shadow-xs space-y-3 transition flex flex-col justify-between">
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold {{ $provType === 'external' ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-blue-50 text-blue-700 border border-blue-200' }}">
+                                                {{ $provType === 'external' ? 'External: Mitra Vendor' : 'Internal: Dosen Akademik' }}
+                                            </span>
 
-                                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $statusBadge }}">
-                                            {{ $statusLabel }}
-                                        </span>
+                                            @if($isCertVerified)
+                                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    ⛓️ Verified Blockchain
+                                                </span>
+                                            @else
+                                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $statusBadge }}">
+                                                    {{ $statusLabel }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <h5 class="font-extrabold text-base text-gray-900 leading-snug">
+                                            {{ $project->title }}
+                                        </h5>
+
+                                        <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                                            {{ $project->description }}
+                                        </p>
+
+                                        <div class="pt-2">
+                                            <div class="flex justify-between text-xs text-gray-600 font-semibold mb-1">
+                                                <span>Pengerjaan Progress</span>
+                                                <span class="text-purple-700 font-bold">{{ $progress }}%</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                                <div class="h-2 rounded-full {{ $progress >= 100 ? 'bg-emerald-500' : 'bg-purple-600' }}" style="width: {{ $progress }}%"></div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <h5 class="font-extrabold text-base text-gray-900 leading-snug">
-                                        {{ $project->title }}
-                                    </h5>
+                                    <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 text-xs">
+                                        <span class="text-gray-500 font-medium">
+                                            Level: {{ ucfirst($project->difficulty_level) }} ({{ $project->duration_days }} Hari)
+                                        </span>
 
-                                    <p class="text-xs text-gray-600 line-clamp-2 leading-relaxed">
-                                        {{ $project->description }}
-                                    </p>
-
-                                    <div class="pt-2">
-                                        <div class="flex justify-between text-xs text-gray-600 font-semibold mb-1">
-                                            <span>Pengerjaan Progress</span>
-                                            <span class="text-purple-700 font-bold">{{ $progress }}%</span>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                            <div class="h-2 rounded-full {{ $progress >= 100 ? 'bg-emerald-500' : 'bg-purple-600' }}" style="width: {{ $progress }}%"></div>
+                                        <div class="flex items-center gap-1.5">
+                                            @if($isCertVerified)
+                                                <a href="{{ route('student.certificate.project.show', $project) }}"
+                                                   class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold rounded-lg transition">
+                                                    Sertifikat
+                                                </a>
+                                            @endif
+                                            <a href="{{ route('student.projects.show', $project) }}"
+                                               class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">
+                                                Detail
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div class="pt-3 border-t border-gray-100 flex items-center justify-between gap-2 text-xs">
-                                    <span class="text-gray-500 font-medium">
-                                        Level: {{ ucfirst($project->difficulty_level) }} ({{ $project->duration_days }} Hari)
-                                    </span>
-
-                                    <a href="{{ route('student.projects.show', $project) }}"
-                                       class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition">
-                                        Detail & Submit
-                                    </a>
-                                </div>
-                            </div>
-                        @endforeach
+                            @endforeach
                     </div>
                 @endif
             </div>

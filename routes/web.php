@@ -299,6 +299,9 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/projects/{project}/toggle-publish', [LecturerProjectController::class, 'togglePublish'])
             ->name('projects.toggle-publish');
 
+        Route::post('/projects/{project}/participations/{participation}/approve-certificate', [LecturerProjectController::class, 'approveCertificate'])
+            ->name('projects.approve-certificate');
+
         Route::resource('projects', LecturerProjectController::class);
     });
 
@@ -327,6 +330,9 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::post('/results/project/{participation}/verify', [AdminResultController::class, 'verifyProject'])
             ->name('results.project.verify');
+
+        Route::post('/results/project/{participation}/integrity', [AdminResultController::class, 'checkProjectIntegrity'])
+            ->name('results.project.integrity');
 
         // Users, Skills, Tags
         Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');
@@ -415,6 +421,8 @@ Route::middleware(['auth', 'role:vendor'])
         // Industry Projects
         Route::get('/students/{student}/portfolio', [VendorProjectController::class, 'studentPortfolio'])->name('students.portfolio');
         Route::post('/projects/{project}/toggle-publish', [VendorProjectController::class, 'togglePublish'])->name('projects.toggle-publish');
+        Route::post('/projects/{project}/participations/{participation}/approve-certificate', [VendorProjectController::class, 'approveCertificate'])
+            ->name('projects.approve-certificate');
         Route::get('/projects/{project}/talent-pool', [VendorProjectController::class, 'talentPool'])->name('projects.talent-pool');
         Route::post('/projects/{project}/invite/{user}', [VendorProjectController::class, 'inviteTalent'])->name('projects.invite');
         Route::resource('projects', VendorProjectController::class);

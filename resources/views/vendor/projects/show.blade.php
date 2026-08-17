@@ -168,7 +168,8 @@
                                         <th class="p-3 border-b border-gray-200">Status</th>
                                         <th class="p-3 border-b border-gray-200">Progress</th>
                                         <th class="p-3 border-b border-gray-200">Aktivitas Terakhir</th>
-                                        <th class="p-3 border-b border-gray-200">Catatan Revisi</th>
+                                        <th class="p-3 border-b border-gray-200">Catatan Pengerjaan</th>
+                                        <th class="p-3 border-b border-gray-200 text-right">Aksi & Sertifikat</th>
                                     </tr>
                                 </thead>
 
@@ -178,6 +179,7 @@
                                         $latestHistory = $participation->statusHistories->sortByDesc('created_at')->first();
                                         $status = $participation->status;
                                         $progress = $participation->progress_percent ?? 0;
+                                        $cert = \App\Models\Certificate::where('user_id', $participation->user_id)->where('project_id', $project->id)->first();
                                     @endphp
 
                                     <tr>
@@ -196,7 +198,7 @@
                                             </span>
                                         </td>
 
-                                        <td class="p-3 align-top min-w-[160px]">
+                                        <td class="p-3 align-top min-w-[150px]">
                                             <div class="flex justify-between text-xs text-gray-600 font-semibold mb-1">
                                                 <span>Progress</span>
                                                 <span>{{ $progress }}%</span>
@@ -223,11 +225,34 @@
                                                 <span class="text-gray-400 italic">Belum ada catatan</span>
                                             @endif
                                         </td>
+
+                                        <td class="p-3 align-top text-right text-xs">
+                                            @if ($cert && $cert->is_verified && !empty($cert->blockchain_hash))
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-[11px] font-bold" title="Hash: {{ $cert->blockchain_hash }}">
+                                                    <span>✅ Verified Blockchain</span>
+                                                </span>
+                                            @elseif ($cert && $cert->status === 'pending')
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-[11px] font-bold">
+                                                    <span>⏳ Menunggu Verifikasi Admin</span>
+                                                </span>
+                                            @elseif ($participation->status === 'completed' || $participation->progress_percent >= 100 || $participation->status === 'review')
+                                                <form action="{{ route('vendor.projects.approve-certificate', [$project, $participation]) }}" method="POST"
+                                                      onsubmit="return confirm('Setujui pengerjaan {{ addslashes($participation->user->name ?? 'Mahasiswa') }} dan ajukan penerbitan sertifikat ke Admin?');">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                                                        <span>✔️ Setujui & Ajukan Sertifikat</span>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span class="text-gray-400 font-medium italic">Dalam Pengerjaan</span>
+                                            @endif
+                                        </td>
                                     </tr>
 
                                     @if ($participation->statusHistories->isNotEmpty())
                                     <tr>
-                                        <td colspan="5" class="p-3 bg-gray-50/80 border-t border-gray-100">
+                                        <td colspan="6" class="p-3 bg-gray-50/80 border-t border-gray-100">
                                             <details class="group">
                                                 <summary class="cursor-pointer font-bold text-xs text-purple-700 hover:text-purple-900 flex items-center gap-1">
                                                     <span>Lihat Riwayat Progress & Status ({{ $participation->statusHistories->count() }})</span>

@@ -48,16 +48,43 @@
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Participation Status</p>
-                        <p class="mt-1 text-xl font-bold text-emerald-600">Accepted & Verified</p>
+                        <p class="mt-1 text-xl font-bold text-emerald-600">Verified & Accepted</p>
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Issued Date</p>
-                        <p class="mt-1 text-xl font-bold text-slate-900">{{ now()->format('d M Y') }}</p>
+                        <p class="mt-1 text-xl font-bold text-slate-900">{{ optional($certificateRecord?->verified_at ?? $certificateRecord?->completed_at ?? now())->format('d M Y') }}</p>
                     </div>
                 </div>
 
-                <div class="mt-12 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                @if($certificateRecord && $certificateRecord->blockchain_hash)
+                    <div class="mt-8 p-5 bg-purple-50/70 border border-purple-200 rounded-2xl max-w-3xl mx-auto text-left space-y-2">
+                        <div class="flex items-center justify-between border-b border-purple-200/60 pb-2">
+                            <span class="text-xs font-extrabold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
+                                <span>⛓️ Blockchain Cryptographic Ledger Verification</span>
+                            </span>
+                            <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-200">
+                                Tamper-Proof Validated
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-purple-700">Blockchain ID:</span>
+                                <p class="font-mono text-[11px] font-bold text-slate-800">{{ $certificateRecord->blockchain_id ?? 'BC-PRJ-001' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-purple-700">Transaction ID (TxID):</span>
+                                <p class="font-mono text-[11px] text-slate-700 truncate" title="{{ $certificateRecord->tx_id }}">{{ $certificateRecord->tx_id }}</p>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <span class="text-[10px] uppercase font-bold text-purple-700">Cryptographic SHA-256 Hash:</span>
+                                <p class="font-mono text-[11px] text-purple-900 break-all bg-white/80 p-2 rounded-lg border border-purple-200 font-semibold">{{ $certificateRecord->blockchain_hash }}</p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <div class="mt-10 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
                     <div>
                         <p class="font-bold text-slate-700">Project Publisher / Vendor</p>
                         <p>{{ $project->user->name ?? 'Vendor' }}</p>

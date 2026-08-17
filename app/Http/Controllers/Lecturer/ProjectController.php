@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\LearningActivityLog;
 use App\Models\Project;
+use App\Models\ProjectParticipation;
+use App\Models\ProjectStatusHistory;
 use App\Models\Skill;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
@@ -475,5 +478,82 @@ class ProjectController extends Controller
         return redirect()
             ->route('lecturer.projects.talent-pool', $project)
             ->with('success', "Undangan resmi telah dikirimkan kepada {$user->name}! Menunggu konfirmasi dari mahasiswa.");
+    }
+
+    public function approveCertificate(Project $project, ProjectParticipation $participation): RedirectResponse
+    {
+        abort_unless(
+            $project->created_by === Auth::id() && $participation->project_id === $project->id,
+            403,
+            'Kamu tidak memiliki akses untuk menyetujui sertifikat project ini.'
+        );
+
+        $oldStatus = $participation->status;
+        $oldProgress = $participation->progress_percent;
+
+        // 1. Update Participation Status to completed 100%
+        $participation->update([
+            'status' => 'completed',
+            'progress_percent' => 100,
+            'completed_at' => $participation->completed_at ?? now(),
+            'last_activity_at' => now(),
+        ]);
+
+        // 2. Create or Update Certificate in 'pending' status for Admin Blockchain Verification
+        $certificate = Certificate::firstOrNew([
+            'user_id' => $participation->user_id,
+            'project_id' => $project->id,
+        ]);
+
+        if (!$certificate->exists) {
+            $certificate->score = 100;
+            $certificate->completed_at = $participation->completed_at ?? now();
+            $certificate->status = 'pending';
+            $certificate->is_verified = false;
+            $certificate->credential_code = $certificate->generateCredentialCode();
+            $certificate->save();
+        } else {
+            if (!$certificate->is_verified) {
+                $certificate->status = 'pending';
+                $certificate->score = 100;
+                $certificate->completed_at = $participation->completed_at ?? now();
+                if (empty($certificate->credential_code)) {
+                    $certificate->credential_code = $certificate->generateCredentialCode();
+                }
+                $certificate->save();
+            }
+        }
+
+        // 3. Log Status History
+        ProjectStatusHistory::create([
+            'project_id' => $project->id,
+            'project_participation_id' => $participation->id,
+            'user_id' => Auth::id(),
+            'old_status' => $oldStatus,
+            'new_status' => 'completed',
+            'old_progress_percent' => $oldProgress,
+            'new_progress_percent' => 100,
+            'note' => 'Pengerjaan disetujui Pembimbing Dosen. Pengajuan sertifikat disalurkan ke Admin untuk verifikasi integritas & blockchain.',
+        ]);
+
+        // 4. Learning Activity Log
+        LearningActivityLog::create([
+            'user_id' => $participation->user_id,
+            'project_id' => $project->id,
+            'activity_type' => 'project_approved_by_mentor',
+            'activity_value' => 100,
+            'metadata' => [
+                'participation_id' => $participation->id,
+                'mentor_id' => Auth::id(),
+                'certificate_id' => $certificate->id,
+            ],
+            'occurred_at' => now(),
+        ]);
+
+        $studentName = $participation->user->name ?? 'Mahasiswa';
+
+        return redirect()
+            ->route('lecturer.projects.show', $project)
+            ->with('success', "Pengerjaan {$studentName} berhasil disetujui! Pengajuan penerbitan sertifikat telah disalurkan ke Admin untuk verifikasi integritas & blockchain.");
     }
 }

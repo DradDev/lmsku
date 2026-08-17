@@ -104,7 +104,7 @@
         <div class="project">{{ $project->title }}</div>
         <div class="author-title">Author / Vendor: {{ $project->user->name ?? 'Vendor' }}</div>
 
-        <div style="margin-bottom: 25px;">
+        <div style="margin-bottom: 20px;">
             <div class="meta-box">
                 <div>DIFFICULTY LEVEL</div>
                 <div class="meta-box-val">{{ ucfirst($project->difficulty_level) }}</div>
@@ -115,9 +115,17 @@
             </div>
             <div class="meta-box">
                 <div>ISSUED DATE</div>
-                <div class="meta-box-val" style="color: #0f172a;">{{ now()->format('d M Y') }}</div>
+                <div class="meta-box-val" style="color: #0f172a;">{{ optional($certificateRecord?->verified_at ?? $certificateRecord?->completed_at ?? now())->format('d M Y') }}</div>
             </div>
         </div>
+
+        @if($certificateRecord && $certificateRecord->blockchain_hash)
+            <div style="margin-bottom: 20px; padding: 12px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; font-size: 10px; text-align: left;">
+                <div style="font-weight: bold; color: #7e22ce; margin-bottom: 4px;">BLOCKCHAIN VALIDATION & CRYPTOGRAPHIC LEDGER PROOF</div>
+                <div style="color: #475569;">Blockchain ID: <strong>{{ $certificateRecord->blockchain_id ?? 'BC-PRJ-001' }}</strong> | TxID: <span style="font-family: monospace;">{{ substr($certificateRecord->tx_id ?? '', 0, 32) }}...</span></div>
+                <div style="color: #6b21a8; font-family: monospace; word-break: break-all; margin-top: 3px;">Hash: {{ $certificateRecord->blockchain_hash }}</div>
+            </div>
+        @endif
 
         <div class="footer-grid">
             <div class="footer-left">
