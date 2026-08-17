@@ -255,21 +255,23 @@
     <div class="page-container">
 
         @php
-            $totalCourses = $allCourses->count();
-            $totalMaterials = $allCourses->sum(fn($course) => $course->materials ? $course->materials->count() : 0);
-            $totalQuizzes = $allCourses->sum(fn($course) => $course->quizzes ? $course->quizzes->count() : 0);
-            $totalStudents = $allCourses->sum(fn($course) => $course->students ? $course->students->count() : 0);
+            $totalPrograms = $masterCourses->count();
+            $totalMaterials = $masterCourses->sum(fn($mc) => $mc->materials ? $mc->materials->count() : 0);
+            $totalQuizzes = $masterCourses->sum(fn($mc) => $mc->quizzes ? $mc->quizzes->count() : 0);
+            $totalStudents = $masterCourses->sum(function($mc) {
+                return $mc->courses->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
+            });
         @endphp
 
         <div class="page-header">
             <div>
-                <p class="page-eyebrow">Author Mitra Vendor Portal &bull; Manajemen Sertifikasi Industri Mandiri</p>
-                <h1 class="page-title">Daftar Sertifikasi Industri Mitra Vendor</h1>
-                <p class="page-sub">Kelola materi modul, bank kuis evaluasi, dan kelulusan sertifikat industri mahasiswa secara mandiri.</p>
+                <p class="page-eyebrow">Author Mitra Vendor Portal &bull; Manajemen Sertifikasi Industri 3NF</p>
+                <h1 class="page-title">Daftar Program Sertifikasi Mitra Vendor</h1>
+                <p class="page-sub">Kelola kurikulum induk, modul materi terpusat, bank kuis evaluasi, dan angkatan batch mahasiswa secara mandiri.</p>
             </div>
 
             <a href="{{ route('vendor.courses.create') }}" class="btn btn-primary">
-                + Buat Course Sertifikasi Baru
+                + Buat Program Sertifikasi Baru
             </a>
         </div>
 
@@ -284,124 +286,156 @@
 
         <div class="stat-strip">
             <div class="stat-card">
-                <div class="stat-label">Total Course</div>
-                <div class="stat-value">{{ $totalCourses }}</div>
+                <div class="stat-label">Program Sertifikasi</div>
+                <div class="stat-value">{{ $totalPrograms }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Materi Pembelajaran</div>
+                <div class="stat-label">Materi Kurikulum</div>
                 <div class="stat-value">{{ $totalMaterials }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Bank Kuis Evaluasi</div>
+                <div class="stat-label">Bank Kuis & Soal</div>
                 <div class="stat-value">{{ $totalQuizzes }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Mahasiswa Terdaftar</div>
+                <div class="stat-label">Total Mahasiswa Terdaftar</div>
                 <div class="stat-value">{{ $totalStudents }}</div>
             </div>
         </div>
 
         <div class="tabs-nav">
             <button class="tab-btn" :class="{ 'active': tab === 'active' }" @click="tab = 'active'">
-                Course Aktif ({{ $activeCourses->count() }})
+                Program Aktif ({{ $activeMasterCourses->count() }})
             </button>
             <button class="tab-btn" :class="{ 'active': tab === 'bank' }" @click="tab = 'bank'">
-                Draft Bank / Arsip ({{ $bankCourses->count() }})
+                Draft / Arsip ({{ $archivedMasterCourses->count() }})
             </button>
         </div>
 
-        <!-- TAB 1: ACTIVE COURSES -->
+        <!-- TAB 1: ACTIVE PROGRAMS -->
         <div x-show="tab === 'active'">
             <div class="courses-grid">
-                @forelse($activeCourses as $course)
+                @forelse($activeMasterCourses as $mc)
+                    @php
+                        $latestBatch = $mc->courses->where('is_archived', false)->first() ?? $mc->courses->first();
+                        $mcStudentCount = $mc->courses->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
+                    @endphp
                     <div class="course-card">
                         <div class="course-top">
-                            <span class="course-tag">Vendor Certified</span>
-                            <span class="course-badge text-green-700 bg-green-50 border-green-200">Aktif Dipublikasikan</span>
+                            <span class="course-tag">{{ $mc->category->name ?? 'Vendor Certified' }}</span>
+                            <span class="course-badge text-purple-700 bg-purple-50 border-purple-200 font-bold">
+                                {{ $mc->courses->count() }} Angkatan Batch
+                            </span>
                         </div>
 
-                        <div class="course-name">{{ $course->name }}</div>
+                        <div class="course-name">{{ $mc->name }}</div>
 
-                        <div class="text-xs text-purple-700 mb-3 font-bold flex items-center gap-1.5">
+                        <div class="text-xs text-purple-700 mb-2 font-bold flex items-center gap-1.5">
                             <span>Certificate Threshold:</span>
-                            <span class="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
+                            <span class="bg-purple-100 text-purple-900 px-2 py-0.5 rounded-md font-extrabold">{{ $mc->certificate_threshold ?? 75 }}%</span>
                         </div>
 
-                        <p class="course-desc">{{ $course->description ?: 'Pengelolaan materi modul, kuis evaluasi, dan kelulusan sertifikat industri.' }}</p>
+                        <!-- Pill Daftar Angkatan Batch yang Terdaftar -->
+                        <div class="my-2 flex flex-wrap gap-1.5" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;">
+                            @foreach($mc->courses as $batchItem)
+                                <a href="{{ route('vendor.courses.show', $batchItem->id) }}" 
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold {{ $batchItem->is_archived ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100' }} transition"
+                                   style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-decoration: none;">
+                                    <span>{{ $batchItem->batch_name ?: 'Batch ' . $loop->iteration }}</span>
+                                    <span style="font-size: 10px; background: rgba(107, 33, 168, 0.12); color: #6b21a8; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
+                                        {{ $batchItem->enrollments ? $batchItem->enrollments->count() : 0 }} Mhs
+                                    </span>
+                                </a>
+                            @endforeach
+                        </div>
+
+                        <p class="course-desc">{{ $mc->description ?: 'Pengelolaan kurikulum materi modul, bank kuis evaluasi, dan kelulusan sertifikat industri.' }}</p>
 
                         <div class="stats-row">
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Materials</div>
-                                <div class="stat-mini-value">{{ $course->materials ? $course->materials->count() : 0 }}</div>
+                                <div class="stat-mini-value">{{ $mc->materials ? $mc->materials->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Quizzes</div>
-                                <div class="stat-mini-value">{{ $course->quizzes ? $course->quizzes->count() : 0 }}</div>
+                                <div class="stat-mini-value">{{ $mc->quizzes ? $mc->quizzes->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
-                                <div class="stat-mini-label">Students</div>
-                                <div class="stat-mini-value">{{ $course->students ? $course->students->count() : 0 }}</div>
+                                <div class="stat-mini-label">Total Mhs</div>
+                                <div class="stat-mini-value">{{ $mcStudentCount }}</div>
                             </div>
                         </div>
 
                         <div style="margin-top: auto;">
-                            <a href="{{ route('vendor.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                Kelola Course Sertifikasi
-                            </a>
+                            @if($latestBatch)
+                                <a href="{{ route('vendor.courses.show', $latestBatch->id) }}" class="btn btn-primary w-full text-center">
+                                    Kelola Program & Angkatan
+                                </a>
+                            @else
+                                <a href="{{ route('vendor.courses.create') }}" class="btn btn-primary w-full text-center">
+                                    Buka Batch Perdana
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
-                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Course Sertifikasi Aktif</h3>
-                        <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Klik tombol "+ Buat Course Sertifikasi Baru" di atas untuk menerbitkan silabus mandiri pertama Anda.</p>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Program Sertifikasi Aktif</h3>
+                        <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Klik tombol "+ Buat Program Sertifikasi Baru" di atas untuk menerbitkan silabus mandiri pertama Anda.</p>
                     </div>
                 @endforelse
             </div>
         </div>
 
-        <!-- TAB 2: BANK COURSES (DRAFTS) -->
+        <!-- TAB 2: BANK / ARCHIVED PROGRAMS -->
         <div x-show="tab === 'bank'" style="display: none;">
             <div class="courses-grid">
-                @forelse($bankCourses as $course)
+                @forelse($archivedMasterCourses as $mc)
+                    @php
+                        $latestBatch = $mc->courses->first();
+                        $mcStudentCount = $mc->courses->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
+                    @endphp
                     <div class="course-card">
                         <div class="course-top">
-                            <span class="course-tag">Draft Vendor</span>
-                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">Archived / Draft</span>
+                            <span class="course-tag">{{ $mc->category->name ?? 'Draft Vendor' }}</span>
+                            <span class="course-badge text-slate-700 bg-slate-100 border-slate-200">Arsip / Draft</span>
                         </div>
 
-                        <div class="course-name">{{ $course->name }}</div>
+                        <div class="course-name">{{ $mc->name }}</div>
 
                         <div class="text-xs text-slate-500 mb-3 font-semibold">
-                            Threshold: {{ $course->certificate_threshold ?? 75 }}%
+                            Threshold: {{ $mc->certificate_threshold ?? 75 }}%
                         </div>
 
-                        <p class="course-desc">{{ $course->description ?: 'Pengelolaan materi pembelajaran dan bank kuis.' }}</p>
+                        <p class="course-desc">{{ $mc->description ?: 'Pengelolaan materi pembelajaran dan bank kuis.' }}</p>
 
                         <div class="stats-row">
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Materials</div>
-                                <div class="stat-mini-value">{{ $course->materials ? $course->materials->count() : 0 }}</div>
+                                <div class="stat-mini-value">{{ $mc->materials ? $mc->materials->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
                                 <div class="stat-mini-label">Quizzes</div>
-                                <div class="stat-mini-value">{{ $course->quizzes ? $course->quizzes->count() : 0 }}</div>
+                                <div class="stat-mini-value">{{ $mc->quizzes ? $mc->quizzes->count() : 0 }}</div>
                             </div>
                             <div class="stat-mini">
-                                <div class="stat-mini-label">Students</div>
-                                <div class="stat-mini-value">{{ $course->students ? $course->students->count() : 0 }}</div>
+                                <div class="stat-mini-label">Total Mhs</div>
+                                <div class="stat-mini-value">{{ $mcStudentCount }}</div>
                             </div>
                         </div>
 
                         <div style="margin-top: auto;">
-                            <a href="{{ route('vendor.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                                Pratinjau & Edit Course
-                            </a>
+                            @if($latestBatch)
+                                <a href="{{ route('vendor.courses.show', $latestBatch->id) }}" class="btn btn-primary w-full text-center">
+                                    Pratinjau & Buka Batch
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @empty
                     <div class="empty-state">
-                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Draft Course di Bank</h3>
-                        <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Seluruh course yang diarsipkan atau belum dipublikasikan akan muncul di sini.</p>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Draft Program di Bank</h3>
+                        <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Seluruh program yang diarsipkan atau belum dipublikasikan akan muncul di sini.</p>
                     </div>
                 @endforelse
             </div>

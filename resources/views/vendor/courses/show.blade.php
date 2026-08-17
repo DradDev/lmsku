@@ -609,38 +609,77 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: DAFTAR MAHASISWA TERDAFTAR (1 COL) -->
+                <!-- RIGHT COLUMN: DAFTAR MAHASISWA TERDAFTAR ANGKATAN BATCH INI (1 COL) -->
                 <div class="space-y-6">
                     <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h2 class="text-xl font-semibold text-slate-900 mb-5">
-                            Mahasiswa Terdaftar
-                        </h2>
+                        <div class="flex items-center justify-between gap-2 mb-5">
+                            <div>
+                                <h2 class="text-xl font-semibold text-slate-900">
+                                    Peserta Angkatan
+                                </h2>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    <strong>{{ $course->batch_name }}</strong> &bull; Total <strong>{{ $course->enrollments->count() }}</strong> Mahasiswa
+                                </p>
+                            </div>
 
-                        @if ($students->count())
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-purple-50 text-purple-700 border border-purple-200">
+                                {{ $course->batch_name }}
+                            </span>
+                        </div>
+
+                        @if ($course->enrollments->count())
                             <div class="space-y-3">
-                                @foreach ($students as $std)
-                                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                                @foreach ($course->enrollments as $enrollment)
+                                    @php
+                                        $stdUser = $enrollment->user;
+                                        $progress = $enrollment->progress_percent ?? 0;
+                                        $isPassed = $progress >= ($course->certificate_threshold ?? 75);
+                                    @endphp
+                                    <div class="rounded-2xl bg-slate-50 border border-slate-200 p-4 hover:border-purple-200 transition">
                                         <div class="flex items-start justify-between gap-3">
-                                            <div>
-                                                <p class="font-semibold text-slate-900">
-                                                    {{ $std->name ?? 'Mahasiswa' }}
-                                                </p>
-
-                                                <p class="mt-1 text-sm text-slate-500">
-                                                    {{ $std->email ?? 'No email' }}
-                                                </p>
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-800 font-bold flex items-center justify-center text-xs flex-shrink-0">
+                                                    {{ strtoupper(substr($stdUser->name ?? 'M', 0, 1)) }}
+                                                </div>
+                                                <div>
+                                                    <p class="font-bold text-slate-900 text-sm">
+                                                        {{ $stdUser->name ?? 'Unknown Student' }}
+                                                    </p>
+                                                    <p class="text-xs text-slate-500">
+                                                        {{ $stdUser->email ?? 'No email' }}
+                                                    </p>
+                                                </div>
                                             </div>
 
-                                            <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800">
-                                                Enrolled
+                                            <span class="text-xs font-bold px-2 py-0.5 rounded-full {{ $enrollment->status === 'completed' ? 'bg-emerald-100 text-emerald-800' : ($enrollment->status === 'in_progress' ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-700') }}">
+                                                {{ $enrollment->status === 'completed' ? 'Completed' : ($enrollment->status === 'in_progress' ? 'In Progress' : 'Not Started') }}
                                             </span>
+                                        </div>
+
+                                        <div class="mt-3 pt-3 border-t border-slate-200/70">
+                                            <div class="flex items-center justify-between text-[11px] font-semibold mb-1">
+                                                <span class="text-slate-500">Progres Belajar</span>
+                                                <span class="font-bold {{ $isPassed ? 'text-emerald-700' : 'text-slate-800' }}">{{ $progress }}%</span>
+                                            </div>
+                                            <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                                <div class="h-1.5 rounded-full {{ $isPassed ? 'bg-emerald-500' : 'bg-purple-600' }}" style="width: {{ min(100, max(0, $progress)) }}%"></div>
+                                            </div>
+
+                                            <div class="flex items-center justify-between mt-2 pt-1 text-[10px] text-slate-400">
+                                                <span>Terdaftar: {{ $enrollment->created_at ? $enrollment->created_at->format('d M Y') : '-' }}</span>
+                                                @if($stdUser)
+                                                    <a href="{{ route('vendor.students.portfolio', $stdUser->id) }}" class="text-purple-600 font-bold hover:underline">
+                                                        Lihat Portofolio →
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
-                                Belum ada mahasiswa yang terdaftar pada course sertifikasi ini.
+                            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
+                                Belum ada mahasiswa yang terdaftar pada angkatan <strong>{{ $course->batch_name }}</strong> ini.
                             </div>
                         @endif
                     </div>

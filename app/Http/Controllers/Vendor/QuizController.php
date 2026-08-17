@@ -127,9 +127,11 @@ class QuizController extends Controller
     public function destroyQuestion(Question $question): RedirectResponse
     {
         $quiz = $question->quiz;
-        $course = $quiz ? $quiz->course : null;
+        $vendorId = Auth::id();
+        $isAuthorized = ($quiz && $quiz->course && $quiz->course->user_id === $vendorId) ||
+                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId);
 
-        if ($course && $course->user_id !== Auth::id()) {
+        if (!$isAuthorized && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke soal ini.');
         }
 
@@ -140,8 +142,11 @@ class QuizController extends Controller
 
     public function destroy(Quiz $quiz): RedirectResponse
     {
-        $course = $quiz->course;
-        if ($course && $course->user_id !== Auth::id()) {
+        $vendorId = Auth::id();
+        $isAuthorized = ($quiz->course && $quiz->course->user_id === $vendorId) ||
+                        ($quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId);
+
+        if (!$isAuthorized && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 
