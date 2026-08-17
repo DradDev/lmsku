@@ -109,7 +109,7 @@
                                         </span>
                                     @elseif(!$isEligible)
                                         <span class="shrink-0 px-2.5 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200">
-                                            🔒 Terkunci
+                                            Terkunci
                                         </span>
                                     @endif
                                 </div>
@@ -168,7 +168,7 @@
                                         Buka Proyek →
                                     </a>
                                     <span class="text-xs font-bold text-emerald-700">
-                                        ✓ Terdaftar
+                                        Terdaftar
                                     </span>
                                 @elseif(!$isEligible)
                                     <a href="{{ route('student.projects.show', $project) }}"
@@ -178,7 +178,7 @@
                                     <a href="{{ route('student.projects.show', $project) }}"
                                        class="inline-flex items-center justify-center px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold rounded-lg hover:bg-amber-100 transition shadow-xs"
                                        title="Lihat mata kuliah prasyarat untuk membuka proyek ini">
-                                        🔒 Terkunci (Syarat)
+                                        Terkunci (Lihat Syarat)
                                     </a>
                                 @elseif ($isFull)
                                     <a href="{{ route('student.projects.show', $project) }}"

@@ -79,8 +79,8 @@
                             @endif
 
                             @if(!$participation && !$isEligible)
-                                <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                                    🔒 Mode Preview (Terkunci)
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                                    Mode Preview (Terkunci)
                                 </span>
                             @endif
                         </div>
@@ -126,7 +126,7 @@
                             @else
                                 <div class="px-3 py-1.5 bg-slate-100 border border-slate-200 text-slate-500 font-semibold rounded-xl text-xs flex items-center gap-1.5 cursor-not-allowed"
                                      title="Selesaikan matkul prasyarat untuk mengunduh TOR proyek">
-                                    🔒 Dokumen TOR Terkunci
+                                    Dokumen TOR Terkunci
                                 </div>
                             @endif
                         @endif
@@ -165,7 +165,7 @@
 
                         @forelse ($project->skills as $skill)
                             <span class="inline-block px-3 py-1 bg-indigo-50 text-indigo-700 font-bold rounded-full text-xs mr-1 mb-2 border border-indigo-100">
-                                ⚡ {{ $skill->name }}
+                                {{ $skill->name }}
                             </span>
                         @empty
                             <p class="text-xs text-gray-500">
@@ -278,7 +278,7 @@
                         <div class="p-5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 space-y-4 mb-5">
                             <div class="flex items-center gap-2">
                                 <span class="px-2.5 py-1 bg-amber-200 text-amber-900 rounded-lg text-xs font-extrabold">
-                                    🔒 PROYEK TERKUNCI
+                                    PROYEK TERKUNCI
                                 </span>
                                 <span class="text-xs font-bold text-amber-900">
                                     Anda belum memenuhi prasyarat kompetensi untuk mengambil proyek ini.
@@ -288,7 +288,7 @@
                             <div class="space-y-2 text-xs border-t border-amber-200/70 pt-3">
                                 <div class="flex items-start gap-2">
                                     <span class="font-black {{ ($eligibility['has_main_skill'] ?? false) ? 'text-emerald-700' : 'text-amber-800' }}">
-                                        {{ ($eligibility['has_main_skill'] ?? false) ? '✓' : '✗' }}
+                                        {{ ($eligibility['has_main_skill'] ?? false) ? '[LULUS]' : '[BELUM]' }}
                                     </span>
                                     <div>
                                         <span class="font-bold">Skill Kompetensi:</span> {{ $eligibility['main_skill_name'] ?? 'Skill' }}
@@ -297,7 +297,7 @@
 
                                 <div class="flex items-start gap-2">
                                     <span class="font-black {{ ($eligibility['has_verified_certificate'] ?? false) ? 'text-emerald-700' : 'text-amber-800' }}">
-                                        {{ ($eligibility['has_verified_certificate'] ?? false) ? '✓' : '✗' }}
+                                        {{ ($eligibility['has_verified_certificate'] ?? false) ? '[LULUS]' : '[BELUM]' }}
                                     </span>
                                     <div>
                                         <span class="font-bold">Sertifikat Kelulusan:</span> Wajib memiliki sertifikat kelulusan Course terkait (Lulus Final Quiz / Sertifikat Vendor).
@@ -308,7 +308,7 @@
                             @if(isset($prerequisiteCourses) && $prerequisiteCourses->count() > 0)
                                 <div class="pt-2 border-t border-amber-200/70">
                                     <p class="text-xs font-bold text-amber-950 mb-2">
-                                        🎓 Rekomendasi Mata Kuliah Prasyarat yang Perlu Diambil:
+                                        Rekomendasi Mata Kuliah Prasyarat yang Perlu Diambil:
                                     </p>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         @foreach($prerequisiteCourses as $pc)
@@ -335,14 +335,14 @@
                             <button type="button"
                                     class="px-5 py-2.5 bg-slate-200 text-slate-500 font-bold text-xs rounded-xl cursor-not-allowed border border-slate-300"
                                     disabled title="Selesaikan matkul prasyarat di atas untuk membuka pendaftaran">
-                                🔒 Pendaftaran Terkunci
+                                Pendaftaran Terkunci
                             </button>
                         </div>
                     @else
                         <!-- STATUS ELIGIBLE -->
                         <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs mb-5 space-y-2">
                             <div class="font-bold text-sm flex items-center gap-2">
-                                <span class="px-2 py-0.5 bg-emerald-200 text-emerald-950 rounded-md text-[10px] font-extrabold">✓ ELIGIBLE</span>
+                                <span class="px-2 py-0.5 bg-emerald-200 text-emerald-950 rounded-md text-[10px] font-extrabold">ELIGIBLE</span>
                                 <span>Selamat! Anda memenuhi seluruh syarat kompetensi proyek ini.</span>
                             </div>
                             <p class="text-emerald-800">
@@ -366,7 +366,7 @@
                                     @csrf
                                     <button type="submit"
                                             class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
-                                        ✨ Ambil Project Ini
+                                        Ambil Project Ini
                                     </button>
                                 </form>
                             @endif
@@ -407,7 +407,7 @@
                     </form>
                 @else
                     <div class="mb-6 p-4 bg-slate-50 border border-slate-200 text-slate-500 rounded-xl text-xs text-center">
-                        🔒 Kolom diskusi & pengumpulan link proyek hanya terbuka bagi mahasiswa yang sudah diterima dalam proyek ini.
+                        Kolom diskusi & pengumpulan link proyek hanya terbuka bagi mahasiswa yang sudah diterima dalam proyek ini.
                     </div>
                 @endif
 
