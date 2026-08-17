@@ -17,16 +17,24 @@ class DemoLmsSeeder extends Seeder
 
         Schema::disableForeignKeyConstraints();
 
-        DB::table('quiz_answers')->truncate();
-        DB::table('quiz_attempts')->truncate();
-        DB::table('submissions')->truncate();
-        DB::table('assignments')->truncate();
-        DB::table('materials')->truncate();
-        DB::table('questions')->truncate();
-        DB::table('quizzes')->truncate();
-        DB::table('enrollments')->truncate();
-        DB::table('courses')->truncate();
-        DB::table('users')->truncate();
+        $tablesToTruncate = [
+            'quiz_answers',
+            'quiz_attempts',
+            'submissions',
+            'assignments',
+            'materials',
+            'questions',
+            'quizzes',
+            'enrollments',
+            'courses',
+            'users',
+        ];
+
+        foreach ($tablesToTruncate as $table) {
+            if (Schema::hasTable($table)) {
+                DB::table($table)->truncate();
+            }
+        }
 
         Schema::enableForeignKeyConstraints();
 
@@ -36,6 +44,7 @@ class DemoLmsSeeder extends Seeder
             'name' => 'Admin LMSKU',
             'email' => 'admin@lmsku.test',
             'role' => 'admin',
+            'registration_status' => 'approved',
             'email_verified_at' => $now,
             'password' => Hash::make('password'),
             'remember_token' => null,
@@ -47,6 +56,7 @@ class DemoLmsSeeder extends Seeder
             'name' => 'Dr. Budi Santoso',
             'email' => 'lecturer@lmsku.test',
             'role' => 'lecturer',
+            'registration_status' => 'approved',
             'email_verified_at' => $now,
             'password' => Hash::make('password'),
             'remember_token' => null,
@@ -58,6 +68,7 @@ class DemoLmsSeeder extends Seeder
             'name' => 'Andi Pratama',
             'email' => 'student@lmsku.test',
             'role' => 'student',
+            'registration_status' => 'approved',
             'email_verified_at' => $now,
             'password' => Hash::make('password'),
             'remember_token' => null,
@@ -706,29 +717,33 @@ class DemoLmsSeeder extends Seeder
             ]);
         }
 
-        foreach ($courseData['assignments'] as $assignment) {
-            $assignmentId = DB::table('assignments')->insertGetId([
-                'course_id' => $courseId,
-                'title' => $assignment['title'],
-                'description' => $assignment['description'],
-                'deadline' => Carbon::now()->addDays($assignment['deadline_days'])->toDateString(),
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+        if (isset($courseData['assignments']) && Schema::hasTable('assignments')) {
+            foreach ($courseData['assignments'] as $assignment) {
+                $assignmentId = DB::table('assignments')->insertGetId([
+                    'course_id' => $courseId,
+                    'title' => $assignment['title'],
+                    'description' => $assignment['description'],
+                    'deadline' => Carbon::now()->addDays($assignment['deadline_days'])->toDateString(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
 
-            $submissionPath = 'demo/submissions/' . $this->slug($courseData['name']) . '/' . $assignment['submission']['filename'];
+                $submissionPath = 'demo/submissions/' . $this->slug($courseData['name']) . '/' . $assignment['submission']['filename'];
 
-            Storage::disk('public')->put($submissionPath, $assignment['submission']['content']);
+                Storage::disk('public')->put($submissionPath, $assignment['submission']['content']);
 
-            DB::table('submissions')->insert([
-                'assignment_id' => $assignmentId,
-                'user_id' => $studentId,
-                'file_path' => $submissionPath,
-                'grade' => $assignment['submission']['grade'],
-                'feedback' => $assignment['submission']['feedback'],
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
+                if (Schema::hasTable('submissions')) {
+                    DB::table('submissions')->insert([
+                        'assignment_id' => $assignmentId,
+                        'user_id' => $studentId,
+                        'file_path' => $submissionPath,
+                        'grade' => $assignment['submission']['grade'],
+                        'feedback' => $assignment['submission']['feedback'],
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+            }
         }
 
         $this->seedRegularQuiz(
@@ -758,14 +773,22 @@ class DemoLmsSeeder extends Seeder
         string $courseName,
         $now
     ): void {
-        $quizId = DB::table('quizzes')->insertGetId([
+        $quizPayload = [
             'course_id' => $courseId,
             'title' => $quizData['title'],
             'time_limit' => $quizData['time_limit'],
-            'is_final' => false,
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+
+        if (Schema::hasColumn('quizzes', 'quiz_type')) {
+            $quizPayload['quiz_type'] = 'daily';
+            $quizPayload['max_attempts'] = 3;
+        } else {
+            $quizPayload['is_final'] = false;
+        }
+
+        $quizId = DB::table('quizzes')->insertGetId($quizPayload);
 
         $questionIds = [];
         $questions = $quizData['questions'];
@@ -820,20 +843,27 @@ class DemoLmsSeeder extends Seeder
                 }
             }
 
-            $answersToInsert[] = [
+            $answerPayload = [
                 'quiz_attempt_id' => $attemptId,
                 'question_id' => $questionIds[$index],
                 'user_id' => $studentId,
                 'selected_option' => $selectedOption,
-                'answer_text' => $answerText,
                 'is_correct' => $isCorrect,
                 'score' => $score,
-                'feedback' => $question['type'] === 'essay'
-                    ? 'Jawaban essay sudah diisi dan siap direview lecturer.'
-                    : ($isCorrect ? 'Benar.' : 'Kurang tepat.'),
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
+
+            if (Schema::hasColumn('quiz_answers', 'answer_text')) {
+                $answerPayload['answer_text'] = $answerText;
+            }
+            if (Schema::hasColumn('quiz_answers', 'feedback')) {
+                $answerPayload['feedback'] = $question['type'] === 'essay'
+                    ? 'Jawaban essay sudah diisi dan siap direview lecturer.'
+                    : ($isCorrect ? 'Benar.' : 'Kurang tepat.');
+            }
+
+            $answersToInsert[] = $answerPayload;
         }
 
         DB::table('quiz_answers')->insert($answersToInsert);
@@ -859,14 +889,22 @@ class DemoLmsSeeder extends Seeder
         string $courseName,
         $now
     ): void {
-        $quizId = DB::table('quizzes')->insertGetId([
+        $quizPayload = [
             'course_id' => $courseId,
             'title' => $quizData['title'],
             'time_limit' => $quizData['time_limit'],
-            'is_final' => true,
             'created_at' => $now,
             'updated_at' => $now,
-        ]);
+        ];
+
+        if (Schema::hasColumn('quizzes', 'quiz_type')) {
+            $quizPayload['quiz_type'] = 'final';
+            $quizPayload['max_attempts'] = 1;
+        } else {
+            $quizPayload['is_final'] = true;
+        }
+
+        $quizId = DB::table('quizzes')->insertGetId($quizPayload);
 
         $questionIds = [];
         foreach ($quizData['questions'] as $question) {
@@ -909,18 +947,25 @@ class DemoLmsSeeder extends Seeder
                 $correctCount++;
             }
 
-            $answersToInsert[] = [
+            $answerPayload = [
                 'quiz_attempt_id' => $attemptId,
                 'question_id' => $questionIds[$index],
                 'user_id' => $studentId,
                 'selected_option' => $selected,
-                'answer_text' => null,
                 'is_correct' => $isCorrect,
                 'score' => $isCorrect ? 1 : 0,
-                'feedback' => $isCorrect ? 'Benar.' : 'Jawaban kurang tepat.',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
+
+            if (Schema::hasColumn('quiz_answers', 'answer_text')) {
+                $answerPayload['answer_text'] = null;
+            }
+            if (Schema::hasColumn('quiz_answers', 'feedback')) {
+                $answerPayload['feedback'] = $isCorrect ? 'Benar.' : 'Jawaban kurang tepat.';
+            }
+
+            $answersToInsert[] = $answerPayload;
         }
 
         DB::table('quiz_answers')->insert($answersToInsert);

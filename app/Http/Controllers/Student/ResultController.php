@@ -10,8 +10,10 @@ class ResultController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+
         $results = QuizAttempt::with(['quiz.course'])
-            ->where('user_id', Auth::id())
+            ->where('user_id', $user->id)
             ->latest()
             ->get();
 
@@ -19,7 +21,13 @@ class ResultController extends Controller
             return $result->quiz->course->name ?? 'Tanpa Course';
         });
 
-        return view('student.results.index', compact('results', 'resultsByCourse'));
+        $joinedProjects = $user->joinedProjects()
+            ->with(['skills', 'tags', 'user'])
+            ->wherePivot('status', 'accepted')
+            ->latest()
+            ->get();
+
+        return view('student.results.index', compact('results', 'resultsByCourse', 'joinedProjects'));
     }
 
     public function show(QuizAttempt $result)

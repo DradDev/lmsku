@@ -1,21 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L3 13V3h10l7.59 7.59a2 2 0 0 1 0 2.82z" />
-                    <circle cx="7.5" cy="7.5" r="1.5" />
-                </svg>
-            </div>
+        <div>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L3 13V3h10l7.59 7.59a2 2 0 0 1 0 2.82z" />
+                        <circle cx="7.5" cy="7.5" r="1.5" />
+                    </svg>
+                </div>
 
-            <div>
-                <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                    Master Tag
-                </h2>
-                <p class="text-sm text-gray-500">
-                    Kelola tag untuk mengelompokkan course dan project.
-                </p>
+                <div>
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        Master Specialty & Topic Tags
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Manage specialty and course topic tags linked to primary skills.
+                    </p>
+                </div>
             </div>
         </div>
     </x-slot>

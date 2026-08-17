@@ -9,27 +9,94 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 class ResultController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $baseQuery = QuizAttempt::whereHas('quiz', function ($query) {
-            $query->where('quiz_type', 'final');
-        });
+        $activeTab = $request->query('tab', 'quiz');
+
+        // Tab 1: Final Quiz Results - Deduplikasi Attempt Terbaik (Nilai Tertinggi) per User & Quiz
+        $bestAttemptIds = QuizAttempt::whereHas('quiz', function ($query) {
+                $query->where('quiz_type', 'final');
+            })
+            ->where(function ($q) {
+                $q->where('score', '>=', 75)->orWhere('is_verified', true);
+            })
+            ->select(DB::raw('MAX(id) as id'))
+            ->groupBy('user_id', 'quiz_id')
+            ->pluck('id');
+
+        $baseQuery = QuizAttempt::whereIn('id', $bestAttemptIds);
 
         $results = (clone $baseQuery)
             ->with(['user', 'quiz.course'])
+            ->latest('id')
+            ->get();
+
+        $totalQuizResults  = (clone $baseQuery)->count();
+        $verifiedQuizCount = (clone $baseQuery)->where('is_verified', true)->count();
+        $pendingQuizCount  = (clone $baseQuery)->where('is_verified', false)->count();
+        $averageQuizScore  = round((float) (clone $baseQuery)->avg('score'), 2);
+
+        // Tab 2: Project Results
+        $projectParticipations = \App\Models\ProjectParticipation::with(['user', 'project.creator', 'project.skills'])
             ->latest()
             ->get();
 
-        $totalResults  = (clone $baseQuery)->count();
-        $verifiedCount = (clone $baseQuery)->where('is_verified', true)->count();
-        $pendingCount  = (clone $baseQuery)->where('is_verified', false)->count();
-        $averageScore  = round((float) (clone $baseQuery)->avg('score'), 2);
+        foreach ($projectParticipations as $part) {
+            $cert = \App\Models\Certificate::where('user_id', $part->user_id)
+                ->where('project_id', $part->project_id)
+                ->first();
+            $part->certificate_record = $cert;
+            $part->is_verified = $cert ? $cert->is_verified : ($part->status === 'completed');
+        }
+
+        $totalProjectResults  = $projectParticipations->count();
+        $verifiedProjectCount = $projectParticipations->filter(fn($p) => $p->is_verified)->count();
+        $pendingProjectCount  = $projectParticipations->filter(fn($p) => !$p->is_verified)->count();
+
+        $totalResults  = $activeTab === 'project' ? $totalProjectResults : $totalQuizResults;
+        $verifiedCount = $activeTab === 'project' ? $verifiedProjectCount : $verifiedQuizCount;
+        $pendingCount  = $activeTab === 'project' ? $pendingProjectCount : $pendingQuizCount;
+        $averageScore  = $averageQuizScore;
 
         return view('admin.results.index', compact(
-            'results', 'totalResults', 'verifiedCount', 'pendingCount', 'averageScore'
+            'results', 'totalResults', 'verifiedCount', 'pendingCount', 'averageScore',
+            'activeTab', 'projectParticipations',
+            'totalQuizResults', 'verifiedQuizCount', 'pendingQuizCount',
+            'totalProjectResults', 'verifiedProjectCount', 'pendingProjectCount'
         ));
+    }
+
+    public function verifyProject(\App\Models\ProjectParticipation $participation): RedirectResponse
+    {
+        $participation->update(['status' => 'completed']);
+
+        $certificate = \App\Models\Certificate::firstOrCreate(
+            [
+                'user_id' => $participation->user_id,
+                'project_id' => $participation->project_id,
+            ],
+            [
+                'score' => 100,
+                'completed_at' => $participation->updated_at ?? now(),
+            ]
+        );
+
+        $certificate->update([
+            'is_verified' => true,
+            'status' => 'verified',
+            'verified_at' => now(),
+            'verified_by' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('admin.results.index', ['tab' => 'project'])
+            ->with('success', "Project Certificate untuk {$participation->user->name} berhasil diverifikasi (Verified)!");
     }
 
     public function show(QuizAttempt $result): View
@@ -76,41 +143,67 @@ class ResultController extends Controller
             ];
             ksort($rawData);
 
-            $response = Http::timeout(30)
-                ->withHeaders(['X-Api-Key' => config('services.blockchain.api_key')])
-                ->post(config('services.blockchain.url') . '/api/hash/store', [
-                'id'        => (string) $result->id,
-                'type'      => 'quiz_attempt',
-                'userId'    => (string) $result->user_id,
-                'score'     => (float) $result->score,
-                'timestamp' => $completedAt,
-                'rawData'   => $rawData,
-            ]);
+            $blockchainSuccess = false;
+            $payload = [];
 
-            if ($response->status() === 409) {
-                $result->update(['is_verified' => true]);
-                return redirect()
-                    ->route('admin.results.show', $result->id)
-                    ->with('info', 'Data sudah tercatat di blockchain sebelumnya.');
+            try {
+                $response = Http::timeout(5)
+                    ->withHeaders(['X-Api-Key' => config('services.blockchain.api_key')])
+                    ->post(config('services.blockchain.url') . '/api/hash/store', [
+                    'id'        => (string) $result->id,
+                    'type'      => 'quiz_attempt',
+                    'userId'    => (string) $result->user_id,
+                    'score'     => (float) $result->score,
+                    'timestamp' => $completedAt,
+                    'rawData'   => $rawData,
+                ]);
+
+                if ($response->successful() || $response->status() === 409) {
+                    $blockchainSuccess = true;
+                    $payload = $response->json() ?? [];
+                }
+            } catch (\Exception $e) {
+                Log::warning('Blockchain network offline during certificate verification: ' . $e->getMessage());
             }
-
-            if (! $response->successful()) {
-                throw new \Exception('Node API error: ' . $response->body());
-            }
-
-            $payload = $response->json();
 
             $result->update([
                 'is_verified'     => true,
                 'completed_at'    => $completedAt,
-                'blockchain_id'   => $payload['blockchainId'],
-                'blockchain_hash' => $payload['hash'],
-                'tx_id'           => $payload['txId'],
+                'blockchain_id'   => $payload['blockchainId'] ?? $result->blockchain_id,
+                'blockchain_hash' => $payload['hash'] ?? $result->blockchain_hash,
+                'tx_id'           => $payload['txId'] ?? $result->tx_id,
             ]);
+
+            // Sync Certificate record
+            $certificate = \App\Models\Certificate::firstOrCreate(
+                [
+                    'user_id' => $result->user_id,
+                    'course_id' => $result->quiz->course_id,
+                ],
+                [
+                    'score' => $result->score,
+                    'completed_at' => $result->completed_at ?? now(),
+                ]
+            );
+
+            $certificate->update([
+                'score' => max($certificate->score ?? 0, (int) $result->score),
+                'is_verified' => true,
+                'status' => 'verified',
+                'verified_at' => now(),
+                'verified_by' => \Illuminate\Support\Facades\Auth::id(),
+                'blockchain_id' => $payload['blockchainId'] ?? $certificate->blockchain_id,
+                'blockchain_hash' => $payload['hash'] ?? $certificate->blockchain_hash,
+                'tx_id' => $payload['txId'] ?? $certificate->tx_id,
+            ]);
+
+            $message = $blockchainSuccess
+                ? 'Sertifikat berhasil diverifikasi & tercatat di blockchain. TX: ' . ($payload['txId'] ?? '-')
+                : 'Sertifikat berhasil diverifikasi admin (Status: Verified).';
 
             return redirect()
                 ->route('admin.results.show', $result->id)
-                ->with('success', 'Sertifikat berhasil tercatat di blockchain. TX: ' . $payload['txId']);
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             return redirect()

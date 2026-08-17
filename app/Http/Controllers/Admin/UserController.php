@@ -15,82 +15,37 @@ class UserController extends Controller
     public function index(): View
     {
         $users = User::query()
+            ->with(['institution'])
             ->latest()
             ->get();
 
         return view('admin.users.index', compact('users'));
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('admin.users.create');
+        return redirect()->route('admin.users.index')->with('info', 'Registrasi pengguna dilakukan mandiri oleh pengguna.');
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', Rule::in(['admin', 'lecturer', 'student'])],
-            'peminatan' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => bcrypt($validated['password']),
-            'role' => $validated['role'],
-            'peminatan' => $validated['peminatan'] ?? null,
-            'registration_status' => 'approved',
-        ]);
-
-        return redirect()
-            ->route('admin.users.index')
-            ->with('success', 'User berhasil dibuat.');
+        return redirect()->route('admin.users.index')->with('info', 'Registrasi pengguna dilakukan mandiri oleh pengguna.');
     }
 
     public function show(User $user): View
     {
+        $user->load('institution');
         return view('admin.users.show', compact('user'));
     }
 
-    public function edit(User $user): View
+    public function edit(User $user): RedirectResponse
     {
-        return view('admin.users.edit', compact('user'));
+        return redirect()->route('admin.users.index')->with('info', 'Data pengguna bersifat mutlak dan dikelola mandiri oleh masing-masing pengguna.');
     }
 
     public function update(Request $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'role' => ['required', Rule::in(['admin', 'lecturer', 'student'])],
-            'password' => ['nullable', 'string', 'min:8'],
-            'peminatan' => ['nullable', 'string', 'max:255'],
-        ]);
-
-        $data = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'peminatan' => $validated['peminatan'] ?? null,
-        ];
-
-        if (!empty($validated['password'])) {
-            $data['password'] = bcrypt($validated['password']);
-        }
-
-        $user->update($data);
-
-        return redirect()
-            ->route('admin.users.index')
-            ->with('success', 'User berhasil diperbarui.');
+        return redirect()->route('admin.users.index')->with('info', 'Data pengguna bersifat mutlak dan dikelola mandiri oleh masing-masing pengguna.');
     }
 
     public function approve(Request $request, User $user): RedirectResponse
@@ -121,14 +76,12 @@ class UserController extends Controller
     public function reject(Request $request, User $user): RedirectResponse
     {
         $validated = $request->validate([
-            'reason' => ['required', 'string', 'max:1000'],
-        ], [
-            'reason.required' => 'Alasan penolakan wajib diisi.',
+            'reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $user->update([
             'registration_status' => 'rejected',
-            'registration_note' => $validated['reason'],
+            'registration_note' => $validated['reason'] ?? 'Registration rejected by administrator.',
         ]);
 
         Log::info('User registration rejected', [

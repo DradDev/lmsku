@@ -9,13 +9,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            DemoLmsSeeder::class,
+            UserSeeder::class,
+            AcademicTermSeeder::class,
+            CategorySeeder::class,
+            SkillSeeder::class,
+            TagSeeder::class,
+            MasterCourseSeeder::class,
+            CourseOfferingSeeder::class,
+            MaterialQuizSeeder::class,
+            ProjectSeeder::class,
+            EnrollmentCertificateSeeder::class,
         ]);
-        
-        $this->call([
-    SkillSeeder::class,
-    TagSeeder::class,
-]);
     }
-    
 }

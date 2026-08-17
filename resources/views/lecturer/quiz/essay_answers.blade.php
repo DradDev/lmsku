@@ -4,10 +4,10 @@
             <div class="mb-8">
                 <a href="{{ route('lecturer.courses.show', $course->id) }}"
                    class="text-sm text-blue-400 hover:text-blue-300">
-                    ← Kembali ke Course
+                    ← Back to Course
                 </a>
 
-                <h1 class="mt-3 text-3xl font-bold">Nilai Jawaban Essay</h1>
+                <h1 class="mt-3 text-3xl font-bold">Grade Essay Answers</h1>
                 <p class="mt-2 text-sm text-slate-400">
                     Quiz: {{ $quiz->title }} — Course: {{ $course->name }}
                 </p>

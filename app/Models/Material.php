@@ -8,15 +8,34 @@ class Material extends Model
 {
     protected $fillable = [
         'course_id',
+        'master_course_id',
+        'course_offering_id',
         'title',
         'file_path',
     ];
 
     /**
-     * Materi dimiliki oleh course
+     * Materi dimiliki oleh MasterCourse (Pustaka Induk)
+     */
+    public function masterCourse()
+    {
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+    }
+
+    /**
+     * Relasi ke penawaran kelas spesifik (opsional)
+     */
+    public function courseOffering()
+    {
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
+    }
+
+    /**
+     * Legacy course relationship
      */
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 }
+

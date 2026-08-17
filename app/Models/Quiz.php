@@ -8,6 +8,7 @@ class Quiz extends Model
 {
     protected $fillable = [
         'course_id',
+        'master_course_id',
         'title',
         'time_limit',
         'quiz_type',
@@ -22,9 +23,14 @@ class Quiz extends Model
         'max_attempts' => 'integer',
     ];
 
+    public function masterCourse()
+    {
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+    }
+
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
     }
 
     public function questions()
@@ -73,20 +79,42 @@ class Quiz extends Model
             return false;
         }
 
+        if ($this->max_attempts === null || $this->max_attempts === 0) {
+            return true;
+        }
+
         $attemptCount = $this->attempts()
             ->where('user_id', $userId)
             ->count();
 
-        return $attemptCount < $this->max_attempts;
+        $approvedRetakes = \App\Models\QuizRetakeRequest::where('user_id', $userId)
+            ->where('quiz_id', $this->id)
+            ->where('status', 'approved')
+            ->count();
+
+        $allowedAttempts = $this->max_attempts + $approvedRetakes;
+
+        return $attemptCount < $allowedAttempts;
     }
 
     public function remainingAttempts(int $userId): int
     {
+        if ($this->max_attempts === null || $this->max_attempts === 0) {
+            return 999; // Unlimited Attempts
+        }
+
         $attemptCount = $this->attempts()
             ->where('user_id', $userId)
             ->count();
 
-        return max(0, $this->max_attempts - $attemptCount);
+        $approvedRetakes = \App\Models\QuizRetakeRequest::where('user_id', $userId)
+            ->where('quiz_id', $this->id)
+            ->where('status', 'approved')
+            ->count();
+
+        $allowedAttempts = $this->max_attempts + $approvedRetakes;
+
+        return max(0, $allowedAttempts - $attemptCount);
     }
 
     public function getQuizTypeLabelAttribute(): string

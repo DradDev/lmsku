@@ -114,6 +114,11 @@ class QuizAnswerController extends Controller
             'is_verified' => $allEssayGraded,
         ]);
 
+        // Akumulasi otomatis profil kompetensi skill mahasiswa saat essay dinilai
+        \Illuminate\Support\Facades\Artisan::call('ai:calculate-user-skill-profiles', [
+            '--user_id' => $attempt->user_id,
+        ]);
+
         return back()->with('success', 'Jawaban essay berhasil dinilai.');
     }
 }

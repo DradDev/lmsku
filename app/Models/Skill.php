@@ -12,6 +12,7 @@ class Skill extends Model
         'parent_id',
     ];
 
+
     public function parent()
     {
         return $this->belongsTo(Skill::class, 'parent_id');

@@ -1,1162 +1,923 @@
 <x-app-layout>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-.lec-wrap {
-    min-height: 100vh;
-    background: #f4f6fb;
-    color: #1e2435;
-    padding: 2.5rem 0 4rem;
-    font-family: 'Inter', sans-serif;
-}
-
-.lec-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-/* ── Header ── */
-.lec-header {
-    margin-bottom: 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-@media (min-width: 768px) {
-    .lec-header { flex-direction: row; align-items: center; justify-content: space-between; }
-}
-
-.lec-eyebrow {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #10b981;
-    margin-bottom: 5px;
-}
-
-.lec-title {
-    font-size: 26px;
-    font-weight: 600;
-    color: #1e2435;
-}
-
-.lec-sub {
-    font-size: 13px;
-    color: #7b8399;
-    margin-top: 3px;
-}
-
-.header-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-/* ── Buttons ── */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 9px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-
-.btn-green  { background: #10b981; color: #fff; }
-.btn-green:hover  { background: #059669; }
-
-.btn-primary { background: #6366f1; color: #fff; }
-.btn-primary:hover { background: #4f46e5; }
-
-.btn-blue   { background: #3b82f6; color: #fff; }
-.btn-blue:hover   { background: #2563eb; }
-
-.btn-purple { background: #8b5cf6; color: #fff; }
-.btn-purple:hover { background: #7c3aed; }
-
-.btn-red    { background: #ef4444; color: #fff; }
-.btn-red:hover    { background: #dc2626; }
-
-.btn-ghost {
-    background: #fff;
-    color: #1e2435;
-    border: 1px solid #e8eaf2;
-}
-.btn-ghost:hover { background: #f4f6fb; }
-
-.btn-outline {
-    background: #f0f1fb;
-    color: #6366f1;
-    border: 1px solid #dde0f9;
-}
-.btn-outline:hover { background: #e4e6f9; }
-
-.btn-muted {
-    background: #f0f2fa;
-    color: #5a607a;
-    border: 1px solid #e8eaf2;
-}
-.btn-muted:hover { background: #e8eaf2; }
-
-/* ── Tabs ── */
-.tabs-wrap {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 13px;
-    padding: 5px;
-    width: fit-content;
-    margin-bottom: 2rem;
-}
-
-.tab-link {
-    padding: 8px 20px;
-    border-radius: 9px;
-    font-size: 13px;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.15s;
-    color: #7b8399;
-}
-
-.tab-link:hover { background: #f4f6fb; color: #1e2435; }
-.tab-link.tab-active-overview  { background: #1e2435; color: #fff; }
-.tab-link.tab-active-materials { background: #3b82f6; color: #fff; }
-.tab-link.tab-active-questions { background: #8b5cf6; color: #fff; }
-
-/* ── Alerts ── */
-.alert {
-    padding: 11px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 500;
-    margin-bottom: 1.5rem;
-    border: 1px solid transparent;
-}
-
-.alert-success { background: #edfaf4; border-color: #a7e9c8; color: #1a7a4a; }
-.alert-error   { background: #fff0f0; border-color: #ffc2c2; color: #b91c1c; }
-.alert-warning { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
-
-/* ── Stat Grid ── */
-.stat-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 14px;
-    padding: 1.2rem 1.4rem;
-    border-top: 3px solid transparent;
-    transition: box-shadow 0.2s;
-}
-
-.stat-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,0.07); }
-.stat-card.sc1 { border-top-color: #6366f1; }
-.stat-card.sc2 { border-top-color: #8b5cf6; }
-.stat-card.sc3 { border-top-color: #3b82f6; }
-.stat-card.sc4 { border-top-color: #10b981; }
-
-.stat-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color: #9399b0;
-    margin-bottom: 8px;
-}
-
-.stat-value {
-    font-size: 30px;
-    font-weight: 600;
-    color: #1e2435;
-}
-
-.stat-sub { font-size: 11px; color: #b0b4c9; margin-top: 4px; }
-
-/* ── Two Column ── */
-.two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-}
-
-@media (max-width: 1024px) { .two-col { grid-template-columns: 1fr; } }
-
-/* ── Card ── */
-.panel {
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 16px;
-    padding: 1.4rem;
-}
-
-.panel-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e2435;
-    margin-bottom: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.panel-title-link { font-size: 12px; color: #6366f1; text-decoration: none; font-weight: 500; }
-.panel-title-link:hover { text-decoration: underline; }
-
-/* ── Quick Actions Grid ── */
-.quick-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.quick-item {
-    background: #f7f8fc;
-    border: 1px solid #e8eaf2;
-    border-radius: 11px;
-    padding: 14px;
-    text-decoration: none;
-    transition: all 0.15s;
-    display: block;
-}
-
-.quick-item:hover { background: #eef0fb; border-color: #dde0f9; }
-.quick-item-cat { font-size: 11px; color: #9399b0; font-weight: 500; margin-bottom: 3px; }
-.quick-item-label { font-size: 13px; font-weight: 600; color: #1e2435; }
-
-/* ── Question Preview Card ── */
-.q-preview {
-    background: #f7f8fc;
-    border: 1px solid #e8eaf2;
-    border-radius: 11px;
-    padding: 13px;
-    margin-bottom: 10px;
-}
-
-.q-preview:last-child { margin-bottom: 0; }
-
-.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 100px;
-}
-
-.badge-gray    { background: #f0f2fa; color: #5a607a; border: 1px solid #e8eaf2; }
-.badge-purple  { background: #f1effe; color: #7c3aed; border: 1px solid #e9e4fd; }
-.badge-green   { background: #edfaf4; color: #1a7a4a; border: 1px solid #a7e9c8; }
-.badge-red     { background: #fff0f0; color: #b91c1c; border: 1px solid #ffc2c2; }
-.badge-blue    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
-.badge-amber   { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
-.badge-draft   { background: #f4f6fb; color: #7b8399; border: 1px solid #e8eaf2; }
-
-.q-preview-text { font-size: 13px; color: #3d4460; line-height: 1.5; }
-
-/* ── Section Header ── */
-.section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.1rem;
-}
-
-.section-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #1e2435;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-}
-
-.section-title::before {
-    content: '';
-    width: 3px;
-    height: 15px;
-    border-radius: 2px;
-    display: inline-block;
-    flex-shrink: 0;
-}
-
-.section-title.bar-blue::before  { background: #3b82f6; }
-.section-title.bar-purple::before { background: #8b5cf6; }
-
-/* ── Materials List ── */
-.material-row {
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 12px;
-    padding: 1.1rem 1.3rem;
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    transition: box-shadow 0.15s;
-}
-
-.material-row:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.06); }
-.material-row:last-child { margin-bottom: 0; }
-
-@media (min-width: 640px) {
-    .material-row { flex-direction: row; align-items: center; justify-content: space-between; }
-}
-
-.material-name { font-size: 14px; font-weight: 600; color: #1e2435; }
-.material-desc { font-size: 12px; color: #9399b0; margin-top: 2px; }
-.material-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-
-/* ── Empty State ── */
-.empty-box {
-    background: #fff;
-    border: 1.5px dashed #dde0ec;
-    border-radius: 14px;
-    padding: 3rem;
-    text-align: center;
-}
-
-.empty-box p { font-size: 13px; color: #b0b4c9; }
-
-/* ── Questions Tab ── */
-.q-form-wrap {
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
-
-.q-form-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.4rem;
-}
-
-.q-form-title {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e2435;
-}
-
-.q-form-icon {
-    background: #f1effe;
-    border-radius: 8px;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ── Form Elements ── */
-.form-group { margin-bottom: 1.1rem; }
-
-.form-label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.7px;
-    color: #9399b0;
-    margin-bottom: 7px;
-}
-
-.form-control {
-    width: 100%;
-    border: 1px solid #e8eaf2;
-    background: #f7f8fc;
-    border-radius: 9px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: #1e2435;
-    font-family: 'Inter', sans-serif;
-    transition: border-color 0.15s;
-    outline: none;
-}
-
-.form-control:focus { border-color: #8b5cf6; background: #fff; }
-
-textarea.form-control { resize: vertical; }
-
-.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-@media (max-width: 640px) { .form-grid-2 { grid-template-columns: 1fr; } }
-
-/* ── Question Card (in form) ── */
-.question-card {
-    background: #f7f8fc;
-    border: 1px solid #e8eaf2;
-    border-radius: 13px;
-    padding: 1.2rem;
-    margin-bottom: 1rem;
-}
-
-.question-card:last-child { margin-bottom: 0; }
-
-.question-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-}
-
-.question-card-title { font-size: 13px; font-weight: 600; color: #1e2435; }
-
-.mc-fields {
-    margin-top: 1rem;
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 10px;
-    padding: 1rem;
-}
-
-.mc-fields-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.7px;
-    text-transform: uppercase;
-    color: #9399b0;
-    margin-bottom: 12px;
-    display: block;
-}
-
-.mc-option-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-}
-
-.mc-option-row:last-child { margin-bottom: 0; }
-
-.mc-letter {
-    width: 30px;
-    height: 30px;
-    border-radius: 7px;
-    background: #eef0fb;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: #6366f1;
-    flex-shrink: 0;
-}
-
-.mc-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-@media (max-width: 640px) { .mc-options-grid { grid-template-columns: 1fr; } }
-
-/* ── Question List Cards ── */
-.q-list-card {
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 13px;
-    padding: 1.2rem;
-    margin-bottom: 10px;
-    transition: box-shadow 0.15s;
-}
-
-.q-list-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,0.06); }
-.q-list-card:last-child { margin-bottom: 0; }
-
-.q-list-top {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-@media (min-width: 1024px) {
-    .q-list-top { flex-direction: row; align-items: flex-start; justify-content: space-between; }
-}
-
-.q-list-body { flex: 1; min-width: 0; }
-.q-list-question { font-size: 14px; font-weight: 500; color: #1e2435; line-height: 1.55; margin-bottom: 6px; }
-.q-list-quiz-ref { font-size: 12px; color: #9399b0; }
-.q-list-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
-
-/* ── Answer Options Display ── */
-.mc-answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-@media (max-width: 640px) { .mc-answer-grid { grid-template-columns: 1fr; } }
-
-.mc-answer-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: 9px;
-    padding: 9px 12px;
-    border: 1px solid transparent;
-}
-
-.mc-answer-item.correct { background: #edfaf4; border-color: #a7e9c8; }
-.mc-answer-item.wrong   { background: #f7f8fc; border-color: #e8eaf2; }
-
-.mc-answer-letter {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-
-.mc-answer-letter.correct { background: #10b981; color: #fff; }
-.mc-answer-letter.wrong   { background: #dde0ec; color: #5a607a; }
-
-.mc-answer-text { font-size: 13px; }
-.mc-answer-text.correct { color: #1a7a4a; }
-.mc-answer-text.wrong   { color: #5a607a; }
-
-.essay-note {
-    background: #f7f8fc;
-    border: 1px solid #e8eaf2;
-    border-radius: 9px;
-    padding: 10px 13px;
-    font-size: 13px;
-    color: #9399b0;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding-top: 8px;
-    flex-wrap: wrap;
-}
-
-
-/* ── Skill Mapping Fields ── */
-.hidden { display: none !important; }
-
-.skill-detail-panel {
-    background: #fff;
-    border: 1px solid #e8eaf2;
-    border-radius: 10px;
-    padding: 12px;
-    margin-top: 10px;
-}
-
-.skill-detail-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: #1e2435;
-    margin-bottom: 9px;
-}
-
-.skill-checkbox {
-    display: block;
-    font-size: 13px;
-    color: #3d4460;
-    margin-bottom: 7px;
-}
-
-.skill-checkbox input { margin-right: 7px; }
-
-.skill-help {
-    font-size: 12px;
-    color: #9399b0;
-    margin-top: 6px;
-}
-
-/* ── Responsive ── */
-@media (max-width: 1024px) {
-    .stat-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px) {
-    .lec-container { padding: 0 1rem; }
-    .stat-grid { grid-template-columns: 1fr; }
-    .quick-grid { grid-template-columns: 1fr; }
-}
-</style>
-
-<div class="lec-wrap">
-    <div class="lec-container">
-
-        {{-- Header --}}
-        <div class="lec-header">
-            <div class="lec-header-left">
-                <p class="lec-eyebrow">Lecturer Portal</p>
-                <h1 class="lec-title">Lecturer Dashboard</h1>
-                <p class="lec-sub">Kelola materi pembelajaran, soal, dan aktivitas pengajaran Anda.</p>
-            </div>
-
-            <div class="header-actions">
-                <a href="{{ route('lecturer.courses.create') }}" class="btn btn-green">+ New Course</a>
-                <a href="{{ route('lecturer.courses.index') }}" class="btn btn-ghost">Manage Courses</a>
-            </div>
-        </div>
-
-        {{-- Tabs --}}
-        <div class="tabs-wrap">
-            <a href="{{ route('lecturer.dashboard', ['tab' => 'overview']) }}"
-               class="tab-link {{ $tab === 'overview' ? 'tab-active-overview' : '' }}">
-                Overview
-            </a>
-            <a href="{{ route('lecturer.dashboard', ['tab' => 'materials']) }}"
-               class="tab-link {{ $tab === 'materials' ? 'tab-active-materials' : '' }}">
-                Learning Materials
-            </a>
-            <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}"
-               class="tab-link {{ $tab === 'questions' ? 'tab-active-questions' : '' }}">
-                Questions
-            </a>
-        </div>
-
-        {{-- Alerts --}}
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert alert-error">
-                <p style="font-weight:600; margin-bottom:6px;">Please fix the following errors:</p>
-                <ul style="list-style:disc; padding-left:1.2rem; display:flex; flex-direction:column; gap:3px;">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        {{-- ==================== OVERVIEW TAB ==================== --}}
-        @if($tab === 'overview')
-            <div class="stat-grid">
-                <div class="stat-card sc1">
-                    <div class="stat-label">Total Materials</div>
-                    <div class="stat-value">{{ $materials->count() }}</div>
-                    <div class="stat-sub">Learning materials uploaded</div>
+    <x-slot name="header">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+                    </svg>
                 </div>
-                <div class="stat-card sc2">
-                    <div class="stat-label">Total Questions</div>
-                    <div class="stat-value">{{ $questions->count() }}</div>
-                    <div class="stat-sub">Questions created</div>
-                </div>
-                <div class="stat-card sc3">
-                    <div class="stat-label">Multiple Choice</div>
-                    <div class="stat-value">{{ $questions->where('question_type', 'multiple_choice')->count() }}</div>
-                    <div class="stat-sub">MC questions</div>
-                </div>
-                <div class="stat-card sc4">
-                    <div class="stat-label">Essay</div>
-                    <div class="stat-value">{{ $questions->where('question_type', 'essay')->count() }}</div>
-                    <div class="stat-sub">Essay questions</div>
-                </div>
-            </div>
-
-            <div class="two-col">
-                <div class="panel">
-                    <div class="panel-title">Quick Actions</div>
-                    <div class="quick-grid">
-                        <a href="{{ route('lecturer.courses.index') }}" class="quick-item">
-                            <div class="quick-item-cat">Courses</div>
-                            <div class="quick-item-label">Manage Courses & Materials</div>
-                        </a>
-                        <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}" class="quick-item">
-                            <div class="quick-item-cat">Questions</div>
-                            <div class="quick-item-label">Create Questions</div>
-                        </a>
-                        <a href="{{ route('lecturer.courses.index') }}" class="quick-item">
-                            <div class="quick-item-cat">Courses</div>
-                            <div class="quick-item-label">View My Courses</div>
-                        </a>
-                        <a href="{{ route('lecturer.assignments.index') }}" class="quick-item">
-                            <div class="quick-item-cat">Assignments</div>
-                            <div class="quick-item-label">Manage Assignments</div>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="panel">
-                    <div class="panel-title">
-                        Recent Questions
-                        <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}" class="panel-title-link">View all →</a>
-                    </div>
-
-                    @forelse($questions->take(5) as $question)
-                        <div class="q-preview">
-                             <div class="badge-row">
-                                <span class="badge badge-purple">
-                                    {{ $question->question_type === 'essay' ? 'Essay' : 'Multiple Choice' }}
-                                </span>
-                                <span class="badge badge-amber">{{ ucfirst($question->difficulty) }}</span>
-                            </div>
-                            <p class="q-preview-text" style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">
-                                {{ $question->question }}
-                            </p>
-                        </div>
-                    @empty
-                        <div class="empty-box">
-                            <p>Belum ada soal yang dibuat.</p>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
-        @endif
-
-        {{-- ==================== MATERIALS TAB ==================== --}}
-        @if($tab === 'materials')
-            <div class="section-header" style="margin-bottom:1.5rem;">
                 <div>
-                    <h2 class="section-title bar-blue" style="font-size:16px;">Learning Materials</h2>
-                    <p style="font-size:13px;color:#9399b0;margin-top:4px;padding-left:12px;">Kelola materi yang digunakan untuk pembelajaran.</p>
-                </div>
-                <a href="{{ route('lecturer.materials.create') }}" class="btn btn-blue">+ Add Material</a>
-            </div>
-
-            @forelse($materials as $material)
-                <div class="material-row">
-                    <div class="material-info">
-                        <div class="material-name">{{ $material->title ?? 'Untitled Material' }}</div>
-                        @if(!empty($material->description))
-                            <div class="material-desc">{{ $material->description }}</div>
-                        @endif
-                    </div>
-                    <div class="material-actions">
-                        <a href="{{ route('lecturer.materials.show', $material->id) }}" class="btn btn-ghost">View</a>
-                        <a href="{{ route('lecturer.materials.edit', $material->id) }}" class="btn btn-blue">Edit</a>
-                        <form method="POST" action="{{ route('lecturer.materials.destroy', $material->id) }}"
-                              onsubmit="return confirm('Yakin ingin menghapus materi ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-red">Delete</button>
-                        </form>
-                    </div>
-                </div>
-            @empty
-                <div class="empty-box">
-                    <p>Belum ada learning material.</p>
-                </div>
-            @endforelse
-        @endif
-
-        {{-- ==================== QUESTIONS TAB ==================== --}}
-        @if($tab === 'questions')
-            @php
-                $groupedQuestions = $questions->groupBy('quiz_id');
-            @endphp
-
-            <div class="section-header" style="margin-bottom:1.5rem;">
-                <div>
-                    <h2 class="section-title bar-purple" style="font-size:16px;">Questions</h2>
-                    <p style="font-size:13px;color:#9399b0;margin-top:4px;padding-left:12px;">
-                        Buat banyak nomor soal dalam 1 quiz, lalu simpan sekaligus.
+                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
+                        Author Dashboard
+                    </h2>
+                    <p class="text-sm text-gray-500">
+                        Kelola materi pembelajaran, kuis, soal, dan pengajaran Anda.
                     </p>
                 </div>
             </div>
 
-            {{-- Create Questions Form --}}
-            <div class="q-form-wrap">
-                <div class="q-form-header">
-                    <div class="q-form-title">
-                        <div class="q-form-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 4v16m8-8H4"/>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('lecturer.courses.index') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                    </svg>
+                    Kelola Kelas Saya
+                </a>
+            </div>
+        </div>
+    </x-slot>
+
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            {{-- Alerts --}}
+            @if(session('success'))
+                <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm text-sm font-medium">
+                    <svg class="mt-0.5 flex-shrink-0 text-emerald-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                    <div>
+                        <p class="font-bold">Berhasil</p>
+                        <p class="mt-0.5 text-emerald-700">{{ session('success') }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($errors) && $errors->any())
+                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm text-sm">
+                    <div class="flex items-center gap-2 font-bold mb-1 text-rose-900">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        Mohon periksa kembali kesalahan berikut:
+                    </div>
+                    <ul class="list-disc pl-6 space-y-1 text-rose-700">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            {{-- Compact Tabs Nav --}}
+            <div class="flex items-center gap-1.5 p-1.5 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto">
+                <a href="{{ route('lecturer.dashboard', ['tab' => 'overview']) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'overview' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    Overview
+                </a>
+                <a href="{{ route('lecturer.dashboard', ['tab' => 'materials']) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'materials' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                    </svg>
+                    Learning Materials
+                </a>
+                <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'questions' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    Questions & Builder
+                </a>
+            </div>
+
+            {{-- ==================== OVERVIEW TAB ==================== --}}
+            @if($tab === 'overview')
+                {{-- Compact Stat Grid --}}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
                             </svg>
                         </div>
-                        Create Questions for One Quiz
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Materials</p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-0.5">{{ $materials->count() }}</h3>
+                            <p class="text-xs text-gray-500">Materi diunggah</p>
+                        </div>
                     </div>
-                    <button type="button" id="add-question" class="btn btn-muted">+ Tambah Nomor Soal</button>
+
+                    <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition">
+                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Questions</p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-0.5">{{ $questions->count() }}</h3>
+                            <p class="text-xs text-gray-500">Soal dibuat</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 11 12 14 22 4"/>
+                                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Multiple Choice</p>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-0.5">{{ $questions->where('question_type', 'multiple_choice')->count() }}</h3>
+                            <p class="text-xs text-gray-500">Pilihan ganda</p>
+                        </div>
+                    </div>
                 </div>
 
-                <form method="POST" action="{{ route('lecturer.questions.store') }}">
-                    @csrf
-
-                    <div class="form-group">
-                        <label class="form-label">Quiz</label>
-                        <select name="quiz_id" class="form-control" required>
-                            <option value="">Select quiz</option>
-                            @forelse($quizzes as $quiz)
-                                <option value="{{ $quiz->id }}">
-                                    {{ $quiz->title }} — {{ $quiz->course->name }}
-                                    @if($quiz->quiz_type === 'final')
-                                        (Final Quiz)
-                                    @endif
-                                </option>
-                            @empty
-                                <option value="">No quiz available</option>
-                            @endforelse
-                        </select>
-                    </div>
-
-                    <div id="questions-wrapper">
-                        <div class="question-card" data-index="0">
-                            <div class="question-card-header">
-                                <div class="question-card-title">Nomor Soal 1</div>
-                                <button type="button" class="remove-question hidden btn btn-red" style="font-size:11px;padding:5px 11px;">Remove</button>
-                            </div>
-
-                            <div class="form-grid-2">
-                                <div class="form-group" style="margin-bottom:0">
-                                    <label class="form-label">Question Type</label>
-                                    <select name="questions[0][question_type]" class="question-type form-control">
-                                        <option value="essay">Essay</option>
-                                        <option value="multiple_choice">Multiple Choice</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom:0">
-                                    <label class="form-label">Difficulty</label>
-                                    <select name="questions[0][difficulty]" class="form-control">
-                                        <option value="easy">Easy</option>
-                                        <option value="medium" selected>Medium</option>
-                                        <option value="hard">Hard</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="form-grid-2" style="margin-top:12px;">
-                                <div class="form-group" style="margin-bottom:0">
-                                    <label class="form-label">Bidang / Skill Utama</label>
-                                    <select
-                                        name="questions[0][main_skill_id]"
-                                        class="question-main-skill form-control"
-                                        data-question-index="0"
-                                    >
-                                        <option value="">-- Pilih Bidang Utama --</option>
-                                        @foreach($mainSkills as $mainSkill)
-                                            <option value="{{ $mainSkill->id }}">{{ $mainSkill->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <p class="skill-help">Contoh: Software, ML / AI, Jaringan.</p>
-                                </div>
-
-                                <div class="form-group" style="margin-bottom:0">
-                                    <label class="form-label">Detail Skill yang Diuji</label>
-                                    @foreach($mainSkills as $mainSkill)
-                                        <div
-                                            class="question-skill-detail-group hidden"
-                                            data-question-index="0"
-                                            data-parent-id="{{ $mainSkill->id }}"
-                                        >
-                                            <div class="skill-detail-panel">
-                                                <div class="skill-detail-title">Detail {{ $mainSkill->name }}</div>
-
-                                                @forelse($mainSkill->children as $childSkill)
-                                                    <label class="skill-checkbox">
-                                                        <input
-                                                            type="checkbox"
-                                                            name="questions[0][skill_ids][]"
-                                                            value="{{ $childSkill->id }}"
-                                                        >
-                                                        {{ $childSkill->name }}
-                                                    </label>
-                                                @empty
-                                                    <p class="skill-help">Belum ada detail skill untuk bidang ini.</p>
-                                                @endforelse
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            <div class="form-group" style="margin-top:12px; margin-bottom:0;">
-                                <label class="form-label">Question</label>
-                                <textarea name="questions[0][question]" rows="3" class="form-control" placeholder="Write your question here..." required></textarea>
-                            </div>
-
-                            <div class="mc-fields hidden">
-                                <span class="mc-fields-label">Answer Options</span>
-                                <div class="mc-options-grid">
-                                    @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $key => $label)
-                                        <div class="mc-option-row">
-                                            <div class="mc-letter">{{ $label }}</div>
-                                            <input type="text"
-                                                   name="questions[0][option_{{ $key }}]"
-                                                   placeholder="Option {{ $label }}"
-                                                   class="option-input form-control"
-                                                   style="margin-bottom:0;">
-                                        </div>
-                                    @endforeach
-                                </div>
-                                <div class="form-group" style="margin-bottom:0;">
-                                    <label class="form-label">Correct Answer</label>
-                                    <select name="questions[0][correct_answer]" class="correct-answer form-control">
-                                        <option value="">Select correct answer</option>
-                                        <option value="A">A</option>
-                                        <option value="B">B</option>
-                                        <option value="C">C</option>
-                                        <option value="D">D</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if($quizzes->isEmpty())
-                        <div class="alert alert-warning" style="margin-top:1rem; margin-bottom:0;">
-                            Anda belum memiliki quiz. Buat quiz terlebih dahulu sebelum menambahkan question.
-                        </div>
-                    @endif
-
-                    <div class="form-actions" style="margin-top:1.2rem;">
-                        <button type="button" id="add-question-bottom" class="btn btn-muted">+ Tambah Nomor Soal</button>
-                        <button type="submit" class="btn btn-purple" {{ $quizzes->isEmpty() ? 'disabled' : '' }}>
-                            Save All Questions
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            {{-- Questions List Grouped by Quiz --}}
-            <div class="section-header">
-                <h2 class="section-title bar-purple">All Questions by Quiz</h2>
-            </div>
-
-            @forelse($groupedQuestions as $quizId => $quizQuestions)
-                @php
-                    $quizRef = $quizQuestions->first()?->quiz;
-                    $mcCountPerQuiz = $quizQuestions->where('question_type', 'multiple_choice')->count();
-                    $essayCountPerQuiz = $quizQuestions->where('question_type', 'essay')->count();
-                @endphp
-
-                <div class="panel" style="margin-bottom:1rem;">
-                    <div class="section-header" style="margin-bottom:1rem;">
-                        <div>
-                            <h3 style="font-size:16px;font-weight:600;color:#1e2435;">
-                                {{ $quizRef->title ?? 'Quiz' }}
+                {{-- Two Column Panels --}}
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {{-- Quick Actions --}}
+                    <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 space-y-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                                Quick Actions
                             </h3>
-                            <p style="font-size:12px;color:#9399b0;margin-top:4px;">
-                                {{ $quizRef->course->name ?? '-' }} • {{ $quizQuestions->count() }} question(s)
-                                @if($quizRef->quiz_type === 'final')
-                                    • Final Quiz
-                                @endif
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <a href="{{ route('lecturer.courses.index') }}"
+                               class="p-3.5 bg-gray-50 hover:bg-blue-50/60 border border-gray-100 hover:border-blue-200 rounded-xl transition flex items-center gap-3 group">
+                                <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Courses</p>
+                                    <p class="text-sm font-semibold text-gray-800 mt-0.5">Kelola Kursus & Materi</p>
+                                </div>
+                            </a>
+
+                            <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}"
+                               class="p-3.5 bg-gray-50 hover:bg-purple-50/60 border border-gray-100 hover:border-purple-200 rounded-xl transition flex items-center gap-3 group">
+                                <div class="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-purple-600 uppercase tracking-wider">Questions</p>
+                                    <p class="text-sm font-semibold text-gray-800 mt-0.5">Buat Bank Soal</p>
+                                </div>
+                            </a>
+
+                            <a href="{{ route('lecturer.courses.index') }}"
+                               class="p-3.5 bg-gray-50 hover:bg-emerald-50/60 border border-gray-100 hover:border-emerald-200 rounded-xl transition flex items-center gap-3 group">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">My Courses</p>
+                                    <p class="text-sm font-semibold text-gray-800 mt-0.5">Daftar Kursus Saya</p>
+                                </div>
+                            </a>
+
+                            <a href="{{ route('lecturer.dashboard', ['tab' => 'materials']) }}"
+                               class="p-3.5 bg-gray-50 hover:bg-amber-50/60 border border-gray-100 hover:border-amber-200 rounded-xl transition flex items-center gap-3 group">
+                                <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Materials</p>
+                                    <p class="text-sm font-semibold text-gray-800 mt-0.5">Learning Materials</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Recent Questions --}}
+                    <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 space-y-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                                Recent Questions
+                            </h3>
+                            <a href="{{ route('lecturer.dashboard', ['tab' => 'questions']) }}" class="text-xs font-semibold text-purple-600 hover:text-purple-700 transition">
+                                View all →
+                            </a>
+                        </div>
+
+                        <div class="space-y-3">
+                            @forelse($questions->take(5) as $question)
+                                <div class="p-3 bg-gray-50/80 border border-gray-100 rounded-xl hover:bg-gray-50 transition space-y-1.5">
+                                    <div class="flex items-center gap-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+                                            {{ $question->question_type === 'essay' ? 'Essay' : 'Multiple Choice' }}
+                                        </span>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                            {{ ucfirst($question->difficulty) }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-gray-700 line-clamp-2 leading-relaxed font-medium">
+                                        {{ $question->question }}
+                                    </p>
+                                </div>
+                            @empty
+                                <div class="p-8 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                                    <p class="text-xs text-gray-400">Belum ada soal yang dibuat.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ==================== MATERIALS TAB ==================== --}}
+            @if($tab === 'materials')
+                <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                                Learning Materials
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Kelola materi yang digunakan untuk pembelajaran kursus.
                             </p>
                         </div>
 
-                        <div class="badge-row" style="margin-bottom:0;">
-                            @if($mcCountPerQuiz > 0)
-                                <span class="badge badge-purple">{{ $mcCountPerQuiz }} Multiple Choice</span>
-                            @endif
-                            @if($essayCountPerQuiz > 0)
-                                <span class="badge badge-green">{{ $essayCountPerQuiz }} Essay</span>
-                            @endif
-                        </div>
+                        <a href="{{ route('lecturer.courses.index') }}"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-sm transition self-start sm:self-auto">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 5v14"/>
+                                <path d="M5 12h14"/>
+                            </svg>
+                            + Add Material via Course
+                        </a>
                     </div>
 
-                    @foreach($quizQuestions->values() as $index => $question)
-                        <div class="q-list-card" style="{{ !$loop->last ? 'margin-bottom:10px;' : 'margin-bottom:0;' }}">
-                            <div class="q-list-top">
-                                <div class="q-list-body">
-                                    <div class="badge-row" style="margin-bottom:10px;">
-                                        <span class="badge badge-gray">No. {{ $index + 1 }}</span>
-
-                                        <span class="badge badge-purple">
-                                            {{ $question->question_type === 'essay' ? 'Essay' : 'Multiple Choice' }}
-                                        </span>
-
-                                        <span class="badge badge-amber">{{ ucfirst($question->difficulty) }}</span>
+                    <div class="space-y-3">
+                        @forelse($materials as $material)
+                            <div class="p-4 bg-gray-50/70 border border-gray-100 rounded-xl hover:border-gray-200 hover:bg-white hover:shadow-sm transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14,2 14,8 20,8"/>
+                                        </svg>
                                     </div>
-
-                                    <p class="q-list-question">{{ $question->question }}</p>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-gray-900">{{ $material->title ?? 'Untitled Material' }}</h4>
+                                        @if(!empty($material->description))
+                                            <p class="text-xs text-gray-500 mt-1 leading-relaxed">{{ $material->description }}</p>
+                                        @endif
+                                        @if($material->course)
+                                            <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded-md bg-gray-200/70 text-gray-700 text-[11px] font-medium">
+                                                Course: {{ $material->course->name }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </div>
 
-                                <div class="q-list-actions">
-                                    <a href="{{ route('lecturer.questions.edit', $question->id) }}" class="btn btn-blue">Edit</a>
-
-                                    <form method="POST"
-                                          action="{{ route('lecturer.questions.destroy', $question->id) }}"
-                                          onsubmit="return confirm('Yakin ingin menghapus soal ini?')">
+                                <div class="flex items-center gap-2 self-end sm:self-center">
+                                    <a href="{{ route('lecturer.materials.show', $material->id) }}"
+                                       class="px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition">
+                                        View
+                                    </a>
+                                    <a href="{{ route('lecturer.materials.edit', $material->id) }}"
+                                       class="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition">
+                                        Edit
+                                    </a>
+                                    <form method="POST" action="{{ route('lecturer.materials.destroy', $material->id) }}"
+                                          onsubmit="return confirm('Yakin ingin menghapus materi ini?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-red">Delete</button>
+                                        <button type="submit"
+                                                class="px-3 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg transition">
+                                            Delete
+                                        </button>
                                     </form>
                                 </div>
                             </div>
+                        @empty
+                            <div class="p-10 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50 space-y-2">
+                                <svg class="mx-auto text-gray-300" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                </svg>
+                                <p class="text-xs text-gray-500 font-medium">Belum ada learning material yang dibuat.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            @endif
 
-                            @if($question->question_type === 'multiple_choice')
-                                <div class="mc-answer-grid">
-                                    @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $key => $label)
-                                        @php $isCorrect = $question->correct_answer === $label; @endphp
-                                        <div class="mc-answer-item {{ $isCorrect ? 'correct' : 'wrong' }}">
-                                            <div class="mc-answer-letter {{ $isCorrect ? 'correct' : 'wrong' }}">{{ $label }}</div>
-                                            <span class="mc-answer-text {{ $isCorrect ? 'correct' : 'wrong' }}">
-                                                {{ $question->{'option_' . $key} }}
+            {{-- ==================== QUESTIONS TAB ==================== --}}
+            @if($tab === 'questions')
+                @php
+                    $groupedQuestions = $questions->groupBy('quiz_id');
+                @endphp
+
+                @if(isset($retakeRequests) && $retakeRequests->isNotEmpty())
+                    <div class="bg-amber-50/70 border border-amber-200/80 shadow-sm rounded-2xl p-5 mb-6 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                                <span>📩 Permintaan Retake Final Quiz</span>
+                                <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold">{{ $retakeRequests->where('status', 'pending')->count() }} Pending</span>
+                            </h3>
+                            <span class="text-xs text-gray-500">Passing Score Minimal: 70</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            @foreach($retakeRequests as $req)
+                                <div class="p-4 bg-white border border-gray-200 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <h4 class="font-bold text-sm text-gray-900">{{ $req->user->name ?? 'Mahasiswa' }}</h4>
+                                            <span class="px-2 py-0.5 text-[11px] font-bold rounded-full {{ $req->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : ($req->status === 'rejected' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700') }}">
+                                                {{ ucfirst($req->status) }}
                                             </span>
                                         </div>
-                                    @endforeach
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Course: <strong>{{ $req->course->name ?? 'Course' }}</strong> • Quiz: <strong class="text-gray-800">{{ $req->quiz->title ?? 'Quiz' }}</strong> • Diajukan: {{ $req->created_at->format('d M Y H:i') }}
+                                        </p>
+                                    </div>
+
+                                    @if($req->status === 'pending')
+                                        <div class="flex items-center gap-2 self-end sm:self-auto">
+                                            <form method="POST" action="{{ route('lecturer.quizzes.retake.approve', $req->id) }}">
+                                                @csrf
+                                                <button type="submit" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm">
+                                                    ✅ Setujui Retake (+1 Attempt)
+                                                </button>
+                                            </form>
+
+                                            <form method="POST" action="{{ route('lecturer.quizzes.retake.reject', $req->id) }}">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold rounded-xl transition">
+                                                    ❌ Tolak
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <p class="text-xs font-semibold text-gray-400">
+                                            Ditinjau pada {{ $req->reviewed_at ? $req->reviewed_at->format('d M Y H:i') : '-' }}
+                                        </p>
+                                    @endif
                                 </div>
-                            @else
-                                <div class="essay-note">Essay question — penilaian dilakukan secara manual.</div>
-                            @endif
+                            @endforeach
                         </div>
-                    @endforeach
+                    </div>
+                @endif
+
+                {{-- Create Questions Builder Card --}}
+                <div class="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 sm:p-6 space-y-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center flex-shrink-0">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 4v16m8-8H4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-bold text-gray-800">Create Questions for One Quiz</h3>
+                                <p class="text-xs text-gray-500">Buat banyak nomor soal dalam 1 kuis, lalu simpan sekaligus.</p>
+                            </div>
+                        </div>
+
+                        <button type="button" id="add-question"
+                                class="inline-flex items-center gap-2 px-3.5 py-2 bg-purple-50 border border-purple-200 hover:bg-purple-100 text-purple-700 text-xs font-semibold rounded-xl transition self-start sm:self-auto">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                            + Tambah Nomor Soal
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ route('lecturer.questions.store') }}" class="space-y-6">
+                        @csrf
+
+                        <div>
+                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5">Quiz Target</label>
+                            <select name="quiz_id" id="quiz_id_select" onchange="syncQuizFilter(this.value)" class="w-full rounded-xl border border-gray-200 bg-gray-50/70 p-3 text-sm font-medium text-gray-900 focus:border-purple-500 focus:bg-white focus:outline-none transition" required>
+                                <option value="">-- Pilih Quiz Target --</option>
+                                @forelse($quizzes as $quiz)
+                                    <option value="{{ $quiz->id }}" data-question-count="{{ $quiz->questions_count ?? 0 }}" {{ (string) old('quiz_id', request('quiz_id')) === (string) $quiz->id ? 'selected' : '' }}>
+                                        {{ $quiz->title }} — {{ $quiz->course->name ?? 'Course' }} ({{ $quiz->questions_count ?? 0 }} Soal Ada)
+                                        @if($quiz->quiz_type === 'final')
+                                            (Final Quiz)
+                                        @endif
+                                    </option>
+                                @empty
+                                    <option value="">Belum ada quiz tersedia</option>
+                                @endforelse
+                            </select>
+                            <p class="text-xs text-gray-400 mt-1">Pilih Quiz untuk mengelola atau menambah soal pada Quiz tersebut.</p>
+                        </div>
+
+                        <div id="questions-wrapper" class="space-y-4">
+                            <div class="question-card p-4 sm:p-5 bg-gray-50/80 border border-gray-200/80 rounded-2xl space-y-4" data-index="0">
+                                <div class="flex items-center justify-between border-b border-gray-200/60 pb-3">
+                                    <span class="question-card-title text-sm font-bold text-gray-800 flex items-center gap-2">
+                                        <span class="w-2 h-2 rounded-full bg-purple-600"></span>
+                                        Nomor Soal 1
+                                    </span>
+                                    <button type="button" class="remove-question hidden px-3 py-1 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-lg hover:bg-rose-100 transition">
+                                        Remove
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Question Type</label>
+                                        <input type="hidden" name="questions[0][question_type]" class="question-type" value="multiple_choice">
+                                        <div class="w-full rounded-xl border border-gray-200 bg-gray-100 p-2.5 text-xs font-semibold text-gray-700">Multiple Choice</div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Difficulty</label>
+                                        <select name="questions[0][difficulty]" class="w-full rounded-xl border border-gray-200 bg-white p-2.5 text-xs font-medium text-gray-800 focus:border-purple-500 focus:outline-none">
+                                            <option value="easy">Easy</option>
+                                            <option value="medium" selected>Medium</option>
+                                            <option value="hard">Hard</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Bidang / Skill Utama</label>
+                                        <select name="questions[0][main_skill_id]" class="question-main-skill w-full rounded-xl border border-gray-200 bg-white p-2.5 text-xs font-medium text-gray-800 focus:border-purple-500 focus:outline-none" data-question-index="0">
+                                            <option value="">-- Pilih Bidang Utama --</option>
+                                            @foreach($mainSkills as $mainSkill)
+                                                <option value="{{ $mainSkill->id }}">{{ $mainSkill->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-[11px] text-gray-400 mt-1">Contoh: Software, ML / AI, Jaringan.</p>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Detail Skill yang Diuji</label>
+                                        @foreach($mainSkills as $mainSkill)
+                                            <div class="question-skill-detail-group hidden" data-question-index="0" data-parent-id="{{ $mainSkill->id }}">
+                                                <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
+                                                    <p class="text-xs font-bold text-gray-800">Detail {{ $mainSkill->name }}</p>
+                                                    @forelse($mainSkill->children as $childSkill)
+                                                        <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
+                                                            <input type="checkbox" name="questions[0][skill_ids][]" value="{{ $childSkill->id }}" class="rounded text-purple-600 focus:ring-purple-500">
+                                                            {{ $childSkill->name }}
+                                                        </label>
+                                                    @empty
+                                                        <p class="text-[11px] text-gray-400">Belum ada detail skill untuk bidang ini.</p>
+                                                    @endforelse
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Question Text</label>
+                                    <textarea name="questions[0][question]" rows="3" class="w-full rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-900 focus:border-purple-500 focus:outline-none" placeholder="Tuliskan pertanyaan soal di sini..." required></textarea>
+                                </div>
+
+                                <div class="mc-fields bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+                                    <span class="block text-xs font-bold uppercase tracking-wider text-gray-500">Answer Options</span>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $key => $label)
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                                    {{ $label }}
+                                                </div>
+                                                <input type="text" name="questions[0][option_{{ $key }}]" placeholder="Opsi {{ $label }}" class="option-input w-full rounded-xl border border-gray-200 p-2 text-xs focus:border-purple-500 focus:outline-none">
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Correct Answer</label>
+                                        <select name="questions[0][correct_answer]" class="correct-answer w-full rounded-xl border border-gray-200 bg-gray-50 p-2.5 text-xs font-medium text-gray-800 focus:border-purple-500 focus:outline-none">
+                                            <option value="">Select correct answer</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($quizzes->isEmpty())
+                            <div class="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-medium">
+                                Anda belum memiliki quiz. Buat quiz terlebih dahulu sebelum menambahkan question.
+                            </div>
+                        @endif
+
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="button" id="add-question-bottom" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition">
+                                + Tambah Nomor Soal
+                            </button>
+                            <button type="submit" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl shadow-sm transition disabled:opacity-50" {{ $quizzes->isEmpty() ? 'disabled' : '' }}>
+                                Save All Questions
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            @empty
-                <div class="empty-box">
-                    <p>Belum ada soal yang dibuat.</p>
+
+                {{-- Questions List Grouped by Quiz --}}
+                <div class="space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 border border-gray-200 rounded-2xl shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-600"></span>
+                            <h3 class="text-base font-bold text-gray-800">All Questions by Quiz</h3>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row items-center gap-2">
+                            <select id="filter_quiz_display" onchange="filterQuestionsBySelectedQuiz(this.value)" class="w-full sm:w-auto rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-xs font-semibold text-gray-800 py-2 px-3 shadow-sm cursor-pointer">
+                                <option value="all">-- Filter Semua Quiz --</option>
+                                @foreach($quizzes as $q)
+                                    <option value="{{ $q->id }}" {{ (string) request('quiz_id') === (string) $q->id ? 'selected' : '' }}>
+                                        {{ $q->title }} ({{ $q->course->name ?? 'Course' }})
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <input type="text" id="search_question_input" oninput="searchQuestionsText()" placeholder="🔍 Cari teks soal..." class="w-full sm:w-48 rounded-xl border-gray-300 focus:border-purple-500 focus:ring-purple-500 text-xs py-2 px-3">
+                        </div>
+                    </div>
+
+                    @forelse($groupedQuestions as $quizId => $quizQuestions)
+                        @php
+                            $quizRef = $quizQuestions->first()?->quiz;
+                            $mcCountPerQuiz = $quizQuestions->count();
+                            $isSelectedQuiz = (string) request('quiz_id') === (string) $quizId;
+                        @endphp
+
+                        <div class="quiz-card-group bg-white border shadow-sm rounded-2xl p-5 space-y-4 transition {{ $isSelectedQuiz ? 'border-purple-400 ring-2 ring-purple-500/20 bg-purple-50/20' : 'border-gray-100' }}" data-quiz-id="{{ $quizId }}" data-quiz-title="{{ strtolower($quizRef->title ?? '') }}">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-100 pb-3">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h4 class="text-base font-bold text-gray-900">{{ $quizRef->title ?? 'Quiz' }}</h4>
+                                        <span class="quiz-selected-badge px-2 py-0.5 bg-purple-600 text-white text-[11px] font-bold rounded-full {{ $isSelectedQuiz ? '' : 'hidden' }}">★ Quiz Terpilih</span>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        {{ $quizRef->course->name ?? '-' }} • {{ $quizQuestions->count() }} question(s) • Durasi: <span class="font-semibold text-purple-700">{{ $quizRef->time_limit ? $quizRef->time_limit . ' Menit' : 'Tanpa Batas' }}</span>
+                                        @if($quizRef->quiz_type === 'final')
+                                            • Final Quiz
+                                        @endif
+                                    </p>
+                                    @if($quizRef->start_date || $quizRef->end_date)
+                                        <p class="text-[11px] text-gray-400 mt-0.5">
+                                            Jadwal: {{ $quizRef->start_date ? \Carbon\Carbon::parse($quizRef->start_date)->format('d M Y H:i') : 'Mulai Sekarang' }} — {{ $quizRef->end_date ? \Carbon\Carbon::parse($quizRef->end_date)->format('d M Y H:i') : 'Tanpa Tenggat' }}
+                                        </p>
+                                    @endif
+                                </div>
+
+                                <div class="flex items-center gap-2 self-start sm:self-auto">
+                                    @if($quizRef && $quizRef->course)
+                                        <button type="button" onclick="document.getElementById('edit-dashboard-quiz-form-{{ $quizId }}').classList.toggle('hidden')" class="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 text-xs font-semibold rounded-xl transition">
+                                            ⚙️ Edit Waktu & Durasi
+                                        </button>
+                                    @endif
+                                    <span class="px-2.5 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full">
+                                        {{ $mcCountPerQuiz }} Multiple Choice
+                                    </span>
+                                </div>
+                            </div>
+
+                            @if($quizRef && $quizRef->course)
+                                <div id="edit-dashboard-quiz-form-{{ $quizId }}" class="hidden p-4 bg-amber-50/50 border border-amber-200/80 rounded-xl space-y-3">
+                                    <h5 class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                                        <span>⚙️ Edit Waktu & Pengaturan Quiz</span>
+                                        <span class="text-amber-700">({{ $quizRef->title }})</span>
+                                    </h5>
+                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$quizRef->course_id, $quizRef->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                        @csrf
+                                        @method('PUT')
+
+                                        <div>
+                                            <label class="block font-bold text-gray-700 mb-1">Judul Quiz</label>
+                                            <input type="text" name="title" value="{{ old('title', $quizRef->title) }}" class="w-full rounded-xl border-gray-300 p-2 text-xs" required>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-bold text-gray-700 mb-1">Durasi (Menit)</label>
+                                            <input type="number" name="time_limit" value="{{ old('time_limit', $quizRef->time_limit) }}" min="1" placeholder="Bebas / Tanpa Limit" class="w-full rounded-xl border-gray-300 p-2 text-xs">
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-bold text-gray-700 mb-1">Max Attempts</label>
+                                            <input type="number" name="max_attempts" value="{{ old('max_attempts', $quizRef->max_attempts) }}" min="1" max="100" class="w-full rounded-xl border-gray-300 p-2 text-xs" required>
+                                        </div>
+
+                                        <div>
+                                            <label class="block font-bold text-gray-700 mb-1">Start Date</label>
+                                            <input type="datetime-local" name="start_date" value="{{ $quizRef->start_date ? \Carbon\Carbon::parse($quizRef->start_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-gray-300 p-2 text-xs">
+                                        </div>
+
+                                        <div class="md:col-span-2">
+                                            <label class="block font-bold text-gray-700 mb-1">End Date / Deadline Baru</label>
+                                            <input type="datetime-local" name="end_date" value="{{ $quizRef->end_date ? \Carbon\Carbon::parse($quizRef->end_date)->format('Y-m-d\TH:i') : '' }}" class="w-full rounded-xl border-gray-300 p-2 text-xs">
+                                        </div>
+
+                                        <div class="md:col-span-2 flex justify-end gap-2 pt-2">
+                                            <button type="button" onclick="document.getElementById('edit-dashboard-quiz-form-{{ $quizId }}').classList.add('hidden')" class="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 font-semibold rounded-lg">Batal</button>
+                                            <button type="submit" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg shadow-sm">Simpan Waktu & Tenggat Baru</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            @endif
+
+                            <div class="space-y-3">
+                                @foreach($quizQuestions->values() as $index => $question)
+                                    <div class="question-item-block p-4 bg-gray-50/70 border border-gray-200/70 rounded-xl space-y-3" data-question-text="{{ strtolower($question->question) }}">
+                                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div class="space-y-2">
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-200 text-gray-700">
+                                                        No. {{ $index + 1 }}
+                                                    </span>
+                                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-700">
+                                                        {{ $question->question_type === 'essay' ? 'Essay' : 'Multiple Choice' }}
+                                                    </span>
+                                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-800">
+                                                        {{ ucfirst($question->difficulty) }}
+                                                    </span>
+                                                </div>
+                                                <p class="text-xs font-medium text-gray-800 leading-relaxed">{{ $question->question }}</p>
+                                            </div>
+
+                                            <div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                                                <a href="{{ route('lecturer.questions.edit', $question->id) }}"
+                                                   class="px-3 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-blue-600 text-xs font-semibold rounded-lg transition">
+                                                    Edit
+                                                </a>
+                                                <form method="POST" action="{{ route('lecturer.questions.destroy', $question->id) }}" onsubmit="return confirm('Yakin ingin menghapus soal ini?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="px-3 py-1 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 text-xs font-semibold rounded-lg transition">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+
+                                        @if($question->question_type === 'multiple_choice')
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                                @foreach(['a' => 'A', 'b' => 'B', 'c' => 'C', 'd' => 'D'] as $key => $label)
+                                                    @php $isCorrect = $question->correct_answer === $label; @endphp
+                                                    <div class="flex items-center gap-2 p-2 rounded-lg border text-xs {{ $isCorrect ? 'bg-emerald-50 border-emerald-200 text-emerald-900 font-medium' : 'bg-white border-gray-200 text-gray-600' }}">
+                                                        <span class="w-5 h-5 rounded-md flex items-center justify-center font-bold text-[11px] flex-shrink-0 {{ $isCorrect ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600' }}">
+                                                            {{ $label }}
+                                                        </span>
+                                                        <span class="truncate">{{ $question->{'option_' . $key} }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="p-2.5 bg-gray-100 border border-gray-200 rounded-lg text-xs text-gray-500">
+                                                Essay question — penilaian dilakukan secara manual.
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-10 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                            <p class="text-xs text-gray-400 font-medium">Belum ada soal yang dibuat.</p>
+                        </div>
+                    @endforelse
                 </div>
-            @endforelse
 
-            <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                    let questionIndex = document.querySelectorAll('.question-card').length;
+                <script>
+                    document.addEventListener('DOMContentLoaded', function () {
+                        let questionIndex = document.querySelectorAll('.question-card').length;
 
-                    const wrapper = document.getElementById('questions-wrapper');
-                    const addBtnTop = document.getElementById('add-question');
-                    const addBtnBottom = document.getElementById('add-question-bottom');
+                        const wrapper = document.getElementById('questions-wrapper');
+                        const addBtnTop = document.getElementById('add-question');
+                        const addBtnBottom = document.getElementById('add-question-bottom');
 
-                    function refreshQuestionSkillDetails(selectElement) {
-                        const questionIndexValue = selectElement.dataset.questionIndex;
-                        const selectedParentId = selectElement.value;
+                        function refreshQuestionSkillDetails(selectElement) {
+                            const questionIndexValue = selectElement.dataset.questionIndex;
+                            const selectedParentId = selectElement.value;
 
-                        const groups = document.querySelectorAll(
-                            `.question-skill-detail-group[data-question-index="${questionIndexValue}"]`
-                        );
+                            const groups = document.querySelectorAll(
+                                `.question-skill-detail-group[data-question-index="${questionIndexValue}"]`
+                            );
 
-                        groups.forEach(function (group) {
-                            if (group.dataset.parentId === selectedParentId) {
-                                group.classList.remove('hidden');
-                            } else {
-                                group.classList.add('hidden');
+                            groups.forEach(function (group) {
+                                if (group.dataset.parentId === selectedParentId) {
+                                    group.classList.remove('hidden');
+                                } else {
+                                    group.classList.add('hidden');
 
-                                group.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
-                                    checkbox.checked = false;
+                                    group.querySelectorAll('input[type="checkbox"]').forEach(function (checkbox) {
+                                        checkbox.checked = false;
+                                    });
+                                }
+                            });
+                        }
+
+                        function setupCard(card) {
+                            const mcFields = card.querySelector('.mc-fields');
+                            const optionInputs = card.querySelectorAll('.option-input');
+                            const correctAnswer = card.querySelector('.correct-answer');
+                            const removeBtn = card.querySelector('.remove-question');
+                            const mainSkillSelect = card.querySelector('.question-main-skill');
+
+                            if (mcFields) mcFields.classList.remove('hidden');
+                            optionInputs.forEach(input => { input.required = true; });
+                            if (correctAnswer) correctAnswer.required = true;
+
+                            if (mainSkillSelect) {
+                                mainSkillSelect.addEventListener('change', function () {
+                                    refreshQuestionSkillDetails(mainSkillSelect);
+                                });
+
+                                refreshQuestionSkillDetails(mainSkillSelect);
+                            }
+
+                            if (removeBtn) {
+                                removeBtn.addEventListener('click', function () {
+                                    card.remove();
+                                    renumberCards();
                                 });
                             }
-                        });
-                    }
-
-                    function setupCard(card) {
-                        const typeSelect = card.querySelector('.question-type');
-                        const mcFields = card.querySelector('.mc-fields');
-                        const optionInputs = card.querySelectorAll('.option-input');
-                        const correctAnswer = card.querySelector('.correct-answer');
-                        const removeBtn = card.querySelector('.remove-question');
-                        const mainSkillSelect = card.querySelector('.question-main-skill');
-
-                        function toggleMc() {
-                            const isMc = typeSelect.value === 'multiple_choice';
-                            mcFields.classList.toggle('hidden', !isMc);
-                            optionInputs.forEach(input => { input.required = isMc; });
-                            correctAnswer.required = isMc;
                         }
 
-                        typeSelect.addEventListener('change', toggleMc);
-                        toggleMc();
+                        function renumberCards() {
+                            const quizSelect = document.getElementById('quiz_id_select');
+                            let offset = 0;
+                            if (quizSelect && quizSelect.selectedIndex >= 0) {
+                                const selectedOpt = quizSelect.options[quizSelect.selectedIndex];
+                                if (selectedOpt && selectedOpt.dataset.questionCount) {
+                                    offset = parseInt(selectedOpt.dataset.questionCount) || 0;
+                                }
+                            }
 
-                        if (mainSkillSelect) {
-                            mainSkillSelect.addEventListener('change', function () {
-                                refreshQuestionSkillDetails(mainSkillSelect);
+                            document.querySelectorAll('.question-card').forEach((card, index) => {
+                                card.dataset.index = index;
+                                const titleEl = card.querySelector('.question-card-title');
+                                if (titleEl) {
+                                    const actualNo = offset + index + 1;
+                                    const continuationBadge = offset > 0 ? ` <span class="text-[11px] font-semibold text-purple-600 bg-purple-100 px-2 py-0.5 rounded-full ml-2">Melanjutkan dari ${offset} Soal Ada</span>` : '';
+                                    titleEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-purple-600"></span> Nomor Soal ${actualNo}${continuationBadge}`;
+                                }
+
+                                const removeBtn = card.querySelector('.remove-question');
+                                if (removeBtn) {
+                                    removeBtn.classList.toggle('hidden', index === 0);
+                                }
+
+                                card.querySelectorAll('input, textarea, select').forEach(input => {
+                                    if (input.name) {
+                                        input.name = input.name.replace(/questions\[\d+\]/, `questions[${index}]`);
+                                    }
+                                });
+
+                                const mainSkillSelect = card.querySelector('.question-main-skill');
+                                if (mainSkillSelect) {
+                                    mainSkillSelect.dataset.questionIndex = index;
+                                }
+
+                                card.querySelectorAll('.question-skill-detail-group').forEach(group => {
+                                    group.dataset.questionIndex = index;
+                                });
                             });
 
-                            refreshQuestionSkillDetails(mainSkillSelect);
+                            questionIndex = document.querySelectorAll('.question-card').length;
                         }
 
-                        removeBtn.addEventListener('click', function () {
-                            card.remove();
-                            renumberCards();
-                        });
-                    }
+                        function clearNewCardValues(newCard) {
+                            newCard.querySelectorAll('textarea').forEach(textarea => {
+                                textarea.value = '';
+                            });
 
-                    function renumberCards() {
-                        document.querySelectorAll('.question-card').forEach((card, index) => {
-                            card.dataset.index = index;
-                            card.querySelector('.question-card-title').textContent = `Nomor Soal ${index + 1}`;
-
-                            const removeBtn = card.querySelector('.remove-question');
-                            removeBtn.classList.toggle('hidden', index === 0);
-
-                            card.querySelectorAll('input, textarea, select').forEach(input => {
-                                if (input.name) {
-                                    input.name = input.name.replace(/questions\[\d+\]/, `questions[${index}]`);
+                            newCard.querySelectorAll('input').forEach(input => {
+                                if (input.type === 'checkbox' || input.type === 'radio') {
+                                    input.checked = false;
+                                } else if (input.classList.contains('question-type')) {
+                                    input.value = 'multiple_choice';
+                                } else {
+                                    input.value = '';
                                 }
                             });
 
-                            const mainSkillSelect = card.querySelector('.question-main-skill');
-                            if (mainSkillSelect) {
-                                mainSkillSelect.dataset.questionIndex = index;
-                            }
-
-                            card.querySelectorAll('.question-skill-detail-group').forEach(group => {
-                                group.dataset.questionIndex = index;
+                            newCard.querySelectorAll('select').forEach(select => {
+                                if (select.classList.contains('correct-answer')) {
+                                    select.value = '';
+                                } else {
+                                    select.selectedIndex = 0;
+                                }
                             });
-                        });
 
-                        questionIndex = document.querySelectorAll('.question-card').length;
-                    }
+                            const mcFields = newCard.querySelector('.mc-fields');
+                            if (mcFields) mcFields.classList.remove('hidden');
+                            newCard.querySelectorAll('.question-skill-detail-group').forEach(group => {
+                                group.classList.add('hidden');
+                            });
+                        }
 
-                    function clearNewCardValues(newCard) {
-                        newCard.querySelectorAll('textarea').forEach(textarea => {
-                            textarea.value = '';
-                        });
+                        function addQuestion() {
+                            const firstCard = document.querySelector('.question-card');
+                            if (!firstCard) return;
+                            const newCard = firstCard.cloneNode(true);
 
-                        newCard.querySelectorAll('input').forEach(input => {
-                            if (input.type === 'checkbox' || input.type === 'radio') {
-                                input.checked = false;
-                            } else {
-                                input.value = '';
+                            newCard.dataset.index = questionIndex;
+                            clearNewCardValues(newCard);
+
+                            wrapper.appendChild(newCard);
+                            renumberCards();
+                            setupCard(newCard);
+                        }
+
+                        if (addBtnTop) {
+                            addBtnTop.addEventListener('click', addQuestion);
+                        }
+
+                        if (addBtnBottom) {
+                            addBtnBottom.addEventListener('click', addQuestion);
+                        }
+
+                        function syncQuizFilter(val) {
+                            const filterDisplay = document.getElementById('filter_quiz_display');
+                            if (filterDisplay) {
+                                filterDisplay.value = val || 'all';
                             }
-                        });
+                            renumberCards();
+                            applyQuizAndSearchFilters();
+                        }
 
-                        newCard.querySelectorAll('select').forEach(select => {
-                            if (select.classList.contains('question-type')) {
-                                select.value = 'essay';
-                            } else if (select.classList.contains('correct-answer')) {
-                                select.value = '';
-                            } else {
-                                select.selectedIndex = 0;
+                        function filterQuestionsBySelectedQuiz(val) {
+                            const quizSelectTop = document.getElementById('quiz_id_select');
+                            if (quizSelectTop && val !== 'all') {
+                                quizSelectTop.value = val;
                             }
-                        });
+                            renumberCards();
+                            applyQuizAndSearchFilters();
+                        }
 
-                        newCard.querySelector('.mc-fields').classList.add('hidden');
-                        newCard.querySelectorAll('.question-skill-detail-group').forEach(group => {
-                            group.classList.add('hidden');
-                        });
-                    }
+                        function searchQuestionsText() {
+                            applyQuizAndSearchFilters();
+                        }
 
-                    function addQuestion() {
-                        const firstCard = document.querySelector('.question-card');
-                        const newCard = firstCard.cloneNode(true);
+                        function applyQuizAndSearchFilters() {
+                            const selectedQuizId = document.getElementById('filter_quiz_display') ? document.getElementById('filter_quiz_display').value : 'all';
+                            const searchText = document.getElementById('search_question_input') ? document.getElementById('search_question_input').value.toLowerCase().trim() : '';
 
-                        newCard.dataset.index = questionIndex;
-                        clearNewCardValues(newCard);
+                            const quizGroups = document.querySelectorAll('.quiz-card-group');
 
-                        wrapper.appendChild(newCard);
+                            quizGroups.forEach(group => {
+                                const groupQuizId = group.getAttribute('data-quiz-id');
+                                const matchesQuiz = (selectedQuizId === 'all') || (groupQuizId === selectedQuizId);
+
+                                const badge = group.querySelector('.quiz-selected-badge');
+                                if (badge) {
+                                    if (selectedQuizId !== 'all' && groupQuizId === selectedQuizId) {
+                                        badge.classList.remove('hidden');
+                                    } else {
+                                        badge.classList.add('hidden');
+                                    }
+                                }
+
+                                const questionItems = group.querySelectorAll('.question-item-block');
+                                let visibleQuestionCount = 0;
+
+                                questionItems.forEach(item => {
+                                    const qText = item.getAttribute('data-question-text') || '';
+                                    const matchesSearch = !searchText || qText.includes(searchText);
+
+                                    if (matchesSearch) {
+                                        item.style.display = 'block';
+                                        visibleQuestionCount++;
+                                    } else {
+                                        item.style.display = 'none';
+                                    }
+                                });
+
+                                if (matchesQuiz && (visibleQuestionCount > 0 || !searchText)) {
+                                    group.style.display = 'block';
+                                } else {
+                                    group.style.display = 'none';
+                                }
+                            });
+                        }
+
+                        window.syncQuizFilter = syncQuizFilter;
+                        window.filterQuestionsBySelectedQuiz = filterQuestionsBySelectedQuiz;
+                        window.searchQuestionsText = searchQuestionsText;
+
+                        document.querySelectorAll('.question-card').forEach(setupCard);
                         renumberCards();
-                        setupCard(newCard);
-                    }
+                        applyQuizAndSearchFilters();
+                    });
+                </script>
+            @endif
 
-                    if (addBtnTop) {
-                        addBtnTop.addEventListener('click', addQuestion);
-                    }
-
-                    if (addBtnBottom) {
-                        addBtnBottom.addEventListener('click', addQuestion);
-                    }
-
-                    document.querySelectorAll('.question-card').forEach(setupCard);
-                    renumberCards();
-                });
-            </script>
-        @endif
-
+        </div>
     </div>
-</div>
 </x-app-layout>

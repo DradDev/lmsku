@@ -6,6 +6,7 @@ $userInitial = strtoupper(substr($userName, 0, 1));
 $homeRoute = match ($role) {
 'admin' => route('admin.dashboard'),
 'lecturer' => route('lecturer.dashboard'),
+'vendor' => route('vendor.dashboard'),
 default => route('student.dashboard'),
 };
 @endphp
@@ -21,8 +22,8 @@ default => route('student.dashboard'),
             </div>
 
             <div class="lms-brand-texts">
-                <span class="lms-brand-title">UNDIP LMS</span>
-                <span class="lms-brand-subtitle">Computer Engineering</span>
+                <span class="lms-brand-title">COMPRO</span>
+                <span class="lms-brand-subtitle">TEKKOM</span>
             </div>
         </a>
 
@@ -45,18 +46,7 @@ default => route('student.dashboard'),
                 My Courses
             </a>
 
-            <a href="{{ route('student.materials.index') }}"
-                class="lms-nav-link {{ request()->routeIs('student.materials.*') ? 'active' : '' }}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14,2 14,8 20,8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                </svg>
-                Materials
-            </a>
-
-            <a href="{{ route('student.results.index') }}"
+             <a href="{{ route('student.results.index') }}"
                 class="lms-nav-link {{ request()->routeIs('student.results.*') ? 'active' : '' }}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="20" x2="18" y2="10" />
@@ -83,13 +73,25 @@ default => route('student.dashboard'),
                 Projects
             </a>
 
+            <a href="{{ route('student.portfolio') }}"
+                class="lms-nav-link {{ request()->routeIs('student.portfolio') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                </svg>
+                My Portfolio
+            </a>
+
             <a href="{{ route('student.recommendations.index') }}"
                 class="lms-nav-link {{ request()->routeIs('student.recommendations.*') ? 'active' : '' }}">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 2l1.8 5.5L19 9.3l-5.2 1.8L12 17l-1.8-5.9L5 9.3l5.2-1.8z" />
                     <path d="M19 15l.9 2.7L22 18.6l-2.1.8L19 22l-.9-2.6-2.1-.8 2.1-.9z" />
                 </svg>
-                Rekomendasi AI
+                AI Recommendations
             </a>
             @endif
 
@@ -117,6 +119,33 @@ default => route('student.dashboard'),
                     <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                 </svg>
                 Projects
+            </a>
+            @endif
+
+            @if($role === 'vendor')
+            <a href="{{ route('vendor.dashboard') }}"
+                class="lms-nav-link {{ request()->routeIs('vendor.dashboard') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 13h8V3H3zM13 21h8v-6h-8zM13 10h8V3h-8zM3 21h8v-6H3z" />
+                </svg>
+                Dashboard
+            </a>
+
+            <a href="{{ route('vendor.courses.index') }}"
+                class="lms-nav-link {{ request()->routeIs('vendor.courses.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                </svg>
+                Certified Courses
+            </a>
+
+            <a href="{{ route('vendor.projects.index') }}"
+                class="lms-nav-link {{ request()->routeIs('vendor.projects.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                </svg>
+                Industry Projects
             </a>
             @endif
 
@@ -174,16 +203,53 @@ default => route('student.dashboard'),
                 Tags
             </a>
 
-            <a href="{{ route('admin.categories.index') }}"
-                class="lms-nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
+            <a href="{{ route('admin.master-courses.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.master-courses.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
                 </svg>
-                Categories
+                Master Courses
             </a>
+
+            <a href="{{ route('admin.academic-terms.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.academic-terms.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Semester Akademik
+            </a>
+
+            <a href="{{ route('admin.course-offerings.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.course-offerings.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <path d="M3 9h18" />
+                    <path d="M9 21V9" />
+                </svg>
+                Penawaran Kelas
+            </a>
+
+            <a href="{{ route('admin.projects.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+                Projects Audit
+            </a>
+
+            <a href="{{ route('admin.courses.index') }}"
+                class="lms-nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                    <path d="M8 21h8M12 17v4" />
+                </svg>
+                Audit Courses
+            </a>
+
             @endif
         </div>
 
@@ -191,8 +257,9 @@ default => route('student.dashboard'),
             <a href="{{ route('profile.edit') }}" class="lms-user-pill">
                 @if(auth()->user()->avatar_url)
                 <img src="{{ auth()->user()->avatar_url }}"
-                    alt="{{ auth()->user()->name }}"
-                    class="lms-avatar-image">
+                    alt=""
+                    class="lms-avatar-image"
+                    onerror="this.style.display='none';">
                 @else
                 <div class="lms-avatar">{{ $userInitial }}</div>
                 @endif

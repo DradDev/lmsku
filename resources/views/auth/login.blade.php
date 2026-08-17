@@ -9,27 +9,27 @@
                     </p>
 
                     <h1 class="text-5xl font-bold leading-tight text-slate-900">
-                        Learning Management System
+                        COMPRO System
                     </h1>
 
                     <p class="mt-5 text-lg leading-8 text-slate-600">
-                        Platform pembelajaran modern untuk Computer Engineering yang membantu
-                        mahasiswa, dosen, dan admin mengelola course, materials, quizzes,
-                        results, dan certificates dalam satu tempat.
+                        Talent Development and Talent Matching platform for TEKKOM empowering
+                        students, Author/Vendors, and admins to manage competency skills, interests, quizzes,
+                        projects, and digital portfolios in one place.
                     </p>
 
                     <div class="mt-8 grid grid-cols-2 gap-4">
                         <div class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Smart Learning</p>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Talent Development</p>
                             <p class="mt-2 text-sm font-medium text-slate-700">
-                                Akses materi, quiz, dan progress belajar dengan lebih rapi.
+                                Access learning materials, quizzes, and accumulated skill competency profiles.
                             </p>
                         </div>
 
                         <div class="rounded-2xl border border-white/60 bg-white/70 p-4 shadow-sm backdrop-blur">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Verified Results</p>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Talent Matching</p>
                             <p class="mt-2 text-sm font-medium text-slate-700">
-                                Nilai dan sertifikat terverifikasi untuk pengalaman LMS yang lebih nyata.
+                                Project qualification matching and verified student talent recruitment.
                             </p>
                         </div>
                     </div>
@@ -47,11 +47,11 @@
                         </div>
 
                         <h1 class="mt-5 text-3xl font-bold text-slate-900">
-                            UNDIP LMS
+                            COMPRO
                         </h1>
 
                         <p class="mt-1 text-sm text-slate-500">
-                            Computer Engineering Learning Platform
+                            TEKKOM Talent Development & Matching Platform
                         </p>
                     </div>
 
@@ -103,7 +103,8 @@
                                 name="role"
                                 class="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-100">
                                 <option value="student" {{ old('role') === 'student' ? 'selected' : '' }}>Student</option>
-                                <option value="lecturer" {{ old('role') === 'lecturer' ? 'selected' : '' }}>Lecturer</option>
+                                <option value="lecturer" {{ old('role') === 'lecturer' ? 'selected' : '' }}>Lecturer (Dosen)</option>
+                                <option value="vendor" {{ old('role') === 'vendor' ? 'selected' : '' }}>Author (Mitra Vendor)</option>
                                 <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                             </select>
                         </div>

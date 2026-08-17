@@ -20,6 +20,8 @@ class User extends Authenticatable
         'role',
         'avatar',
         'peminatan',
+        'institution_id',
+        'institution_type',
         'registration_status',
         'registration_note',
     ];
@@ -28,6 +30,11 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
     public function createdCourses()
     {
@@ -49,6 +56,11 @@ class User extends Authenticatable
         return $this->role === 'lecturer';
     }
 
+    public function isVendor()
+    {
+        return $this->role === 'vendor';
+    }
+
     public function isRegistrationPending()
     {
         return $this->registration_status === 'pending';
@@ -66,9 +78,15 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): ?string
     {
-        return $this->avatar
-            ? asset('storage/' . $this->avatar)
-            : null;
+        if (!$this->avatar) {
+            return null;
+        }
+
+        if (\Illuminate\Support\Str::startsWith($this->avatar, ['http://', 'https://'])) {
+            return $this->avatar;
+        }
+
+        return asset('storage/' . ltrim($this->avatar, '/'));
     }
 
     protected function casts(): array
@@ -98,7 +116,6 @@ class User extends Authenticatable
                 'started_at',
                 'completed_at',
                 'last_activity_at',
-                'profile_photo_path',
             ])
             ->withTimestamps();
     }
@@ -131,5 +148,83 @@ class User extends Authenticatable
     public function projectComments()
     {
         return $this->hasMany(ProjectComment::class);
+    }
+
+    public function completedProjects()
+    {
+        return $this->belongsToMany(Project::class, 'project_participations')
+            ->wherePivot('status', 'accepted')
+            ->wherePivot('progress_percent', 100);
+    }
+
+    public function calculateTalentMatchScore(Project $project): int
+    {
+        // 1. Competency Skill Match Score (50%)
+        $projectSkillIds = $project->skills->pluck('id')->toArray();
+        
+        $this->loadMissing([
+            'enrollments.courseOffering.masterCourse.skills',
+            'enrollments.course.skills',
+            'interestProfiles.tag',
+        ]);
+
+        $studentAcquiredSkillIds = [];
+        $completedSkillIds = [];
+
+        foreach ($this->enrollments as $enrollment) {
+            $courseObj = $enrollment->courseOffering?->masterCourse ?? $enrollment->course;
+            if ($courseObj) {
+                $isDone = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
+                foreach ($courseObj->skills as $s) {
+                    $studentAcquiredSkillIds[] = $s->id;
+                    if ($isDone) {
+                        $completedSkillIds[] = $s->id;
+                    }
+                }
+            }
+        }
+
+        $studentAcquiredSkillIds = array_unique($studentAcquiredSkillIds);
+        $completedSkillIds = array_unique($completedSkillIds);
+
+        $skillMatchScore = 50;
+        if (!empty($projectSkillIds)) {
+            $matchingSkills = array_intersect($projectSkillIds, $studentAcquiredSkillIds);
+            $matchingCompleted = array_intersect($projectSkillIds, $completedSkillIds);
+
+            if (!empty($matchingCompleted)) {
+                $skillMatchScore = 100;
+            } elseif (!empty($matchingSkills)) {
+                $skillMatchScore = 75;
+            } else {
+                $skillMatchScore = 30;
+            }
+        } else {
+            $skillMatchScore = !empty($studentAcquiredSkillIds) ? 80 : 50;
+        }
+
+        // 2. Interest Match Score (30%)
+        $projectTagIds = $project->tags->pluck('id')->toArray();
+        $interestMatch = 50;
+
+        if (!empty($projectTagIds)) {
+            $studentTagIds = $this->interestProfiles->pluck('tag_id')->toArray();
+            $matchingTags = array_intersect($projectTagIds, $studentTagIds);
+            if (!empty($matchingTags)) {
+                $interestMatch = 90;
+            }
+        }
+
+        if ($this->peminatan && $project->category && stripos($project->category->name, $this->peminatan) !== false) {
+            $interestMatch = min(100, $interestMatch + 20);
+        }
+
+        // 3. Project Experience (20%)
+        $completedCount = $this->completedProjects()->count();
+        $expMatch = min(100, $completedCount * 25 + 30);
+
+        $totalScore = (0.50 * $skillMatchScore) + (0.30 * $interestMatch) + (0.20 * $expMatch);
+
+        return (int) round(min(100, max(30, $totalScore)));
     }
 }

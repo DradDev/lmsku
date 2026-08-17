@@ -2,102 +2,133 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Certificate</title>
+    <title>Course Certificate - {{ $course->name }}</title>
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
             background: #f8fafc;
             margin: 0;
-            padding: 40px;
+            padding: 30px;
             color: #0f172a;
         }
         .certificate {
-            border: 10px solid #6366f1;
+            border: 8px solid #4f46e5;
             background: white;
-            padding: 60px;
+            padding: 40px;
             text-align: center;
+            position: relative;
+        }
+        .credential-code {
+            display: inline-block;
+            font-family: monospace;
+            font-size: 13px;
+            font-weight: bold;
+            color: #4f46e5;
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-bottom: 15px;
         }
         .eyebrow {
             font-size: 14px;
-            letter-spacing: 6px;
+            letter-spacing: 5px;
             text-transform: uppercase;
             color: #64748b;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
         .name {
-            font-size: 42px;
+            font-size: 38px;
             font-weight: bold;
-            margin-bottom: 20px;
+            color: #0f172a;
+            margin-bottom: 15px;
         }
-        .course {
-            font-size: 30px;
-            color: #4f46e5;
-            margin: 20px 0;
-        }
-        .meta {
-            margin-top: 40px;
+        .subtext {
             font-size: 16px;
             color: #475569;
+            margin-bottom: 15px;
         }
-        .score {
+        .course {
             font-size: 28px;
             font-weight: bold;
-            margin-top: 16px;
+            color: #4f46e5;
+            margin: 15px 0;
         }
-        .blockchain-status {
+        .quiz-title {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+        .meta-box {
             display: inline-block;
-            margin-top: 18px;
-            padding: 8px 20px;
-            border-radius: 999px;
+            margin: 0 10px;
+            padding: 10px 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             font-size: 13px;
+        }
+        .meta-box-val {
+            font-size: 18px;
             font-weight: bold;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            color: #4f46e5;
+            margin-top: 4px;
         }
-        .blockchain-status--verified {
-            background: #ecfdf5;
-            color: #065f46;
-            border: 1.5px solid #a7f3d0;
+        .footer-grid {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #64748b;
         }
-        .blockchain-status--pending {
-            background: #fffbeb;
-            color: #92400e;
-            border: 1.5px solid #fde68a;
+        .footer-left {
+            float: left;
+            text-align: left;
         }
-        .blockchain-hash {
-            margin-top: 10px;
-            font-size: 10px;
-            color: #94a3b8;
-            word-break: break-all;
+        .footer-right {
+            float: right;
+            text-align: right;
+        }
+        .clear {
+            clear: both;
         }
     </style>
 </head>
 <body>
     <div class="certificate">
-        <div class="eyebrow">Certificate of Completion</div>
+        <div class="credential-code">KEY: {{ $credentialCode }}</div>
+        <div class="eyebrow">Certificate of Course Completion</div>
         <div class="name">{{ $student->name }}</div>
-        <p>has successfully completed the final multiple choice quiz for</p>
+        <div class="subtext">has successfully completed the competency evaluation and final quiz for</div>
         <div class="course">{{ $course->name }}</div>
-        <p>Final Quiz: {{ $finalQuiz->title }}</p>
-        <div class="score">Final Score: {{ $attempt->score }}</div>
+        <div class="quiz-title">Final Quiz: {{ $finalQuiz->title }}</div>
 
-        @if(!empty($attempt->blockchain_hash))
-            <div class="blockchain-status blockchain-status--verified">
-                ✓ Verified on Blockchain
+        <div style="margin-bottom: 25px;">
+            <div class="meta-box">
+                <div>FINAL SCORE</div>
+                <div class="meta-box-val">{{ $attempt->score }} / 100</div>
             </div>
-            <div class="blockchain-hash">
-                TX: {{ $attempt->tx_id ?? '-' }}<br>
-                Hash: {{ $attempt->blockchain_hash }}
+            <div class="meta-box">
+                <div>STATUS</div>
+                <div class="meta-box-val" style="color: #059669;">Verified</div>
             </div>
-        @else
-            <div class="blockchain-status blockchain-status--pending">
-                Pending Verification
+            <div class="meta-box">
+                <div>ISSUED DATE</div>
+                <div class="meta-box-val" style="color: #0f172a;">{{ now()->format('d M Y') }}</div>
             </div>
-        @endif
+        </div>
 
-        <div class="meta">
-            Issued on {{ now()->format('d M Y') }}<br>
-            Instructor: {{ $course->user->name ?? 'Lecturer' }}
+        <div class="footer-grid">
+            <div class="footer-left">
+                <strong>Instructor / Author</strong><br>
+                {{ $course->user->name ?? 'Lecturer' }}
+            </div>
+            <div class="footer-right">
+                <strong>Credential ID</strong><br>
+                {{ $credentialCode }}
+            </div>
+            <div class="clear"></div>
         </div>
     </div>
 </body>

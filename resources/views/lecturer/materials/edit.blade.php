@@ -3,9 +3,9 @@
         <div class="max-w-6xl mx-auto px-6">
 
             <div class="mb-8">
-                <a href="{{ route('lecturer.courses.show', $material->course_id) }}"
+                <a href="{{ route('lecturer.courses.show', $material->course_offering_id ?? $material->course_id) }}"
                    class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
-                    ← Kembali ke Course
+                    ← Back to Course
                 </a>
 
                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
@@ -13,7 +13,7 @@
                 </p>
                 <h1 class="text-3xl font-bold text-slate-900">Edit Learning Material</h1>
                 <p class="text-slate-500 mt-2">
-                    Course: <span class="font-semibold text-slate-700">{{ $material->course->name ?? '-' }}</span>
+                    Course: <span class="font-semibold text-slate-700">{{ $material->masterCourse->name ?? ($material->courseOffering->full_name ?? ($material->course->name ?? '-')) }}</span>
                 </p>
             </div>
 
@@ -76,7 +76,7 @@
                         </div>
 
                         <div class="flex justify-end gap-3 pt-2">
-                            <a href="{{ route('lecturer.courses.show', $material->course_id) }}"
+                            <a href="{{ route('lecturer.courses.show', $material->course_offering_id ?? $material->course_id) }}"
                                class="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                                 Cancel
                             </a>

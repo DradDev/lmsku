@@ -15,6 +15,9 @@ class Project extends Model
         'duration_days',
         'max_students',
         'created_by',
+        'provider_type',
+        'brief_file',
+        'benefits',
         'is_published',
     ];
 
@@ -22,7 +25,21 @@ class Project extends Model
         'is_published' => 'boolean',
     ];
 
+    public function getBriefFileUrlAttribute()
+    {
+        if (empty($this->brief_file)) {
+            return null;
+        }
+
+        return asset('storage/' . $this->brief_file);
+    }
+
     public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
     }

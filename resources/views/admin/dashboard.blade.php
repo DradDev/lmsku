@@ -42,25 +42,20 @@
                 </div>
             </form>
 
-                <div class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <p class="text-sm text-slate-500">Total Results</p>
+                <div class="mb-6 grid gap-4 md:grid-cols-3">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Results</p>
                         <h3 class="mt-3 text-3xl font-bold text-slate-900">{{ $resultStats['total'] }}</h3>
                     </div>
 
-                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-                        <p class="text-sm text-emerald-700">Verified</p>
-                        <h3 class="mt-3 text-3xl font-bold text-emerald-900">{{ $resultStats['verified'] }}</h3>
+                    <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Verified</p>
+                        <h3 class="mt-3 text-3xl font-bold text-emerald-800">{{ $resultStats['verified'] }}</h3>
                     </div>
 
-                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-                        <p class="text-sm text-amber-700">Unverified</p>
-                        <h3 class="mt-3 text-3xl font-bold text-amber-900">{{ $resultStats['unverified'] }}</h3>
-                    </div>
-
-                    <div class="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-                        <p class="text-sm text-blue-700">Average Score</p>
-                        <h3 class="mt-3 text-3xl font-bold text-blue-900">{{ $resultStats['average_score'] }}</h3>
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50/50 p-5">
+                        <p class="text-xs font-semibold uppercase tracking-wider text-amber-700">Unverified</p>
+                        <h3 class="mt-3 text-3xl font-bold text-amber-800">{{ $resultStats['unverified'] }}</h3>
                     </div>
                 </div>
 

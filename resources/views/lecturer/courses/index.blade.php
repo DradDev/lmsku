@@ -12,6 +12,36 @@
     font-family: 'Inter', sans-serif;
 }
 
+.tabs-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e4e7ec;
+    padding-bottom: 1rem;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #667085;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #101828;
+    background: #f8fafc;
+}
+
+.tab-btn.active {
+    color: #4338ca;
+    background: #eef2ff;
+}
+
 .page-container {
     max-width: 1280px;
     margin: 0 auto;
@@ -43,9 +73,10 @@
 }
 
 .page-title {
-    font-size: 30px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 800;
     color: #101828;
+    letter-spacing: -0.5px;
 }
 
 .page-sub {
@@ -72,43 +103,24 @@
     justify-content: center;
     gap: 6px;
     font-size: 13px;
-    font-weight: 600;
-    padding: 10px 16px;
+    font-weight: 700;
+    padding: 10px 18px;
     border-radius: 12px;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: 'Inter', sans-serif;
     white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
     color: #fff;
-    box-shadow: 0 10px 24px rgba(99, 102, 241, 0.18);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
 }
-.btn-primary:hover { transform: translateY(-1px); }
-
-.btn-solid {
-    background: #111827;
-    color: #fff;
-}
-.btn-solid:hover { background: #0f172a; }
-
-.btn-outline {
-    background: #fff;
-    color: #334155;
-    border: 1px solid #d0d5dd;
-}
-.btn-outline:hover { background: #f8fafc; }
-
-.btn-danger {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-}
-.btn-danger:hover { background: #ffe4e6; }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35); }
 
 .stat-strip {
     display: grid;
@@ -117,157 +129,116 @@
     margin-bottom: 2rem;
 }
 
-@media (max-width: 1024px) {
-    .stat-strip { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px) {
-    .page-container { padding: 0 1rem; }
-    .stat-strip { grid-template-columns: 1fr; }
-}
-
 .stat-card {
-    background: rgba(255,255,255,0.9);
+    background: #fff;
     border: 1px solid #e4e7ec;
-    border-radius: 18px;
-    padding: 1.1rem 1.2rem;
-    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.04);
+    border-radius: 16px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
 .stat-label {
     font-size: 11px;
     font-weight: 700;
+    color: #667085;
     text-transform: uppercase;
-    letter-spacing: .6px;
-    color: #98a2b3;
-    margin-bottom: 8px;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
-    font-size: 30px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 800;
     color: #101828;
+    margin-top: 4px;
 }
 
 .courses-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
-}
-
-@media (max-width: 1100px) {
-    .courses-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 640px) {
-    .courses-grid { grid-template-columns: 1fr; }
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
 }
 
 .course-card {
-    background: rgba(255,255,255,0.94);
-    backdrop-filter: blur(10px);
+    background: #fff;
     border: 1px solid #e4e7ec;
-    border-radius: 22px;
-    padding: 1.4rem;
+    border-radius: 20px;
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    min-height: 320px;
-    box-shadow: 0 14px 36px rgba(17, 24, 39, 0.05);
-    transition: transform .18s ease, box-shadow .18s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: all 0.2s;
 }
 
 .course-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 18px 42px rgba(17, 24, 39, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
 }
 
 .course-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .course-tag {
-    display: inline-flex;
-    align-items: center;
     font-size: 11px;
     font-weight: 700;
-    padding: 5px 11px;
-    border-radius: 999px;
+    color: #4f46e5;
     background: #eef2ff;
-    color: #4338ca;
-    border: 1px solid #c7d2fe;
+    padding: 3px 10px;
+    border-radius: 100px;
 }
 
 .course-badge {
-    display: inline-flex;
-    align-items: center;
     font-size: 11px;
     font-weight: 700;
-    padding: 5px 11px;
-    border-radius: 999px;
-    background: #f8fafc;
-    color: #475467;
-    border: 1px solid #e4e7ec;
+    padding: 3px 10px;
+    border-radius: 100px;
+    border: 1px solid transparent;
 }
 
 .course-name {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 17px;
+    font-weight: 800;
     color: #101828;
+    margin-bottom: 6px;
     line-height: 1.35;
-    margin-bottom: 10px;
 }
 
 .course-desc {
-    font-size: 14px;
+    font-size: 13px;
     color: #667085;
-    line-height: 1.7;
-    margin-bottom: 1.2rem;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    flex: 1;
 }
 
 .stats-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 1.2rem;
-}
-
-.stat-mini {
-    background: linear-gradient(180deg, #f8fafc 0%, #f2f4f7 100%);
-    border: 1px solid #e4e7ec;
-    border-radius: 14px;
-    padding: 12px 10px;
-    text-align: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
 }
 
 .stat-mini-label {
     font-size: 10px;
     font-weight: 700;
+    color: #64748b;
     text-transform: uppercase;
-    letter-spacing: .6px;
-    color: #98a2b3;
-    margin-bottom: 5px;
 }
 
 .stat-mini-value {
-    font-size: 22px;
-    font-weight: 700;
-    color: #111827;
-}
-
-.card-actions {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: auto;
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
 }
 
 .empty-state {
@@ -278,120 +249,160 @@
     padding: 4rem 2rem;
     text-align: center;
 }
-
-.empty-state h3 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #101828;
-    margin-bottom: 8px;
-}
-
-.empty-state p {
-    font-size: 14px;
-    color: #98a2b3;
-    margin-bottom: 1.2rem;
-}
 </style>
 
 <div class="page-wrap">
     <div class="page-container">
 
         @php
-            $totalCourses = $courses->count();
-            $totalMaterials = $courses->sum(fn($course) => $course->materials->count());
-            $totalQuizzes = $courses->sum(fn($course) => $course->quizzes->count());
-            $totalStudents = $courses->sum(fn($course) => $course->students->count());
+            $totalCourses = $activeCourses->count();
+            $totalMaterials = $activeCourses->sum(fn($course) => $course->materials ? $course->materials->count() : 0);
+            $totalQuizzes = $activeCourses->sum(fn($course) => $course->quizzes ? $course->quizzes->count() : 0);
+            $totalStudents = $activeCourses->sum(function($course) {
+                if (isset($course->students) && $course->students) return $course->students->count();
+                if (isset($course->enrollments) && $course->enrollments) return $course->enrollments->count();
+                return 0;
+            });
         @endphp
 
         <div class="page-header">
             <div>
-                <p class="page-eyebrow">Lecturer Portal</p>
-                <h1 class="page-title">Daftar Mata Kuliah</h1>
-                <p class="page-sub">Kelola course yang Anda ajarkan, beserta materi, quiz, dan mahasiswa di dalamnya.</p>
+                <p class="page-eyebrow">Dosen Pengampu Portal &bull; Manajemen Kelas Pembelajaran</p>
+                <h1 class="page-title">Daftar Kelas Pembelajaran Dosen</h1>
+                <p class="page-sub">Kelola materi modul, bank kuis (harian/akhir), dan kelulusan sertifikat mahasiswa di kelas semester aktif.</p>
             </div>
-
-            <a href="{{ route('lecturer.courses.create') }}" class="btn btn-primary">
-                + Tambah Mata Kuliah
-            </a>
         </div>
 
         @if(session('success'))
-            <div class="alert-success">{{ session('success') }}</div>
+            <div class="alert-success flex items-center gap-3">
+                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs">✓</span>
+                <div>
+                    <strong>Berhasil!</strong> {{ session('success') }}
+                </div>
+            </div>
         @endif
 
         <div class="stat-strip">
             <div class="stat-card">
-                <div class="stat-label">Total Courses</div>
+                <div class="stat-label">Total Kelas Aktif</div>
                 <div class="stat-value">{{ $totalCourses }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Materials</div>
+                <div class="stat-label">Materi Pembelajaran</div>
                 <div class="stat-value">{{ $totalMaterials }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Quizzes</div>
+                <div class="stat-label">Bank Kuis</div>
                 <div class="stat-value">{{ $totalQuizzes }}</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Students</div>
+                <div class="stat-label">Mahasiswa Terdaftar</div>
                 <div class="stat-value">{{ $totalStudents }}</div>
             </div>
         </div>
 
         <div class="courses-grid">
-            @forelse($courses as $course)
+            @if(isset($groupedOfferings) && $groupedOfferings->isNotEmpty())
+                @foreach($groupedOfferings as $masterCourseId => $offeringsGroup)
+                    @php
+                        $firstOffering = $offeringsGroup->first();
+                        $totalGroupStudents = $offeringsGroup->sum(fn($o) => $o->enrollments ? $o->enrollments->count() : 0);
+                    @endphp
+                    <div class="course-card">
+                        <div class="course-top">
+                            <span class="course-tag">{{ $firstOffering->academicTerm->name ?? 'Semester Aktif' }}</span>
+                            <span class="course-badge text-indigo-700 bg-indigo-50 border-indigo-200 font-bold">
+                                {{ $offeringsGroup->count() }} Rombel Kelas
+                            </span>
+                        </div>
+
+                        <div class="course-name">{{ $firstOffering->name }}</div>
+
+                        <!-- List Pill Kelas Pararel (Kelas A, B, C) yang Diampu Dosen -->
+                        <div class="my-2 flex flex-wrap gap-1.5" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;">
+                            @foreach($offeringsGroup as $offeringItem)
+                                <a href="{{ route('lecturer.courses.show', $offeringItem->id) }}" 
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition"
+                                   style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; text-decoration: none;">
+                                    <span>{{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
+                                    <span style="font-size: 10px; background: #c7d2fe; color: #312e81; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
+                                        {{ $offeringItem->enrollments ? $offeringItem->enrollments->count() : 0 }} Mhs
+                                    </span>
+                                </a>
+                            @endforeach
+                        </div>
+
+                        <p class="course-desc">{{ $firstOffering->description ?: 'Pengelolaan materi pembelajaran, bank kuis, dan kelulusan sertifikat.' }}</p>
+
+                        <div class="stats-row">
+                            <div class="stat-mini">
+                                <div class="stat-mini-label">Materials</div>
+                                <div class="stat-mini-value">{{ $firstOffering->materials ? $firstOffering->materials->count() : 0 }}</div>
+                            </div>
+                            <div class="stat-mini">
+                                <div class="stat-mini-label">Quizzes</div>
+                                <div class="stat-mini-value">{{ $firstOffering->quizzes ? $firstOffering->quizzes->count() : 0 }}</div>
+                            </div>
+                            <div class="stat-mini">
+                                <div class="stat-mini-label">Total Mhs</div>
+                                <div class="stat-mini-value">{{ $totalGroupStudents }}</div>
+                            </div>
+                        </div>
+
+                        <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
+                        <div style="margin-top: auto;">
+                            <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" class="btn btn-primary w-full text-center">
+                                Buka Gerbang Kelas
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+            @forelse($activeCourses as $course)
                 <div class="course-card">
                     <div class="course-top">
-                        <span class="course-tag">Course</span>
-                        <span class="course-badge">Latest</span>
+                        <span class="course-tag">{{ $course->academicTerm->name ?? 'Semester Aktif' }}</span>
+                        <span class="course-badge text-green-700 bg-green-50 border-green-200">Aktif</span>
                     </div>
 
                     <div class="course-name">{{ $course->name }}</div>
 
-                    <p class="course-desc">{{ $course->description ?: 'Belum ada deskripsi untuk mata kuliah ini.' }}</p>
+                    <div class="text-xs text-indigo-600 mb-3 font-bold flex items-center gap-1.5">
+                        <span>Certificate Threshold:</span>
+                        <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
+                    </div>
+
+                    <p class="course-desc">{{ $course->description ?: 'Pengelolaan materi pembelajaran, bank kuis, dan kelulusan sertifikat.' }}</p>
 
                     <div class="stats-row">
                         <div class="stat-mini">
                             <div class="stat-mini-label">Materials</div>
-                            <div class="stat-mini-value">{{ $course->materials->count() }}</div>
+                            <div class="stat-mini-value">{{ $course->materials ? $course->materials->count() : 0 }}</div>
                         </div>
                         <div class="stat-mini">
                             <div class="stat-mini-label">Quizzes</div>
-                            <div class="stat-mini-value">{{ $course->quizzes->count() }}</div>
+                            <div class="stat-mini-value">{{ $course->quizzes ? $course->quizzes->count() : 0 }}</div>
                         </div>
                         <div class="stat-mini">
                             <div class="stat-mini-label">Students</div>
-                            <div class="stat-mini-value">{{ $course->students->count() }}</div>
+                            <div class="stat-mini-value">{{ isset($course->students) && $course->students ? $course->students->count() : ($course->enrollments ? $course->enrollments->count() : 0) }}</div>
                         </div>
                     </div>
 
-                    <div class="card-actions">
-                        <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-solid">
-                            View
+                    <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
+                    <div style="margin-top: auto;">
+                        <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
+                            Buka Gerbang Kelas
                         </a>
-
-                        <a href="{{ route('lecturer.courses.edit', $course->id) }}" class="btn btn-outline">
-                            Edit
-                        </a>
-
-                        <form action="{{ route('lecturer.courses.destroy', $course->id) }}"
-                              method="POST"
-                              onsubmit="return confirm('Yakin ingin menghapus course ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" style="width:100%">Delete</button>
-                        </form>
                     </div>
                 </div>
             @empty
                 <div class="empty-state">
-                    <h3>Belum ada mata kuliah</h3>
-                    <p>Mulai buat course pertama Anda untuk mengelola materi, quiz, dan aktivitas belajar.</p>
-                    <a href="{{ route('lecturer.courses.create') }}" class="btn btn-primary">
-                        Tambah mata kuliah pertama
-                    </a>
+                    <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Kelas Aktif</h3>
+                    <p style="font-size: 13px; color: #64748b;">Mata kuliah dan penawaran kelas semester aktif akan disiapkan dan ditugaskan oleh Admin.</p>
                 </div>
             @endforelse
+            @endif
         </div>
 
     </div>

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Course;
-use App\Models\Submission;
-use App\Models\QuizAttempt;
-use App\Models\Assignment;
+use App\Models\CourseOffering;
+use App\Models\Enrollment;
+use App\Models\ProjectParticipation;
 use App\Models\Quiz;
-use App\Models\QuizAnswer;
+use App\Models\QuizAttempt;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -17,24 +17,72 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $courses = Course::whereIn('id', function ($query) use ($user) {
-                $query->select('course_id')
-                    ->from('enrollments')
-                    ->where('user_id', $user->id);
-            })
-            ->with(['materials', 'assignments', 'user', 'quizzes.questions'])
+        // 1. Ambil seluruh kursus aktif mahasiswa (mendukung 3NF CourseOffering & Legacy Course)
+        $enrollments = Enrollment::with([
+            'courseOffering.masterCourse.materials',
+            'courseOffering.masterCourse.quizzes.questions',
+            'courseOffering.lecturer.institution',
+            'courseOffering.academicTerm',
+            'course.materials',
+            'course.user.institution',
+            'course.quizzes.questions',
+        ])
+            ->where('user_id', $user->id)
             ->latest()
             ->get();
 
-        $courseIds = $courses->pluck('id');
+        $courses = collect();
+        $allQuizIds = collect();
 
-        $assignments = Assignment::with('course')
-            ->whereIn('course_id', $courseIds)
-            ->latest()
-            ->get();
+        foreach ($enrollments as $enrollment) {
+            $offering = $enrollment->courseOffering;
+            $courseObj = $offering ?? $enrollment->course;
 
+            if (!$courseObj) {
+                continue;
+            }
+
+            $item = clone $courseObj;
+            $item->enrollment_id = $enrollment->id;
+            $item->progress = $enrollment->progress_percent ?? 0;
+            $item->is_completed = $enrollment->progress_percent >= 100 || $enrollment->status === 'completed';
+            $item->can_get_certificate = false;
+
+            $quizzes = $courseObj->quizzes ?? collect();
+            if ($quizzes->isEmpty() && isset($courseObj->masterCourse)) {
+                $quizzes = $courseObj->masterCourse->quizzes ?? collect();
+            }
+
+            $allQuizIds = $allQuizIds->merge($quizzes->pluck('id'));
+
+            $finalQuiz = $quizzes->firstWhere('quiz_type', 'final');
+            if ($finalQuiz) {
+                $threshold = $offering?->certificate_threshold 
+                    ?? $offering?->masterCourse?->certificate_threshold 
+                    ?? $item->certificate_threshold 
+                    ?? 70;
+
+                $verifiedAttempt = QuizAttempt::where('user_id', $user->id)
+                    ->where('quiz_id', $finalQuiz->id)
+                    ->where('is_verified', true)
+                    ->orderByDesc('score')
+                    ->first();
+
+                if ($verifiedAttempt && $verifiedAttempt->score >= $threshold) {
+                    $item->can_get_certificate = true;
+                }
+            }
+
+            $courses->push($item);
+        }
+
+        $totalCourses = $courses->count();
+        $completed = $courses->where('can_get_certificate', true)->count();
+        $inProgress = max($totalCourses - $completed, 0);
+
+        // 2. Kuis yang Tersedia untuk Mahasiswa
         $availableQuizzes = Quiz::with(['course'])
-            ->whereIn('course_id', $courseIds)
+            ->whereIn('id', $allQuizIds->unique())
             ->whereHas('questions', function ($query) {
                 $query->where('status', 'approved');
             })
@@ -44,61 +92,16 @@ class DashboardController extends Controller
                 }
             ])
             ->latest()
+            ->take(4)
             ->get();
 
-        $completed = 0;
-
-        foreach ($courses as $course) {
-            $totalMaterials = $course->materials->count();
-            $totalAssignments = $course->assignments->count();
-            $totalItems = $totalMaterials + $totalAssignments;
-
-            $course->progress = $totalItems > 0
-                ? round(($totalMaterials / $totalItems) * 100)
-                : 0;
-
-            $course->is_completed = $course->progress >= 100;
-            $course->can_get_certificate = false;
-
-            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
-
-            if ($finalQuiz) {
-                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
-                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
-
-                $verifiedAttempt = QuizAttempt::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->orderByDesc('score')
-                    ->first();
-
-                if ($verifiedAttempt && $verifiedAttempt->score >= 70 && $onlyMultipleChoice) {
-                    $course->can_get_certificate = true;
-                }
-            }
-
-            if ($course->can_get_certificate) {
-                $completed++;
-            }
-        }
-
-        $totalCourses = $courses->count();
-        $inProgress = max($totalCourses - $completed, 0);
-
-        $lastSubmission = Submission::where('user_id', $user->id)
-            ->latest()
-            ->first();
-
+        // 3. Riwayat Hasil Kuis Terakhir
         $latestQuiz = QuizAttempt::with(['quiz.course'])
             ->where('user_id', $user->id)
             ->where('is_verified', true)
             ->latest()
             ->first();
-        
+
         $latestQuizResults = QuizAttempt::with(['quiz.course'])
             ->where('user_id', $user->id)
             ->where('is_verified', true)
@@ -112,27 +115,37 @@ class DashboardController extends Controller
             ->latest()
             ->first();
 
-        $latestEssayAnswer = QuizAnswer::with(['question.quiz.course', 'attempt'])
+        // 4. Proyek & Portofolio Aktif Mahasiswa (Pengganti Grafik Dummy)
+        $activeParticipations = ProjectParticipation::with([
+            'project.creator.institution',
+            'project.skills',
+        ])
             ->where('user_id', $user->id)
-            ->whereNotNull('score')
-            ->whereHas('question', function ($query) {
-                $query->where('question_type', 'essay');
-            })
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
             ->latest('updated_at')
-            ->first();
+            ->take(3)
+            ->get();
+
+        $pendingInvitationsCount = ProjectParticipation::where('user_id', $user->id)
+            ->where('status', 'invited')
+            ->count();
+
+        $totalJoinedProjectsCount = ProjectParticipation::where('user_id', $user->id)
+            ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
+            ->count();
 
         return view('student.dashboard', compact(
             'courses',
-            'assignments',
             'availableQuizzes',
             'totalCourses',
             'inProgress',
             'completed',
-            'lastSubmission',
             'latestQuiz',
             'latestQuizResults',
             'pendingQuiz',
-            'latestEssayAnswer'
+            'activeParticipations',
+            'pendingInvitationsCount',
+            'totalJoinedProjectsCount'
         ));
     }
 }
