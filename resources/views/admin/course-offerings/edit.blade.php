@@ -1,20 +1,38 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Edit Kelas Penawaran
-        </h2>
-    </x-slot>
-
     <div class="py-6">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow rounded p-6">
-                <form action="{{ route('admin.course-offerings.update', $courseOffering) }}" method="POST">
+        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+            <!-- HEADER CARD -->
+            <div class="bg-white border border-slate-200 shadow-xs rounded-2xl p-6">
+                <div class="flex items-center gap-3.5">
+                    <a href="{{ route('admin.course-offerings.index') }}" class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 flex items-center justify-center font-bold transition flex-shrink-0">
+                        ←
+                    </a>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                                Penawaran Perkuliahan
+                            </span>
+                        </div>
+                        <h2 class="font-bold text-xl text-slate-900 leading-tight mt-0.5">
+                            Edit Rombel: {{ $courseOffering->section_name }} ({{ $courseOffering->masterCourse->name ?? 'Course' }})
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Perbarui rombel kelas, dosen pengampu, kuota mahasiswa, atau status perkuliahan.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORM CARD -->
+            <div class="bg-white border border-slate-200 shadow-xs rounded-2xl p-6">
+                <form action="{{ route('admin.course-offerings.update', $courseOffering) }}" method="POST" class="space-y-4">
                     @csrf
                     @method('PUT')
 
-                    <div class="mb-4">
-                        <label class="block font-semibold mb-2">Mata Kuliah Induk</label>
-                        <select name="master_course_id" class="border rounded w-full p-2" required>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Mata Kuliah Induk <span class="text-rose-500">*</span></label>
+                        <select name="master_course_id" class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold" required>
                             <option value="">-- Pilih Mata Kuliah --</option>
                             @foreach($masterCourses as $mc)
                                 <option value="{{ $mc->id }}" {{ old('master_course_id', $courseOffering->master_course_id) == $mc->id ? 'selected' : '' }}>
@@ -22,141 +40,129 @@
                                 </option>
                             @endforeach
                         </select>
-
                         @error('master_course_id')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block font-semibold mb-2">Semester</label>
-                        <select name="academic_term_id" class="border rounded w-full p-2" required>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Semester Akademik <span class="text-rose-500">*</span></label>
+                        <select name="academic_term_id" class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold" required>
                             <option value="">-- Pilih Semester --</option>
                             @foreach($terms as $t)
                                 <option value="{{ $t->id }}" {{ old('academic_term_id', $courseOffering->academic_term_id) == $t->id ? 'selected' : '' }}>
-                                    {{ $t->name }} {{ $t->is_active ? '(Aktif)' : '' }}
+                                    {{ $t->name }} {{ $t->is_active ? '(Aktif)' : '(Non-Aktif)' }}
                                 </option>
                             @endforeach
                         </select>
-
                         @error('academic_term_id')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block font-semibold mb-2">Nama Kelas</label>
-                        <input type="text"
-                               name="section_name"
-                               value="{{ old('section_name', $courseOffering->section_name) }}"
-                               class="border rounded w-full p-2"
-                               required>
-
-                        @error('section_name')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block font-semibold mb-2">Dosen Pengampu</label>
-                        <select name="lecturer_id" class="border rounded w-full p-2" required>
-                            <option value="">-- Pilih Dosen --</option>
-                            @foreach($lecturers as $lecturer)
-                                <option value="{{ $lecturer->id }}" {{ old('lecturer_id', $courseOffering->lecturer_id) == $lecturer->id ? 'selected' : '' }}>
-                                    {{ $lecturer->name }}
-                                </option>
-                            @endforeach
-                        </select>
-
-                        @error('lecturer_id')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block font-semibold mb-2">Kuota Mahasiswa</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Nama Rombel / Kelas <span class="text-rose-500">*</span></label>
+                            <input type="text"
+                                   name="section_name"
+                                   value="{{ old('section_name', $courseOffering->section_name) }}"
+                                   class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold"
+                                   required>
+                            @error('section_name')
+                                <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Dosen Pengampu <span class="text-rose-500">*</span></label>
+                            <select name="lecturer_id" class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold" required>
+                                <option value="">-- Pilih Dosen --</option>
+                                @foreach($lecturers as $lecturer)
+                                    <option value="{{ $lecturer->id }}" {{ old('lecturer_id', $courseOffering->lecturer_id) == $lecturer->id ? 'selected' : '' }}>
+                                        {{ $lecturer->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('lecturer_id')
+                                <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Kuota Mahasiswa</label>
                             <input type="number"
                                    name="capacity"
                                    value="{{ old('capacity', $courseOffering->capacity) }}"
-                                   class="border rounded w-full p-2"
-                                   placeholder="30"
+                                   class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold"
+                                   placeholder="40"
                                    min="1">
-
                             @error('capacity')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                             @enderror
-
-                            <p class="text-sm text-gray-500 mt-1">
-                                Kosongkan jika tidak ada batasan kuota.
-                            </p>
                         </div>
 
                         <div>
-                            <label class="block font-semibold mb-2">Threshold Sertifikat</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Threshold Sertifikat (%) <span class="text-rose-500">*</span></label>
                             <input type="number"
                                    name="certificate_threshold"
                                    value="{{ old('certificate_threshold', $courseOffering->certificate_threshold) }}"
-                                   class="border rounded w-full p-2"
+                                   class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold"
                                    min="0"
                                    max="100"
                                    required>
-
                             @error('certificate_threshold')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block font-semibold mb-2">Tanggal Mulai</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Tanggal Mulai</label>
                             <input type="date"
                                    name="start_date"
                                    value="{{ old('start_date', $courseOffering->start_date?->format('Y-m-d')) }}"
-                                   class="border rounded w-full p-2">
-
+                                   class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold">
                             @error('start_date')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
 
                         <div>
-                            <label class="block font-semibold mb-2">Tanggal Selesai</label>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Tanggal Selesai</label>
                             <input type="date"
                                    name="end_date"
                                    value="{{ old('end_date', $courseOffering->end_date?->format('Y-m-d')) }}"
-                                   class="border rounded w-full p-2">
-
+                                   class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold">
                             @error('end_date')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                                <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block font-semibold mb-2">Status</label>
-                        <select name="status" class="border rounded w-full p-2" required>
-                            <option value="draft" {{ old('status', $courseOffering->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                            <option value="published" {{ old('status', $courseOffering->status) == 'published' ? 'selected' : '' }}>Published</option>
-                            <option value="ongoing" {{ old('status', $courseOffering->status) == 'ongoing' ? 'selected' : '' }}>Ongoing</option>
-                            <option value="expired" {{ old('status', $courseOffering->status) == 'expired' ? 'selected' : '' }}>Expired</option>
-                            <option value="cancelled" {{ old('status', $courseOffering->status) == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Status Rombel <span class="text-rose-500">*</span></label>
+                        <select name="status" class="w-full rounded-xl border-slate-300 focus:border-blue-600 focus:ring-blue-600 text-xs font-semibold" required>
+                            <option value="draft" {{ old('status', $courseOffering->status) == 'draft' ? 'selected' : '' }}>Draft (Tertutup)</option>
+                            <option value="published" {{ old('status', $courseOffering->status) == 'published' ? 'selected' : '' }}>Published (Terbuka)</option>
+                            <option value="ongoing" {{ old('status', $courseOffering->status) == 'ongoing' ? 'selected' : '' }}>Ongoing (Sedang Berjalan)</option>
+                            <option value="expired" {{ old('status', $courseOffering->status) == 'expired' ? 'selected' : '' }}>Expired (Kedaluwarsa)</option>
+                            <option value="cancelled" {{ old('status', $courseOffering->status) == 'cancelled' ? 'selected' : '' }}>Cancelled (Dibatalkan)</option>
                         </select>
-
                         @error('status')
-                            <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
+                            <p class="text-rose-600 text-xs mt-1">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div class="flex gap-2">
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">
-                            Perbarui
-                        </button>
-
-                        <a href="{{ route('admin.course-offerings.index') }}" class="px-4 py-2 bg-gray-200 rounded">
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+                        <a href="{{ route('admin.course-offerings.index') }}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition border border-slate-200">
                             Batal
                         </a>
+                        <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition">
+                            Perbarui Kelas
+                        </button>
                     </div>
                 </form>
             </div>

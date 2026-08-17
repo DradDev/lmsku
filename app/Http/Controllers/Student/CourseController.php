@@ -470,8 +470,8 @@ class CourseController extends Controller
                 return redirect()->back()->with('error', 'Pendaftaran gagal: Rombel ' . $offering->section_name . ' sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
             }
 
-            if ($offering->isExpired() || $offering->status === 'cancelled') {
-                return redirect()->back()->with('error', 'Kelas ini tidak tersedia untuk pendaftaran baru karena sudah ditutup atau dibatalkan.');
+            if ($offering->isExpired() || $offering->status !== 'published' || ($offering->academicTerm && ! $offering->academicTerm->is_active)) {
+                return redirect()->back()->with('error', 'Kelas ini tidak tersedia untuk pendaftaran baru karena semester sedang non-aktif, kelas berstatus draft, atau sudah ditutup.');
             }
 
             Enrollment::create([
