@@ -62,7 +62,7 @@ class ProjectController extends Controller
             'category',
             'participations.user',
             'comments.user',
-            'comments.replies.user',
+            'comments.participation',
         ]);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
