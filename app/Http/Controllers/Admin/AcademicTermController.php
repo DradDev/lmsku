@@ -89,12 +89,12 @@ class AcademicTermController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active');
 
-        // Jika semester ini diaktifkan, nonaktifkan semester lain dan ubah status published offering-nya ke draft
+        // Jika semester ini diaktifkan, nonaktifkan semester lain dan ubah status offering-nya ke draft
         if ($validated['is_active']) {
             $otherTerms = AcademicTerm::where('is_active', true)->pluck('id');
             AcademicTerm::where('is_active', true)->update(['is_active' => false]);
             \App\Models\CourseOffering::whereIn('academic_term_id', $otherTerms)
-                ->where('status', 'published')
+                ->where('status', '!=', 'cancelled')
                 ->update(['status' => 'draft']);
         }
 
@@ -123,20 +123,25 @@ class AcademicTermController extends Controller
 
         $validated['is_active'] = $request->boolean('is_active');
 
-        // Jika semester ini dinonaktifkan, ubah kelas penawaran di dalamnya menjadi draft
+        // Jika semester ini dinonaktifkan, ubah seluruh kelas penawaran di dalamnya menjadi draft
         if (!$validated['is_active'] && $academicTerm->is_active) {
             \App\Models\CourseOffering::where('academic_term_id', $academicTerm->id)
-                ->where('status', 'published')
+                ->where('status', '!=', 'cancelled')
                 ->update(['status' => 'draft']);
         } elseif ($validated['is_active']) {
-            // Jika semester ini diaktifkan, nonaktifkan semester lain
+            // Jika semester ini diaktifkan, nonaktifkan semester lain dan ubah kelasnya ke draft
             $otherTerms = AcademicTerm::where('is_active', true)->where('id', '!=', $academicTerm->id)->pluck('id');
             AcademicTerm::where('is_active', true)
                 ->where('id', '!=', $academicTerm->id)
                 ->update(['is_active' => false]);
             \App\Models\CourseOffering::whereIn('academic_term_id', $otherTerms)
-                ->where('status', 'published')
+                ->where('status', '!=', 'cancelled')
                 ->update(['status' => 'draft']);
+
+            // Aktifkan/publish seluruh kelas pada semester yang diaktifkan
+            \App\Models\CourseOffering::where('academic_term_id', $academicTerm->id)
+                ->where('status', '!=', 'cancelled')
+                ->update(['status' => 'published']);
         }
 
         $academicTerm->update($validated);
@@ -149,23 +154,28 @@ class AcademicTermController extends Controller
     public function toggleActive(AcademicTerm $academicTerm): RedirectResponse
     {
         if ($academicTerm->is_active) {
-            // Nonaktifkan semester ini dan ubah semua kelas penawaran yang published menjadi draft
+            // Nonaktifkan semester ini dan ubah semua kelas penawaran menjadi draft
             $academicTerm->update(['is_active' => false]);
             \App\Models\CourseOffering::where('academic_term_id', $academicTerm->id)
-                ->where('status', 'published')
+                ->where('status', '!=', 'cancelled')
                 ->update(['status' => 'draft']);
 
-            $message = "Semester '{$academicTerm->name}' telah dinonaktifkan dan seluruh kelas di semester ini telah dialihkan menjadi Draft.";
+            $message = "Semester '{$academicTerm->name}' telah dinonaktifkan dan seluruh kelas di semester ini otomatis dialihkan menjadi Draft.";
         } else {
-            // Aktifkan semester ini, nonaktifkan semester lain dan ubah kelas di semester lain menjadi draft
+            // Nonaktifkan semester lain dan ubah kelas di semester lain menjadi draft
             $otherTerms = AcademicTerm::where('is_active', true)->pluck('id');
             AcademicTerm::where('is_active', true)->update(['is_active' => false]);
             \App\Models\CourseOffering::whereIn('academic_term_id', $otherTerms)
-                ->where('status', 'published')
+                ->where('status', '!=', 'cancelled')
                 ->update(['status' => 'draft']);
 
+            // Aktifkan semester ini dan aktifkan/publish seluruh kelas di semester ini
             $academicTerm->update(['is_active' => true]);
-            $message = "Semester '{$academicTerm->name}' telah diaktifkan.";
+            \App\Models\CourseOffering::where('academic_term_id', $academicTerm->id)
+                ->where('status', '!=', 'cancelled')
+                ->update(['status' => 'published']);
+
+            $message = "Semester '{$academicTerm->name}' telah diaktifkan dan seluruh kelas di semester ini otomatis berstatus Published.";
         }
 
         return redirect()
