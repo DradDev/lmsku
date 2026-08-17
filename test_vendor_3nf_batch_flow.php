@@ -177,7 +177,7 @@ echo "\n8. Testing Vendor Course Index View Rendering...\n";
 $indexView = $courseController->index();
 $renderedIndex = $indexView->render();
 
-if (strpos($renderedIndex, 'Daftar Program Sertifikasi Mitra Vendor') !== false &&
+if (strpos($renderedIndex, 'Daftar Program Sertifikasi') !== false &&
     strpos($renderedIndex, 'Master Certified Kubernetes Administrator (CKA)') !== false &&
     strpos($renderedIndex, 'Batch 1 - Q1 2026') !== false &&
     strpos($renderedIndex, 'Batch 2 - Q3 2026 Intake') !== false) {

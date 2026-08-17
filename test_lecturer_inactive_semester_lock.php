@@ -29,11 +29,19 @@ echo "1. Logged in as Lecturer: {$lecturer->name} (ID: {$lecturer->id})\n";
 
 // 2. Setup Test Data: 1 Active Term, 1 Inactive Term
 $activeTerm = AcademicTerm::where('is_active', true)->first();
+if (!$activeTerm) {
+    $activeTerm = AcademicTerm::first();
+    $activeTerm?->update(['is_active' => true]);
+}
 $inactiveTerm = AcademicTerm::where('is_active', false)->first();
-
-if (!$activeTerm || !$inactiveTerm) {
-    echo "[ERROR] Need at least 1 active term and 1 inactive term.\n";
-    exit(1);
+if (!$inactiveTerm) {
+    $inactiveTerm = AcademicTerm::create([
+        'name' => 'Semester Lampau Inactive',
+        'code' => 'INACT-' . rand(1000, 9999),
+        'is_active' => false,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->subMonths(6),
+    ]);
 }
 
 echo "   - Active Term: ID {$activeTerm->id} ({$activeTerm->name})\n";
@@ -42,18 +50,26 @@ echo "   - Inactive Term: ID {$inactiveTerm->id} ({$inactiveTerm->name})\n";
 // Find or assign offerings to lecturer for both terms
 $activeOffering = CourseOffering::where('academic_term_id', $activeTerm->id)->where('lecturer_id', $lecturer->id)->first();
 if (!$activeOffering) {
-    $activeOffering = CourseOffering::where('academic_term_id', $activeTerm->id)->first();
-    if ($activeOffering) {
-        $activeOffering->update(['lecturer_id' => $lecturer->id]);
-    }
+    $master = MasterCourse::first();
+    $activeOffering = CourseOffering::create([
+        'master_course_id' => $master->id,
+        'academic_term_id' => $activeTerm->id,
+        'lecturer_id' => $lecturer->id,
+        'section_name' => 'Kelas Aktif Test',
+        'status' => 'published',
+    ]);
 }
 
 $inactiveOffering = CourseOffering::where('academic_term_id', $inactiveTerm->id)->where('lecturer_id', $lecturer->id)->first();
 if (!$inactiveOffering) {
-    $inactiveOffering = CourseOffering::where('academic_term_id', $inactiveTerm->id)->first();
-    if ($inactiveOffering) {
-        $inactiveOffering->update(['lecturer_id' => $lecturer->id]);
-    }
+    $master = MasterCourse::first();
+    $inactiveOffering = CourseOffering::create([
+        'master_course_id' => $master->id,
+        'academic_term_id' => $inactiveTerm->id,
+        'lecturer_id' => $lecturer->id,
+        'section_name' => 'Kelas Lampau Inactive',
+        'status' => 'draft',
+    ]);
 }
 
 echo "   - Active Offering: ID {$activeOffering->id} (Term {$activeOffering->academic_term_id}, Status: {$activeOffering->status})\n";
