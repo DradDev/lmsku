@@ -407,17 +407,9 @@
             $certificateReadyCount = $courses->where('can_get_certificate', true)->count();
         @endphp
 
-        <div class="dash-header flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <p class="dash-eyebrow">Student Portal</p>
-                <h1 class="dash-title">Student Dashboard</h1>
-            </div>
-            @if(auth()->user()->peminatan)
-            <div class="px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 shadow-xs max-w-md">
-                <span class="font-bold text-amber-950 block">Initial Registered Interest:</span>
-                <span class="font-medium text-amber-800">{{ auth()->user()->peminatan }}</span>
-            </div>
-            @endif
+        <div class="dash-header">
+            <p class="dash-eyebrow">Student Portal</p>
+            <h1 class="dash-title">Student Dashboard</h1>
         </div>
 
         @if(session('success'))
