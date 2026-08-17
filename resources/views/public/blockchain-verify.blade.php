@@ -145,35 +145,94 @@
 
             {{-- Result --}}
             @if ($result)
-            <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div class="mt-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
 
-                <h2 class="mb-5 text-xl font-bold text-slate-900">
-                    Detail Validasi
-                </h2>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            ⛓️ {{ $result->cert_type ?? 'Certified Credential' }}
+                        </span>
+                        <h2 class="mt-2 text-2xl font-bold text-slate-900">
+                            Detail Kredensial Blockchain
+                        </h2>
+                    </div>
 
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 text-xs font-extrabold border border-emerald-200 self-start sm:self-auto">
+                        <span>✓ Tamper-Proof Validated</span>
+                    </span>
+                </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-sm text-slate-500">
-                            Nama Student
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Nama Penerima (Student Talent)
                         </p>
-
-                        <p class="mt-1 text-sm font-semibold text-slate-900">
+                        <p class="mt-1 text-base font-bold text-slate-900">
                             {{ $result->student_name ?? '-' }}
                         </p>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $result->student_email ?? '-' }}</p>
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-sm text-slate-500">
-                            Judul Quiz
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Program / Project / Course
                         </p>
+                        <p class="mt-1 text-base font-bold text-indigo-700">
+                            {{ $result->title ?? '-' }}
+                        </p>
+                        <p class="text-xs text-slate-500 mt-0.5">{{ $result->category ?? 'Academic & Industry' }}</p>
+                    </div>
 
-                        <p class="mt-1 text-sm font-semibold text-slate-900">
-                            {{ $result->quiz_title ?? '-' }}
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Penerbit / Penilai (Author / Vendor)
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-slate-800">
+                            {{ $result->issuer ?? '-' }}
                         </p>
                     </div>
 
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">
+                            Waktu Verifikasi & Pencatatan
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-slate-800">
+                            {{ optional(\Carbon\Carbon::parse($result->verified_at ?? now()))->format('d M Y, H:i') }} WIB
+                        </p>
+                        <p class="text-xs text-emerald-600 font-bold mt-0.5">Otentikasi oleh {{ $result->verified_by_name ?? 'Admin LP3M' }}</p>
+                    </div>
                 </div>
+
+                {{-- Blockchain Technical Panel --}}
+                <div class="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-5 space-y-3 text-xs">
+                    <div class="flex items-center justify-between border-b border-indigo-200/60 pb-2">
+                        <span class="font-extrabold text-indigo-950 uppercase tracking-wider">
+                            ⛓️ Bukti Otentisitas Kriptografis Blockchain
+                        </span>
+                        <span class="font-mono text-indigo-700 font-bold">
+                            {{ $result->credential_code ?? '-' }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <p class="font-bold text-slate-500 text-[11px]">Blockchain ID</p>
+                            <p class="font-mono font-bold text-slate-800 mt-0.5">{{ $result->blockchain_id ?? '-' }}</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-500 text-[11px]">Transaction ID (TxID)</p>
+                            <p class="font-mono text-slate-700 mt-0.5 truncate" title="{{ $result->tx_id }}">{{ $result->tx_id ?? '-' }}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="font-bold text-slate-500 text-[11px]">Cryptographic SHA-256 Ledger Hash</p>
+                        <p class="mt-1 font-mono text-[11px] font-bold text-indigo-900 bg-white p-3 rounded-xl border border-indigo-200 break-all select-all shadow-xs">
+                            {{ $result->blockchain_hash ?? '-' }}
+                        </p>
+                    </div>
+                </div>
+
             </div>
             @endif
 
