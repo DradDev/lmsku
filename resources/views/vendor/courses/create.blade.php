@@ -54,8 +54,7 @@
             <!-- INFO BANNER VENDOR BLUE -->
             <div class="mb-8 p-5 bg-blue-50 border border-blue-200 text-blue-900 rounded-2xl shadow-sm space-y-2">
                 <div class="flex items-center gap-2 font-extrabold text-sm text-blue-900">
-                    <span>💡 Otonomi Author Mitra Vendor Industri</span>
-                </div>
+                    <span>💡 Otonomi Mitra Vendor Industri</span>
                 </div>
                 <p class="text-xs text-blue-800 leading-relaxed font-medium">
                     Sebagai Author Mitra Vendor, Anda memiliki otonomi penuh atas penentuan <strong class="font-bold text-blue-950">Angkatan Batch Sertifikasi</strong> dan <strong class="font-bold text-blue-950">Threshold Kelulusan (%)</strong>. Mahasiswa yang lulus Kuis Akhir pada course ini akan otomatis menerima <strong class="font-bold text-blue-950">Sertifikat Digital Verifikasi Vendor dengan Hash Blockchain & QR Code</strong>.
