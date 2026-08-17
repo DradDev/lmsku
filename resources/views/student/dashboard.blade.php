@@ -677,16 +677,7 @@
                         </li>
                     </ul>
                 </div>
-<<<<<<< HEAD
 
-                <div class="card chart-card">
-                    <div class="section-header">
-                        <h2 class="section-title">Learning Progress</h2>
-                    </div>
-                    <canvas id="progressChart" height="120" role="img" aria-label="Grafik Progres Pembelajaran Mingguan"></canvas>
-                </div>
-=======
->>>>>>> origin/feat/lecturer-portal-3nf-class-switcher
             </div>
         </div>
 
