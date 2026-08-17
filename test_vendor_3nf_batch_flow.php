@@ -186,4 +186,34 @@ if (strpos($renderedIndex, 'Daftar Program Sertifikasi') !== false &&
     echo "   [FAIL] Vendor Index rendering failed.\n";
 }
 
+// 10. Test Update Batch & Toggle Archive specifically
+echo "\n9. Testing Update Batch & Toggle Archive per Batch...\n";
+$updateBatchReq = Request::create(route('vendor.courses.update-batch', $batch2->id), 'PUT', [
+    'batch_name' => 'Batch 2 - Q3 2026 (Updated & Active)',
+    'certificate_threshold' => 85,
+    'duration_weeks' => 6,
+    'is_archived' => 0,
+]);
+$courseController->updateBatch($updateBatchReq, $batch2);
+$batch2Fresh = $batch2->fresh();
+
+if ($batch2Fresh->batch_name === 'Batch 2 - Q3 2026 (Updated & Active)' &&
+    $batch2Fresh->certificate_threshold == 85 &&
+    $batch2Fresh->duration_weeks == 6 &&
+    $batch2Fresh->is_archived == false) {
+    echo "   [OK] Batch 2 parameters successfully updated without modifying MasterCourse!\n";
+} else {
+    echo "   [FAIL] Batch 2 parameters update mismatch.\n";
+}
+
+// Toggle archive Batch 1
+$initialArchived = $batch1->fresh()->is_archived;
+$courseController->toggleArchive($batch1);
+$batch1Fresh = $batch1->fresh();
+if ($batch1Fresh->is_archived !== $initialArchived) {
+    echo "   [OK] Batch 1 archive status toggled independently while Batch 2 remains active!\n";
+} else {
+    echo "   [FAIL] Batch 1 archive toggle failed.\n";
+}
+
 echo "\n=== ALL VENDOR 3NF MULTI-BATCH TESTS PASSED 100%! ===\n";

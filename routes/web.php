@@ -393,6 +393,7 @@ Route::middleware(['auth', 'role:vendor'])
         // Industry Certified Courses
         Route::post('/courses/{course}/toggle-archive', [VendorCourseController::class, 'toggleArchive'])->name('courses.toggle-archive');
         Route::post('/courses/{course}/launch-batch', [VendorCourseController::class, 'launchBatch'])->name('courses.launch-batch');
+        Route::put('/courses/{course}/batch', [VendorCourseController::class, 'updateBatch'])->name('courses.update-batch');
         Route::resource('courses', VendorCourseController::class);
 
         // Course Materials & Quizzes

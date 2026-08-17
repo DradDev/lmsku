@@ -135,7 +135,7 @@
     font-size: 13px;
     color: #64748b;
     line-height: 1.6;
-    max-width: 820px;
+    max-width: 860px;
 }
 
 .hero-stats-strip {
@@ -175,85 +175,7 @@
     margin-top: 2px;
 }
 
-.batch-nav-bar {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 18px;
-    padding: 12px 16px;
-    margin-bottom: 1.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-@media (min-width: 768px) {
-    .batch-nav-bar {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
-
-.batch-nav-title {
-    font-size: 12px;
-    font-weight: 800;
-    color: #475569;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.batch-pills-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.batch-pill-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 10px;
-    text-decoration: none;
-    transition: all 0.2s;
-}
-
-.batch-pill-selected {
-    background: #7c3aed;
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
-}
-
-.batch-pill-unselected {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-}
-
-.batch-pill-unselected:hover {
-    background: #f5f3ff;
-    color: #7c3aed;
-    border-color: #ddd6fe;
-}
-
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-}
-
-@media (min-width: 1024px) {
-    .content-grid {
-        grid-template-columns: 2fr 1fr;
-    }
-}
-
+/* SECTION MANAGEMENT CARD */
 .section-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -304,6 +226,46 @@
     color: #ffffff;
 }
 
+.batch-table-container {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.batch-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    text-align: left;
+}
+
+.batch-table th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 10.5px;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.batch-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #1e293b;
+    vertical-align: middle;
+}
+
+.batch-table tr:last-child td {
+    border-bottom: none;
+}
+
+.batch-table tr.active-row {
+    background: #faf5ff;
+}
+
 .item-card {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -324,6 +286,18 @@
     font-weight: 800;
     padding: 2.5px 8px;
     border-radius: 6px;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+    .content-grid {
+        grid-template-columns: 2fr 1fr;
+    }
 }
 </style>
 
@@ -348,17 +322,6 @@
             </div>
         @endif
 
-        @if($course->moderation_status === 'suspended')
-            <div class="mb-6 p-5 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-xs space-y-1">
-                <div class="flex items-center gap-2 font-extrabold text-sm text-rose-900">
-                    <span>Status Course: Dibekukan Sementara (Suspended) oleh Admin Kampus</span>
-                </div>
-                <p class="text-xs font-semibold text-rose-700 leading-relaxed">
-                    Catatan Admin: "{{ $course->moderation_note ?? 'Course sedang ditangguhkan dari katalog publik untuk peninjauan lebih lanjut.' }}"
-                </p>
-            </div>
-        @endif
-
         <!-- TOP BAR NAV -->
         <div class="top-bar-nav">
             <a href="{{ route('vendor.courses.index') }}" class="back-link">
@@ -372,26 +335,17 @@
                     <span>+ Launch Batch Baru</span>
                 </button>
 
-                <a href="{{ route('vendor.courses.edit', $course) }}" class="btn-header btn-header-secondary">
-                    Edit Program
-                </a>
-
-                <form action="{{ route('vendor.courses.toggle-archive', $course) }}" method="POST" onsubmit="return confirm('Ubah status publikasi/arsip batch ini?')">
-                    @csrf
-                    <button type="submit" class="btn-header btn-header-secondary">
-                        @if($course->is_archived)
-                            <span class="text-emerald-700 font-bold">✓ Aktifkan Batch</span>
-                        @else
-                            <span class="text-slate-600 font-bold">Arsipkan Batch</span>
-                        @endif
-                    </button>
-                </form>
+                <button type="button"
+                        onclick="document.getElementById('edit_program_modal').classList.remove('hidden')"
+                        class="btn-header btn-header-secondary">
+                    ✏️ Edit Info Kurikulum
+                </button>
             </div>
         </div>
 
         <!-- HERO HEADER CARD -->
         <div class="hero-card">
-            <p class="hero-eyebrow">Program Sertifikasi Industri &bull; Kurikulum Induk 3NF</p>
+            <p class="hero-eyebrow">Program Sertifikasi Industri &bull; Kurikulum Induk Terpusat</p>
             <h1 class="hero-title">{{ $course->name }}</h1>
 
             <div class="hero-meta-row">
@@ -401,16 +355,13 @@
                 <span class="hero-badge bg-slate-100 text-slate-700">
                     Level: <strong>{{ $course->level ?? 'Beginner' }}</strong>
                 </span>
-                <span class="hero-badge bg-indigo-50 text-indigo-800 border border-indigo-200">
-                    Threshold Kelulusan: <strong>{{ $course->certificate_threshold ?? 75 }}%</strong>
-                </span>
                 @if($course->masterCourse && $course->masterCourse->code)
                     <span class="hero-badge bg-slate-50 text-slate-500 border border-slate-200">
                         Code: {{ $course->masterCourse->code }}
                     </span>
                 @endif
-                <span class="hero-badge {{ $course->is_archived ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200' }}">
-                    {{ $course->is_archived ? 'Draft Internal / Diarsipkan' : 'Terbuka Dipublikasikan' }}
+                <span class="hero-badge bg-indigo-50 text-indigo-800 border border-indigo-200">
+                    {{ $allBatches->count() }} Angkatan Batch Terdaftar
                 </span>
             </div>
 
@@ -418,10 +369,10 @@
                 {{ $course->description ?: 'Pengelolaan kurikulum terpusat, modul pembelajaran, bank kuis evaluasi, dan kelulusan sertifikat industri mahasiswa.' }}
             </p>
 
-            @if($course->skills && $course->skills->isNotEmpty())
+            @if($course->masterCourse && $course->masterCourse->skills && $course->masterCourse->skills->isNotEmpty())
                 <div class="flex flex-wrap items-center gap-1.5 mt-3">
-                    <span class="text-[11px] font-bold text-slate-400">Kompetensi:</span>
-                    @foreach($course->skills as $cSkill)
+                    <span class="text-[11px] font-bold text-slate-400">Target Kompetensi:</span>
+                    @foreach($course->masterCourse->skills as $cSkill)
                         <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-100">
                             {{ $cSkill->name }}
                         </span>
@@ -432,105 +383,126 @@
             <!-- QUICK STATS -->
             <div class="hero-stats-strip">
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Total Peserta Batch</div>
-                    <div class="hero-stat-val text-purple-700">{{ $course->enrollments->count() }}</div>
+                    <div class="hero-stat-label">Total Peserta (Semua Batch)</div>
+                    <div class="hero-stat-val text-purple-700">{{ $allBatches->sum(fn($b) => $b->enrollments_count ?? $b->enrollments->count()) }}</div>
                 </div>
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Lulus / Completed</div>
+                    <div class="hero-stat-label">Lulus / Completed (Batch Ini)</div>
                     <div class="hero-stat-val text-emerald-600">{{ $completedStudentCount }}</div>
                 </div>
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Modul Materi</div>
+                    <div class="hero-stat-label">Modul Materi Bersama</div>
                     <div class="hero-stat-val text-indigo-600">{{ $materials->count() }}</div>
                 </div>
                 <div class="hero-stat-card">
-                    <div class="hero-stat-label">Bank Kuis</div>
+                    <div class="hero-stat-label">Bank Kuis & Soal</div>
                     <div class="hero-stat-val text-amber-600">{{ $quizzes->count() }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- BATCH NAVIGATION BAR -->
-        <div class="batch-nav-bar">
-            <div class="batch-nav-title">
-                <span>🏷️ Angkatan Batch Terdaftar:</span>
-            </div>
-
-            <div class="batch-pills-row">
-                <span class="batch-pill-btn batch-pill-selected">
-                    ✓ {{ $course->batch_name ?? 'Batch 1' }} ({{ $course->enrollments->count() }} Mhs)
-                </span>
-
-                @foreach($otherBatches as $ob)
-                    <a href="{{ route('vendor.courses.show', $ob->id) }}" class="batch-pill-btn batch-pill-unselected">
-                        {{ $ob->batch_name }} ({{ $ob->enrollments_count ?? $ob->enrollments->count() }} Mhs)
-                    </a>
-                @endforeach
-
-                <button type="button" 
-                        onclick="document.getElementById('launch_batch_modal').classList.remove('hidden')"
-                        class="batch-pill-btn bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 cursor-pointer">
-                    + Launch Batch
-                </button>
-            </div>
-        </div>
-
-        <!-- MODAL LAUNCH BATCH BARU -->
-        <div id="launch_batch_modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-5 animate-in fade-in zoom-in duration-200">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
-                        <span>Launch Angkatan Batch Baru</span>
-                    </h3>
-                    <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
-                        ✕
-                    </button>
+        <!-- SECTION: MANAJEMEN ANGKATAN BATCH (ALA ADMIN OFFERINGS) -->
+        <div class="section-card">
+            <div class="section-card-header">
+                <div>
+                    <h2 class="section-title">🏷️ Daftar & Kontrol Angkatan Batch</h2>
+                    <p class="section-sub">Kelola jadwal rilis, status buka/tutup pendaftaran, threshold nilai, dan peserta per angkatan secara independen.</p>
                 </div>
 
-                <form action="{{ route('vendor.courses.launch-batch', $course) }}" method="POST" class="space-y-4">
-                    @csrf
-                    
-                    <div class="p-4 bg-purple-50 rounded-2xl border border-purple-100 text-xs text-purple-900 leading-relaxed">
-                        <strong>Efisiensi Kurikulum 3NF:</strong> Seluruh modul materi (PDF/Video) dan bank kuis dari kurikulum <strong>{{ $course->name }}</strong> akan otomatis diwariskan ke batch baru ini tanpa perlu di-upload ulang.
-                    </div>
+                <button type="button" 
+                        onclick="document.getElementById('launch_batch_modal').classList.remove('hidden')" 
+                        class="btn-action-purple">
+                    + Launch Batch Baru
+                </button>
+            </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                            Nama Batch Angkatan Baru <span class="text-rose-500">*</span>
-                        </label>
-                        <input type="text" name="batch_name" required placeholder="Contoh: Batch 2 - Intake Q3 2026"
-                               class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-extrabold text-purple-900">
-                    </div>
+            <div class="batch-table-container">
+                <table class="batch-table">
+                    <thead>
+                        <tr>
+                            <th>Angkatan Batch</th>
+                            <th>Status Pendaftaran</th>
+                            <th>Durasi & Jadwal</th>
+                            <th>Threshold Kelulusan</th>
+                            <th>Mahasiswa</th>
+                            <th class="text-right">Aksi Manajemen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($allBatches as $batchItem)
+                            @php
+                                $isCurrent = $batchItem->id === $course->id;
+                                $stdCount = $batchItem->enrollments_count ?? $batchItem->enrollments->count();
+                            @endphp
+                            <tr class="{{ $isCurrent ? 'active-row' : '' }}">
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <strong class="text-slate-900 font-bold text-xs">{{ $batchItem->batch_name ?: 'Batch ' . $loop->iteration }}</strong>
+                                        @if($isCurrent)
+                                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-600 text-white shadow-xs">
+                                                Aktif Ditampilkan
+                                            </span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    @if(!$batchItem->is_archived)
+                                        <span class="badge-pill bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                            <span>✓</span> Terbuka (Pendaftaran Aktif)
+                                        </span>
+                                    @else
+                                        <span class="badge-pill bg-slate-100 text-slate-600 border border-slate-200 inline-flex items-center gap-1">
+                                            <span>📦</span> Draft / Diarsipkan
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="font-semibold text-slate-700 text-xs">{{ $batchItem->duration_weeks ?? 4 }} Minggu</span>
+                                    @if($batchItem->start_date || $batchItem->end_date)
+                                        <div class="text-[10.5px] text-slate-400 mt-0.5">
+                                            {{ $batchItem->start_date ? \Carbon\Carbon::parse($batchItem->start_date)->format('d M Y') : '-' }} &bull; {{ $batchItem->end_date ? \Carbon\Carbon::parse($batchItem->end_date)->format('d M Y') : 'Selesai' }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <span class="font-extrabold text-purple-900 text-xs">{{ $batchItem->certificate_threshold ?? 75 }}%</span>
+                                </td>
+                                <td>
+                                    <span class="font-bold text-slate-800 text-xs">{{ $stdCount }} Mhs</span>
+                                </td>
+                                <td class="text-right">
+                                    <div class="flex items-center justify-end gap-1.5 flex-wrap">
+                                        @if(!$isCurrent)
+                                            <a href="{{ route('vendor.courses.show', $batchItem->id) }}" 
+                                               class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs rounded-lg border border-purple-200 transition">
+                                                👥 Kelola Peserta
+                                            </a>
+                                        @endif
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                Threshold Sertifikat (%) <span class="text-rose-500">*</span>
-                            </label>
-                            <input type="number" name="certificate_threshold" value="{{ $course->certificate_threshold ?? 75 }}" min="0" max="100" required
-                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-slate-900">
-                        </div>
+                                        <button type="button" 
+                                                onclick="document.getElementById('edit_batch_modal_{{ $batchItem->id }}').classList.remove('hidden')"
+                                                class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-lg border border-slate-300 transition">
+                                            ✏️ Edit Batch
+                                        </button>
 
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                Durasi (Minggu)
-                            </label>
-                            <input type="number" name="duration_weeks" value="{{ $course->duration_weeks ?? 4 }}" min="1" required
-                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-bold text-slate-900">
-                        </div>
-                    </div>
-
-                    <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
-                        <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')"
-                                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
-                            Batal
-                        </button>
-                        <button type="submit"
-                                class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md transition">
-                            Rilis Batch Baru Sekarang
-                        </button>
-                    </div>
-                </form>
+                                        <form action="{{ route('vendor.courses.toggle-archive', $batchItem->id) }}" method="POST" onsubmit="return confirm('Ubah status pendaftaran angkatan {{ $batchItem->batch_name }}?')">
+                                            @csrf
+                                            <button type="submit" class="px-2.5 py-1 {{ $batchItem->is_archived ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200' }} font-bold text-xs rounded-lg border transition">
+                                                {{ $batchItem->is_archived ? 'Buka Batch' : 'Tutup / Arsip' }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center py-6 text-slate-400 text-xs">
+                                    Belum ada angkatan batch terdaftar.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -757,51 +729,9 @@
 
             </div>
 
-            <!-- RIGHT COLUMN: PENGATURAN BATCH & PESERTA ANGKATAN -->
+            <!-- RIGHT COLUMN: PESERTA ANGKATAN TERPILIH -->
             <div class="space-y-6">
 
-                <!-- CARD 1: PENGATURAN THRESHOLD & ANGKATAN -->
-                <div class="section-card">
-                    <h3 class="text-sm font-extrabold text-slate-900 mb-1">
-                        Pengaturan Angkatan {{ $course->batch_name }}
-                    </h3>
-                    <p class="text-xs text-slate-500 mb-4">
-                        Batas nilai kelulusan sertifikat digital pada angkatan ini.
-                    </p>
-
-                    <form action="{{ route('vendor.courses.update', $course) }}" method="POST" class="space-y-3">
-                        @csrf
-                        @method('PUT')
-                        <input type="hidden" name="name" value="{{ $course->name }}">
-                        <input type="hidden" name="batch_name" value="{{ $course->batch_name ?? 'Batch 1 - 2026' }}">
-                        <input type="hidden" name="level" value="{{ $course->level }}">
-                        <input type="hidden" name="category_id" value="{{ $course->category_id }}">
-                        <input type="hidden" name="description" value="{{ $course->description }}">
-                        @foreach($course->skills as $cSkill)
-                            <input type="hidden" name="skill_ids[]" value="{{ $cSkill->id }}">
-                        @endforeach
-
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Threshold Sertifikat (%)</label>
-                            <div class="relative">
-                                <input type="number" 
-                                       name="certificate_threshold" 
-                                       value="{{ old('certificate_threshold', $course->certificate_threshold ?? 75) }}" 
-                                       min="0" 
-                                       max="100" 
-                                       class="w-full rounded-xl border-slate-300 text-xs font-extrabold text-purple-900 py-2 pl-3 pr-8" 
-                                       required>
-                                <span class="absolute right-3 top-2 text-xs font-bold text-slate-400">%</span>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="w-full py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold text-xs rounded-xl transition">
-                            Simpan Perubahan Threshold
-                        </button>
-                    </form>
-                </div>
-
-                <!-- CARD 2: PESERTA ANGKATAN INI -->
                 <div class="section-card">
                     <div class="flex items-center justify-between gap-2 mb-4">
                         <div>
@@ -809,7 +739,7 @@
                                 Peserta Angkatan
                             </h3>
                             <p class="text-xs text-slate-500">
-                                Total <strong>{{ $course->enrollments->count() }}</strong> Mahasiswa
+                                {{ $course->batch_name }} &bull; <strong>{{ $course->enrollments->count() }}</strong> Mahasiswa
                             </p>
                         </div>
 
@@ -870,7 +800,7 @@
                         </div>
                     @else
                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-xs text-slate-500">
-                            Belum ada mahasiswa terdaftar pada angkatan ini.
+                            Belum ada mahasiswa terdaftar pada angkatan <strong>{{ $course->batch_name }}</strong> ini.
                         </div>
                     @endif
                 </div>
@@ -878,6 +808,241 @@
             </div>
 
         </div>
+
+        <!-- MODAL 1: EDIT PROGRAM KURIKULUM INDUK -->
+        <div id="edit_program_modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 md:p-8 space-y-4 animate-in fade-in zoom-in duration-200">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-lg font-extrabold text-slate-900">
+                        Edit Informasi Kurikulum Sertifikasi
+                    </h3>
+                    <button type="button" onclick="document.getElementById('edit_program_modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
+                        ✕
+                    </button>
+                </div>
+
+                <form action="{{ route('vendor.courses.update', $course) }}" method="POST" class="space-y-3.5 text-xs">
+                    @csrf
+                    @method('PUT')
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Program Sertifikasi <span class="text-rose-500">*</span></label>
+                        <input type="text" name="name" value="{{ old('name', $course->name) }}" required class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-900">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Kategori</label>
+                            <select name="category_id" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-800">
+                                <option value="">-- Pilih Kategori --</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat->id }}" @selected(old('category_id', $course->category_id) == $cat->id)>{{ $cat->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">Level Kesulitan <span class="text-rose-500">*</span></label>
+                            <select name="level" required class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-800">
+                                <option value="Beginner" @selected(old('level', $course->level) === 'Beginner')>Beginner</option>
+                                <option value="Intermediate" @selected(old('level', $course->level) === 'Intermediate')>Intermediate</option>
+                                <option value="Advanced" @selected(old('level', $course->level) === 'Advanced')>Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Deskripsi Silabus Pelatihan <span class="text-rose-500">*</span></label>
+                        <textarea name="description" rows="3" required class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-normal text-slate-800">{{ old('description', $course->description) }}</textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1.5">Target Kompetensi (Skills) <span class="text-rose-500">*</span></label>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">
+                            @php
+                                $selectedSkillIds = $course->masterCourse && $course->masterCourse->skills ? $course->masterCourse->skills->pluck('id')->toArray() : $course->skills->pluck('id')->toArray();
+                            @endphp
+                            @foreach($skills as $skill)
+                                <label class="flex items-center gap-1.5 cursor-pointer">
+                                    <input type="checkbox" name="skill_ids[]" value="{{ $skill->id }}" @checked(in_array($skill->id, $selectedSkillIds)) class="rounded text-purple-600 focus:ring-purple-500">
+                                    <span class="text-[11px] font-semibold text-slate-700">{{ $skill->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="document.getElementById('edit_program_modal').classList.add('hidden')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">
+                            Batal
+                        </button>
+                        <button type="submit" class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md">
+                            Simpan Perubahan Kurikulum
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL 2: LAUNCH BATCH BARU -->
+        <div id="launch_batch_modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-4 animate-in fade-in zoom-in duration-200">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="text-lg font-extrabold text-slate-900">
+                        Launch Angkatan Batch Baru
+                    </h3>
+                    <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
+                        ✕
+                    </button>
+                </div>
+
+                <form action="{{ route('vendor.courses.launch-batch', $course) }}" method="POST" class="space-y-4 text-xs">
+                    @csrf
+                    
+                    <div class="p-3.5 bg-purple-50 rounded-2xl border border-purple-100 text-xs text-purple-900 leading-relaxed">
+                        <strong>Kurikulum 3NF:</strong> Modul materi dan bank kuis dari kurikulum <strong>{{ $course->name }}</strong> otomatis diwariskan ke batch baru ini tanpa duplikasi berkas fisik server.
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                            Nama Angkatan Batch Baru <span class="text-rose-500">*</span>
+                        </label>
+                        <input type="text" name="batch_name" required placeholder="Contoh: Batch 2 - Q3 2026 Intake"
+                               class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-extrabold text-purple-900 bg-white">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Threshold Sertifikat (%) <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="number" name="certificate_threshold" value="{{ $course->certificate_threshold ?? 75 }}" min="0" max="100" required
+                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Durasi (Minggu)
+                            </label>
+                            <input type="number" name="duration_weeks" value="{{ $course->duration_weeks ?? 4 }}" min="1" required
+                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Tanggal Mulai (Opsional)
+                            </label>
+                            <input type="date" name="start_date" class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 text-slate-800 bg-white">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Tanggal Selesai (Opsional)
+                            </label>
+                            <input type="date" name="end_date" class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 text-slate-800 bg-white">
+                        </div>
+                    </div>
+
+                    <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                        <button type="button" onclick="document.getElementById('launch_batch_modal').classList.add('hidden')"
+                                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                            Batal
+                        </button>
+                        <button type="submit"
+                                class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md transition">
+                            Rilis Batch Baru Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL 3: EDIT INDIVIDUAL BATCHES (LOOP PER BATCH) -->
+        @foreach($allBatches as $b)
+            <div id="edit_batch_modal_{{ $b->id }}" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-4 animate-in fade-in zoom-in duration-200 text-xs">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-lg font-extrabold text-slate-900">
+                            Edit Pengaturan {{ $b->batch_name }}
+                        </h3>
+                        <button type="button" onclick="document.getElementById('edit_batch_modal_{{ $b->id }}').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
+                            ✕
+                        </button>
+                    </div>
+
+                    <form action="{{ route('vendor.courses.update-batch', $b->id) }}" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PUT')
+
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Nama Angkatan Batch <span class="text-rose-500">*</span>
+                            </label>
+                            <input type="text" name="batch_name" value="{{ old('batch_name', $b->batch_name) }}" required
+                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Threshold Sertifikat (%) <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="number" name="certificate_threshold" value="{{ old('certificate_threshold', $b->certificate_threshold ?? 75) }}" min="0" max="100" required
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-extrabold text-purple-900 bg-white">
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Durasi (Minggu)
+                                </label>
+                                <input type="number" name="duration_weeks" value="{{ old('duration_weeks', $b->duration_weeks ?? 4) }}" min="1" required
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Tanggal Mulai
+                                </label>
+                                <input type="date" name="start_date" value="{{ $b->start_date ? \Carbon\Carbon::parse($b->start_date)->format('Y-m-d') : '' }}"
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 text-slate-800 bg-white">
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Tanggal Selesai
+                                </label>
+                                <input type="date" name="end_date" value="{{ $b->end_date ? \Carbon\Carbon::parse($b->end_date)->format('Y-m-d') : '' }}"
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 text-slate-800 bg-white">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Status Publikasi Angkatan Ini
+                            </label>
+                            <select name="is_archived" class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-purple-900 bg-white">
+                                <option value="0" @selected(!$b->is_archived)>Terbuka (Pendaftaran Aktif Mahasiswa)</option>
+                                <option value="1" @selected($b->is_archived)>Draft / Ditutup (Arsip Internal)</option>
+                            </select>
+                        </div>
+
+                        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                            <button type="button" onclick="document.getElementById('edit_batch_modal_{{ $b->id }}').classList.add('hidden')"
+                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                    class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md">
+                                Simpan Perubahan Batch
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endforeach
 
     </div>
 </div>

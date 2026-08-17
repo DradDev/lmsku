@@ -197,6 +197,8 @@ class CourseController extends Controller
             'tags',
             'masterCourse.materials',
             'masterCourse.quizzes.questions',
+            'masterCourse.skills',
+            'masterCourse.tags',
         ]);
 
         // Materi & Kuis terpusat dari MasterCourse & seluruh batch di bawah kurikulum ini
@@ -215,10 +217,14 @@ class CourseController extends Controller
         // Seluruh angkatan batch yang ada pada kurikulum induk ini
         $allBatches = Course::where('master_course_id', $course->master_course_id)
             ->withCount('enrollments')
-            ->orderByDesc('created_at')
+            ->orderBy('created_at')
             ->get();
 
         $otherBatches = $allBatches->where('id', '!=', $course->id);
+
+        $categories = Category::orderBy('name')->get();
+        $skills = Skill::orderBy('name')->get();
+        $tags = Tag::orderBy('name')->get();
 
         return view('vendor.courses.show', compact(
             'course',
@@ -228,7 +234,10 @@ class CourseController extends Controller
             'students',
             'completedStudentCount',
             'allBatches',
-            'otherBatches'
+            'otherBatches',
+            'categories',
+            'skills',
+            'tags'
         ));
     }
 
@@ -253,22 +262,20 @@ class CourseController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'batch_name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
-            'duration_weeks' => ['nullable', 'integer', 'min:1'],
-            'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
-            'is_archived' => ['nullable', 'boolean'],
             'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
+            'batch_name' => ['nullable', 'string', 'max:255'],
+            'duration_weeks' => ['nullable', 'integer', 'min:1'],
+            'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'is_archived' => ['nullable', 'boolean'],
         ]);
 
-        $course->update($validated);
-
-        // Update parent MasterCourse jika ada
+        // 1. Update MasterCourse
         if ($course->master_course_id) {
             $masterCourse = MasterCourse::find($course->master_course_id);
             if ($masterCourse) {
@@ -276,7 +283,6 @@ class CourseController extends Controller
                     'name' => $validated['name'],
                     'description' => $validated['description'],
                     'level' => $validated['level'],
-                    'certificate_threshold' => $validated['certificate_threshold'],
                     'category_id' => $validated['category_id'],
                 ]);
 
@@ -289,14 +295,44 @@ class CourseController extends Controller
                 if (isset($validated['tag_ids'])) {
                     $masterCourse->tags()->sync($validated['tag_ids']);
                 }
+
+                // Sinkronkan metadata master ke seluruh batch turunan
+                Course::where('master_course_id', $masterCourse->id)->update([
+                    'name' => $validated['name'],
+                    'description' => $validated['description'],
+                    'level' => $validated['level'],
+                    'category_id' => $validated['category_id'],
+                ]);
             }
         }
+
+        // 2. Update field batch spesifik jika ada
+        $batchUpdate = [
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'level' => $validated['level'],
+            'category_id' => $validated['category_id'],
+        ];
+
+        if (!empty($validated['batch_name'])) {
+            $batchUpdate['batch_name'] = $validated['batch_name'];
+        }
+        if (isset($validated['duration_weeks'])) {
+            $batchUpdate['duration_weeks'] = $validated['duration_weeks'];
+        }
+        if (isset($validated['certificate_threshold'])) {
+            $batchUpdate['certificate_threshold'] = $validated['certificate_threshold'];
+        }
+        if (isset($validated['is_archived'])) {
+            $batchUpdate['is_archived'] = $validated['is_archived'];
+        }
+
+        $course->update($batchUpdate);
 
         $skillsData = [];
         foreach ($validated['skill_ids'] as $sId) {
             $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
         }
-
         $course->skills()->sync($skillsData);
 
         if (isset($validated['tag_ids'])) {
@@ -305,7 +341,33 @@ class CourseController extends Controller
 
         return redirect()
             ->route('vendor.courses.show', $course)
-            ->with('success', 'Informasi Course Sertifikasi Industri berhasil diperbarui.');
+            ->with('success', 'Informasi Program Sertifikasi Industri berhasil diperbarui.');
+    }
+
+    public function updateBatch(Request $request, Course $course): RedirectResponse
+    {
+        if ($course->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak memiliki akses ke batch ini.');
+        }
+
+        $validated = $request->validate([
+            'batch_name' => ['required', 'string', 'max:255'],
+            'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
+            'duration_weeks' => ['nullable', 'integer', 'min:1'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'is_archived' => ['nullable', 'boolean'],
+        ]);
+
+        if ($request->has('is_archived')) {
+            $validated['is_archived'] = (bool)$request->is_archived;
+        }
+
+        $course->update($validated);
+
+        return redirect()
+            ->route('vendor.courses.show', $course)
+            ->with('success', "Pengaturan Angkatan '{$course->batch_name}' berhasil diperbarui.");
     }
 
     public function launchBatch(Request $request, Course $course): RedirectResponse
