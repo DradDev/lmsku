@@ -47,7 +47,7 @@ class MaterialController extends Controller
             }
         }
         if ($material) {
-            $offeringId = $material->course_offering_id ?? $material->course_id;
+            $offeringId = $material->course_offering_id;
             if ($offeringId) {
                 $offering = CourseOffering::with('academicTerm')->find($offeringId);
                 if ($offering && $offering->academicTerm && !$offering->academicTerm->is_active) {

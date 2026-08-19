@@ -31,7 +31,6 @@ class MaterialController extends Controller
                 'title'            => $validated['title'],
             ],
             [
-                'course_id'  => $course->id,
                 'file_path'  => $path,
             ]
         );

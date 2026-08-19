@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Material extends Model
 {
     protected $fillable = [
-        'course_id',
         'master_course_id',
         'course_offering_id',
         'title',
