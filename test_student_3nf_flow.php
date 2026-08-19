@@ -89,4 +89,16 @@ $certIndex = $certController->index();
 $renderedCertIndex = $certIndex->render();
 echo "   [OK] Student Certificates Index rendered successfully!\n";
 
+// 6. Test Student Enrollment Execution
+echo "7. Testing Student Enrollment Execution (POST /student/courses/{id}/enroll)...\n";
+$newOffering = CourseOffering::where('id', '!=', $vendorOffering->id)->where('status', 'published')->first();
+if ($newOffering) {
+    Enrollment::where('user_id', $student->id)->where('course_offering_id', $newOffering->id)->delete();
+    $enrollResp = $courseController->enroll((string)$newOffering->id);
+    assert($enrollResp->isRedirection());
+    $isEnrolled = Enrollment::where('user_id', $student->id)->where('course_offering_id', $newOffering->id)->exists();
+    assert($isEnrolled, "Student must be enrolled successfully");
+    echo "   [OK] Student enrollment action completed without error!\n";
+}
+
 echo "\n=== ALL STUDENT 3NF FLOW TESTS PASSED 100%! ===\n";

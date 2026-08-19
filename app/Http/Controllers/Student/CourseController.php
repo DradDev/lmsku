@@ -318,10 +318,7 @@ class CourseController extends Controller
             'last_activity_at'         => now(),
         ]);
 
-        $this->logActivity(
-            activityType: 'enroll_course',
-            courseId: $offering->master_course_id
-        );
+        $this->logActivity('enroll_course', $offering->id);
 
         return redirect()
             ->route('student.courses.show', $offering->id)
