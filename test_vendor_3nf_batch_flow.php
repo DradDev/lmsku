@@ -7,7 +7,6 @@ $app = require_once __DIR__ . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\MasterCourse;
@@ -31,8 +30,7 @@ if (!$vendor) {
 Auth::login($vendor);
 echo "1. Logged in as Vendor: {$vendor->name} (ID: {$vendor->id})\n";
 
-// 2. Setup Category & Skills
-$category = Category::firstOrCreate(['name' => 'Cloud & DevOps Tech'], ['slug' => 'cloud-devops']);
+// 2. Setup Skills
 $skill = Skill::firstOrCreate(['name' => 'Kubernetes & Docker'], ['category' => 'Engineering']);
 
 // 3. Test Vendor Course Store (Creates Master Course + Batch 1)
@@ -44,7 +42,6 @@ $reqStore = Request::create(route('vendor.courses.store'), 'POST', [
     'batch_name' => 'Batch 1 - Q1 2026',
     'description' => 'Comprehensive enterprise cloud orchestration curriculum.',
     'level' => 'Advanced',
-    'category_id' => $category->id,
     'duration_weeks' => 6,
     'certificate_threshold' => 85,
     'skill_ids' => [$skill->id],

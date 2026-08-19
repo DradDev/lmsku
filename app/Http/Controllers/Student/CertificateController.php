@@ -26,13 +26,11 @@ class CertificateController extends Controller
         $enrollments = Enrollment::with([
             'courseOffering.masterCourse.quizzes.questions',
             'courseOffering.masterCourse.skills',
-            'courseOffering.masterCourse.category',
             'courseOffering.lecturer.institution',
             'courseOffering.academicTerm',
             'course.masterCourse.quizzes.questions',
             'course.masterCourse.skills',
             'course.user.institution',
-            'course.category',
         ])
             ->where('user_id', $student->id)
             ->latest()
@@ -117,7 +115,6 @@ class CertificateController extends Controller
             'project.creator.institution',
             'project.user.institution',
             'project.skills',
-            'project.category',
             'project.tags',
         ])
             ->where('user_id', $student->id)
@@ -242,7 +239,7 @@ class CertificateController extends Controller
             'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
         );
 
-        $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
+        $project->load(['creator.institution', 'user.institution', 'skills']);
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
@@ -273,7 +270,7 @@ class CertificateController extends Controller
             'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
         );
 
-        $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
+        $project->load(['creator.institution', 'user.institution', 'skills']);
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,

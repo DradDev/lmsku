@@ -34,7 +34,7 @@ class AcademicTermController extends Controller
     {
         $academicTerm->loadCount('offerings');
 
-        $offerings = \App\Models\CourseOffering::with(['masterCourse.category', 'masterCourse.skills', 'masterCourse.tags', 'lecturer', 'enrollments'])
+        $offerings = \App\Models\CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'lecturer', 'enrollments'])
             ->where('academic_term_id', $academicTerm->id)
             ->get();
 
@@ -47,7 +47,7 @@ class AcademicTermController extends Controller
         $allMasterCourses = \App\Models\MasterCourse::where(function ($q) {
             $q->whereNull('user_id')
               ->orWhereHas('user', fn($u) => $u->where('role', '!=', 'vendor'));
-        })->with(['category', 'skills', 'tags'])->orderBy('name')->get();
+        })->with(['skills', 'tags'])->orderBy('name')->get();
         
         $lecturers = \App\Models\User::where('role', 'lecturer')
             ->orderBy('name')

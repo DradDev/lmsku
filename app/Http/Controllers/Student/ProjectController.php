@@ -59,7 +59,6 @@ class ProjectController extends Controller
             'creator.institution',
             'skills',
             'tags',
-            'category',
             'participations.user',
             'comments.user',
             'comments.replies.user',
@@ -72,7 +71,7 @@ class ProjectController extends Controller
         $eligibility = $this->checkStudentEligibility($student, $project);
 
         $skillIds = $project->skills->pluck('id')->toArray();
-        $prerequisiteCourses = \App\Models\MasterCourse::with(['skills', 'category'])
+        $prerequisiteCourses = \App\Models\MasterCourse::with(['skills'])
             ->whereHas('skills', function ($q) use ($skillIds) {
                 $q->whereIn('skills.id', $skillIds);
             })
@@ -198,7 +197,6 @@ class ProjectController extends Controller
             'enrollments.courseOffering.lecturer',
             'enrollments.course.skills',
             'enrollments.course.tags',
-            'enrollments.course.category',
         ]);
 
         $certificates = Certificate::with([

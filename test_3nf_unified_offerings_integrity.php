@@ -47,8 +47,8 @@ assert($enrollmentsWithoutOffering === 0, "No enrollment should have null course
 echo "   [OK] All " . Enrollment::count() . " enrollments are strictly linked to course_offering_id!\n\n";
 
 // 4. Check Magic Accessors on CourseOffering
-echo "4. Checking Magic Accessors on CourseOffering (name, description, level, category, skills, tags)...\n";
-$sampleOffering = CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'masterCourse.category'])->first();
+echo "4. Checking Magic Accessors on CourseOffering (name, description, level, main_skill, skills, tags)...\n";
+$sampleOffering = CourseOffering::with(['masterCourse.skills', 'masterCourse.tags'])->first();
 assert(!empty($sampleOffering->name), "Name accessor must work");
 assert(!empty($sampleOffering->level), "Level accessor must work");
 assert($sampleOffering->skills !== null, "Skills accessor must work");

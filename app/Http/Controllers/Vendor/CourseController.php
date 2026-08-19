@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseOffering;
 use App\Models\MasterCourse;
@@ -37,7 +36,6 @@ class CourseController extends Controller
                     'description' => $lc->description,
                     'level' => $lc->level ?? 'Beginner',
                     'certificate_threshold' => $lc->certificate_threshold ?? 75,
-                    'category_id' => $lc->category_id,
                 ]
             );
             $lc->update(['master_course_id' => $mc->id]);
@@ -45,7 +43,6 @@ class CourseController extends Controller
 
         // 2. Ambil MasterCourse milik Vendor beserta angkatan batch dan relasinya
         $masterCourses = MasterCourse::with([
-            'category',
             'skills',
             'tags',
             'materials',
@@ -57,7 +54,7 @@ class CourseController extends Controller
         ->get();
 
         // Ambil data courses untuk fallback & kalkulasi
-        $allBatches = Course::with(['materials', 'quizzes', 'enrollments', 'category'])
+        $allBatches = Course::with(['materials', 'quizzes', 'enrollments'])
             ->where('lecturer_id', $vendorId)
             ->latest()
             ->get();
@@ -95,11 +92,10 @@ class CourseController extends Controller
 
     public function create(): View
     {
-        $categories = Category::orderBy('name')->get();
         $skills = Skill::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
 
-        return view('vendor.courses.create', compact('categories', 'skills', 'tags'));
+        return view('vendor.courses.create', compact('skills', 'tags'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -108,7 +104,6 @@ class CourseController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'batch_name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
@@ -130,7 +125,6 @@ class CourseController extends Controller
                 'description' => $validated['description'],
                 'level' => $validated['level'],
                 'certificate_threshold' => $validated['certificate_threshold'],
-                'category_id' => $validated['category_id'],
             ]
         );
 
@@ -183,7 +177,6 @@ class CourseController extends Controller
                     'description' => $course->description,
                     'level' => $course->level,
                     'certificate_threshold' => $course->certificate_threshold ?? 75,
-                    'category_id' => $course->category_id,
                 ]
             );
             $course->update(['master_course_id' => $masterCourse->id]);
@@ -223,7 +216,6 @@ class CourseController extends Controller
 
         $otherBatches = $allBatches->where('id', '!=', $course->id);
 
-        $categories = Category::orderBy('name')->get();
         $skills = Skill::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
 
@@ -236,7 +228,6 @@ class CourseController extends Controller
             'completedStudentCount',
             'allBatches',
             'otherBatches',
-            'categories',
             'skills',
             'tags'
         ));
@@ -248,11 +239,10 @@ class CourseController extends Controller
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
-        $categories = Category::orderBy('name')->get();
         $skills = Skill::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
 
-        return view('vendor.courses.edit', compact('course', 'categories', 'skills', 'tags'));
+        return view('vendor.courses.edit', compact('course', 'skills', 'tags'));
     }
 
     public function update(Request $request, CourseOffering $course): RedirectResponse
@@ -264,7 +254,6 @@ class CourseController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'category_id' => ['nullable', 'exists:categories,id'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
@@ -284,7 +273,6 @@ class CourseController extends Controller
                     'name' => $validated['name'],
                     'description' => $validated['description'],
                     'level' => $validated['level'],
-                    'category_id' => $validated['category_id'],
                 ]);
 
                 $masterSkillsData = [];
@@ -302,7 +290,6 @@ class CourseController extends Controller
                     'name' => $validated['name'],
                     'description' => $validated['description'],
                     'level' => $validated['level'],
-                    'category_id' => $validated['category_id'],
                 ]);
             }
         }
@@ -312,7 +299,6 @@ class CourseController extends Controller
             'name' => $validated['name'],
             'description' => $validated['description'],
             'level' => $validated['level'],
-            'category_id' => $validated['category_id'],
         ];
 
         if (!empty($validated['batch_name'])) {
@@ -401,7 +387,6 @@ class CourseController extends Controller
                     'description' => $course->description,
                     'level' => $course->level,
                     'certificate_threshold' => $course->certificate_threshold ?? 75,
-                    'category_id' => $course->category_id,
                 ]
             );
             $course->update(['master_course_id' => $masterCourse->id]);

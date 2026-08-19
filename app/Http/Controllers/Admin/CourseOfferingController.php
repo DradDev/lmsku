@@ -103,7 +103,7 @@ class CourseOfferingController extends Controller
     public function show(CourseOffering $courseOffering): View
     {
         $courseOffering->load([
-            'masterCourse.category',
+            'masterCourse.skills',
             'academicTerm',
             'lecturer',
             'enrollments.user',

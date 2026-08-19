@@ -52,7 +52,6 @@ class Backfill3nfData extends Command
                 'name' => $course->name,
                 'description' => $course->description ?? null,
                 'level' => $course->level ?? 'Beginner',
-                'category_id' => $course->category_id ?? null,
                 'created_at' => $course->created_at ?? now(),
                 'updated_at' => $course->updated_at ?? now(),
             ]);

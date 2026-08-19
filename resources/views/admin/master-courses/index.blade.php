@@ -147,7 +147,7 @@
                 <!-- 1. ACADEMIC INTERNAL MASTER COURSES CARDS -->
                 @foreach ($masterCourses as $mc)
                     @php
-                        $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . ($mc->description ?? '') . ' ' . ($mc->category->name ?? ''));
+                        $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . ($mc->description ?? '') . ' ' . ($mc->main_skill->name ?? ''));
                         $levelBadges = [
                             'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
@@ -190,7 +190,7 @@
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
-                                    {{ $mc->category->name ?? 'Umum' }}
+                                    {{ $mc->main_skill->name ?? 'Umum' }}
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
@@ -255,7 +255,7 @@
                         $batchesList = $vmc->courses ?? collect();
                         $latestBatch = $batchesList->first();
                         $totalStudents = $batchesList->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
-                        $searchHaystack = strtolower($vmc->name . ' ' . ($vmc->code ?? '') . ' ' . $vendorName . ' ' . ($vmc->category->name ?? ''));
+                        $searchHaystack = strtolower($vmc->name . ' ' . ($vmc->code ?? '') . ' ' . $vendorName . ' ' . ($vmc->main_skill->name ?? ''));
                         $levelBadges = [
                             'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
@@ -306,7 +306,7 @@
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
-                                    {{ $vmc->category->name ?? 'Sertifikasi' }}
+                                    {{ $vmc->main_skill->name ?? 'Sertifikasi' }}
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">

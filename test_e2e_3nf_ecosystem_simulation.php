@@ -6,7 +6,6 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 use App\Models\AcademicTerm;
-use App\Models\Category;
 use App\Models\Certificate;
 use App\Models\CourseOffering;
 use App\Models\Enrollment;
@@ -65,7 +64,6 @@ echo "\n▶ [ACTOR 2: VENDOR] Launching Industry Certification & Multi-Batch Int
 $vendor = User::where('role', 'vendor')->first();
 Auth::login($vendor);
 
-$vendorCategory = Category::firstOrCreate(['name' => 'Cybersecurity & Infrastructure'], ['slug' => 'cybersecurity-infra']);
 $vendorSkill = Skill::firstOrCreate(['name' => 'Ethical Hacking & Penetration Testing'], ['category' => 'Security']);
 
 $vendorCourseController = new \App\Http\Controllers\Vendor\CourseController();
@@ -74,7 +72,6 @@ $reqVendorStore = Request::create(route('vendor.courses.store'), 'POST', [
     'batch_name'            => 'Cohort 1 - Fall 2026',
     'description'           => 'Hands-on enterprise threat modeling and SOC operations.',
     'level'                 => 'Advanced',
-    'category_id'           => $vendorCategory->id,
     'duration_weeks'        => 6,
     'certificate_threshold' => 80,
     'skill_ids'             => [$vendorSkill->id],

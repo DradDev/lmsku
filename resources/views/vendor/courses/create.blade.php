@@ -94,7 +94,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                                     Level Kesulitan <span class="text-rose-500">*</span>
@@ -103,18 +103,6 @@
                                     <option value="Beginner" @selected(old('level') === 'Beginner')>Beginner</option>
                                     <option value="Intermediate" @selected(old('level', 'Intermediate') === 'Intermediate')>Intermediate</option>
                                     <option value="Advanced" @selected(old('level') === 'Advanced')>Advanced</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Kategori Keterampilan
-                                </label>
-                                <select name="category_id" class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-3 font-semibold text-slate-800">
-                                    <option value="">-- Pilih Kategori --</option>
-                                    @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}" @selected(old('category_id') == $cat->id)>{{ $cat->name }}</option>
-                                    @endforeach
                                 </select>
                             </div>
 

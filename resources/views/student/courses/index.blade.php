@@ -551,8 +551,8 @@
                             </div>
 
                             <div class="course-meta-item">
-                                <strong>Kategori:</strong>
-                                <span>{{ $master->category->name ?? 'General' }}</span>
+                                <strong>Skill:</strong>
+                                <span>{{ $master->main_skill->name ?? optional($master->category)->name ?? 'General' }}</span>
                             </div>
                         </div>
 

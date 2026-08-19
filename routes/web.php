@@ -28,7 +28,6 @@ use App\Http\Controllers\Lecturer\ResultController as LecturerResultController;
 use App\Http\Controllers\Lecturer\ProjectController as LecturerProjectController;
 
 // Admin Controllers
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -338,9 +337,6 @@ Route::middleware(['auth', 'role:admin'])
         Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');
 
         Route::resource('users', AdminUserController::class);
-
-        Route::resource('categories', AdminCategoryController::class)
-            ->except(['show']);
 
         Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])
             ->name('users.approve');

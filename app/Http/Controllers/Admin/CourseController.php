@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +13,7 @@ class CourseController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Course::with(['user', 'category', 'materials', 'quizzes', 'students'])
+        $query = Course::with(['user', 'materials', 'quizzes', 'students'])
             ->withCount(['materials', 'quizzes', 'students']);
 
         // Filter Provider Type (Vendor vs Lecturer)
@@ -74,7 +73,6 @@ class CourseController extends Controller
     {
         $course->load([
             'user',
-            'category',
             'materials',
             'quizzes.questions',
             'students',

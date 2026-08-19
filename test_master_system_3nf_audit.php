@@ -6,7 +6,6 @@ $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
 use App\Models\AcademicTerm;
-use App\Models\Category;
 use App\Models\Certificate;
 use App\Models\CourseOffering;
 use App\Models\Enrollment;

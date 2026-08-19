@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterCourse;
-use App\Models\Category;
 use App\Models\Skill;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +16,7 @@ class MasterCourseController extends Controller
 {
     public function index(): View
     {
-        $masterCourses = MasterCourse::with(['category', 'skills', 'tags', 'materials', 'quizzes'])
+        $masterCourses = MasterCourse::with(['skills', 'tags', 'materials', 'quizzes'])
             ->where(function ($q) {
                 $q->whereNull('user_id')
                   ->orWhereHas('user', fn($u) => $u->where('role', '!=', 'vendor'));
@@ -28,7 +27,6 @@ class MasterCourseController extends Controller
 
         $vendorMasterCourses = MasterCourse::with([
             'user',
-            'category',
             'skills',
             'tags',
             'materials',
@@ -49,11 +47,10 @@ class MasterCourseController extends Controller
 
     public function create(): View
     {
-        $categories = Category::orderBy('name')->get();
         $skills = Skill::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
 
-        return view('admin.master-courses.create', compact('categories', 'skills', 'tags'));
+        return view('admin.master-courses.create', compact('skills', 'tags'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -64,7 +61,6 @@ class MasterCourseController extends Controller
             'description' => ['nullable', 'string'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
-            'category_id' => ['nullable', 'exists:categories,id'],
             'skill_ids' => ['nullable', 'array'],
             'skill_ids.*' => ['exists:skills,id'],
             'tag_ids' => ['nullable', 'array'],
@@ -75,7 +71,7 @@ class MasterCourseController extends Controller
         $tagIds = $validated['tag_ids'] ?? [];
 
         if (empty($validated['code'])) {
-            $validated['code'] = $this->generateInternalCode($validated['category_id'] ?? null, $skillIds, $validated['level']);
+            $validated['code'] = $this->generateInternalCode($skillIds, $validated['level']);
         }
 
         $masterCourse = MasterCourse::create([
@@ -84,7 +80,6 @@ class MasterCourseController extends Controller
             'description' => $validated['description'] ?? null,
             'level' => $validated['level'],
             'certificate_threshold' => $validated['certificate_threshold'],
-            'category_id' => $validated['category_id'] ?? null,
         ]);
 
         if (!empty($skillIds)) {
@@ -100,7 +95,7 @@ class MasterCourseController extends Controller
             ->with('success', 'Master Course berhasil dibuat dengan kode ' . $masterCourse->code . ' beserta target kompetensi skill & tag.');
     }
 
-    private function generateInternalCode(?int $categoryId, array $skillIds, string $level): string
+    private function generateInternalCode(array $skillIds, string $level): string
     {
         $prefix = 'TK';
         $skillCode = '';
@@ -131,19 +126,6 @@ class MasterCourseController extends Controller
             }
         }
 
-        // Fallback ke Kategori jika skill tidak dipilih
-        if (empty($skillCode) && $categoryId) {
-            $category = Category::find($categoryId);
-            if ($category && !empty($category->name)) {
-                $words = explode(' ', trim($category->name));
-                if (count($words) >= 2) {
-                    $skillCode = strtoupper(substr($words[0], 0, 2) . substr($words[1], 0, 1));
-                } else {
-                    $skillCode = strtoupper(substr($words[0], 0, 3));
-                }
-            }
-        }
-
         if (empty($skillCode)) {
             $skillCode = 'GEN';
         }
@@ -169,8 +151,7 @@ class MasterCourseController extends Controller
 
     public function edit(MasterCourse $masterCourse): View
     {
-        $categories = Category::orderBy('name')->get();
-        return view('admin.master-courses.edit', compact('masterCourse', 'categories'));
+        return view('admin.master-courses.edit', compact('masterCourse'));
     }
 
     public function update(Request $request, MasterCourse $masterCourse): RedirectResponse
@@ -181,7 +162,6 @@ class MasterCourseController extends Controller
             'description' => ['nullable', 'string'],
             'level' => ['required', 'in:Beginner,Intermediate,Advanced'],
             'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
-            'category_id' => ['nullable', 'exists:categories,id'],
         ]);
 
         $masterCourse->update($validated);
@@ -218,7 +198,7 @@ class MasterCourseController extends Controller
             }
         }
 
-        $masterCourse->load(['category', 'materials', 'quizzes', 'skills', 'tags', 'courses.enrollments.user']);
+        $masterCourse->load(['materials', 'quizzes', 'skills', 'tags', 'courses.enrollments.user']);
 
         // Semesters (Academic Terms)
         $academicTerms = \App\Models\AcademicTerm::orderByDesc('is_active')
@@ -240,7 +220,6 @@ class MasterCourseController extends Controller
         $totalOfferings = $courseOfferings->count();
         $materials = $masterCourse->materials;
         $quizzes = $masterCourse->quizzes;
-        $categories = Category::orderBy('name')->get();
 
         // All Skills and Tags for competency assignment
         $allSkills = Skill::orderBy('name')->get();
@@ -260,7 +239,6 @@ class MasterCourseController extends Controller
             'totalOfferings',
             'materials',
             'quizzes',
-            'categories',
             'allSkills',
             'allTags',
             'activeTab',

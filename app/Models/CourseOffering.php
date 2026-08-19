@@ -50,17 +50,6 @@ class CourseOffering extends Model
         return $this->belongsTo(User::class, 'lecturer_id');
     }
 
-    public function category()
-    {
-        return $this->hasOneThrough(
-            Category::class,
-            MasterCourse::class,
-            'id',
-            'id',
-            'master_course_id',
-            'category_id'
-        );
-    }
 
     public function materials()
     {
@@ -157,14 +146,15 @@ class CourseOffering extends Model
         return $this->masterCourse->level ?? 'Beginner';
     }
 
-    public function getCategoryIdAttribute(): ?int
+    public function getMainSkillAttribute()
     {
-        return $this->masterCourse->category_id ?? null;
+        return $this->masterCourse?->main_skill ?? null;
     }
 
     public function getCategoryAttribute()
     {
-        return $this->masterCourse->category ?? null;
+        $mainSkillName = $this->masterCourse?->main_skill?->name;
+        return $mainSkillName ? (object)['name' => $mainSkillName] : null;
     }
 
     public function getSkillsAttribute()

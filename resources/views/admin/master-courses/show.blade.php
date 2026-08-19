@@ -43,8 +43,8 @@
                     <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                         <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">{{ $masterCourse->name }}</h1>
                         <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->level }}</span>
-                        @if($masterCourse->category)
-                            <span style="background: #EFF6FF; color: #1D4ED8; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->category->name }}</span>
+                        @if($masterCourse->main_skill)
+                            <span style="background: #EFF6FF; color: #1D4ED8; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->main_skill->name }}</span>
                         @endif
                     </div>
                     <p style="font-size: 13px; color: #64748B; margin: 6px 0 0 0; line-height: 1.5; max-width: 650px;">
@@ -277,15 +277,7 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Kategori Matkul</label>
-                        <select name="category_id" style="width: 100%; padding: 9px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; outline: none; background: #FFF;">
-                            <option value="">-- Pilih Kategori --</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ $cat->id }}" {{ old('category_id', $masterCourse->category_id) == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+
                 </div>
 
                 <div style="margin-bottom: 1.25rem;">

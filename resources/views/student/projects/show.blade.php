@@ -315,7 +315,7 @@
                                             <div class="p-3 bg-white border border-amber-200 rounded-xl flex items-center justify-between gap-2">
                                                 <div>
                                                     <div class="font-bold text-xs text-slate-800">{{ $pc->name }}</div>
-                                                    <div class="text-[11px] text-slate-500">{{ $pc->category->name ?? 'Kompetensi' }}</div>
+                                                    <div class="text-[11px] text-slate-500">{{ $pc->main_skill->name ?? optional($pc->category)->name ?? 'Kompetensi' }}</div>
                                                 </div>
                                                 <a href="{{ route('student.courses.index') }}" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition shrink-0">
                                                     Ambil Matkul →

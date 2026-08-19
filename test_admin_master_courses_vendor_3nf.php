@@ -49,7 +49,7 @@ foreach ($vendorMasterCourses as $vmc) {
 
 // 4. Test Admin viewing Vendor Course Show (Checking Batches List & Enrolled Students Roster)
 echo "\n4. Testing Admin Vendor Course Show (Batch List & Enrolled Students Roster)...\n";
-$targetMasterCourse = $vendorMasterCourses->firstWhere('code', 'VMC-0ZYM4Q') ?? $vendorMasterCourses->first();
+$targetMasterCourse = $vendorMasterCourses->filter(fn($mc) => $mc->courses->count() > 0)->first();
 $batch1 = $targetMasterCourse->courses->first();
 $batch2 = $targetMasterCourse->courses->skip(1)->first() ?? $batch1;
 

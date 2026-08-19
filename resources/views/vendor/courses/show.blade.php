@@ -350,7 +350,7 @@
 
             <div class="hero-meta-row">
                 <span class="hero-badge bg-purple-50 text-purple-800 border border-purple-200">
-                    {{ optional($course->category)->name ?? 'Sertifikasi Industri' }}
+                    {{ $course->main_skill->name ?? optional($course->category)->name ?? 'Sertifikasi Industri' }}
                 </span>
                 <span class="hero-badge bg-slate-100 text-slate-700">
                     Level: <strong>{{ $course->level ?? 'Beginner' }}</strong>
@@ -830,25 +830,13 @@
                         <input type="text" name="name" value="{{ old('name', $course->name) }}" required class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-900">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1">Kategori</label>
-                            <select name="category_id" class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-800">
-                                <option value="">-- Pilih Kategori --</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat->id }}" @selected(old('category_id', $course->category_id) == $cat->id)>{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label class="block font-bold text-slate-700 mb-1">Level Kesulitan <span class="text-rose-500">*</span></label>
-                            <select name="level" required class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-800">
-                                <option value="Beginner" @selected(old('level', $course->level) === 'Beginner')>Beginner</option>
-                                <option value="Intermediate" @selected(old('level', $course->level) === 'Intermediate')>Intermediate</option>
-                                <option value="Advanced" @selected(old('level', $course->level) === 'Advanced')>Advanced</option>
-                            </select>
-                        </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Level Kesulitan <span class="text-rose-500">*</span></label>
+                        <select name="level" required class="w-full rounded-xl border-slate-300 p-2.5 text-xs font-semibold text-slate-800">
+                            <option value="Beginner" @selected(old('level', $course->level) === 'Beginner')>Beginner</option>
+                            <option value="Intermediate" @selected(old('level', $course->level) === 'Intermediate')>Intermediate</option>
+                            <option value="Advanced" @selected(old('level', $course->level) === 'Advanced')>Advanced</option>
+                        </select>
                     </div>
 
                     <div>

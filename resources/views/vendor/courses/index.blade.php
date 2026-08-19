@@ -446,7 +446,7 @@
                 @endphp
                 <div class="program-card">
                     <div class="program-badge-row">
-                        <span class="badge-category">{{ $mc->category->name ?? 'Sertifikasi Industri' }}</span>
+                        <span class="badge-category">{{ $mc->main_skill->name ?? 'Sertifikasi Industri' }}</span>
                         <span class="badge-batches-count">
                             {{ $mc->courses->count() }} Angkatan Batch
                         </span>

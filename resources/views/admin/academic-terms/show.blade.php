@@ -156,7 +156,7 @@
                                                 </h4>
                                             </div>
                                             <p class="text-xs text-slate-500 mt-0.5">
-                                                Level: <strong>{{ $masterCourse->level }}</strong> • Kategori: <strong>{{ optional($masterCourse->category)->name ?? 'Umum' }}</strong>
+                                                Level: <strong>{{ $masterCourse->level }}</strong> • Skill: <strong>{{ $masterCourse->main_skill->name ?? 'Umum' }}</strong>
                                             </p>
                                         </div>
                                     </div>

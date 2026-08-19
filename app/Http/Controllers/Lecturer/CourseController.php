@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseOffering;
 use App\Models\Material;
@@ -32,7 +31,7 @@ class CourseController extends Controller
             ->get();
 
         // Fallback ke legacy Courses jika ada
-        $legacyCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags', 'category'])
+        $legacyCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags'])
             ->where('lecturer_id', $lecturerId)
             ->where('is_archived', false)
             ->latest()
@@ -53,7 +52,7 @@ class CourseController extends Controller
         $offering = CourseOffering::with([
             'masterCourse.materials',
             'masterCourse.quizzes.questions',
-            'masterCourse.category',
+            'masterCourse.skills',
             'academicTerm',
             'enrollments.user',
             'quizzes',
@@ -78,11 +77,11 @@ class CourseController extends Controller
                       ->orWhere('course_id', $offering->id);
                 })
                 ->latest()
+                ->latest()
                 ->get();
             $quizzes = $offering->quizzes->count() > 0 ? $offering->quizzes : ($offering->masterCourse->quizzes ?? collect());
             $students = $offering->enrollments->map(fn($e) => $e->user)->filter();
             $enrollments = $offering->enrollments;
-            $categories = Category::orderBy('name')->get();
             $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
                 ->whereIn('quiz_id', $quizzes->pluck('id'))
                 ->latest()
@@ -94,7 +93,6 @@ class CourseController extends Controller
                 'quizzes',
                 'students',
                 'enrollments',
-                'categories',
                 'retakeRequests',
                 'siblingOfferings',
                 'isTermActive'
@@ -109,7 +107,6 @@ class CourseController extends Controller
             'user',
             'skills',
             'tags',
-            'category',
             'enrollments.user',
         ])
         ->where('lecturer_id', $lecturerId)
@@ -120,7 +117,6 @@ class CourseController extends Controller
         $quizzes = $course->quizzes;
         $students = $course->students;
         $enrollments = $course->enrollments;
-        $categories = Category::orderBy('name')->get();
         $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
             ->whereIn('quiz_id', $quizzes->pluck('id'))
             ->latest()
@@ -132,7 +128,6 @@ class CourseController extends Controller
             'quizzes',
             'students',
             'enrollments',
-            'categories',
             'retakeRequests',
             'isTermActive'
         ));
@@ -157,9 +152,8 @@ class CourseController extends Controller
             $course = $offering;
             $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
             $tags = Tag::with('skill')->orderBy('name')->get();
-            $categories = Category::orderBy('name')->get();
 
-            return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
+            return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags'));
         }
 
         // Fallback to legacy Course
@@ -167,9 +161,8 @@ class CourseController extends Controller
 
         $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
 
-        return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
+        return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags'));
     }
 
     public function update(Request $request, $id): RedirectResponse
@@ -213,7 +206,6 @@ class CourseController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'category_id' => ['nullable', 'exists:categories,id'],
             'material_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip,rar', 'max:20480'],
 
             'skill_ids' => ['nullable', 'array'],
@@ -232,7 +224,6 @@ class CourseController extends Controller
             'start_date' => $validated['start_date'] ?? null,
             'end_date' => $validated['end_date'] ?? null,
             'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
-            'category_id' => $validated['category_id'] ?? null,
         ];
 
         $course->update($updateData);

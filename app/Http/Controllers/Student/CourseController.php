@@ -21,7 +21,7 @@ class CourseController extends Controller
         $user = Auth::user();
 
         // 3NF CourseOfferings yang dipublish di semester aktif
-        $offerings = \App\Models\CourseOffering::with(['masterCourse.category', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
+        $offerings = \App\Models\CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
             ->where('status', 'published')
             ->whereHas('academicTerm', function ($query) {
                 $query->where('is_active', true);
@@ -94,7 +94,7 @@ class CourseController extends Controller
 
         // Vendor Certification Courses (3NF CourseOfferings type=vendor)
         $vendorOfferings = \App\Models\CourseOffering::vendor()
-            ->with(['lecturer.institution', 'masterCourse.category', 'masterCourse.materials', 'masterCourse.quizzes.questions', 'masterCourse.skills', 'masterCourse.tags'])
+            ->with(['lecturer.institution', 'masterCourse.materials', 'masterCourse.quizzes.questions', 'masterCourse.skills', 'masterCourse.tags'])
             ->where('is_archived', false)
             ->where(function ($query) {
                 $query->whereNull('status')
@@ -103,7 +103,7 @@ class CourseController extends Controller
             ->latest()
             ->get();
 
-        $vendorCourses = $vendorOfferings->isNotEmpty() ? $vendorOfferings : Course::with(['user.institution', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
+        $vendorCourses = $vendorOfferings->isNotEmpty() ? $vendorOfferings : Course::with(['user.institution', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
             ->whereHas('user', function ($query) {
                 $query->where('role', 'vendor');
             })
@@ -157,7 +157,6 @@ class CourseController extends Controller
 
         // 1. Resolve CourseOffering (either direct ID or via master_course_id)
         $offering = CourseOffering::with([
-            'masterCourse.category',
             'masterCourse.materials',
             'masterCourse.quizzes.questions',
             'masterCourse.skills',
@@ -170,7 +169,6 @@ class CourseController extends Controller
 
         if (! $offering) {
             $offering = CourseOffering::with([
-                'masterCourse.category',
                 'masterCourse.materials',
                 'masterCourse.quizzes.questions',
                 'masterCourse.skills',

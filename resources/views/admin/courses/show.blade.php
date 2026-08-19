@@ -57,7 +57,7 @@
                             @endif
 
                             <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                {{ optional($course->category)->name ?? 'Sertifikasi Industri' }}
+                                {{ $course->main_skill->name ?? optional($course->category)->name ?? 'Sertifikasi Industri' }}
                             </span>
                         </div>
 
