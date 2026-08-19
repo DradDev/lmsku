@@ -35,8 +35,12 @@ class CourseProgressService
         $this->recalculate($userId, $offeringId);
     }
 
-    public function recalculate(int $userId, int $offeringId): ?Enrollment
+    public function recalculate(int $userId, ?int $offeringId): ?Enrollment
     {
+        if (! $offeringId) {
+            return null;
+        }
+
         $enrollment = Enrollment::where('user_id', $userId)
             ->where('course_offering_id', $offeringId)
             ->first();

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\CourseOffering;
+use App\Models\MasterCourse;
 use App\Models\LearningActivityLog;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
@@ -257,16 +259,16 @@ class ProjectController extends Controller
             return true;
         }
 
-        $hasCourse = Course::where('is_archived', false)
+        $hasCourse = CourseOffering::where('is_archived', false)
             ->where(function ($query) use ($skillId) {
-                $query->whereHas('skills', function ($q) use ($skillId) {
+                $query->whereHas('masterCourse.skills', function ($q) use ($skillId) {
                     $q->where('skills.id', $skillId)
                       ->orWhere('skills.parent_id', $skillId);
                 })
-                ->orWhereHas('tags', function ($q) use ($skillId) {
+                ->orWhereHas('masterCourse.tags', function ($q) use ($skillId) {
                     $q->where('tags.skill_id', $skillId);
                 })
-                ->orWhereHas('quizzes.questions.skills', function ($q) use ($skillId) {
+                ->orWhereHas('masterCourse.quizzes.questions.skills', function ($q) use ($skillId) {
                     $q->where('skills.id', $skillId)
                       ->orWhere('skills.parent_id', $skillId);
                 });
@@ -283,8 +285,8 @@ class ProjectController extends Controller
             $skillWords = explode(' ', str_replace('&', '', $skill->name));
             $firstWord = trim($skillWords[0] ?? '');
             if (!empty($firstWord) && strlen($firstWord) >= 3) {
-                $hasNamedCourse = Course::where('is_archived', false)
-                    ->where(function ($q) use ($skill, $firstWord) {
+                $hasNamedCourse = CourseOffering::where('is_archived', false)
+                    ->whereHas('masterCourse', function ($q) use ($skill, $firstWord) {
                         $q->where('name', 'LIKE', "%{$skill->name}%")
                           ->orWhere('name', 'LIKE', "%{$firstWord}%")
                           ->orWhere('description', 'LIKE', "%{$skill->name}%");

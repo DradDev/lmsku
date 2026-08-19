@@ -20,12 +20,14 @@ class CourseController extends Controller
         // Filter Provider Type (Vendor vs Lecturer)
         if ($request->filled('provider_type')) {
             if ($request->provider_type === 'vendor') {
-                $query->whereHas('user', function ($q) {
-                    $q->where('role', 'vendor');
+                $query->where(function ($q) {
+                    $q->where('offering_type', 'vendor')
+                      ->orWhereHas('user', fn($u) => $u->where('role', 'vendor'));
                 });
             } elseif ($request->provider_type === 'lecturer') {
-                $query->whereHas('user', function ($q) {
-                    $q->where('role', 'lecturer');
+                $query->where(function ($q) {
+                    $q->where('offering_type', 'academic')
+                      ->orWhereHas('user', fn($u) => $u->where('role', 'lecturer'));
                 });
             }
         }
@@ -43,9 +45,11 @@ class CourseController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+                $q->whereHas('masterCourse', function ($mc) use ($search) {
+                    $mc->where('name', 'like', "%{$search}%")
+                       ->orWhere('description', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -53,8 +57,8 @@ class CourseController extends Controller
 
         // Statistics
         $totalCourses = Course::count();
-        $vendorCourses = Course::whereHas('user', fn($q) => $q->where('role', 'vendor'))->count();
-        $lecturerCourses = Course::whereHas('user', fn($q) => $q->where('role', 'lecturer'))->count();
+        $vendorCourses = Course::where('offering_type', 'vendor')->orWhereHas('user', fn($q) => $q->where('role', 'vendor'))->count();
+        $lecturerCourses = Course::where('offering_type', 'academic')->orWhereHas('user', fn($q) => $q->where('role', 'lecturer'))->count();
         $activeCourses = Course::where('is_archived', false)->count();
 
         return view('admin.courses.index', compact(
