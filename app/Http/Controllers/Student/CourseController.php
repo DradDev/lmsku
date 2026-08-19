@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\CourseProgressService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class CourseController extends Controller
 {
@@ -31,7 +32,7 @@ class CourseController extends Controller
 
         $enrollments = Enrollment::where('user_id', $user->id)->get();
         $enrolledOfferingIds = $enrollments->pluck('course_offering_id')->filter()->toArray();
-        $enrolledCourseIds = $enrollments->pluck('course_id')->filter()->toArray();
+        $enrolledCourseIds = $enrolledOfferingIds;
 
         // Group offerings by master_course_id
         $groupedOfferings = $offerings->groupBy('master_course_id');
@@ -122,7 +123,7 @@ class CourseController extends Controller
 
         foreach ($vendorCourses as $vc) {
             $userEnrollment = $enrollments->first(function ($e) use ($vc) {
-                return $e->course_offering_id == $vc->id || $e->course_id == $vc->id;
+                return $e->course_offering_id == $vc->id;
             });
             $vc->is_enrolled = (bool) $userEnrollment;
             $vc->progress = $userEnrollment?->progress_percent ?? 0;
@@ -150,185 +151,56 @@ class CourseController extends Controller
         return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors', 'vendors'));
     }
 
-    public function show(string $id)
+    public function show(string $id): View
     {
         $user = Auth::user();
 
-        // 1. Coba di Course Vendor (Explicit Vendor Check)
-        $vendorCourse = Course::with(['materials', 'quizzes.questions', 'user', 'masterCourse.materials', 'masterCourse.quizzes'])
-            ->where('id', $id)
-            ->whereHas('user', function ($query) {
-                $query->where('role', 'vendor');
-            })
+        // 1. Resolve CourseOffering (either direct ID or via master_course_id)
+        $offering = CourseOffering::with([
+            'masterCourse.category',
+            'masterCourse.materials',
+            'masterCourse.quizzes.questions',
+            'masterCourse.skills',
+            'masterCourse.tags',
+            'academicTerm',
+            'lecturer.institution',
+            'materials',
+            'quizzes.questions',
+        ])->find($id);
+
+        if (! $offering) {
+            $offering = CourseOffering::with([
+                'masterCourse.category',
+                'masterCourse.materials',
+                'masterCourse.quizzes.questions',
+                'masterCourse.skills',
+                'masterCourse.tags',
+                'academicTerm',
+                'lecturer.institution',
+                'materials',
+                'quizzes.questions',
+            ])
+            ->where('master_course_id', $id)
+            ->where('status', 'published')
             ->first();
-
-        if ($vendorCourse) {
-            $course = $vendorCourse;
-            $enrollment = Enrollment::where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->first();
-
-            if ($enrollment) {
-                app(CourseProgressService::class)->recalculate($user->id, $course->id);
-                $enrollment->refresh();
-            }
-
-            $this->logActivity('view_course', $course->id);
-
-            // Combined 3NF materials & quizzes
-            if ($course->masterCourse) {
-                $combinedMaterials = $course->materials->merge($course->masterCourse->materials ?? collect())->unique('id');
-                $combinedQuizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
-                $course->setRelation('materials', $combinedMaterials);
-                $course->setRelation('quizzes', $combinedQuizzes);
-            }
-
-            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
-            $verifiedFinalAttempt = null;
-            $canDownloadCertificate = false;
-            $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
-
-            if ($finalQuiz && $enrollment) {
-                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
-                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
-
-                $verifiedFinalAttempt = QuizAttempt::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->orderByDesc('score')
-                    ->first();
-
-                $threshold = $course->certificate_threshold ?? 75;
-
-                if (! $onlyMultipleChoice) {
-                    $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
-                } elseif (! $verifiedFinalAttempt) {
-                    $certificateStatusText = 'Kerjakan final quiz untuk membuka certificate.';
-                } elseif ($verifiedFinalAttempt->score < $threshold) {
-                    $certificateStatusText = "Nilai final quiz minimal {$threshold}% untuk membuka certificate.";
-                } else {
-                    $canDownloadCertificate = true;
-                    $certificateStatusText = 'Certificate Sertifikasi Industri sudah tersedia untuk diunduh.';
-                }
-            } elseif (! $enrollment) {
-                $certificateStatusText = 'Silakan ambil course sertifikasi ini untuk mengakses kuis dan sertifikat.';
-            }
-
-            $retakeRequest = null;
-            if ($finalQuiz && $enrollment) {
-                $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->latest()
-                    ->first();
-            }
-
-            $isReadOnly = $course->isExpired() || $course->is_archived;
-
-            return view('student.courses.show', compact(
-                'course',
-                'enrollment',
-                'finalQuiz',
-                'verifiedFinalAttempt',
-                'canDownloadCertificate',
-                'certificateStatusText',
-                'isReadOnly',
-                'retakeRequest'
-            ));
         }
 
-        // 2. Coba di CourseOffering (3NF Academic)
-        $offering = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
-            ->find($id);
+        abort_unless($offering, 404, 'Kelas atau program kursus tidak ditemukan.');
 
-        if ($offering) {
-            $enrollment = Enrollment::where('user_id', $user->id)
-                ->where('course_offering_id', $offering->id)
-                ->first();
-
-            $course = $offering; // Magic accessors handle backward compatibility!
-
-            $this->logActivity('view_course', $offering->id);
-
-            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
-            $verifiedFinalAttempt = null;
-            $canDownloadCertificate = false;
-            $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
-
-            if ($finalQuiz && $enrollment) {
-                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
-                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
-
-                $verifiedFinalAttempt = QuizAttempt::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->orderByDesc('score')
-                    ->first();
-
-                $threshold = $offering->certificate_threshold ?? 60;
-
-                if (! $onlyMultipleChoice) {
-                    $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
-                } elseif (! $verifiedFinalAttempt) {
-                    $certificateStatusText = 'Kerjakan final quiz dan tunggu verifikasi admin untuk membuka certificate.';
-                } elseif ($verifiedFinalAttempt->score < $threshold) {
-                    $certificateStatusText = "Nilai final quiz minimal {$threshold} untuk membuka certificate.";
-                } else {
-                    $canDownloadCertificate = true;
-                    $certificateStatusText = 'Certificate sudah tersedia untuk diunduh.';
-                }
-            } elseif (! $enrollment) {
-                $certificateStatusText = 'Silakan ambil rombel kelas ini untuk mengakses materi dan kuis.';
-            }
-
-            $retakeRequest = null;
-            if ($finalQuiz && $enrollment) {
-                $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->latest()
-                    ->first();
-            }
-
-            $isReadOnly = $offering->isExpired() || $offering->status === 'cancelled';
-
-            return view('student.courses.show', compact(
-                'course',
-                'enrollment',
-                'finalQuiz',
-                'verifiedFinalAttempt',
-                'canDownloadCertificate',
-                'certificateStatusText',
-                'isReadOnly',
-                'retakeRequest'
-            ));
-        }
-
-        // 3. Fallback ke legacy Course
-        $course = Course::findOrFail($id);
+        $course = $offering; // Magic accessors provide seamless compatibility
 
         $enrollment = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
+            ->where('course_offering_id', $offering->id)
             ->first();
 
-        abort_unless($enrollment, 403, 'Kamu tidak terdaftar di course sertifikasi ini.');
+        if ($enrollment) {
+            app(CourseProgressService::class)->recalculate($user->id, $offering->id);
+            $enrollment->refresh();
+        }
 
-        app(CourseProgressService::class)->recalculate($user->id, $course->id);
+        $this->logActivity('view_course', $offering->id);
 
-        $enrollment->refresh();
-
-        $this->logActivity(
-            activityType: 'view_course',
-            courseId: $course->id
-        );
-
-        // Combined 3NF materials & quizzes
+        // Combined materials & quizzes from Master Course & Offering
         if ($course->masterCourse) {
             $combinedMaterials = $course->materials->merge($course->masterCourse->materials ?? collect())->unique('id');
             $combinedQuizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
@@ -341,7 +213,7 @@ class CourseController extends Controller
         $canDownloadCertificate = false;
         $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
 
-        if ($finalQuiz) {
+        if ($finalQuiz && $enrollment) {
             $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
             $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
@@ -355,7 +227,7 @@ class CourseController extends Controller
                 ->orderByDesc('score')
                 ->first();
 
-            $threshold = $course->certificate_threshold ?? 75;
+            $threshold = $offering->certificate_threshold ?? $course->masterCourse?->certificate_threshold ?? 75;
 
             if (! $onlyMultipleChoice) {
                 $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
@@ -365,19 +237,21 @@ class CourseController extends Controller
                 $certificateStatusText = "Nilai final quiz minimal {$threshold}% untuk membuka certificate.";
             } else {
                 $canDownloadCertificate = true;
-                $certificateStatusText = 'Certificate Sertifikasi Industri sudah tersedia untuk diunduh.';
+                $certificateStatusText = 'Certificate sudah tersedia untuk diunduh.';
             }
+        } elseif (! $enrollment) {
+            $certificateStatusText = 'Silakan ambil/daftar program ini untuk mengakses materi dan kuis.';
         }
 
         $retakeRequest = null;
-        if ($finalQuiz) {
+        if ($finalQuiz && $enrollment) {
             $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
                 ->where('quiz_id', $finalQuiz->id)
                 ->latest()
                 ->first();
         }
 
-        $isReadOnly = $course->isExpired() || $course->is_archived;
+        $isReadOnly = $offering->isExpired() || $offering->is_archived || $offering->status === 'cancelled';
 
         return view('student.courses.show', compact(
             'course',

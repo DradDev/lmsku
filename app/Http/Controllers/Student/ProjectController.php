@@ -225,8 +225,7 @@ class ProjectController extends Controller
             $courseName = $masterCourse->name ?? ($enrollment->course->name ?? 'Course');
             $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
             $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
-                return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
-                    || ($cert->course_id && $cert->course_id === $enrollment->course_id);
+                return $cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id;
             });
 
             foreach ($courseObj->skills as $skill) {

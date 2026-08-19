@@ -326,13 +326,22 @@ class ResultController extends Controller
             ]);
 
             // Sync Certificate record
+            $enrollment = \App\Models\Enrollment::where('user_id', $result->user_id)
+                ->whereIn('course_offering_id', function ($sub) use ($result) {
+                    $sub->select('id')->from('course_offerings')
+                        ->where('master_course_id', $result->quiz->master_course_id);
+                })
+                ->first();
+
+            $offeringId = $enrollment?->course_offering_id;
+
             $certificate = \App\Models\Certificate::firstOrCreate(
                 [
-                    'user_id' => $result->user_id,
-                    'course_id' => $result->quiz->course_id,
+                    'user_id'            => $result->user_id,
+                    'course_offering_id' => $offeringId,
                 ],
                 [
-                    'score' => $result->score,
+                    'score'        => $result->score,
                     'completed_at' => $result->completed_at ?? now(),
                 ]
             );

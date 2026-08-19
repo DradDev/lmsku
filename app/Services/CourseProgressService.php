@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\Material;
 use App\Models\MaterialProgress;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class CourseProgressService
 {
-    public function markMaterialAsCompleted(int $userId, int $courseId, int $materialId): void
+    public function markMaterialAsCompleted(int $userId, int $offeringId, int $materialId): void
     {
         $existingProgress = MaterialProgress::where('user_id', $userId)
             ->where('material_id', $materialId)
@@ -23,7 +24,7 @@ class CourseProgressService
                 'material_id' => $materialId,
             ],
             [
-                'course_id' => $courseId,
+                'course_offering_id' => $offeringId,
                 'is_completed' => true,
                 'first_viewed_at' => $existingProgress?->first_viewed_at ?? now(),
                 'last_viewed_at' => now(),
@@ -31,33 +32,43 @@ class CourseProgressService
             ]
         );
 
-        $this->recalculate($userId, $courseId);
+        $this->recalculate($userId, $offeringId);
     }
 
-    public function recalculate(int $userId, int $courseId): ?Enrollment
+    public function recalculate(int $userId, int $offeringId): ?Enrollment
     {
         $enrollment = Enrollment::where('user_id', $userId)
-            ->where('course_id', $courseId)
+            ->where('course_offering_id', $offeringId)
             ->first();
 
         if (! $enrollment) {
             return null;
         }
 
-        $totalMaterialCount = Material::where('course_id', $courseId)->count();
+        $offering = CourseOffering::with(['masterCourse.materials', 'masterCourse.quizzes'])->find($offeringId);
+        $masterCourseId = $offering?->master_course_id;
 
-        $totalQuizCount = Quiz::where('course_id', $courseId)->count();
+        $totalMaterialCount = $masterCourseId 
+            ? Material::where('master_course_id', $masterCourseId)->count()
+            : 0;
+
+        $totalQuizCount = $masterCourseId
+            ? Quiz::where('master_course_id', $masterCourseId)->count()
+            : 0;
 
         $completedMaterialCount = MaterialProgress::where('user_id', $userId)
-            ->where('course_id', $courseId)
             ->where('is_completed', true)
+            ->whereIn('material_id', function($q) use ($masterCourseId) {
+                $q->select('id')->from('materials')->where('master_course_id', $masterCourseId);
+            })
             ->distinct('material_id')
             ->count('material_id');
 
         $completedQuizCount = QuizAttempt::query()
             ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
             ->where('quiz_attempts.user_id', $userId)
-            ->where('quizzes.course_id', $courseId)
+            ->where('quiz_attempts.is_verified', true)
+            ->where('quizzes.master_course_id', $masterCourseId)
             ->distinct('quiz_attempts.quiz_id')
             ->count('quiz_attempts.quiz_id');
 
@@ -92,12 +103,12 @@ class CourseProgressService
         return $enrollment->fresh();
     }
 
-    public function recalculateAllForCourse(int $courseId): void
+    public function recalculateAllForCourse(int $offeringId): void
     {
-        Enrollment::where('course_id', $courseId)
-            ->chunkById(100, function ($enrollments) use ($courseId) {
+        Enrollment::where('course_offering_id', $offeringId)
+            ->chunkById(100, function ($enrollments) use ($offeringId) {
                 foreach ($enrollments as $enrollment) {
-                    $this->recalculate($enrollment->user_id, $courseId);
+                    $this->recalculate($enrollment->user_id, $offeringId);
                 }
             });
     }
@@ -107,7 +118,7 @@ class CourseProgressService
         Enrollment::where('user_id', $userId)
             ->chunkById(100, function ($enrollments) use ($userId) {
                 foreach ($enrollments as $enrollment) {
-                    $this->recalculate($userId, $enrollment->course_id);
+                    $this->recalculate($userId, $enrollment->course_offering_id);
                 }
             });
     }

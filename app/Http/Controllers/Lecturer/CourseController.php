@@ -121,7 +121,7 @@ class CourseController extends Controller
         $enrollments = $course->enrollments;
         $categories = Category::orderBy('name')->get();
         $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
-            ->where('course_id', $course->id)
+            ->where('course_offering_id', $course->id)
             ->latest()
             ->get();
 
@@ -237,9 +237,9 @@ class CourseController extends Controller
         if ($request->hasFile('material_file')) {
             $filePath = $request->file('material_file')->store('materials', 'public');
             Material::create([
-                'course_id' => $course->id,
-                'title' => $course->name . ' - Learning Material',
-                'file_path' => $filePath,
+                'master_course_id' => $course->master_course_id,
+                'title'            => $course->name . ' - Learning Material',
+                'file_path'        => $filePath,
             ]);
         }
 

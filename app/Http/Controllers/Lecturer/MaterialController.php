@@ -127,7 +127,6 @@ class MaterialController extends Controller
         $offeringId = ($courseObj instanceof CourseOffering) ? $courseObj->id : null;
 
         Material::create([
-            'course_id' => $courseObj->id,
             'master_course_id' => $masterCourseId,
             'course_offering_id' => $targetScope === 'class' ? $offeringId : null,
             'title' => $validated['title'],

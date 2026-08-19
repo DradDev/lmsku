@@ -59,22 +59,15 @@ class CertificateController extends Controller
             $item->final_quiz = $quizzes->firstWhere('quiz_type', 'final');
 
             $certificateRecord = Certificate::where('user_id', $student->id)
-                ->where(function ($q) use ($enrollment, $item) {
-                    if ($enrollment->course_offering_id) {
-                        $q->where('course_offering_id', $enrollment->course_offering_id);
-                    } else {
-                        $q->where('course_id', $item->id);
-                    }
-                })
+                ->where('course_offering_id', $enrollment->course_offering_id)
                 ->first();
 
             $item->certificate_record = $certificateRecord;
 
             $tempCert = new Certificate([
-                'user_id' => $student->id,
+                'user_id'            => $student->id,
                 'course_offering_id' => $enrollment->course_offering_id,
-                'course_id' => $enrollment->course_id,
-                'completed_at' => $enrollment->updated_at ?? now(),
+                'completed_at'       => $enrollment->updated_at ?? now(),
             ]);
             $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
 
@@ -189,19 +182,15 @@ class CertificateController extends Controller
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
+        $offeringId = $courseOffering?->id ?? $course->id;
+
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where(function ($q) use ($courseOffering, $course) {
-                if ($courseOffering) {
-                    $q->where('course_offering_id', $courseOffering->id);
-                } else {
-                    $q->where('course_id', $course->id);
-                }
-            })->first();
+            ->where('course_offering_id', $offeringId)
+            ->first();
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
-            'user_id' => $student->id,
-            'course_id' => $course->id,
-            'course_offering_id' => $courseOffering?->id,
+            'user_id'            => $student->id,
+            'course_offering_id' => $offeringId,
         ]))->generateCredentialCode();
 
         return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'));
@@ -214,19 +203,15 @@ class CertificateController extends Controller
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
+        $offeringId = $courseOffering?->id ?? $course->id;
+
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where(function ($q) use ($courseOffering, $course) {
-                if ($courseOffering) {
-                    $q->where('course_offering_id', $courseOffering->id);
-                } else {
-                    $q->where('course_id', $course->id);
-                }
-            })->first();
+            ->where('course_offering_id', $offeringId)
+            ->first();
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
-            'user_id' => $student->id,
-            'course_id' => $course->id,
-            'course_offering_id' => $courseOffering?->id,
+            'user_id'            => $student->id,
+            'course_offering_id' => $offeringId,
         ]))->generateCredentialCode();
 
         $pdf = Pdf::loadView('student.certificate_pdf', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'))

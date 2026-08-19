@@ -56,7 +56,6 @@ class QuizController extends Controller
         }
 
         $quiz = Quiz::create([
-            'course_id' => $courseObj->id,
             'master_course_id' => $masterCourseId,
             'title' => $validated['title'],
             'time_limit' => $validated['time_limit'] ?? null,
