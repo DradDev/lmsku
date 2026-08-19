@@ -8,7 +8,6 @@ class Certificate extends Model
 {
     protected $fillable = [
         'user_id',
-        'course_id',
         'course_offering_id',
         'project_id',
         'credential_code',
@@ -220,30 +219,22 @@ class Certificate extends Model
             $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.user.institution', 'lecturer.institution', 'academicTerm'])->find($this->course_offering_id);
         }
 
-        $course = $this->course;
-        if (!$course && $this->course_id) {
-            $course = Course::with(['masterCourse.skills', 'user.institution', 'skills'])->find($this->course_id);
-        }
-
-        $courseCreator = $course?->user ?? $offering?->lecturer ?? $course?->masterCourse?->user;
-        $isVendorCourse = ($courseCreator?->role === 'vendor');
+        $courseCreator = $offering?->lecturer ?? $offering?->masterCourse?->user ?? $offering?->user;
+        $isVendorCourse = ($offering?->type === 'vendor' || $courseCreator?->role === 'vendor');
 
         if ($isVendorCourse) {
             // KATEGORI 4: VENDOR COURSE (Industry Course)
             $vendorCode = static::getVendorCode($courseCreator);
-            $skills = $course?->skills ?? $course?->masterCourse?->skills ?? collect();
+            $skills = $offering?->skills ?? $offering?->masterCourse?->skills ?? collect();
             $skillTag = static::extractSkillsTag($skills);
-            $courseIdFormatted = sprintf('%04d', $course?->id ?? $offering?->id ?? 1);
+            $courseIdFormatted = sprintf('%04d', $offering?->id ?? 1);
             $periodMonth = $completedDate->format('Ym');
 
             return "CERT/IND-CRS-{$vendorCode}-{$skillTag}-{$courseIdFormatted}/{$periodMonth}/{$userIdFormatted}";
         }
 
         // KATEGORI 1: ACADEMIC COURSE (Internal Teknik Komputer / Master Course)
-        $courseCode = $offering?->masterCourse?->code
-            ?? $course?->masterCourse?->code
-            ?? $course?->code
-            ?? 'TK-SE-001';
+        $courseCode = $offering?->masterCourse?->code ?? 'TK-SE-001';
 
         // Tahun & Semester (Ganjil = 1, Genap = 2)
         $termObj = $offering?->academicTerm;

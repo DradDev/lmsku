@@ -52,8 +52,6 @@ class BlockchainVerificationController extends Controller
             'courseOffering.masterCourse',
             'courseOffering.academicTerm',
             'courseOffering.lecturer.institution',
-            'course.masterCourse',
-            'course.user.institution',
             'verifiedByAdmin',
         ])
         ->where(function ($q) use ($queryStr) {

@@ -290,28 +290,14 @@ class CertificateController extends Controller
     {
         $student = Auth::user();
 
-        $isOffering = $course instanceof CourseOffering;
-
-        if ($isOffering) {
-            $isEnrolled = DB::table('enrollments')
-                ->where('user_id', $student->id)
-                ->where('course_offering_id', $course->id)
-                ->exists();
-        } else {
-            $isEnrolled = DB::table('enrollments')
-                ->where('user_id', $student->id)
-                ->where('course_id', $course->id)
-                ->exists();
-        }
+        $isEnrolled = DB::table('enrollments')
+            ->where('user_id', $student->id)
+            ->where('course_offering_id', $course->id)
+            ->exists();
 
         abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
 
-        $course->load(['quizzes.questions']);
-        if ($isOffering) {
-            $course->load(['lecturer.institution', 'masterCourse']);
-        } else {
-            $course->load(['user.institution']);
-        }
+        $course->load(['quizzes.questions', 'lecturer.institution', 'masterCourse']);
 
         $quizzes = $course->quizzes ?? collect();
         if ($quizzes->isEmpty() && isset($course->masterCourse)) {
@@ -337,13 +323,7 @@ class CertificateController extends Controller
         abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '%.');
 
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where(function ($q) use ($isOffering, $course) {
-                if ($isOffering) {
-                    $q->where('course_offering_id', $course->id);
-                } else {
-                    $q->where('course_id', $course->id);
-                }
-            })
+            ->where('course_offering_id', $course->id)
             ->first();
 
         abort_if(
