@@ -97,6 +97,25 @@
                 </div>
             </div>
 
+            <!-- TABS: ALL / ACADEMIC / VENDOR -->
+            <div class="flex items-center gap-2 pb-1 overflow-x-auto">
+                <a href="{{ route('admin.course-offerings.index', array_merge(request()->query(), ['type' => 'all'])) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap {{ ($type ?? 'all') === 'all' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+                    <span>Semua Penawaran</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ ($type ?? 'all') === 'all' ? 'bg-blue-700 text-white' : 'bg-slate-100 text-slate-600' }}">{{ $totalCount ?? 0 }}</span>
+                </a>
+                <a href="{{ route('admin.course-offerings.index', array_merge(request()->query(), ['type' => 'academic'])) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap {{ ($type ?? 'all') === 'academic' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+                    <span>🏛️ Kelas Kampus (Akademik)</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ ($type ?? 'all') === 'academic' ? 'bg-blue-700 text-white' : 'bg-blue-50 text-blue-700' }}">{{ $totalAcademicCount ?? 0 }}</span>
+                </a>
+                <a href="{{ route('admin.course-offerings.index', array_merge(request()->query(), ['type' => 'vendor'])) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap {{ ($type ?? 'all') === 'vendor' ? 'bg-purple-600 text-white shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200' }}">
+                    <span>🏢 Batch Pelatihan Vendor</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] {{ ($type ?? 'all') === 'vendor' ? 'bg-purple-700 text-white' : 'bg-purple-50 text-purple-700 border border-purple-100' }}">{{ $totalVendorCount ?? 0 }}</span>
+                </a>
+            </div>
+
             <!-- TABLE CARD -->
             <div class="bg-white border border-slate-200 shadow-xs rounded-2xl overflow-hidden">
                 <div class="overflow-x-auto">
@@ -128,24 +147,43 @@
                                     </td>
 
                                     <td class="px-5 py-3.5">
-                                        <span class="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
-                                            {{ $offering->section_name ?? '-' }}
-                                        </span>
+                                        @if($offering->type === 'vendor')
+                                            <span class="inline-flex items-center px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-100">
+                                                🏢 {{ $offering->section_name ?? '-' }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-100">
+                                                🏛️ {{ $offering->section_name ?? '-' }}
+                                            </span>
+                                        @endif
                                     </td>
 
                                     <td class="px-5 py-3.5">
-                                        <div class="flex items-center gap-1.5">
-                                            <span class="font-semibold text-slate-800">{{ $offering->academicTerm->name ?? '-' }}</span>
-                                            @if($isTermActive)
-                                                <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>
-                                            @else
-                                                <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-600 border border-slate-200">Non-Aktif</span>
+                                        @if($offering->type === 'vendor')
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded bg-purple-50 text-purple-700 border border-purple-100">
+                                                Mitra Industri
+                                            </span>
+                                        @elseif($offering->academicTerm)
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="font-semibold text-slate-800">{{ $offering->academicTerm->name }}</span>
+                                                @if($isTermActive)
+                                                    <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-50 text-emerald-800 border border-emerald-200">Aktif</span>
+                                                @else
+                                                    <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-100 text-slate-600 border border-slate-200">Non-Aktif</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-slate-400">-</span>
+                                        @endif
+                                    </td>
+
+                                    <td class="px-5 py-3.5">
+                                        <div class="flex flex-col">
+                                            <span class="font-semibold text-slate-800">{{ $offering->lecturer->institution->name ?? ($offering->lecturer->name ?? '-') }}</span>
+                                            @if($offering->type === 'vendor')
+                                                <span class="text-[10px] text-purple-600 font-semibold">{{ $offering->lecturer->name ?? 'Vendor Mitra' }}</span>
                                             @endif
                                         </div>
-                                    </td>
-
-                                    <td class="px-5 py-3.5">
-                                        <span class="font-semibold text-slate-700">{{ $offering->lecturer->name ?? '-' }}</span>
                                     </td>
 
                                     <td class="px-5 py-3.5">

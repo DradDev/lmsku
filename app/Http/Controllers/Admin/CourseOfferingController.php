@@ -16,8 +16,15 @@ class CourseOfferingController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer'])
+        $query = CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer.institution'])
             ->withCount('enrollments');
+
+        $type = $request->query('type', 'all');
+        if ($type === 'academic') {
+            $query->where('type', 'academic');
+        } elseif ($type === 'vendor') {
+            $query->where('type', 'vendor');
+        }
 
         // Filter berdasarkan semester (opsional)
         if ($request->filled('academic_term_id')) {
@@ -25,10 +32,20 @@ class CourseOfferingController extends Controller
         }
 
         $offerings = $query->orderBy('created_at', 'desc')->get();
-
         $terms = AcademicTerm::orderBy('created_at', 'desc')->get();
 
-        return view('admin.course-offerings.index', compact('offerings', 'terms'));
+        $totalCount = CourseOffering::count();
+        $totalAcademicCount = CourseOffering::academic()->count();
+        $totalVendorCount = CourseOffering::vendor()->count();
+
+        return view('admin.course-offerings.index', compact(
+            'offerings', 
+            'terms', 
+            'type', 
+            'totalCount', 
+            'totalAcademicCount', 
+            'totalVendorCount'
+        ));
     }
 
     public function create(Request $request): View

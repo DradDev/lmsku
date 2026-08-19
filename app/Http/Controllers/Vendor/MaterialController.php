@@ -25,12 +25,16 @@ class MaterialController extends Controller
 
         $path = $request->file('file')->store('materials', 'public');
 
-        Material::create([
-            'course_id' => $course->id,
-            'master_course_id' => $course->master_course_id,
-            'title' => $validated['title'],
-            'file_path' => $path,
-        ]);
+        Material::firstOrCreate(
+            [
+                'master_course_id' => $course->master_course_id,
+                'title'            => $validated['title'],
+            ],
+            [
+                'course_id'  => $course->id,
+                'file_path'  => $path,
+            ]
+        );
 
         return back()->with('success', "Materi pembelajaran '{$validated['title']}' berhasil diunggah ke kurikulum induk.");
     }

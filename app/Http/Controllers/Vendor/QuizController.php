@@ -34,16 +34,20 @@ class QuizController extends Controller
         $isUnlimited = $request->boolean('is_unlimited');
         $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
-        $quiz = Quiz::create([
-            'course_id' => $courseObj->id,
-            'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
-            'title' => $validated['title'],
-            'quiz_type' => $validated['quiz_type'],
-            'time_limit' => $validated['time_limit'] ?? null,
-            'max_attempts' => $maxAttemptsValue,
-            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
-            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
-        ]);
+        $quiz = Quiz::firstOrCreate(
+            [
+                'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
+                'title'            => $validated['title'],
+            ],
+            [
+                'course_id'    => $courseObj->id,
+                'quiz_type'    => $validated['quiz_type'],
+                'time_limit'   => $validated['time_limit'] ?? null,
+                'max_attempts' => $maxAttemptsValue,
+                'start_date'   => !empty($validated['start_date']) ? $validated['start_date'] : null,
+                'end_date'     => !empty($validated['end_date']) ? $validated['end_date'] : null,
+            ]
+        );
 
         return back()->with('success', "Kuis '{$quiz->title}' berhasil dibuat. Silakan tambahkan soal evaluasi.");
     }
