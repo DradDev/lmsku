@@ -135,7 +135,6 @@ class QuizController extends Controller
                 'selected_option' => $answer,
                 'is_correct' => $isCorrect,
                 'score' => $isCorrect ? 1 : 0,
-                'feedback' => null,
             ]);
         }
 

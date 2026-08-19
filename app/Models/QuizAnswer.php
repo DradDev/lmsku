@@ -13,7 +13,6 @@ class QuizAnswer extends Model
         'selected_option',
         'is_correct',
         'score',
-        'feedback',
     ];
 
     public function attempt()
