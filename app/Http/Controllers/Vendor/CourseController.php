@@ -152,11 +152,6 @@ class CourseController extends Controller
         $validated['batch_name'] = $validated['batch_name'] ?? 'Batch 1 - 2026';
 
         $course = Course::create($validated);
-        $course->skills()->sync($skillsData);
-
-        if (!empty($validated['tag_ids'])) {
-            $course->tags()->sync($validated['tag_ids']);
-        }
 
         // 3. Pastikan tercatat di CourseOffering (3NF Unified Instance)
         \App\Models\CourseOffering::firstOrCreate(
@@ -348,16 +343,6 @@ class CourseController extends Controller
 
         $course->update($batchUpdate);
 
-        $skillsData = [];
-        foreach ($validated['skill_ids'] as $sId) {
-            $skillsData[$sId] = ['is_main' => true, 'weight' => 1.00];
-        }
-        $course->skills()->sync($skillsData);
-
-        if (isset($validated['tag_ids'])) {
-            $course->tags()->sync($validated['tag_ids']);
-        }
-
         return redirect()
             ->route('vendor.courses.show', $course)
             ->with('success', 'Informasi Program Sertifikasi Industri berhasil diperbarui.');
@@ -436,14 +421,6 @@ class CourseController extends Controller
             'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
             'is_archived' => false,
         ]);
-
-        // Wariskan relasi skills & tags
-        $skillsData = [];
-        foreach ($course->skills as $s) {
-            $skillsData[$s->id] = ['is_main' => $s->pivot->is_main ?? true, 'weight' => $s->pivot->weight ?? 1.00];
-        }
-        $newBatch->skills()->sync($skillsData);
-        $newBatch->tags()->sync($course->tags->pluck('id')->toArray());
 
         // Pastikan tercatat di CourseOffering (3NF Unified Instance)
         \App\Models\CourseOffering::firstOrCreate(

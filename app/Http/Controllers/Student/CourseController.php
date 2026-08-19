@@ -90,8 +90,18 @@ class CourseController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Vendor Certification Courses (Hanya yang tidak diarsip & tidak dibekukan Admin)
-        $vendorCourses = Course::with(['user.institution', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
+        // Vendor Certification Courses (3NF CourseOfferings type=vendor)
+        $vendorOfferings = \App\Models\CourseOffering::vendor()
+            ->with(['lecturer.institution', 'masterCourse.category', 'masterCourse.materials', 'masterCourse.quizzes.questions', 'masterCourse.skills', 'masterCourse.tags'])
+            ->where('is_archived', false)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'published');
+            })
+            ->latest()
+            ->get();
+
+        $vendorCourses = $vendorOfferings->isNotEmpty() ? $vendorOfferings : Course::with(['user.institution', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
             ->whereHas('user', function ($query) {
                 $query->where('role', 'vendor');
             })
@@ -103,13 +113,16 @@ class CourseController extends Controller
             ->latest()
             ->get();
 
+        $vendorUserIds = $vendorCourses->map(fn($vc) => $vc->lecturer_id ?? $vc->user_id)->filter()->unique();
         $vendors = User::with('institution')
-            ->whereIn('id', $vendorCourses->pluck('user_id')->filter()->unique())
+            ->whereIn('id', $vendorUserIds)
             ->orderBy('name')
             ->get();
 
         foreach ($vendorCourses as $vc) {
-            $userEnrollment = $enrollments->firstWhere('course_id', $vc->id);
+            $userEnrollment = $enrollments->first(function ($e) use ($vc) {
+                return $e->course_offering_id == $vc->id || $e->course_id == $vc->id;
+            });
             $vc->is_enrolled = (bool) $userEnrollment;
             $vc->progress = $userEnrollment?->progress_percent ?? 0;
             $vc->is_completed = $userEnrollment?->status === 'completed';

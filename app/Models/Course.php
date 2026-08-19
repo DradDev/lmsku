@@ -93,15 +93,14 @@ class Course extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'course_skills')
-            ->withPivot('weight', 'is_main')
+        return $this->belongsToMany(Skill::class, 'master_course_skills', 'master_course_id', 'skill_id', 'master_course_id', 'id')
+            ->withPivot('is_main')
             ->withTimestamps();
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'course_tags')
-            ->withPivot('weight')
+        return $this->belongsToMany(Tag::class, 'master_course_tags', 'master_course_id', 'tag_id', 'master_course_id', 'id')
             ->withTimestamps();
     }
 

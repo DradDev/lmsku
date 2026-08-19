@@ -22,15 +22,15 @@ class CertificateController extends Controller
     {
         $student = Auth::user();
 
-        // 1. Ambil Seluruh Kursus Mahasiswa (3NF CourseOfferings & Legacy Course)
+        // 1. Ambil Seluruh Kursus Mahasiswa (3NF CourseOfferings)
         $enrollments = Enrollment::with([
             'courseOffering.masterCourse.quizzes.questions',
             'courseOffering.masterCourse.skills',
             'courseOffering.masterCourse.category',
             'courseOffering.lecturer.institution',
             'courseOffering.academicTerm',
-            'course.quizzes.questions',
-            'course.skills',
+            'course.masterCourse.quizzes.questions',
+            'course.masterCourse.skills',
             'course.user.institution',
             'course.category',
         ])
