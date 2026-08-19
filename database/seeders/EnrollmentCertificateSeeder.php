@@ -35,7 +35,6 @@ class EnrollmentCertificateSeeder extends Seeder
                         'course_offering_id' => $offeringEmbedded->id,
                     ],
                     [
-                        'course_id' => $courseEmbedded ? $courseEmbedded->id : null,
                         'progress_percent' => 100,
                         'completed_material_count' => 2,
                         'completed_quiz_count' => 2,
@@ -55,7 +54,6 @@ class EnrollmentCertificateSeeder extends Seeder
                         'course_offering_id' => $offeringEmbedded->id,
                     ],
                     [
-                        'course_id' => $courseEmbedded ? $courseEmbedded->id : null,
                         'score' => 92,
                         'blockchain_hash' => $hash1,
                         'blockchain_id' => 'BLK-' . strtoupper(Str::random(10)),
@@ -73,7 +71,6 @@ class EnrollmentCertificateSeeder extends Seeder
         // 2. Enrollment Mahasiswa untuk Course Software Engineering (In Progress)
         if ($student && $mcSoftware) {
             $offeringSoftware = CourseOffering::where('master_course_id', $mcSoftware->id)->first();
-            $courseSoftware = Course::where('master_course_id', $mcSoftware->id)->first();
 
             if ($offeringSoftware) {
                 Enrollment::updateOrCreate(
@@ -82,7 +79,6 @@ class EnrollmentCertificateSeeder extends Seeder
                         'course_offering_id' => $offeringSoftware->id,
                     ],
                     [
-                        'course_id' => $courseSoftware ? $courseSoftware->id : null,
                         'progress_percent' => 50,
                         'completed_material_count' => 1,
                         'completed_quiz_count' => 1,

@@ -21,7 +21,7 @@ class CourseController extends Controller
         $vendorId = Auth::id();
 
         // 1. Pastikan seluruh legacy course milik vendor terhubung ke MasterCourse
-        $legacyWithoutMaster = Course::where('user_id', $vendorId)
+        $legacyWithoutMaster = Course::where('lecturer_id', $vendorId)
             ->whereNull('master_course_id')
             ->get();
 
@@ -57,7 +57,7 @@ class CourseController extends Controller
 
         // Ambil data courses untuk fallback & kalkulasi
         $allBatches = Course::with(['materials', 'quizzes', 'enrollments', 'category'])
-            ->where('user_id', $vendorId)
+            ->where('lecturer_id', $vendorId)
             ->latest()
             ->get();
 
@@ -144,37 +144,24 @@ class CourseController extends Controller
             $masterCourse->tags()->sync($validated['tag_ids']);
         }
 
-        // 2. Buat Inaugural Batch (Angkatan Perdana)
-        $validated['user_id'] = Auth::id();
-        $validated['master_course_id'] = $masterCourse->id;
-        $validated['progress'] = 0;
-        $validated['duration_weeks'] = $validated['duration_weeks'] ?? 4;
-        $validated['batch_name'] = $validated['batch_name'] ?? 'Batch 1 - 2026';
-
-        $course = Course::create($validated);
-
-        // 3. Pastikan tercatat di CourseOffering (3NF Unified Instance)
-        \App\Models\CourseOffering::firstOrCreate(
-            [
-                'master_course_id' => $masterCourse->id,
-                'section_name'     => $validated['batch_name'],
-                'type'             => 'vendor',
-            ],
-            [
-                'lecturer_id'           => Auth::id(),
-                'academic_term_id'      => null,
-                'capacity'              => 40,
-                'start_date'            => $course->start_date ?? now(),
-                'end_date'              => $course->end_date ?? now()->addWeeks($validated['duration_weeks'] ?? 4),
-                'certificate_threshold' => $validated['certificate_threshold'],
-                'status'                => 'published',
-                'is_archived'           => false,
-            ]
-        );
+        // 2. Buat Inaugural Batch (CourseOffering type=vendor)
+        $course = \App\Models\CourseOffering::create([
+            'master_course_id'      => $masterCourse->id,
+            'type'                  => 'vendor',
+            'lecturer_id'           => Auth::id(),
+            'academic_term_id'      => null,
+            'section_name'          => $validated['batch_name'] ?? 'Batch 1 - 2026',
+            'capacity'              => 40,
+            'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
+            'status'                => 'published',
+            'is_archived'           => false,
+            'start_date'            => !empty($validated['start_date']) ? $validated['start_date'] : now(),
+            'end_date'              => !empty($validated['end_date']) ? $validated['end_date'] : now()->addWeeks($validated['duration_weeks'] ?? 4),
+        ]);
 
         return redirect()
             ->route('vendor.courses.show', $course)
-            ->with('success', 'Program Sertifikasi Industri & Angkatan ' . $course->batch_name . ' berhasil dipublikasikan.');
+            ->with('success', 'Program Sertifikasi Industri & Batch Perdana berhasil dibuat.');
     }
 
     public function show(Course $course): View
@@ -350,7 +337,7 @@ class CourseController extends Controller
 
     public function updateBatch(Request $request, Course $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke batch ini.');
         }
 
@@ -363,11 +350,25 @@ class CourseController extends Controller
             'is_archived' => ['nullable', 'boolean'],
         ]);
 
+        $updateData = [
+            'section_name' => $validated['batch_name'],
+            'certificate_threshold' => $validated['certificate_threshold'],
+        ];
+
         if ($request->has('is_archived')) {
-            $validated['is_archived'] = (bool)$request->is_archived;
+            $updateData['is_archived'] = (bool)$request->is_archived;
         }
 
-        $course->update($validated);
+        $startDate = !empty($validated['start_date']) ? \Carbon\Carbon::parse($validated['start_date']) : ($course->start_date ?? now());
+        $updateData['start_date'] = $startDate;
+
+        if (!empty($validated['end_date'])) {
+            $updateData['end_date'] = \Carbon\Carbon::parse($validated['end_date']);
+        } elseif (!empty($validated['duration_weeks'])) {
+            $updateData['end_date'] = $startDate->copy()->addWeeks((int)$validated['duration_weeks']);
+        }
+
+        $course->update($updateData);
 
         return redirect()
             ->route('vendor.courses.show', $course)
@@ -406,40 +407,19 @@ class CourseController extends Controller
             $course->update(['master_course_id' => $masterCourse->id]);
         }
 
-        $newBatch = Course::create([
-            'name' => $course->name,
-            'batch_name' => $validated['batch_name'],
-            'description' => $course->description,
-            'user_id' => Auth::id(),
-            'master_course_id' => $course->master_course_id,
-            'level' => $course->level,
-            'progress' => 0,
-            'duration_weeks' => $validated['duration_weeks'] ?? $course->duration_weeks ?? 4,
+        $newBatch = \App\Models\CourseOffering::create([
+            'master_course_id'      => $course->master_course_id,
+            'type'                  => 'vendor',
+            'lecturer_id'           => Auth::id(),
+            'academic_term_id'      => null,
+            'section_name'          => $validated['batch_name'],
+            'capacity'              => 40,
+            'start_date'            => !empty($validated['start_date']) ? $validated['start_date'] : now(),
+            'end_date'              => !empty($validated['end_date']) ? $validated['end_date'] : now()->addWeeks($validated['duration_weeks'] ?? 4),
             'certificate_threshold' => $validated['certificate_threshold'],
-            'category_id' => $course->category_id,
-            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
-            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
-            'is_archived' => false,
+            'status'                => 'published',
+            'is_archived'           => false,
         ]);
-
-        // Pastikan tercatat di CourseOffering (3NF Unified Instance)
-        \App\Models\CourseOffering::firstOrCreate(
-            [
-                'master_course_id' => $course->master_course_id,
-                'section_name'     => $validated['batch_name'],
-                'type'             => 'vendor',
-            ],
-            [
-                'lecturer_id'           => Auth::id(),
-                'academic_term_id'      => null,
-                'capacity'              => 40,
-                'start_date'            => $newBatch->start_date ?? now(),
-                'end_date'              => $newBatch->end_date ?? now()->addWeeks($newBatch->duration_weeks ?? 4),
-                'certificate_threshold' => $validated['certificate_threshold'],
-                'status'                => 'published',
-                'is_archived'           => false,
-            ]
-        );
 
         return redirect()
             ->route('vendor.courses.show', $newBatch)

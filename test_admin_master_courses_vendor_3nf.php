@@ -55,7 +55,7 @@ $batch2 = $targetMasterCourse->courses->skip(1)->first() ?? $batch1;
 
 $student = User::where('role', 'student')->first();
 Enrollment::updateOrCreate(
-    ['user_id' => $student->id, 'course_id' => $batch1->id],
+    ['user_id' => $student->id, 'course_offering_id' => $batch1->id],
     ['status' => 'completed', 'progress_percent' => 95]
 );
 

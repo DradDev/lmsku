@@ -42,28 +42,6 @@ echo "   [OK] Vendor offerings structure is valid!\n\n";
 
 // 3. Check Enrollments Foreign Key Integrity
 echo "3. Checking Enrollments Integrity (course_offering_id strictly populated)...\n";
-$nullEnrollments = Enrollment::whereNull('course_offering_id')->get();
-foreach ($nullEnrollments as $ne) {
-    if ($ne->course_id) {
-        $course = \App\Models\Course::find($ne->course_id);
-        if ($course && $course->master_course_id) {
-            $mapped = CourseOffering::where('master_course_id', $course->master_course_id)
-                ->where('section_name', $course->batch_name)
-                ->first();
-            if ($mapped) {
-                $alreadyExists = Enrollment::where('user_id', $ne->user_id)
-                    ->where('course_offering_id', $mapped->id)
-                    ->where('id', '!=', $ne->id)
-                    ->exists();
-                if ($alreadyExists) {
-                    $ne->delete();
-                } else {
-                    $ne->update(['course_offering_id' => $mapped->id]);
-                }
-            }
-        }
-    }
-}
 $enrollmentsWithoutOffering = Enrollment::whereNull('course_offering_id')->count();
 assert($enrollmentsWithoutOffering === 0, "No enrollment should have null course_offering_id");
 echo "   [OK] All " . Enrollment::count() . " enrollments are strictly linked to course_offering_id!\n\n";

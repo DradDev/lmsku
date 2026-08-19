@@ -18,6 +18,8 @@ class CourseOffering extends Model
         'is_archived',
         'certificate_threshold',
         'status',
+        'user_id',
+        'batch_name',
     ];
 
     protected $casts = [
@@ -48,6 +50,18 @@ class CourseOffering extends Model
         return $this->belongsTo(User::class, 'lecturer_id');
     }
 
+    public function category()
+    {
+        return $this->hasOneThrough(
+            Category::class,
+            MasterCourse::class,
+            'id',
+            'id',
+            'master_course_id',
+            'category_id'
+        );
+    }
+
     public function materials()
     {
         return $this->hasMany(Material::class, 'master_course_id', 'master_course_id');
@@ -75,7 +89,36 @@ class CourseOffering extends Model
         return $this->hasMany(Certificate::class, 'course_offering_id');
     }
 
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'enrollments', 'course_offering_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class, 'master_course_skills', 'master_course_id', 'skill_id', 'master_course_id', 'id')
+            ->withPivot('is_main')
+            ->withTimestamps();
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'master_course_tags', 'master_course_id', 'tag_id', 'master_course_id', 'id')
+            ->withTimestamps();
+    }
+
     // Accessors for 100% Backward Compatibility with Blade Views
+    public function getUserIdAttribute(): ?int
+    {
+        return $this->lecturer_id;
+    }
+
+    public function setUserIdAttribute($value): void
+    {
+        $this->attributes['lecturer_id'] = $value;
+    }
+
     public function getNameAttribute(): string
     {
         return $this->masterCourse->name ?? 'Course';
@@ -84,6 +127,19 @@ class CourseOffering extends Model
     public function getBatchNameAttribute(): string
     {
         return $this->section_name ?? 'Batch 1';
+    }
+
+    public function setBatchNameAttribute($value): void
+    {
+        $this->attributes['section_name'] = $value;
+    }
+
+    public function getDurationWeeksAttribute(): int
+    {
+        if ($this->start_date && $this->end_date) {
+            return max(1, (int) round($this->start_date->diffInWeeks($this->end_date)));
+        }
+        return 4;
     }
 
     public function getCodeAttribute(): ?string

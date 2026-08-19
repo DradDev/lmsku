@@ -63,7 +63,7 @@ if (!$masterCourse) {
 echo "   [OK] MasterCourse created: ID {$masterCourse->id} (Code: {$masterCourse->code})\n";
 
 $batch1 = Course::where('master_course_id', $masterCourse->id)
-    ->where('batch_name', 'Batch 1 - Q1 2026')
+    ->where('section_name', 'Batch 1 - Q1 2026')
     ->first();
 
 if (!$batch1) {
@@ -124,7 +124,7 @@ $reqBatch2 = Request::create(route('vendor.courses.launch-batch', $batch1->id), 
 $respBatch2 = $courseController->launchBatch($reqBatch2, $batch1);
 
 $batch2 = Course::where('master_course_id', $masterCourse->id)
-    ->where('batch_name', 'Batch 2 - Q3 2026 Intake')
+    ->where('section_name', 'Batch 2 - Q3 2026 Intake')
     ->first();
 
 if ($batch2) {
@@ -160,12 +160,12 @@ $offeringBatch2 = \App\Models\CourseOffering::where('master_course_id', $masterC
 
 Enrollment::updateOrCreate(
     ['user_id' => $student1->id, 'course_offering_id' => $offeringBatch1?->id ?? $batch1->id],
-    ['course_id' => $batch1->id, 'status' => 'in_progress', 'progress_percent' => 50]
+    ['status' => 'in_progress', 'progress_percent' => 50]
 );
 
 Enrollment::updateOrCreate(
     ['user_id' => $student2->id, 'course_offering_id' => $offeringBatch2?->id ?? $batch2->id],
-    ['course_id' => $batch2->id, 'status' => 'completed', 'progress_percent' => 100]
+    ['status' => 'completed', 'progress_percent' => 100]
 );
 
 $batch1EnrollmentsCount = $batch1->fresh()->enrollments()->count();

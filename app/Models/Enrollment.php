@@ -29,6 +29,16 @@ class Enrollment extends Model
         'last_activity_at' => 'datetime',
     ];
 
+    public function setCourseIdAttribute($value): void
+    {
+        $this->attributes['course_offering_id'] = $value;
+    }
+
+    public function getCourseIdAttribute(): ?int
+    {
+        return $this->attributes['course_offering_id'] ?? null;
+    }
+
     protected static function booted()
     {
         static::saving(function ($enrollment) {
