@@ -133,7 +133,6 @@ class QuizController extends Controller
                 'question_id' => $question->id,
                 'user_id' => $user->id,
                 'selected_option' => $answer,
-                'answer_text' => null,
                 'is_correct' => $isCorrect,
                 'score' => $isCorrect ? 1 : 0,
                 'feedback' => null,
