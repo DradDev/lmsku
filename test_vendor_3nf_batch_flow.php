@@ -151,14 +151,21 @@ echo "\n7. Testing Student Enrollments isolation per Batch...\n";
 $student1 = User::where('role', 'student')->first();
 $student2 = User::where('role', 'student')->skip(1)->first() ?? $student1;
 
+$offeringBatch1 = \App\Models\CourseOffering::where('master_course_id', $masterCourse->id)
+    ->where('section_name', $batch1->batch_name)
+    ->first();
+$offeringBatch2 = \App\Models\CourseOffering::where('master_course_id', $masterCourse->id)
+    ->where('section_name', $batch2->batch_name)
+    ->first();
+
 Enrollment::updateOrCreate(
-    ['user_id' => $student1->id, 'course_id' => $batch1->id],
-    ['status' => 'in_progress', 'progress_percent' => 50]
+    ['user_id' => $student1->id, 'course_offering_id' => $offeringBatch1?->id ?? $batch1->id],
+    ['course_id' => $batch1->id, 'status' => 'in_progress', 'progress_percent' => 50]
 );
 
 Enrollment::updateOrCreate(
-    ['user_id' => $student2->id, 'course_id' => $batch2->id],
-    ['status' => 'completed', 'progress_percent' => 100]
+    ['user_id' => $student2->id, 'course_offering_id' => $offeringBatch2?->id ?? $batch2->id],
+    ['course_id' => $batch2->id, 'status' => 'completed', 'progress_percent' => 100]
 );
 
 $batch1EnrollmentsCount = $batch1->fresh()->enrollments()->count();

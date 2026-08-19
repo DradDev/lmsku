@@ -8,6 +8,7 @@ class CourseOffering extends Model
 {
     protected $fillable = [
         'master_course_id',
+        'type',
         'academic_term_id',
         'lecturer_id',
         'section_name',
@@ -55,11 +56,6 @@ class CourseOffering extends Model
     public function getMaterialsAttribute()
     {
         return Material::where('master_course_id', $this->master_course_id)
-            ->where(function ($q) {
-                $q->whereNull('course_offering_id')
-                  ->orWhere('course_offering_id', $this->id)
-                  ->orWhere('course_id', $this->id);
-            })
             ->latest()
             ->get();
     }
@@ -85,6 +81,16 @@ class CourseOffering extends Model
         return $this->masterCourse->name ?? 'Course';
     }
 
+    public function getBatchNameAttribute(): string
+    {
+        return $this->section_name ?? 'Batch 1';
+    }
+
+    public function getCodeAttribute(): ?string
+    {
+        return $this->masterCourse->code ?? null;
+    }
+
     public function getDescriptionAttribute(): ?string
     {
         return $this->masterCourse->description ?? null;
@@ -98,6 +104,21 @@ class CourseOffering extends Model
     public function getCategoryIdAttribute(): ?int
     {
         return $this->masterCourse->category_id ?? null;
+    }
+
+    public function getCategoryAttribute()
+    {
+        return $this->masterCourse->category ?? null;
+    }
+
+    public function getSkillsAttribute()
+    {
+        return $this->masterCourse ? $this->masterCourse->skills : collect();
+    }
+
+    public function getTagsAttribute()
+    {
+        return $this->masterCourse ? $this->masterCourse->tags : collect();
     }
 
     /**
@@ -142,11 +163,30 @@ class CourseOffering extends Model
     }
 
     /**
-     * Scope: hanya kelas yang published
+     * Scopes
      */
     public function scopePublished($query)
     {
         return $query->where('status', 'published');
+    }
+
+    public function scopeAcademic($query)
+    {
+        return $query->where('type', 'academic');
+    }
+
+    public function scopeVendor($query)
+    {
+        return $query->where('type', 'vendor');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_archived', false)
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now()->startOfDay());
+            });
     }
 }
 

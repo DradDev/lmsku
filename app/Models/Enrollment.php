@@ -29,6 +29,28 @@ class Enrollment extends Model
         'last_activity_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::saving(function ($enrollment) {
+            if (empty($enrollment->course_offering_id) && !empty($enrollment->course_id)) {
+                $offering = CourseOffering::find($enrollment->course_id);
+                if ($offering) {
+                    $enrollment->course_offering_id = $offering->id;
+                } else {
+                    $course = Course::find($enrollment->course_id);
+                    if ($course && $course->master_course_id) {
+                        $mapped = CourseOffering::where('master_course_id', $course->master_course_id)
+                            ->where('section_name', $course->batch_name)
+                            ->first();
+                        if ($mapped) {
+                            $enrollment->course_offering_id = $mapped->id;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

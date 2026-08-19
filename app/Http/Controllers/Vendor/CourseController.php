@@ -158,6 +158,25 @@ class CourseController extends Controller
             $course->tags()->sync($validated['tag_ids']);
         }
 
+        // 3. Pastikan tercatat di CourseOffering (3NF Unified Instance)
+        \App\Models\CourseOffering::firstOrCreate(
+            [
+                'master_course_id' => $masterCourse->id,
+                'section_name'     => $validated['batch_name'],
+                'type'             => 'vendor',
+            ],
+            [
+                'lecturer_id'           => Auth::id(),
+                'academic_term_id'      => null,
+                'capacity'              => 40,
+                'start_date'            => $course->start_date ?? now(),
+                'end_date'              => $course->end_date ?? now()->addWeeks($validated['duration_weeks'] ?? 4),
+                'certificate_threshold' => $validated['certificate_threshold'],
+                'status'                => 'published',
+                'is_archived'           => false,
+            ]
+        );
+
         return redirect()
             ->route('vendor.courses.show', $course)
             ->with('success', 'Program Sertifikasi Industri & Angkatan ' . $course->batch_name . ' berhasil dipublikasikan.');
@@ -425,6 +444,25 @@ class CourseController extends Controller
         }
         $newBatch->skills()->sync($skillsData);
         $newBatch->tags()->sync($course->tags->pluck('id')->toArray());
+
+        // Pastikan tercatat di CourseOffering (3NF Unified Instance)
+        \App\Models\CourseOffering::firstOrCreate(
+            [
+                'master_course_id' => $course->master_course_id,
+                'section_name'     => $validated['batch_name'],
+                'type'             => 'vendor',
+            ],
+            [
+                'lecturer_id'           => Auth::id(),
+                'academic_term_id'      => null,
+                'capacity'              => 40,
+                'start_date'            => $newBatch->start_date ?? now(),
+                'end_date'              => $newBatch->end_date ?? now()->addWeeks($newBatch->duration_weeks ?? 4),
+                'certificate_threshold' => $validated['certificate_threshold'],
+                'status'                => 'published',
+                'is_archived'           => false,
+            ]
+        );
 
         return redirect()
             ->route('vendor.courses.show', $newBatch)

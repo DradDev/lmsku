@@ -91,10 +91,14 @@ class CalculateUserInterestProfiles extends Command
     private function calculateCourseInterest(?string $userId = null)
     {
         $query = DB::table('learning_activity_logs')
-            ->join('course_tags', 'learning_activity_logs.course_id', '=', 'course_tags.course_id')
+            ->leftJoin('course_offerings', 'learning_activity_logs.course_offering_id', '=', 'course_offerings.id')
+            ->join('master_course_tags', function ($join) {
+                $join->on('course_offerings.master_course_id', '=', 'master_course_tags.master_course_id')
+                     ->orOn('learning_activity_logs.course_id', '=', 'master_course_tags.master_course_id');
+            })
             ->select(
                 'learning_activity_logs.user_id',
-                'course_tags.tag_id',
+                'master_course_tags.tag_id',
                 DB::raw('SUM(
                     CASE learning_activity_logs.activity_type
                         WHEN "view_course" THEN 1
@@ -104,12 +108,15 @@ class CalculateUserInterestProfiles extends Command
                         WHEN "submit_assignment" THEN 3
                         WHEN "enroll_course" THEN 4
                         ELSE 0
-                    END * course_tags.weight
+                    END
                 ) as interest_score'),
                 DB::raw('COUNT(learning_activity_logs.id) as interaction_count'),
-                DB::raw('MAX(learning_activity_logs.occurred_at) as last_activity_at')
+                DB::raw('MAX(learning_activity_logs.created_at) as last_activity_at')
             )
-            ->whereNotNull('learning_activity_logs.course_id')
+            ->where(function ($q) {
+                $q->whereNotNull('learning_activity_logs.course_offering_id')
+                  ->orWhereNotNull('learning_activity_logs.course_id');
+            })
             ->whereIn('learning_activity_logs.activity_type', [
                 'view_course',
                 'view_material',
@@ -118,7 +125,7 @@ class CalculateUserInterestProfiles extends Command
                 'submit_assignment',
                 'enroll_course',
             ])
-            ->groupBy('learning_activity_logs.user_id', 'course_tags.tag_id');
+            ->groupBy('learning_activity_logs.user_id', 'master_course_tags.tag_id');
 
         if ($userId) {
             $query->where('learning_activity_logs.user_id', $userId);
