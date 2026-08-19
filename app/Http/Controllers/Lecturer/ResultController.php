@@ -14,13 +14,13 @@ class ResultController extends Controller
     public function index(Course $course, Quiz $quiz): View
     {
         abort_unless(
-            $course->user_id === Auth::id(),
+            ($course->lecturer_id ?? $course->user_id) === Auth::id(),
             403,
             'Kamu tidak memiliki akses ke course ini.'
         );
 
         abort_unless(
-            $quiz->course_id === $course->id,
+            $quiz->master_course_id === $course->master_course_id,
             403,
             'Quiz tidak valid.'
         );
@@ -36,13 +36,13 @@ class ResultController extends Controller
     public function show(Course $course, Quiz $quiz, QuizAttempt $result): View
     {
         abort_unless(
-            $course->user_id === Auth::id(),
+            ($course->lecturer_id ?? $course->user_id) === Auth::id(),
             403,
             'Kamu tidak memiliki akses ke course ini.'
         );
 
         abort_unless(
-            $quiz->course_id === $course->id,
+            $quiz->master_course_id === $course->master_course_id,
             403,
             'Quiz tidak valid.'
         );

@@ -31,11 +31,11 @@ class Material extends Model
     }
 
     /**
-     * Legacy course relationship
+     * Backward compatibility course relationship
      */
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
     }
 }
 

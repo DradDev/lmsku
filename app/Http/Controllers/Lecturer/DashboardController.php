@@ -19,38 +19,30 @@ class DashboardController extends Controller
         $tab = $request->input('tab', 'overview');
         $lecturerId = Auth::id();
 
-        // Ambil master_course_id dari course_offerings milik Dosen
-        $masterCourseIds = \App\Models\CourseOffering::where('lecturer_id', $lecturerId)
-            ->pluck('master_course_id')
-            ->toArray();
-
-        // Ambil legacy course_id jika ada
-        $legacyCourseIds = \App\Models\Course::where('user_id', $lecturerId)
-            ->pluck('id')
-            ->toArray();
+        // Ambil master_course_id dan offering id milik Dosen
+        $offerings = \App\Models\CourseOffering::where('lecturer_id', $lecturerId)->get();
+        $masterCourseIds = $offerings->pluck('master_course_id')->filter()->unique()->toArray();
+        $offeringIds = $offerings->pluck('id')->toArray();
 
         $materials = Material::query()
-            ->where(function ($query) use ($masterCourseIds, $legacyCourseIds) {
+            ->where(function ($query) use ($masterCourseIds, $offeringIds) {
                 $query->whereIn('master_course_id', $masterCourseIds)
-                    ->orWhereIn('course_id', $legacyCourseIds);
+                    ->orWhereIn('course_offering_id', $offeringIds);
             })
             ->latest()
             ->get();
 
         $questions = Question::query()
             ->where('user_id', $lecturerId)
-            ->with(['quiz.course'])
+            ->with(['quiz.masterCourse'])
             ->orderBy('id', 'asc')
             ->get();
 
         $selectedQuizId = $request->input('quiz_id');
 
         $quizzes = Quiz::query()
-            ->where(function ($query) use ($masterCourseIds, $legacyCourseIds) {
-                $query->whereIn('master_course_id', $masterCourseIds)
-                    ->orWhereIn('course_id', $legacyCourseIds);
-            })
-            ->with(['course'])
+            ->whereIn('master_course_id', $masterCourseIds)
+            ->with(['masterCourse'])
             ->withCount('questions')
             ->when($selectedQuizId, function ($query) use ($selectedQuizId) {
                 $query->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [(int) $selectedQuizId]);
@@ -72,9 +64,9 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'course'])
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz.masterCourse'])
+            ->whereHas('quiz.masterCourse.offerings', function ($query) {
+                $query->where('lecturer_id', Auth::id());
             })
             ->latest()
             ->get();

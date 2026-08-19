@@ -164,8 +164,8 @@
                                         {{ optional($cert->completed_at ?? $cert->created_at)->format('d M Y') }}
                                     </span>
 
-                                    @if($cert->course_id)
-                                        <a href="{{ route('student.certificate.show', $cert->course_id) }}" target="_blank"
+                                    @if($cert->course_offering_id || $cert->course_id)
+                                        <a href="{{ route('student.certificate.show', $cert->course_offering_id ?? $cert->course_id) }}" target="_blank"
                                            class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition shadow-xs">
                                             Lihat Sertifikat
                                         </a>

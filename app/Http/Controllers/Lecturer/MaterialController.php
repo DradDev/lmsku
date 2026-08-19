@@ -16,33 +16,21 @@ class MaterialController extends Controller
     {
         $lecturerId = Auth::id();
 
-        // 1. Check via course_offering_id
+        // 1. Check via master_course_id
+        if ($material->master_course_id) {
+            $hasTeachingRole = CourseOffering::where('master_course_id', $material->master_course_id)
+                ->where('lecturer_id', $lecturerId)
+                ->exists();
+
+            if ($hasTeachingRole) {
+                return;
+            }
+        }
+
+        // 2. Check via course_offering_id
         if ($material->course_offering_id) {
             $offering = CourseOffering::find($material->course_offering_id);
             if ($offering && (int)$offering->lecturer_id === (int)$lecturerId) {
-                return;
-            }
-        }
-
-        // 2. Check via master_course_id (is lecturer assigned to any offering of this master course?)
-        if ($material->master_course_id) {
-            $isAssigned = CourseOffering::where('master_course_id', $material->master_course_id)
-                ->where('lecturer_id', $lecturerId)
-                ->exists();
-            if ($isAssigned) {
-                return;
-            }
-        }
-
-        // 3. Check via course_id
-        if ($material->course_id) {
-            $offering = CourseOffering::find($material->course_id);
-            if ($offering && (int)$offering->lecturer_id === (int)$lecturerId) {
-                return;
-            }
-
-            $legacyCourse = Course::find($material->course_id);
-            if ($legacyCourse && (int)$legacyCourse->user_id === (int)$lecturerId) {
                 return;
             }
         }
@@ -85,7 +73,7 @@ class MaterialController extends Controller
                     ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan materi dikunci (Read-Only).');
             }
         } else {
-            $isLecturer = (int)$courseObj->user_id === (int)$lecturerId;
+            $isLecturer = (int)($courseObj->lecturer_id ?? $courseObj->user_id) === (int)$lecturerId;
         }
 
         abort_unless($isLecturer, 403, 'Kamu tidak memiliki akses ke course ini.');
@@ -109,7 +97,7 @@ class MaterialController extends Controller
                     ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan materi ditolak.');
             }
         } else {
-            $isLecturer = (int)$courseObj->user_id === (int)$lecturerId;
+            $isLecturer = (int)($courseObj->lecturer_id ?? $courseObj->user_id) === (int)$lecturerId;
         }
 
         abort_unless($isLecturer, 403, 'Kamu tidak memiliki akses ke course ini.');
@@ -177,8 +165,8 @@ class MaterialController extends Controller
         if (isset($validated['target_scope'])) {
             if ($validated['target_scope'] === 'all') {
                 $updateData['course_offering_id'] = null;
-            } elseif ($material->course_id) {
-                $updateData['course_offering_id'] = $material->course_id;
+            } elseif (!empty($request->course_offering_id)) {
+                $updateData['course_offering_id'] = $request->course_offering_id;
             }
         }
 
@@ -192,7 +180,10 @@ class MaterialController extends Controller
 
         $material->update($updateData);
 
-        $redirectId = $material->course_offering_id ?? $material->course_id;
+        $offering = CourseOffering::where('master_course_id', $material->master_course_id)
+            ->where('lecturer_id', Auth::id())
+            ->first();
+        $redirectId = $material->course_offering_id ?? ($offering?->id ?? 1);
 
         return redirect()
             ->route('lecturer.courses.show', $redirectId)
@@ -204,13 +195,16 @@ class MaterialController extends Controller
         $this->authorizeLecturer($material);
         $this->checkTermActive($material);
 
-        $redirectId = $material->course_offering_id ?? $material->course_id;
+        $offering = CourseOffering::where('master_course_id', $material->master_course_id)
+            ->where('lecturer_id', Auth::id())
+            ->first();
+        $redirectId = $material->course_offering_id ?? ($offering?->id ?? 1);
 
         if (!empty($material->file_path) && Storage::disk('public')->exists($material->file_path)) {
             Storage::disk('public')->delete($material->file_path);
         }
 
-        $courseId = $material->course_offering_id ?? $material->course_id;
+        $courseId = $material->course_offering_id ?? $offering?->id;
         $material->delete();
 
         if ($courseId) {

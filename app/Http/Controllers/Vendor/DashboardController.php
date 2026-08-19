@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseOffering;
+use App\Models\MasterCourse;
 use App\Models\Material;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
@@ -21,8 +23,12 @@ class DashboardController extends Controller
         $tab = $request->input('tab', 'overview');
         $vendorId = Auth::id();
 
-        // Vendor Industry Certified Courses
-        $courses = Course::where('user_id', $vendorId)
+        // Vendor Master Courses & Batches
+        $masterCourses = MasterCourse::where('user_id', $vendorId)->get();
+        $masterCourseIds = $masterCourses->pluck('id')->toArray();
+
+        $courses = CourseOffering::where('lecturer_id', $vendorId)
+            ->orWhereIn('master_course_id', $masterCourseIds)
             ->withCount(['students', 'materials', 'quizzes'])
             ->latest()
             ->get();
@@ -38,15 +44,16 @@ class DashboardController extends Controller
         $projectIds = $projects->pluck('id')->toArray();
 
         // Materials & Quizzes created by Vendor
-        $materials = Material::whereIn('course_id', $courseIds)
-            ->with('course')
+        $materials = Material::whereIn('master_course_id', $masterCourseIds)
+            ->orWhereIn('course_offering_id', $courseIds)
+            ->with('masterCourse')
             ->latest()
             ->get();
 
         $selectedQuizId = $request->input('quiz_id');
 
-        $quizzes = Quiz::whereIn('course_id', $courseIds)
-            ->with(['course', 'questions'])
+        $quizzes = Quiz::whereIn('master_course_id', $masterCourseIds)
+            ->with(['masterCourse', 'questions'])
             ->withCount('questions')
             ->when($selectedQuizId, function ($query) use ($selectedQuizId) {
                 $query->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [(int) $selectedQuizId]);
@@ -55,7 +62,7 @@ class DashboardController extends Controller
             ->get();
 
         $questions = Question::where('user_id', $vendorId)
-            ->with(['quiz.course', 'skills'])
+            ->with(['quiz.masterCourse', 'skills'])
             ->orderBy('id', 'asc')
             ->get();
 

@@ -16,13 +16,13 @@ class QuizAnswerController extends Controller
     public function index(Course $course, Quiz $quiz): View
     {
         abort_unless(
-            $course->user_id === Auth::id(),
+            ($course->lecturer_id ?? $course->user_id) === Auth::id(),
             403,
             'Kamu tidak memiliki akses ke course ini.'
         );
 
         abort_unless(
-            $quiz->course_id === $course->id,
+            $quiz->master_course_id === $course->master_course_id,
             403,
             'Quiz tidak valid.'
         );
@@ -44,13 +44,13 @@ class QuizAnswerController extends Controller
     public function grade(Request $request, Course $course, Quiz $quiz, QuizAnswer $quizAnswer): RedirectResponse
     {
         abort_unless(
-            $course->user_id === Auth::id(),
+            ($course->lecturer_id ?? $course->user_id) === Auth::id(),
             403,
             'Kamu tidak memiliki akses ke course ini.'
         );
 
         abort_unless(
-            $quiz->course_id === $course->id,
+            $quiz->master_course_id === $course->master_course_id,
             403,
             'Quiz tidak valid.'
         );

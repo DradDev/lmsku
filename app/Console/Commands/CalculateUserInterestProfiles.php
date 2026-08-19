@@ -91,11 +91,8 @@ class CalculateUserInterestProfiles extends Command
     private function calculateCourseInterest(?string $userId = null)
     {
         $query = DB::table('learning_activity_logs')
-            ->leftJoin('course_offerings', 'learning_activity_logs.course_offering_id', '=', 'course_offerings.id')
-            ->join('master_course_tags', function ($join) {
-                $join->on('course_offerings.master_course_id', '=', 'master_course_tags.master_course_id')
-                     ->orOn('learning_activity_logs.course_id', '=', 'master_course_tags.master_course_id');
-            })
+            ->join('course_offerings', 'learning_activity_logs.course_offering_id', '=', 'course_offerings.id')
+            ->join('master_course_tags', 'course_offerings.master_course_id', '=', 'master_course_tags.master_course_id')
             ->select(
                 'learning_activity_logs.user_id',
                 'master_course_tags.tag_id',
@@ -113,10 +110,7 @@ class CalculateUserInterestProfiles extends Command
                 DB::raw('COUNT(learning_activity_logs.id) as interaction_count'),
                 DB::raw('MAX(learning_activity_logs.created_at) as last_activity_at')
             )
-            ->where(function ($q) {
-                $q->whereNotNull('learning_activity_logs.course_offering_id')
-                  ->orWhereNotNull('learning_activity_logs.course_id');
-            })
+            ->whereNotNull('learning_activity_logs.course_offering_id')
             ->whereIn('learning_activity_logs.activity_type', [
                 'view_course',
                 'view_material',

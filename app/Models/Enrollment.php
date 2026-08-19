@@ -73,7 +73,7 @@ class Enrollment extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
     }
 }
 

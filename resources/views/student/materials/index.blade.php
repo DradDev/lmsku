@@ -228,7 +228,7 @@
 
         @php
             $totalMaterials = $materials->count();
-            $totalCourses = $materials->pluck('course_id')->filter()->unique()->count();
+            $totalCourses = $materials->pluck('master_course_id')->filter()->unique()->count();
             $latestUpload = $materials->first();
         @endphp
 

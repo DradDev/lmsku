@@ -29,7 +29,10 @@ class GenerateRecommendationFeatureSnapshots extends Command
             return self::SUCCESS;
         }
 
-        $courseItems = DB::table('courses')->get();
+        $courseItems = DB::table('course_offerings')
+            ->where('status', 'published')
+            ->orWhereNull('status')
+            ->get();
         $projectItems = DB::table('projects')
             ->where('is_published', true)
             ->get();
@@ -204,13 +207,16 @@ class GenerateRecommendationFeatureSnapshots extends Command
     {
         $enrollment = DB::table('enrollments')
             ->where('user_id', $userId)
-            ->where('course_id', $courseId)
+            ->where('course_offering_id', $courseId)
             ->first();
 
         $isCompleted = false;
 
+        $offering = DB::table('course_offerings')->where('id', $courseId)->first();
+        $masterCourseId = $offering?->master_course_id ?? $courseId;
+
         $finalQuiz = DB::table('quizzes')
-            ->where('course_id', $courseId)
+            ->where('master_course_id', $masterCourseId)
             ->where('quiz_type', 'final')
             ->first();
 
@@ -251,10 +257,13 @@ class GenerateRecommendationFeatureSnapshots extends Command
     private function calculateInterestMatchScore(int $userId, string $itemType, int $itemId): float
     {
         if ($itemType === 'course') {
+            $offering = DB::table('course_offerings')->where('id', $itemId)->first();
+            $masterCourseId = $offering?->master_course_id ?? $itemId;
+
             $score = DB::table('user_interest_profiles')
                 ->join('master_course_tags', 'user_interest_profiles.tag_id', '=', 'master_course_tags.tag_id')
                 ->where('user_interest_profiles.user_id', $userId)
-                ->where('master_course_tags.master_course_id', $itemId)
+                ->where('master_course_tags.master_course_id', $masterCourseId)
                 ->selectRaw('SUM(user_interest_profiles.interest_score) as score')
                 ->value('score');
         } else {
@@ -272,10 +281,13 @@ class GenerateRecommendationFeatureSnapshots extends Command
     private function calculateWeaknessMatchScore(int $userId, string $itemType, int $itemId): float
     {
         if ($itemType === 'course') {
+            $offering = DB::table('course_offerings')->where('id', $itemId)->first();
+            $masterCourseId = $offering?->master_course_id ?? $itemId;
+
             $score = DB::table('user_skill_profiles')
                 ->join('master_course_skills', 'user_skill_profiles.skill_id', '=', 'master_course_skills.skill_id')
                 ->where('user_skill_profiles.user_id', $userId)
-                ->where('master_course_skills.master_course_id', $itemId)
+                ->where('master_course_skills.master_course_id', $masterCourseId)
                 ->selectRaw('AVG(100 - user_skill_profiles.avg_score) as score')
                 ->value('score');
         } else {
@@ -293,10 +305,13 @@ class GenerateRecommendationFeatureSnapshots extends Command
     private function calculateReadinessScore(int $userId, string $itemType, int $itemId): float
     {
         if ($itemType === 'course') {
+            $offering = DB::table('course_offerings')->where('id', $itemId)->first();
+            $masterCourseId = $offering?->master_course_id ?? $itemId;
+
             $score = DB::table('user_skill_profiles')
                 ->join('master_course_skills', 'user_skill_profiles.skill_id', '=', 'master_course_skills.skill_id')
                 ->where('user_skill_profiles.user_id', $userId)
-                ->where('master_course_skills.master_course_id', $itemId)
+                ->where('master_course_skills.master_course_id', $masterCourseId)
                 ->selectRaw('AVG(user_skill_profiles.avg_score) as score')
                 ->value('score');
         } else {
@@ -328,7 +343,7 @@ class GenerateRecommendationFeatureSnapshots extends Command
                 ->exists();
 
             if ($hasPassed) {
-                $completedCourseIds[] = $quiz->course_id;
+                $completedCourseIds[] = $quiz->master_course_id ?? $quiz->id;
             }
         }
 

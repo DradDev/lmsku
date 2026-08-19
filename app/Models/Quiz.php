@@ -30,7 +30,7 @@ class Quiz extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
     }
 
     public function questions()

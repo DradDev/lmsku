@@ -594,7 +594,7 @@
                                         <span>⚙️ Edit Waktu & Pengaturan Quiz</span>
                                         <span class="text-amber-700">({{ $quizRef->title }})</span>
                                     </h5>
-                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$quizRef->course_id, $quizRef->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                    <form method="POST" action="{{ route('lecturer.courses.quizzes.update', [$quizRef->course->id ?? ($quizRef->master_course_id ?? 1), $quizRef->id]) }}" class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                                         @csrf
                                         @method('PUT')
 

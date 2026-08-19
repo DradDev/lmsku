@@ -17,7 +17,8 @@ class QuizController extends Controller
     {
         $courseObj = is_numeric($course) ? Course::findOrFail($course) : $course;
 
-        if ($courseObj->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $ownerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? $courseObj->masterCourse?->user_id);
+        if ($ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -40,7 +41,6 @@ class QuizController extends Controller
                 'title'            => $validated['title'],
             ],
             [
-                'course_id'    => $courseObj->id,
                 'quiz_type'    => $validated['quiz_type'],
                 'time_limit'   => $validated['time_limit'] ?? null,
                 'max_attempts' => $maxAttemptsValue,
@@ -56,7 +56,8 @@ class QuizController extends Controller
     {
         $courseObj = is_numeric($course) ? Course::findOrFail($course) : $course;
 
-        if ($courseObj->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $ownerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? $courseObj->masterCourse?->user_id);
+        if ($ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course ini.');
         }
 
@@ -85,11 +86,12 @@ class QuizController extends Controller
 
     public function show(Quiz $quiz): View
     {
-        $course = $quiz->course;
-        if ($course && $course->user_id !== Auth::id()) {
+        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        if ($ownerId && $ownerId !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 
+        $course = $quiz->course;
         $quiz->load(['questions', 'course']);
 
         return view('vendor.quizzes.show', compact('quiz', 'course'));
@@ -97,8 +99,8 @@ class QuizController extends Controller
 
     public function storeQuestion(Request $request, Quiz $quiz): RedirectResponse
     {
-        $course = $quiz->course;
-        if ($course && $course->user_id !== Auth::id()) {
+        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        if ($ownerId && $ownerId !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 

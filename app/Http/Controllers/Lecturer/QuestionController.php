@@ -78,8 +78,8 @@ class QuestionController extends Controller
         }
 
         $quiz = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->whereIn('master_course_id', function($sub) {
+                $sub->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
             })
             ->findOrFail($validated['quiz_id']);
 
@@ -123,14 +123,14 @@ class QuestionController extends Controller
     public function edit(Question $question): View
     {
         $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && $question->quiz->course && $question->quiz->course->user_id === Auth::id());
+            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists());
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $quizzes = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->whereIn('master_course_id', function ($query) {
+                $query->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
             })
-            ->with('course')
+            ->with('masterCourse')
             ->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [$question->quiz_id])
             ->latest()
             ->get();
@@ -150,7 +150,7 @@ class QuestionController extends Controller
     public function update(Request $request, Question $question): RedirectResponse
     {
         $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && $question->quiz->course && $question->quiz->course->user_id === Auth::id());
+            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists());
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $rules = [
@@ -177,8 +177,8 @@ class QuestionController extends Controller
         unset($data['skill_ids'], $data['main_skill_id']);
 
         $quiz = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->whereIn('master_course_id', function ($query) {
+                $query->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
             })
             ->findOrFail($data['quiz_id']);
 

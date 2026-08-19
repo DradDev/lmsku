@@ -255,19 +255,11 @@ class QuizController extends Controller
             return redirect()->back()->with('error', 'Permintaan retake Anda sudah terkirim dan sedang menunggu persetujuan Author.');
         }
 
-        $enrollment = Enrollment::where('user_id', $user->id)
-            ->whereIn('course_offering_id', function ($sub) use ($quiz) {
-                $sub->select('id')->from('course_offerings')
-                    ->where('master_course_id', $quiz->master_course_id);
-            })
-            ->first();
-
         \App\Models\QuizRetakeRequest::create([
-            'user_id'            => $user->id,
-            'quiz_id'            => $quiz->id,
-            'course_offering_id' => $enrollment?->course_offering_id,
-            'status'             => 'pending',
-            'reason'             => 'Pengajuan ulang ujian karena nilai di bawah passing threshold.',
+            'user_id' => $user->id,
+            'quiz_id' => $quiz->id,
+            'status'  => 'pending',
+            'reason'  => 'Pengajuan ulang ujian karena nilai di bawah passing threshold.',
         ]);
 
         return redirect()->back()->with('success', 'Permintaan retake kuis berhasil dikirim ke Author. Mohon menunggu persetujuan.');

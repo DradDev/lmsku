@@ -49,7 +49,7 @@
                             </a>
                         @endif
 
-                        <a href="{{ route('student.courses.show', $material->course_id) }}"
+                        <a href="{{ route('student.courses.show', $material->course_offering_id ?? ($material->master_course_id ?? 1)) }}"
                            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                             Back to Course
                         </a>
@@ -182,7 +182,7 @@
                                 </a>
                             @endif
 
-                            <a href="{{ route('student.courses.show', $material->course_id) }}"
+                            <a href="{{ route('student.courses.show', $material->course_offering_id ?? ($material->master_course_id ?? 1)) }}"
                                class="block w-full text-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
                                 Back to Course
                             </a>

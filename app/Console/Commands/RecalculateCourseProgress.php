@@ -26,7 +26,7 @@ class RecalculateCourseProgress extends Command
         }
 
         if ($courseId) {
-            $query->where('course_id', $courseId);
+            $query->where('course_offering_id', $courseId);
         }
 
         $total = $query->count();
@@ -45,7 +45,7 @@ class RecalculateCourseProgress extends Command
             foreach ($enrollments as $enrollment) {
                 $courseProgressService->recalculate(
                     $enrollment->user_id,
-                    $enrollment->course_id
+                    $enrollment->course_offering_id
                 );
 
                 $bar->advance();

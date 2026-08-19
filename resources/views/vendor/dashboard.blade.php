@@ -236,7 +236,7 @@
                                         <p class="text-[11px] text-gray-500">Terhubung ke Course: {{ optional($mat->course)->name ?? 'General' }}</p>
                                     </div>
                                 </div>
-                                <a href="{{ route('vendor.courses.show', $mat->course_id) }}" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                                <a href="{{ route('vendor.courses.show', $mat->master_course_id ?? ($mat->course_id ?? 1)) }}" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
                                     Buka Course →
                                 </a>
                             </div>
