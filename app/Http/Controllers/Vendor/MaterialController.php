@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\Material;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
-    public function store(Request $request, Course $course): RedirectResponse
+    public function store(Request $request, CourseOffering $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 

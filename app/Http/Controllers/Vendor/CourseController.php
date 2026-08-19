@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Vendor;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\MasterCourse;
 use App\Models\Skill;
 use App\Models\Tag;
@@ -78,9 +79,9 @@ class CourseController extends Controller
         ));
     }
 
-    public function toggleArchive(Course $course): RedirectResponse
+    public function toggleArchive(CourseOffering $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course ini.');
         }
 
@@ -164,9 +165,9 @@ class CourseController extends Controller
             ->with('success', 'Program Sertifikasi Industri & Batch Perdana berhasil dibuat.');
     }
 
-    public function show(Course $course): View
+    public function show(CourseOffering $course): View
     {
-        if (Auth::user()->role !== 'admin' && $course->user_id !== Auth::id()) {
+        if (Auth::user()->role !== 'admin' && ($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -175,7 +176,7 @@ class CourseController extends Controller
             $masterCourse = MasterCourse::firstOrCreate(
                 [
                     'name' => $course->name,
-                    'user_id' => $course->user_id,
+                    'user_id' => $course->lecturer_id ?? $course->user_id,
                 ],
                 [
                     'code' => 'VMC-' . strtoupper(Str::random(6)),
@@ -189,7 +190,6 @@ class CourseController extends Controller
         }
 
         $course->load([
-            'category',
             'materials',
             'quizzes.questions',
             'enrollments.user',
@@ -205,18 +205,18 @@ class CourseController extends Controller
         // Materi & Kuis terpusat dari MasterCourse & seluruh batch di bawah kurikulum ini
         $masterCourse = $course->masterCourse;
         $materials = $masterCourse
-            ? \App\Models\Material::where('master_course_id', $masterCourse->id)->orWhere('course_id', $course->id)->get()
+            ? \App\Models\Material::where('master_course_id', $masterCourse->id)->get()
             : $course->materials;
 
         $quizzes = $masterCourse
-            ? \App\Models\Quiz::with('questions')->where('master_course_id', $masterCourse->id)->orWhere('course_id', $course->id)->get()
+            ? \App\Models\Quiz::with('questions')->where('master_course_id', $masterCourse->id)->get()
             : $course->quizzes;
 
         $students = $course->students;
         $completedStudentCount = $course->enrollments()->where('status', 'completed')->count();
 
         // Seluruh angkatan batch yang ada pada kurikulum induk ini
-        $allBatches = Course::where('master_course_id', $course->master_course_id)
+        $allBatches = CourseOffering::where('master_course_id', $course->master_course_id)
             ->withCount('enrollments')
             ->orderBy('created_at')
             ->get();
@@ -242,9 +242,9 @@ class CourseController extends Controller
         ));
     }
 
-    public function edit(Course $course): View
+    public function edit(CourseOffering $course): View
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -255,9 +255,9 @@ class CourseController extends Controller
         return view('vendor.courses.edit', compact('course', 'categories', 'skills', 'tags'));
     }
 
-    public function update(Request $request, Course $course): RedirectResponse
+    public function update(Request $request, CourseOffering $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -375,9 +375,9 @@ class CourseController extends Controller
             ->with('success', "Pengaturan Angkatan '{$course->batch_name}' berhasil diperbarui.");
     }
 
-    public function launchBatch(Request $request, Course $course): RedirectResponse
+    public function launchBatch(Request $request, CourseOffering $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -426,9 +426,9 @@ class CourseController extends Controller
             ->with('success', 'Angkatan ' . $newBatch->batch_name . ' berhasil diluncurkan! Seluruh materi dan bank kuis otomatis diwariskan.');
     }
 
-    public function destroy(Course $course): RedirectResponse
+    public function destroy(CourseOffering $course): RedirectResponse
     {
-        if ($course->user_id !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 

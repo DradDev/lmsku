@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\QuizAttempt;
@@ -172,10 +173,7 @@ class CourseController extends Controller
                 $enrollment->refresh();
             }
 
-            $this->logActivity(
-                activityType: 'view_course',
-                courseId: $course->id
-            );
+            $this->logActivity('view_course', $course->id);
 
             // Combined 3NF materials & quizzes
             if ($course->masterCourse) {
@@ -253,10 +251,7 @@ class CourseController extends Controller
 
             $course = $offering; // Magic accessors handle backward compatibility!
 
-            $this->logActivity(
-                activityType: 'view_course',
-                courseId: $offering->master_course_id
-            );
+            $this->logActivity('view_course', $offering->id);
 
             $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
             $verifiedFinalAttempt = null;
@@ -400,167 +395,73 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Explicit Vendor Course Enrollment Check
-        $vendorCourse = Course::where('id', $id)
-            ->whereHas('user', fn($q) => $q->where('role', 'vendor'))
-            ->first();
+        // 1. Resolve CourseOffering (either direct ID or via master_course_id)
+        $offering = CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
 
-        if ($vendorCourse) {
-            $alreadyEnrolled = Enrollment::where('user_id', $user->id)
-                ->where('course_id', $vendorCourse->id)
-                ->exists();
-
-            if ($alreadyEnrolled) {
-                return redirect()
-                    ->route('student.courses.show', $vendorCourse->id)
-                    ->with('success', 'Kamu sudah terdaftar di course sertifikasi vendor ini.');
-            }
-
-            if ($vendorCourse->is_archived) {
-                return redirect()->back()->with('error', 'Course sertifikasi vendor ini tidak sedang menerima pendaftaran baru.');
-            }
-
-            Enrollment::create([
-                'user_id' => $user->id,
-                'course_id' => $vendorCourse->id,
-                'progress_percent' => 0,
-                'completed_material_count' => 0,
-                'completed_quiz_count' => 0,
-                'total_material_count' => $vendorCourse->materials->count(),
-                'total_quiz_count' => $vendorCourse->quizzes->count(),
-                'status' => 'not_started',
-                'started_at' => now(),
-                'last_activity_at' => now(),
-            ]);
-
-            $this->logActivity(
-                activityType: 'enroll_course',
-                courseId: $vendorCourse->id
-            );
-
-            return redirect()
-                ->route('student.courses.show', $vendorCourse->id)
-                ->with('success', 'Enrollment berhasil! Selamat mengikuti Sertifikasi Industri.');
-        }
-
-        // 2. Coba enroll di CourseOffering (3NF Academic)
-        $offering = \App\Models\CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
-
-        // Jika $id bukan CourseOffering ID langsung, periksa apakah $id merupakan master_course_id
         if (! $offering) {
-            $masterOfferings = \App\Models\CourseOffering::where('master_course_id', $id)
+            $masterOfferings = CourseOffering::where('master_course_id', $id)
                 ->where('status', 'published')
-                ->whereHas('academicTerm', function ($query) {
-                    $query->where('is_active', true);
-                })
+                ->where('is_archived', false)
                 ->get();
 
-            if ($masterOfferings->count() > 0) {
-                // Cari rombel yang masih memiliki kuota
-                $offering = $masterOfferings->first(fn($o) => $o->hasAvailableCapacity());
-
-                if (! $offering) {
-                    return redirect()
-                        ->back()
-                        ->with('error', 'Pendaftaran gagal: Seluruh rombel kelas untuk mata kuliah ini sudah memenuhi kuota maksimum (kuota habis).');
-                }
+            if ($masterOfferings->isNotEmpty()) {
+                $offering = $masterOfferings->first(fn($o) => $o->hasAvailableCapacity()) ?? $masterOfferings->first();
             }
         }
 
-        if ($offering) {
-            $alreadyEnrolled = Enrollment::where('user_id', $user->id)
-                ->where('course_offering_id', $offering->id)
-                ->exists();
-
-            if ($alreadyEnrolled) {
-                return redirect()
-                    ->route('student.courses.show', $offering->id)
-                    ->with('success', 'Kamu sudah terdaftar di kelas ini.');
-            }
-
-            // CAPACITY CHECK: Kuota Mahasiswa
-            if (! $offering->hasAvailableCapacity()) {
-                return redirect()->back()->with('error', 'Pendaftaran gagal: Rombel ' . $offering->section_name . ' sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
-            }
-
-            if ($offering->isExpired() || $offering->status !== 'published' || ($offering->academicTerm && ! $offering->academicTerm->is_active)) {
-                return redirect()->back()->with('error', 'Kelas ini tidak tersedia untuk pendaftaran baru karena semester sedang non-aktif, kelas berstatus draft, atau sudah ditutup.');
-            }
-
-            Enrollment::create([
-                'user_id' => $user->id,
-                'course_offering_id' => $offering->id,
-                'course_id' => $offering->master_course_id,
-                'progress_percent' => 0,
-                'completed_material_count' => 0,
-                'completed_quiz_count' => 0,
-                'total_material_count' => $offering->materials->count(),
-                'total_quiz_count' => $offering->quizzes->count(),
-                'status' => 'not_started',
-                'started_at' => now(),
-                'last_activity_at' => now(),
-            ]);
-
-            $this->logActivity(
-                activityType: 'enroll_course',
-                courseId: $offering->master_course_id
-            );
-
-            return redirect()
-                ->route('student.courses.show', $offering->id)
-                ->with('success', 'Enrollment berhasil! Selamat belajar.');
+        if (! $offering) {
+            return redirect()->back()->with('error', 'Kelas atau program sertifikasi tidak ditemukan.');
         }
-
-        // 2. Fallback ke legacy Course
-        $course = Course::findOrFail($id);
 
         $alreadyEnrolled = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
+            ->where('course_offering_id', $offering->id)
             ->exists();
 
         if ($alreadyEnrolled) {
             return redirect()
-                ->route('student.courses.show', $course->id)
-                ->with('success', 'Kamu sudah terdaftar di course ini.');
+                ->route('student.courses.show', $offering->id)
+                ->with('success', 'Kamu sudah terdaftar di program ini.');
         }
 
-        if ($course->isExpired() || $course->is_archived) {
-            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk enrollment baru.');
+        if (! $offering->hasAvailableCapacity()) {
+            return redirect()->back()->with('error', 'Pendaftaran gagal: Kuota rombel ' . $offering->section_name . ' sudah penuh.');
+        }
+
+        if ($offering->isExpired() || $offering->status === 'draft' || $offering->is_archived) {
+            return redirect()->back()->with('error', 'Program ini tidak menerima pendaftaran baru.');
         }
 
         Enrollment::create([
-            'user_id' => $user->id,
-            'course_id' => $course->id,
-            'progress_percent' => 0,
+            'user_id'                  => $user->id,
+            'course_offering_id'       => $offering->id,
+            'progress_percent'         => 0,
             'completed_material_count' => 0,
-            'completed_quiz_count' => 0,
-            'total_material_count' => $course->materials->count(),
-            'total_quiz_count' => $course->quizzes->count(),
-            'status' => 'not_started',
-            'started_at' => now(),
-            'last_activity_at' => now(),
+            'completed_quiz_count'     => 0,
+            'total_material_count'     => $offering->materials->count(),
+            'total_quiz_count'         => $offering->quizzes->count(),
+            'status'                   => 'not_started',
+            'started_at'               => now(),
+            'last_activity_at'         => now(),
         ]);
 
         $this->logActivity(
             activityType: 'enroll_course',
-            courseId: $course->id
+            courseId: $offering->master_course_id
         );
 
         return redirect()
-            ->route('student.courses.show', $course->id)
+            ->route('student.courses.show', $offering->id)
             ->with('success', 'Enrollment berhasil! Selamat belajar.');
     }
 
-    private function logActivity(string $activityType, int $courseId): void
+    private function logActivity(string $activityType, int $offeringId): void
     {
-        $validCourseId = Course::where('id', $courseId)->exists() ? $courseId : null;
-
         LearningActivityLog::create([
-            'user_id' => Auth::id(),
-            'course_id' => $validCourseId,
-            'activity_type' => $activityType,
-            'activity_value' => 1,
-            'occurred_at' => now(),
+            'user_id'            => Auth::id(),
+            'course_offering_id' => $offeringId,
+            'activity_type'      => $activityType,
+            'activity_value'     => 1,
+            'created_at'         => now(),
         ]);
     }
 }
