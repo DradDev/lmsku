@@ -114,17 +114,45 @@ class MaterialController extends Controller
         $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
         $offeringId = ($courseObj instanceof CourseOffering) ? $courseObj->id : null;
 
-        Material::create([
-            'master_course_id' => $masterCourseId,
-            'course_offering_id' => $targetScope === 'class' ? $offeringId : null,
-            'title' => $validated['title'],
-            'file_path' => $filePath,
-        ]);
+        if ($targetScope === 'all' && $courseObj instanceof CourseOffering) {
+            $siblingOfferings = CourseOffering::where('lecturer_id', $lecturerId)
+                ->where('master_course_id', $masterCourseId)
+                ->where('academic_term_id', $courseObj->academic_term_id)
+                ->get();
 
-        app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseObj->id);
+            if ($siblingOfferings->isNotEmpty()) {
+                foreach ($siblingOfferings as $sibling) {
+                    Material::create([
+                        'master_course_id' => $masterCourseId,
+                        'course_offering_id' => $sibling->id,
+                        'title' => $validated['title'],
+                        'file_path' => $filePath,
+                    ]);
+                    app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($sibling->id);
+                }
+            } else {
+                Material::create([
+                    'master_course_id' => $masterCourseId,
+                    'course_offering_id' => $offeringId,
+                    'title' => $validated['title'],
+                    'file_path' => $filePath,
+                ]);
+                app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseObj->id);
+            }
+        } else {
+            Material::create([
+                'master_course_id' => $masterCourseId,
+                'course_offering_id' => $offeringId,
+                'title' => $validated['title'],
+                'file_path' => $filePath,
+            ]);
+            if ($offeringId) {
+                app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($offeringId);
+            }
+        }
 
         $scopeMsg = $targetScope === 'all'
-            ? 'Pustaka Induk (Semua Kelas)'
+            ? 'Semua Kelas Rombel'
             : "khusus " . ($courseObj->section_name ?: 'Kelas Ini');
 
         return redirect()
@@ -190,29 +218,57 @@ class MaterialController extends Controller
             ->with('success', 'Materi berhasil diperbarui.');
     }
 
-    public function destroy(Material $material)
+    public function destroy(Request $request, Material $material)
     {
         $this->authorizeLecturer($material);
         $this->checkTermActive($material);
 
+        $lecturerId = Auth::id();
         $offering = CourseOffering::where('master_course_id', $material->master_course_id)
-            ->where('lecturer_id', Auth::id())
+            ->where('lecturer_id', $lecturerId)
             ->first();
-        $redirectId = $material->course_offering_id ?? ($offering?->id ?? 1);
 
-        if (!empty($material->file_path) && Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
+        $currentCourseId = $request->input('course_id') ?? ($material->course_offering_id ?? $offering?->id);
+
+        // Jika materi berstatus global (course_offering_id is null) dan dihapus dari kelas tertentu:
+        // Amankan materi untuk kelas-kelas rombel lain (sibling) milik dosen sebelum materi ini dihapus dari kelas aktif
+        if ($material->course_offering_id === null && $currentCourseId) {
+            $currentOffering = CourseOffering::find($currentCourseId);
+            if ($currentOffering) {
+                $otherOfferings = CourseOffering::where('lecturer_id', $lecturerId)
+                    ->where('master_course_id', $material->master_course_id)
+                    ->where('id', '!=', $currentCourseId)
+                    ->get();
+
+                foreach ($otherOfferings as $otherOff) {
+                    Material::create([
+                        'master_course_id'   => $material->master_course_id,
+                        'course_offering_id' => $otherOff->id,
+                        'title'              => $material->title,
+                        'file_path'          => $material->file_path,
+                    ]);
+                    app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($otherOff->id);
+                }
+            }
         }
 
-        $courseId = $material->course_offering_id ?? $offering?->id;
+        $filePath = $material->file_path;
         $material->delete();
 
-        if ($courseId) {
-            app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseId);
+        // Hapus file fisik dari storage hanya jika sudah tidak ada baris materi lain yang menggunakannya
+        if (!empty($filePath)) {
+            $stillUsed = Material::where('file_path', $filePath)->exists();
+            if (!$stillUsed && Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+            }
+        }
+
+        if ($currentCourseId) {
+            app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($currentCourseId);
         }
 
         return redirect()
-            ->route('lecturer.courses.show', $redirectId)
-            ->with('success', 'Materi berhasil dihapus.');
+            ->route('lecturer.courses.show', $currentCourseId ?? 1)
+            ->with('success', 'Materi berhasil dihapus dari kelas ini.');
     }
 }

@@ -222,11 +222,20 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/courses/{course}/quizzes', [LecturerQuizController::class, 'store'])
             ->name('courses.quizzes.store');
 
+        Route::get('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'show'])
+            ->name('courses.quizzes.show');
+
+        Route::get('/quizzes/{quiz}', [LecturerQuizController::class, 'show'])
+            ->name('quizzes.show');
+
         Route::put('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'update'])
             ->name('courses.quizzes.update');
 
         Route::delete('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'destroy'])
             ->name('courses.quizzes.destroy');
+
+        Route::post('/quizzes/{quiz}/questions', [LecturerQuizController::class, 'storeQuestion'])
+            ->name('quizzes.questions.store');
 
         Route::get('/courses/{course}/quizzes/{quiz}/essay-answers', [LecturerQuizAnswerController::class, 'index'])
             ->name('courses.quizzes.answers.index');
@@ -418,6 +427,7 @@ Route::middleware(['auth', 'role:vendor'])
         Route::delete('/materials/{material}', [VendorMaterialController::class, 'destroy'])->name('materials.destroy');
 
         Route::post('/courses/{course}/quizzes', [VendorQuizController::class, 'store'])->name('quizzes.store');
+        Route::get('/courses/{course}/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('courses.quizzes.show');
         Route::put('/courses/{course}/quizzes/{quiz}', [VendorQuizController::class, 'update'])->name('courses.quizzes.update');
         Route::get('/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('quizzes.show');
         Route::delete('/quizzes/{quiz}', [VendorQuizController::class, 'destroy'])->name('quizzes.destroy');

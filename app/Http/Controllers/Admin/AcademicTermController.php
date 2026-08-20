@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AcademicTermController extends Controller
@@ -243,13 +244,23 @@ class AcademicTermController extends Controller
     public function updateOffering(Request $request, \App\Models\CourseOffering $offering): RedirectResponse
     {
         $validated = $request->validate([
-            'section_name' => ['required', 'string', 'max:50'],
+            'section_name' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('course_offerings')->where(function ($query) use ($offering) {
+                    return $query->where('master_course_id', $offering->master_course_id)
+                        ->where('academic_term_id', $offering->academic_term_id);
+                })->ignore($offering->id),
+            ],
             'lecturer_id' => ['required', 'exists:users,id'],
             'capacity' => ['required', 'integer', 'min:1'],
             'certificate_threshold' => ['required', 'integer', 'min:1', 'max:100'],
             'status' => ['required', 'in:draft,published,cancelled'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ], [
+            'section_name.unique' => "Nama rombel '{$request->section_name}' sudah digunakan pada mata kuliah dan semester yang sama.",
         ]);
 
         $offering->update($validated);
@@ -263,17 +274,18 @@ class AcademicTermController extends Controller
     {
         $termId = $offering->academic_term_id;
         $sectionName = $offering->section_name;
+        $enrolledCount = $offering->enrollments()->count();
 
-        if ($offering->enrollments()->count() > 0) {
-            $offering->update(['status' => 'cancelled']);
-            $message = "Rombel kelas '{$sectionName}' telah dibatalkan (memiliki pendaftaran mahasiswa).";
-        } else {
-            $offering->delete();
-            $message = "Rombel kelas '{$sectionName}' berhasil dihapus.";
+        if ($enrolledCount > 0) {
+            return redirect()
+                ->route('admin.academic-terms.show', $termId)
+                ->with('error', "Rombel kelas '{$sectionName}' tidak dapat dihapus karena sudah memiliki {$enrolledCount} mahasiswa yang terdaftar.");
         }
+
+        $offering->delete();
 
         return redirect()
             ->route('admin.academic-terms.show', $termId)
-            ->with('success', $message);
+            ->with('success', "Rombel kelas '{$sectionName}' berhasil dihapus.");
     }
 }

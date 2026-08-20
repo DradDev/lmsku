@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Question;
 use App\Models\Quiz;
 use App\Models\QuizRetakeRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class QuizController extends Controller
 {
@@ -74,8 +76,78 @@ class QuizController extends Controller
         $scopeLabel = $targetScope === 'all' ? 'untuk Semua Kelas (Master)' : "khusus untuk {$courseObj->section_name}";
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
-            ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat {$scopeLabel}! Silakan buat soal-soal untuk quiz ini.");
+            ->back()
+            ->with('success', "{$typeLabel} '{$quiz->title}' berhasil dibuat {$scopeLabel}! Silakan kelola butir soal untuk kuis ini.");
+    }
+
+    public function show($courseOrQuiz, $quizParam = null): View
+    {
+        $quiz = $quizParam instanceof Quiz 
+            ? $quizParam 
+            : ($courseOrQuiz instanceof Quiz ? $courseOrQuiz : Quiz::findOrFail(is_numeric($quizParam) ? $quizParam : $courseOrQuiz));
+
+        $courseObj = null;
+        if ($quizParam) {
+            $courseObj = is_numeric($courseOrQuiz)
+                ? (\App\Models\CourseOffering::with('academicTerm')->find($courseOrQuiz) ?? Course::findOrFail($courseOrQuiz))
+                : $courseOrQuiz;
+        } else {
+            $courseObj = $quiz->course ?? ($quiz->masterCourse?->offerings()->where('lecturer_id', Auth::id())->first() ?? $quiz->masterCourse);
+        }
+
+        $lecturerId = $courseObj?->lecturer_id ?? ($courseObj?->user_id ?? $quiz->masterCourse?->user_id);
+        if ($lecturerId && $lecturerId !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403, 'Kamu tidak memiliki akses ke kuis ini.');
+        }
+
+        $isTermActive = true;
+        if ($courseObj instanceof \App\Models\CourseOffering && $courseObj->academicTerm) {
+            $isTermActive = (bool) $courseObj->academicTerm->is_active;
+        }
+
+        $quiz->load(['questions' => fn($q) => $q->latest()], 'masterCourse');
+        $course = $courseObj ?? $quiz->course;
+
+        return view('lecturer.quiz.show', compact('quiz', 'course', 'isTermActive'));
+    }
+
+    public function storeQuestion(Request $request, Quiz $quiz): RedirectResponse
+    {
+        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        if ($ownerId && $ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
+            abort(403, 'Kamu tidak memiliki akses ke kuis ini.');
+        }
+
+        if ($quiz->course && $quiz->course instanceof \App\Models\CourseOffering && $quiz->course->academicTerm && !$quiz->course->academicTerm->is_active) {
+            return redirect()->back()
+                ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan soal ditolak (Read-Only).');
+        }
+
+        $validated = $request->validate([
+            'question' => ['required', 'string'],
+            'difficulty' => ['nullable', 'in:easy,medium,hard'],
+            'option_a' => ['required', 'string'],
+            'option_b' => ['required', 'string'],
+            'option_c' => ['required', 'string'],
+            'option_d' => ['required', 'string'],
+            'correct_answer' => ['required', 'in:A,B,C,D'],
+        ]);
+
+        Question::create([
+            'quiz_id' => $quiz->id,
+            'user_id' => Auth::id(),
+            'question_type' => 'multiple_choice',
+            'difficulty' => $validated['difficulty'] ?? 'medium',
+            'question' => $validated['question'],
+            'option_a' => $validated['option_a'],
+            'option_b' => $validated['option_b'],
+            'option_c' => $validated['option_c'],
+            'option_d' => $validated['option_d'],
+            'correct_answer' => $validated['correct_answer'],
+            'status' => 'approved',
+        ]);
+
+        return redirect()->back()->with('success', 'Soal evaluasi berhasil ditambahkan ke kuis.');
     }
 
     public function update(Request $request, $course, Quiz $quiz): RedirectResponse
@@ -167,12 +239,12 @@ class QuizController extends Controller
                 ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penghapusan kuis ditolak (Read-Only).');
         }
 
-        \App\Models\OfferingQuiz::where('quiz_id', $quiz->id)->delete();
+        $quizTitle = $quiz->title;
         $quiz->delete();
 
         return redirect()
             ->back()
-            ->with('success', 'Quiz berhasil dihapus.');
+            ->with('success', "Kuis '{$quizTitle}' berhasil dihapus.");
     }
 
     public function bulkApproveRetake($course): RedirectResponse

@@ -53,12 +53,15 @@ class CourseOffering extends Model
 
     public function materials()
     {
-        return $this->hasMany(Material::class, 'master_course_id', 'master_course_id');
+        return $this->hasMany(Material::class, 'course_offering_id');
     }
 
     public function getMaterialsAttribute()
     {
-        return Material::where('master_course_id', $this->master_course_id)
+        return Material::where('course_offering_id', $this->id)
+            ->orWhere(function ($q) {
+                $q->where('master_course_id', $this->master_course_id)->whereNull('course_offering_id');
+            })
             ->latest()
             ->get();
     }

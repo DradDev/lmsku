@@ -159,9 +159,48 @@ class CourseController extends Controller
             ->with('success', 'Program Sertifikasi Industri & Batch Perdana berhasil dibuat.');
     }
 
-    public function show(CourseOffering $course): View
+    public function show($course): View
     {
-        if (Auth::user()->role !== 'admin' && ($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
+        $vendorId = Auth::id();
+        $courseOffering = is_numeric($course)
+            ? CourseOffering::with('masterCourse')->find($course)
+            : ($course instanceof CourseOffering ? $course : null);
+
+        // Fallback: Jika $course adalah ID MasterCourse atau bukan CourseOffering langsung milik vendor
+        $isOwner = $courseOffering && (
+            $courseOffering->lecturer_id === $vendorId ||
+            ($courseOffering->masterCourse && $courseOffering->masterCourse->user_id === $vendorId) ||
+            Auth::user()->isAdmin()
+        );
+
+        if (!$courseOffering || !$isOwner) {
+            $masterCourseId = is_numeric($course) ? $course : ($course->id ?? null);
+            $foundByMaster = CourseOffering::where('master_course_id', $masterCourseId)
+                ->where(function ($q) use ($vendorId) {
+                    if (!Auth::user()->isAdmin()) {
+                        $q->where('lecturer_id', $vendorId)
+                          ->orWhereHas('masterCourse', function ($mc) use ($vendorId) {
+                              $mc->where('user_id', $vendorId);
+                          });
+                    }
+                })
+                ->latest()
+                ->first();
+
+            if ($foundByMaster) {
+                $courseOffering = $foundByMaster;
+            }
+        }
+
+        abort_unless($courseOffering, 404, 'Course sertifikasi tidak ditemukan.');
+
+        $course = $courseOffering;
+
+        $isCourseOwner = ($course->lecturer_id === $vendorId) ||
+            ($course->masterCourse && $course->masterCourse->user_id === $vendorId) ||
+            Auth::user()->isAdmin();
+
+        if (!$isCourseOwner) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -210,6 +249,7 @@ class CourseController extends Controller
 
         // Seluruh angkatan batch yang ada pada kurikulum induk ini
         $allBatches = CourseOffering::where('master_course_id', $course->master_course_id)
+            ->with(['enrollments'])
             ->withCount('enrollments')
             ->orderBy('created_at')
             ->get();
@@ -343,6 +383,7 @@ class CourseController extends Controller
         $validated = $request->validate([
             'batch_name' => ['required', 'string', 'max:255'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
+            'capacity' => ['nullable', 'integer', 'min:1'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -353,6 +394,10 @@ class CourseController extends Controller
             'section_name' => $validated['batch_name'],
             'certificate_threshold' => $validated['certificate_threshold'],
         ];
+
+        if ($request->has('capacity')) {
+            $updateData['capacity'] = $request->filled('capacity') ? (int)$request->capacity : null;
+        }
 
         if ($request->has('is_archived')) {
             $updateData['is_archived'] = (bool)$request->is_archived;
@@ -383,6 +428,7 @@ class CourseController extends Controller
         $validated = $request->validate([
             'batch_name' => ['required', 'string', 'max:255'],
             'certificate_threshold' => ['required', 'integer', 'min:0', 'max:100'],
+            'capacity' => ['nullable', 'integer', 'min:1'],
             'duration_weeks' => ['nullable', 'integer', 'min:1'],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
@@ -411,7 +457,7 @@ class CourseController extends Controller
             'lecturer_id'           => Auth::id(),
             'academic_term_id'      => null,
             'section_name'          => $validated['batch_name'],
-            'capacity'              => 40,
+            'capacity'              => $request->filled('capacity') ? (int)$request->capacity : 40,
             'start_date'            => !empty($validated['start_date']) ? $validated['start_date'] : now(),
             'end_date'              => !empty($validated['end_date']) ? $validated['end_date'] : now()->addWeeks($validated['duration_weeks'] ?? 4),
             'certificate_threshold' => $validated['certificate_threshold'],

@@ -16,7 +16,7 @@ class QuestionController extends Controller
 {
     public function index(): RedirectResponse
     {
-        return redirect()->route('vendor.dashboard', ['tab' => 'quizzes']);
+        return redirect()->route('vendor.courses.index');
     }
 
     public function store(Request $request): RedirectResponse
@@ -73,7 +73,7 @@ class QuestionController extends Controller
                 $countCreated++;
             }
 
-            return redirect()->route('vendor.dashboard', ['tab' => 'quizzes', 'quiz_id' => $quiz->id])
+            return redirect()->route('vendor.quizzes.show', $quiz->id)
                 ->with('success', "Berhasil menambahkan {$countCreated} soal ke kuis '{$quiz->title}'.");
         }
 
@@ -118,7 +118,7 @@ class QuestionController extends Controller
             $question->skills()->sync(array_unique($skillIds));
         }
 
-        return redirect()->route('vendor.dashboard', ['tab' => 'quizzes', 'quiz_id' => $quiz->id])
+        return redirect()->route('vendor.quizzes.show', $quiz->id)
             ->with('success', 'Soal berhasil ditambahkan ke kuis.');
     }
 
@@ -172,7 +172,7 @@ class QuestionController extends Controller
 
         $question->skills()->sync(array_unique($skillIds));
 
-        return redirect()->route('vendor.dashboard', ['tab' => 'quizzes', 'quiz_id' => $question->quiz_id])
+        return redirect()->route('vendor.quizzes.show', $question->quiz_id)
             ->with('success', 'Soal berhasil diperbarui.');
     }
 }

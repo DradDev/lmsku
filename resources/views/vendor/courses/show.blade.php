@@ -651,7 +651,7 @@
                                     </div>
 
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <a href="{{ route('vendor.quizzes.show', $quiz) }}"
+                                        <a href="{{ route('vendor.courses.quizzes.show', [$course->id, $quiz->id]) }}"
                                            class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs rounded-lg border border-purple-200 transition">
                                             Kelola Soal ({{ $quiz->questions ? $quiz->questions->count() : 0 }})
                                         </a>
@@ -737,9 +737,10 @@
 
                                         <form action="{{ route('vendor.materials.destroy', $material) }}"
                                               method="POST"
-                                              onsubmit="return confirm('Yakin hapus modul ini?')">
+                                              onsubmit="return confirm('Yakin hapus modul ini dari course ini?')">
                                             @csrf
                                             @method('DELETE')
+                                            <input type="hidden" name="course_id" value="{{ $course->id }}">
                                             <button type="submit" class="text-rose-500 hover:text-rose-700 text-xs font-bold p-1">
                                                 ✕
                                             </button>
@@ -926,12 +927,20 @@
                                class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-extrabold text-purple-900 bg-white">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                             <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                Threshold Sertifikat (%) <span class="text-rose-500">*</span>
+                                Threshold (%) <span class="text-rose-500">*</span>
                             </label>
                             <input type="number" name="certificate_threshold" value="{{ $course->certificate_threshold ?? 75 }}" min="0" max="100" required
+                                   class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
+                        </div>
+
+                        <div>
+                            <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                Kuota Kursi
+                            </label>
+                            <input type="number" name="capacity" value="40" min="1" placeholder="40"
                                    class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
                         </div>
 
@@ -976,6 +985,14 @@
 
         <!-- MODAL 3: EDIT INDIVIDUAL BATCHES (LOOP PER BATCH) -->
         @foreach($allBatches as $b)
+            @php
+                $bEnrollments = $b->enrollments ?? collect();
+                $bTotalStudents = $b->enrollments_count ?? $bEnrollments->count();
+                $bCompletedCount = $bEnrollments->where('status', 'completed')->count();
+                $bInProgressCount = $bEnrollments->where('status', 'in_progress')->count();
+                $bCapacity = $b->capacity ?? 40;
+                $bCapacityPercent = $bCapacity > 0 ? min(100, round(($bTotalStudents / $bCapacity) * 100)) : 0;
+            @endphp
             <div id="edit_batch_modal_{{ $b->id }}" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full p-6 md:p-8 space-y-4 animate-in fade-in zoom-in duration-200 text-xs">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -985,6 +1002,43 @@
                         <button type="button" onclick="document.getElementById('edit_batch_modal_{{ $b->id }}').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
                             ✕
                         </button>
+                    </div>
+
+                    <!-- Ringkasan Statistik Mahasiswa Terdaftar -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-700 text-xs">Status Mahasiswa Terdaftar</span>
+                            <span class="px-2 py-0.5 rounded-md text-[10.5px] font-extrabold {{ $bTotalStudents > 0 ? 'bg-purple-100 text-purple-800' : 'bg-slate-200 text-slate-600' }}">
+                                {{ $bTotalStudents }} Mahasiswa Terdaftar
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-white border border-slate-200/80 rounded-xl p-2">
+                                <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</span>
+                                <span class="block text-sm font-extrabold text-slate-900 mt-0.5">{{ $bTotalStudents }}</span>
+                            </div>
+                            <div class="bg-white border border-slate-200/80 rounded-xl p-2">
+                                <span class="block text-[10px] font-bold text-purple-600 uppercase tracking-wider">Sedang Belajar</span>
+                                <span class="block text-sm font-extrabold text-purple-700 mt-0.5">{{ $bInProgressCount }}</span>
+                            </div>
+                            <div class="bg-white border border-slate-200/80 rounded-xl p-2">
+                                <span class="block text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Lulus</span>
+                                <span class="block text-sm font-extrabold text-emerald-700 mt-0.5">{{ $bCompletedCount }}</span>
+                            </div>
+                        </div>
+
+                        @if($bCapacity > 0)
+                            <div>
+                                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
+                                    <span>Keterisian Kuota Kelas</span>
+                                    <span><strong>{{ $bTotalStudents }}</strong> / {{ $bCapacity }} Kursi ({{ $bCapacityPercent }}%)</span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                    <div class="h-1.5 rounded-full {{ $bCapacityPercent >= 90 ? 'bg-rose-500' : ($bCapacityPercent >= 60 ? 'bg-amber-500' : 'bg-purple-600') }}" style="width: {{ $bCapacityPercent }}%"></div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <form action="{{ route('vendor.courses.update-batch', $b->id) }}" method="POST" class="space-y-4">
@@ -999,13 +1053,21 @@
                                    class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div>
                                 <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
-                                    Threshold Sertifikat (%) <span class="text-rose-500">*</span>
+                                    Threshold (%) <span class="text-rose-500">*</span>
                                 </label>
                                 <input type="number" name="certificate_threshold" value="{{ old('certificate_threshold', $b->certificate_threshold ?? 75) }}" min="0" max="100" required
                                        class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-extrabold text-purple-900 bg-white">
+                            </div>
+
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                                    Kuota Kursi
+                                </label>
+                                <input type="number" name="capacity" value="{{ old('capacity', $b->capacity ?? 40) }}" min="1" placeholder="40"
+                                       class="w-full border-slate-300 focus:border-purple-500 focus:ring-purple-500 rounded-xl text-xs p-2.5 font-bold text-slate-900 bg-white">
                             </div>
 
                             <div>

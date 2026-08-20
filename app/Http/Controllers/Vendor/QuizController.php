@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\Question;
 use App\Models\Quiz;
 use Illuminate\Http\RedirectResponse;
@@ -84,15 +85,44 @@ class QuizController extends Controller
         return back()->with('success', "Waktu rilis dan deadline Kuis '{$quiz->title}' berhasil diperbarui!");
     }
 
-    public function show(Quiz $quiz): View
+    public function show($courseOrQuiz, $quizParam = null): View
     {
+        $quiz = $quizParam instanceof Quiz
+            ? $quizParam
+            : ($courseOrQuiz instanceof Quiz ? $courseOrQuiz : Quiz::findOrFail(is_numeric($quizParam) ? $quizParam : $courseOrQuiz));
+
         $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
-        if ($ownerId && $ownerId !== Auth::id()) {
+        if ($ownerId && $ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 
-        $course = $quiz->course;
-        $quiz->load(['questions', 'course']);
+        $courseObj = null;
+        if ($quizParam) {
+            $courseObj = is_numeric($courseOrQuiz)
+                ? (CourseOffering::find($courseOrQuiz) ?? Course::find($courseOrQuiz))
+                : $courseOrQuiz;
+        } else {
+            $courseIdFromReq = request('course_id');
+            if ($courseIdFromReq) {
+                $courseObj = CourseOffering::find($courseIdFromReq);
+            }
+            if (!$courseObj) {
+                $courseObj = CourseOffering::where('master_course_id', $quiz->master_course_id)
+                    ->where(function ($q) {
+                        if (!Auth::user()->isAdmin()) {
+                            $q->where('lecturer_id', Auth::id())
+                              ->orWhereHas('masterCourse', function ($mc) {
+                                  $mc->where('user_id', Auth::id());
+                              });
+                        }
+                    })
+                    ->latest()
+                    ->first();
+            }
+        }
+
+        $course = $courseObj ?? $quiz->course;
+        $quiz->load(['questions', 'masterCourse']);
 
         return view('vendor.quizzes.show', compact('quiz', 'course'));
     }
@@ -134,10 +164,11 @@ class QuizController extends Controller
     {
         $quiz = $question->quiz;
         $vendorId = Auth::id();
-        $isAuthorized = ($quiz && $quiz->course && $quiz->course->user_id === $vendorId) ||
-                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId);
+        $isAuthorized = ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        ($quiz && $quiz->course && (($quiz->course->lecturer_id ?? $quiz->course->user_id) === $vendorId)) ||
+                        Auth::user()->isAdmin();
 
-        if (!$isAuthorized && !Auth::user()->isAdmin()) {
+        if (!$isAuthorized) {
             abort(403, 'Anda tidak memiliki akses ke soal ini.');
         }
 
@@ -149,10 +180,11 @@ class QuizController extends Controller
     public function destroy(Quiz $quiz): RedirectResponse
     {
         $vendorId = Auth::id();
-        $isAuthorized = ($quiz->course && $quiz->course->user_id === $vendorId) ||
-                        ($quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId);
+        $isAuthorized = ($quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        ($quiz->course && (($quiz->course->lecturer_id ?? $quiz->course->user_id) === $vendorId)) ||
+                        Auth::user()->isAdmin();
 
-        if (!$isAuthorized && !Auth::user()->isAdmin()) {
+        if (!$isAuthorized) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 

@@ -16,12 +16,12 @@ class QuestionController extends Controller
 {
     public function index(): RedirectResponse
     {
-        return redirect()->route('lecturer.dashboard', ['tab' => 'questions']);
+        return redirect()->route('lecturer.courses.index');
     }
 
     public function create(): RedirectResponse
     {
-        return redirect()->route('lecturer.dashboard', ['tab' => 'questions']);
+        return redirect()->route('lecturer.courses.index');
     }
 
     public function store(Request $request): RedirectResponse
@@ -111,13 +111,13 @@ class QuestionController extends Controller
         }
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', $createdMultipleChoice . ' multiple choice question berhasil dibuat dan langsung aktif.');
+            ->route('lecturer.quizzes.show', $quiz->id)
+            ->with('success', $createdMultipleChoice . ' multiple choice question berhasil ditambahkan.');
     }
 
     public function show(Question $question): RedirectResponse
     {
-        return redirect()->route('lecturer.dashboard', ['tab' => 'questions']);
+        return redirect()->route('lecturer.courses.index');
     }
 
     public function edit(Question $question): View
@@ -187,19 +187,23 @@ class QuestionController extends Controller
         $this->syncQuestionSkills($question, $skillIds, $mainSkillId);
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
+            ->route('lecturer.quizzes.show', $quiz->id)
             ->with('success', 'Question berhasil diperbarui dan tetap aktif untuk student.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
-        abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
+        $isOwner = $question->user_id === Auth::id() || 
+            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists()) ||
+            Auth::user()->isAdmin();
+
+        abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $question->delete();
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', 'Question deleted successfully.');
+            ->back()
+            ->with('success', 'Soal evaluasi berhasil dihapus.');
     }
 
     private function syncQuestionSkills(Question $question, array $skillIds, mixed $mainSkillId = null): void

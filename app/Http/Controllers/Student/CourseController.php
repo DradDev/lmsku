@@ -204,10 +204,16 @@ class CourseController extends Controller
         $this->logActivity('view_course', $offering->id);
 
         // Combined materials & quizzes from Master Course & Offering
+        $classMaterials = Material::where('course_offering_id', $offering->id)
+            ->orWhere(function ($q) use ($offering) {
+                $q->where('master_course_id', $offering->master_course_id)->whereNull('course_offering_id');
+            })
+            ->latest()
+            ->get();
+        $course->setRelation('materials', $classMaterials);
+
         if ($course->masterCourse) {
-            $combinedMaterials = $course->materials->merge($course->masterCourse->materials ?? collect())->unique('id');
             $combinedQuizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
-            $course->setRelation('materials', $combinedMaterials);
             $course->setRelation('quizzes', $combinedQuizzes);
         }
 

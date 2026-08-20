@@ -1,0 +1,590 @@
+// ====================================================================
+// DATABASE ENTITY RELATIONSHIP DIAGRAM (ERD) - LMSKU / NELMS SYSTEM
+// Format: DBML (Database Markup Language) for https://dbdiagram.io
+// ====================================================================
+
+Project LMSKU_NELMS_Database {
+  database_type: 'MySQL'
+  Note: 'Arsitektur Database Relasional 3NF Lengkap untuk Sistem LMSKU / NELMS'
+}
+
+// ======================================================================
+// MODUL: USER AND INSTITUTION
+// ======================================================================
+
+Table users {
+  id                         bigint       [pk, increment]
+  name                       varchar      [not null]
+  email                      varchar      [not null, unique]
+  avatar                     varchar     
+  role                       varchar      [not null, default: `student`]
+  institution_id             bigint      
+  institution_type           enum        
+  registration_status        enum         [not null, default: `pending`]
+  registration_note          text        
+  peminatan                  varchar     
+  email_verified_at          timestamp   
+  password                   varchar      [not null]
+  remember_token             varchar     
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table institutions {
+  id                         bigint       [pk, increment]
+  name                       varchar      [not null]
+  slug                       varchar      [not null, unique]
+  code                       varchar      [not null, unique]
+  type                       enum         [not null, default: `company`]
+  description                text        
+  website                    varchar     
+  logo_path                  varchar     
+  is_verified                boolean      [not null, default: `1`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// MODUL: SKILL AND TAG FRAMEWORK
+// ======================================================================
+
+Table skills {
+  id                         bigint       [pk, increment]
+  name                       varchar      [not null]
+  description                text        
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table tags {
+  id                         bigint       [pk, increment]
+  name                       varchar      [not null, unique]
+  skill_id                   bigint      
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// MODUL: CURRICULUM AND COURSE OFFERINGS
+// ======================================================================
+
+Table academic_terms {
+  id                         bigint       [pk, increment]
+  name                       varchar      [not null]
+  academic_year              varchar     
+  term_type                  enum         [not null, default: `ganjil`]
+  start_date                 date        
+  end_date                   date        
+  is_active                  boolean      [not null, default: `1`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table master_courses {
+  id                         bigint       [pk, increment]
+  user_id                    bigint      
+  code                       varchar      [unique]
+  name                       varchar      [not null]
+  description                text        
+  level                      enum         [not null, default: `Beginner`]
+  certificate_threshold      int          [not null, default: `75`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table master_course_skills {
+  id                         bigint       [pk, increment]
+  master_course_id           bigint       [not null]
+  skill_id                   bigint       [not null]
+  is_main                    boolean      [not null, default: `0`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table master_course_tags {
+  id                         bigint       [pk, increment]
+  master_course_id           bigint       [not null]
+  tag_id                     bigint       [not null]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table course_offerings {
+  id                         bigint       [pk, increment]
+  master_course_id           bigint       [not null]
+  type                       enum         [not null, default: `academic`]
+  academic_term_id           bigint      
+  lecturer_id                bigint       [not null]
+  section_name               varchar     
+  capacity                   int         
+  start_date                 date        
+  end_date                   date        
+  is_archived                boolean      [not null, default: `0`]
+  certificate_threshold      int          [not null, default: `60`]
+  status                     enum         [not null, default: `draft`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table enrollments {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  course_offering_id         bigint      
+  progress_percent           tinyint      [not null, default: `0`]
+  completed_material_count   int          [not null, default: `0`]
+  completed_quiz_count       int          [not null, default: `0`]
+  total_material_count       int          [not null, default: `0`]
+  total_quiz_count           int          [not null, default: `0`]
+  status                     varchar      [not null, default: `in_progress`]
+  started_at                 timestamp   
+  completed_at               timestamp   
+  last_activity_at           timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table materials {
+  id                         bigint       [pk, increment]
+  master_course_id           bigint      
+  course_offering_id         bigint      
+  title                      varchar      [not null]
+  file_path                  varchar      [not null]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table material_progresses {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  material_id                bigint       [not null]
+  is_completed               boolean      [not null, default: `1`]
+  first_viewed_at            timestamp   
+  last_viewed_at             timestamp   
+  completed_at               timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table saved_materials {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  material_id                bigint       [not null]
+  course_offering_id         bigint      
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// MODUL: ASSESSMENT AND QUIZ
+// ======================================================================
+
+Table quizzes {
+  id                         bigint       [pk, increment]
+  master_course_id           bigint      
+  title                      varchar      [not null]
+  time_limit                 int         
+  quiz_type                  enum         [not null, default: `daily`]
+  max_attempts               int          [not null, default: `1`]
+  start_date                 datetime    
+  end_date                   datetime    
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table questions {
+  id                         bigint       [pk, increment]
+  quiz_id                    bigint       [not null]
+  question_type              enum         [not null, default: `multiple_choice`]
+  user_id                    bigint      
+  question                   text         [not null]
+  option_a                   varchar     
+  option_b                   varchar     
+  option_c                   varchar     
+  option_d                   varchar     
+  correct_answer             varchar     
+  status                     enum         [not null, default: `approved`]
+  difficulty                 enum         [not null, default: `medium`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table question_skills {
+  id                         bigint       [pk, increment]
+  question_id                bigint       [not null]
+  skill_id                   bigint       [not null]
+  weight                     decimal      [not null, default: `1.00`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table quiz_attempts {
+  id                         bigint       [pk, increment]
+  quiz_id                    bigint       [not null]
+  user_id                    bigint       [not null]
+  score                      int          [not null]
+  completed_at               timestamp   
+  is_verified                boolean      [not null, default: `0`]
+  blockchain_hash            varchar     
+  blockchain_id              varchar     
+  tx_id                      varchar     
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table quiz_answers {
+  id                         bigint       [pk, increment]
+  quiz_attempt_id            bigint       [not null]
+  question_id                bigint       [not null]
+  user_id                    bigint       [not null]
+  selected_option            varchar     
+  is_correct                 boolean     
+  score                      int         
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table quiz_retake_requests {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  quiz_id                    bigint       [not null]
+  course_offering_id         bigint      
+  status                     varchar      [not null, default: `pending`]
+  reason                     text        
+  reviewed_by                bigint      
+  reviewed_at                timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table item_statistics {
+  id                         bigint       [pk, increment]
+  item_type                  enum         [not null]
+  item_id                    bigint       [not null]
+  viewed_count               int          [not null, default: `0`]
+  clicked_count              int          [not null, default: `0`]
+  taken_count                int          [not null, default: `0`]
+  completed_count            int          [not null, default: `0`]
+  popularity_score           decimal      [not null, default: `0.00`]
+  completion_rate            decimal      [not null, default: `0.00`]
+  last_activity_at           timestamp   
+  last_calculated_at         timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// MODUL: INDUSTRY PROJECTS AND TALENT POOL
+// ======================================================================
+
+Table projects {
+  id                         bigint       [pk, increment]
+  title                      varchar      [not null]
+  description                text        
+  difficulty_level           enum         [not null, default: `Beginner`]
+  duration_days              int          [not null, default: `7`]
+  max_students               int          [not null, default: `1`]
+  created_by                 bigint       [not null]
+  provider_type              enum         [not null, default: `internal`]
+  brief_file                 varchar     
+  benefits                   text        
+  is_published               boolean      [not null, default: `0`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table project_skills {
+  id                         bigint       [pk, increment]
+  project_id                 bigint       [not null]
+  skill_id                   bigint       [not null]
+  weight                     decimal      [not null, default: `1.00`]
+  is_main                    boolean      [not null, default: `0`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table project_tags {
+  id                         bigint       [pk, increment]
+  project_id                 bigint       [not null]
+  tag_id                     bigint       [not null]
+  weight                     decimal      [not null, default: `1.00`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table project_participations {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  project_id                 bigint       [not null]
+  status                     enum         [not null, default: `in_progress`]
+  progress_percent           tinyint      [not null, default: `0`]
+  started_at                 timestamp   
+  completed_at               timestamp   
+  last_activity_at           timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table project_status_histories {
+  id                         bigint       [pk, increment]
+  project_id                 bigint       [not null]
+  project_participation_id   bigint       [not null]
+  user_id                    bigint       [not null]
+  old_status                 varchar     
+  new_status                 varchar      [not null]
+  old_progress_percent       tinyint     
+  new_progress_percent       tinyint     
+  note                       text        
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table project_comments {
+  id                         bigint       [pk, increment]
+  project_id                 bigint       [not null]
+  user_id                    bigint       [not null]
+  project_participation_id   bigint      
+  comment                    text         [not null]
+  comment_type               varchar      [not null, default: `comment`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// MODUL: CERTIFICATION AND BLOCKCHAIN
+// ======================================================================
+
+Table certificates {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  course_offering_id         bigint      
+  project_id                 bigint      
+  credential_code            varchar     
+  score                      int         
+  blockchain_hash            varchar     
+  blockchain_id              varchar     
+  tx_id                      varchar     
+  completed_at               timestamp   
+  is_verified                boolean      [not null, default: `0`]
+  status                     enum         [not null, default: `pending`]
+  verified_at                timestamp   
+  verified_by                bigint      
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// MODUL: AI PROFILING AND ANALYTICS
+// ======================================================================
+
+Table user_skill_profiles {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  skill_id                   bigint       [not null]
+  avg_score                  decimal      [not null, default: `0.00`]
+  lowest_score               decimal      [not null, default: `0.00`]
+  highest_score              decimal      [not null, default: `0.00`]
+  attempt_count              int          [not null, default: `0`]
+  correct_count              int          [not null, default: `0`]
+  wrong_count                int          [not null, default: `0`]
+  last_activity_at           timestamp   
+  last_calculated_at         timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table user_interest_profiles {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  tag_id                     bigint       [not null]
+  interest_score             decimal      [not null, default: `0.00`]
+  interaction_count          int          [not null, default: `0`]
+  last_activity_at           timestamp   
+  last_calculated_at         timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table recommendation_feature_snapshots {
+  id                         bigint       [pk, increment]
+  snapshot_date              date         [not null]
+  user_id                    bigint       [not null]
+  item_type                  enum         [not null]
+  item_type_encoded          tinyint      [not null]
+  item_id                    bigint       [not null]
+  user_avg_skill_score       decimal      [not null, default: `0.00`]
+  user_lowest_skill_score    decimal      [not null, default: `0.00`]
+  user_completed_course_count int          [not null, default: `0`]
+  user_completed_project_count int          [not null, default: `0`]
+  user_recent_activity_score decimal      [not null, default: `0.00`]
+  user_top_interest_tag_id   bigint      
+  item_difficulty_level      tinyint      [not null, default: `1`]
+  item_main_skill_id         bigint      
+  item_popularity_score      decimal      [not null, default: `0.00`]
+  item_completion_rate       decimal      [not null, default: `0.00`]
+  interest_match_score       decimal      [not null, default: `0.00`]
+  weakness_match_score       decimal      [not null, default: `0.00`]
+  readiness_score            decimal      [not null, default: `0.00`]
+  label_clicked              boolean      [not null, default: `0`]
+  label_taken                boolean      [not null, default: `0`]
+  label_completed            boolean      [not null, default: `0`]
+  already_started_flag       boolean      [not null, default: `0`]
+  item_skill_count           int          [not null, default: `0`]
+  item_tag_count             int          [not null, default: `0`]
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table recommendation_results {
+  id                         bigint       [pk, increment]
+  snapshot_date              date         [not null]
+  user_id                    bigint       [not null]
+  item_type                  enum         [not null]
+  item_id                    bigint       [not null]
+  prediction_score           decimal      [not null, default: `0.000000`]
+  rank                       int          [not null, default: `0`]
+  model_name                 varchar     
+  model_version              varchar     
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+Table learning_activity_logs {
+  id                         bigint       [pk, increment]
+  user_id                    bigint       [not null]
+  course_offering_id         bigint      
+  project_id                 bigint      
+  material_id                bigint      
+  quiz_id                    bigint      
+  activity_type              varchar      [not null]
+  activity_value             decimal     
+  duration_seconds           int         
+  metadata                   json        
+  occurred_at                timestamp   
+  created_at                 timestamp   
+  updated_at                 timestamp   
+}
+
+// ======================================================================
+// TABLE GROUPS (ORGANISASI MODUL DBDiagram.io)
+// ======================================================================
+
+TableGroup User_And_Institution {
+  users
+  institutions
+}
+
+TableGroup Skill_And_Tag_Framework {
+  skills
+  tags
+}
+
+TableGroup Curriculum_And_Course_Offerings {
+  academic_terms
+  master_courses
+  master_course_skills
+  master_course_tags
+  course_offerings
+  enrollments
+  materials
+  material_progresses
+  saved_materials
+}
+
+TableGroup Assessment_And_Quiz {
+  quizzes
+  questions
+  question_skills
+  quiz_attempts
+  quiz_answers
+  quiz_retake_requests
+  item_statistics
+}
+
+TableGroup Industry_Projects_And_Talent_Pool {
+  projects
+  project_skills
+  project_tags
+  project_participations
+  project_status_histories
+  project_comments
+}
+
+TableGroup Certification_And_Blockchain {
+  certificates
+}
+
+TableGroup AI_Profiling_And_Analytics {
+  user_skill_profiles
+  user_interest_profiles
+  recommendation_feature_snapshots
+  recommendation_results
+  learning_activity_logs
+}
+
+// ======================================================================
+// FOREIGN KEY RELATIONSHIPS
+// ======================================================================
+
+Ref: certificates.course_offering_id > course_offerings.id
+Ref: certificates.project_id > projects.id
+Ref: certificates.user_id > users.id
+Ref: certificates.verified_by > users.id
+Ref: course_offerings.academic_term_id > academic_terms.id
+Ref: course_offerings.lecturer_id > users.id
+Ref: course_offerings.master_course_id > master_courses.id
+Ref: enrollments.course_offering_id > course_offerings.id
+Ref: enrollments.user_id > users.id
+Ref: learning_activity_logs.course_offering_id > course_offerings.id
+Ref: learning_activity_logs.material_id > materials.id
+Ref: learning_activity_logs.project_id > projects.id
+Ref: learning_activity_logs.quiz_id > quizzes.id
+Ref: learning_activity_logs.user_id > users.id
+Ref: master_course_skills.master_course_id > master_courses.id
+Ref: master_course_skills.skill_id > skills.id
+Ref: master_course_tags.master_course_id > master_courses.id
+Ref: master_course_tags.tag_id > tags.id
+Ref: master_courses.user_id > users.id
+Ref: material_progresses.material_id > materials.id
+Ref: material_progresses.user_id > users.id
+Ref: materials.course_offering_id > course_offerings.id
+Ref: materials.master_course_id > master_courses.id
+Ref: project_comments.project_id > projects.id
+Ref: project_comments.project_participation_id > project_participations.id
+Ref: project_comments.user_id > users.id
+Ref: project_participations.project_id > projects.id
+Ref: project_participations.user_id > users.id
+Ref: project_skills.project_id > projects.id
+Ref: project_skills.skill_id > skills.id
+Ref: project_status_histories.project_id > projects.id
+Ref: project_status_histories.project_participation_id > project_participations.id
+Ref: project_status_histories.user_id > users.id
+Ref: project_tags.project_id > projects.id
+Ref: project_tags.tag_id > tags.id
+Ref: projects.created_by > users.id
+Ref: question_skills.question_id > questions.id
+Ref: question_skills.skill_id > skills.id
+Ref: questions.quiz_id > quizzes.id
+Ref: questions.user_id > users.id
+Ref: quiz_answers.question_id > questions.id
+Ref: quiz_answers.quiz_attempt_id > quiz_attempts.id
+Ref: quiz_answers.user_id > users.id
+Ref: quiz_attempts.quiz_id > quizzes.id
+Ref: quiz_attempts.user_id > users.id
+Ref: quiz_retake_requests.course_offering_id > course_offerings.id
+Ref: quiz_retake_requests.quiz_id > quizzes.id
+Ref: quiz_retake_requests.reviewed_by > users.id
+Ref: quiz_retake_requests.user_id > users.id
+Ref: quizzes.master_course_id > master_courses.id
+Ref: recommendation_feature_snapshots.item_main_skill_id > skills.id
+Ref: recommendation_feature_snapshots.user_id > users.id
+Ref: recommendation_feature_snapshots.user_top_interest_tag_id > tags.id
+Ref: recommendation_results.user_id > users.id
+Ref: saved_materials.course_offering_id > course_offerings.id
+Ref: saved_materials.material_id > materials.id
+Ref: saved_materials.user_id > users.id
+Ref: tags.skill_id > skills.id
+Ref: user_interest_profiles.tag_id > tags.id
+Ref: user_interest_profiles.user_id > users.id
+Ref: user_skill_profiles.skill_id > skills.id
+Ref: user_skill_profiles.user_id > users.id
+Ref: users.institution_id > institutions.id
