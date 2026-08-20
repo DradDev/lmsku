@@ -277,19 +277,6 @@
                                                             <span>Cek Integritas Data</span>
                                                         </button>
                                                     </form>
-
-                                                    <!-- LIHAT SERTIFIKAT BUTTON -->
-                                                    @php
-                                                        $courseParam = $cert?->course_offering_id ?? $result->quiz?->course_id ?? $result->quiz?->master_course_id;
-                                                    @endphp
-                                                    @if($courseParam)
-                                                        <a href="{{ route('student.certificate.show', $courseParam) }}" target="_blank"
-                                                           class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-extrabold px-3.5 py-2 border border-emerald-200 hover:bg-emerald-100 transition shadow-sm"
-                                                           title="Buka Sertifikat Kelulusan Resmi">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                                                            <span>Lihat Sertifikat</span>
-                                                        </a>
-                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
@@ -432,9 +419,9 @@
                                         <div class="flex flex-col sm:flex-row sm:items-center gap-3 xl:justify-end">
                                             <div class="flex flex-wrap items-center gap-2">
                                                 <!-- DETAIL PROYEK BUTTON -->
-                                                <a href="{{ route('student.projects.show', $part->project_id) }}" target="_blank"
+                                                <a href="{{ route('admin.results.project.show', $part->id) }}"
                                                    class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition shadow-sm"
-                                                   title="Lihat rincian pengerjaan dan TOR/Brief proyek">
+                                                   title="Lihat rincian pengerjaan dan status proyek">
                                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
                                                     <span>Detail Proyek</span>
                                                 </a>
@@ -463,16 +450,6 @@
                                                             <span>Cek Integritas Data</span>
                                                         </button>
                                                     </form>
-
-                                                    <!-- LIHAT SERTIFIKAT BUTTON -->
-                                                    @if($part->project_id)
-                                                        <a href="{{ route('student.certificate.project.show', [$part->project_id, 'user_id' => $part->user_id]) }}" target="_blank"
-                                                           class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-extrabold px-3.5 py-2 border border-emerald-200 hover:bg-emerald-100 transition shadow-sm"
-                                                           title="Buka Sertifikat Kelulusan Resmi">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                                                            <span>Lihat Sertifikat</span>
-                                                        </a>
-                                                    @endif
                                                 @endif
                                             </div>
                                         </div>

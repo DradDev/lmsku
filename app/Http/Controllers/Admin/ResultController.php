@@ -279,6 +279,27 @@ class ResultController extends Controller
         return view('admin.results.show', compact('result'));
     }
 
+    public function showProject(\App\Models\ProjectParticipation $participation): View
+    {
+        $participation->load([
+            'user',
+            'project.creator.institution',
+            'project.user.institution',
+            'project.skills',
+            'project.tags',
+            'statusHistories.user',
+        ]);
+
+        $project = $participation->project;
+        $student = $participation->user;
+
+        $certificate = \App\Models\Certificate::where('user_id', $participation->user_id)
+            ->where('project_id', $participation->project_id)
+            ->first();
+
+        return view('admin.results.project_show', compact('participation', 'project', 'student', 'certificate'));
+    }
+
     /**
      * Approve = kirim ke blockchain.
      * Hashing terjadi di chaincode — Laravel hanya kirim raw data.

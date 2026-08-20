@@ -90,87 +90,97 @@ Route::post('/validasi-blockchain', [BlockchainVerificationController::class, 'v
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:student'])
     ->prefix('student')
     ->name('student.')
     ->group(function () {
-        // Certificates (Accessible by Student & Admin)
-        Route::middleware(['role:student,admin'])->group(function () {
-            Route::get('/certificates', [StudentCertificateController::class, 'index'])
-                ->name('certificate.index');
-            Route::get('/certificate/{course}', [StudentCertificateController::class, 'show'])
-                ->name('certificate.show');
-            Route::get('/certificate/{course}/download', [StudentCertificateController::class, 'download'])
-                ->name('certificate.download');
-            Route::get('/certificate/project/{project}', [StudentCertificateController::class, 'showProject'])
-                ->name('certificate.project.show');
-            Route::get('/certificate/project/{project}/download', [StudentCertificateController::class, 'downloadProject'])
-                ->name('certificate.project.download');
-        });
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])
+            ->name('dashboard');
 
-        // Project Detail (Accessible by Student, Admin, Lecturer, Vendor)
-        Route::middleware(['role:student,admin,lecturer,vendor'])->group(function () {
-            Route::get('/projects/{project}', [StudentProjectController::class, 'show'])
-                ->name('projects.show');
-        });
+        // Courses
+        Route::get('/courses', [StudentCourseController::class, 'index'])
+            ->name('courses.index');
 
-        // Student-Only Interactive Routes
-        Route::middleware(['role:student'])->group(function () {
-            Route::get('/dashboard', [StudentDashboardController::class, 'index'])
-                ->name('dashboard');
+        Route::post('/courses/{course}/enroll', [StudentCourseController::class, 'enroll'])
+            ->name('courses.enroll');
 
-            // Courses
-            Route::get('/courses', [StudentCourseController::class, 'index'])
-                ->name('courses.index');
-            Route::post('/courses/{course}/enroll', [StudentCourseController::class, 'enroll'])
-                ->name('courses.enroll');
-            Route::get('/courses/{course}', [StudentCourseController::class, 'show'])
-                ->name('courses.show');
+        Route::get('/courses/{course}', [StudentCourseController::class, 'show'])
+            ->name('courses.show');
 
-            // Materials
-            Route::get('/materials', [StudentMaterialController::class, 'index'])
-                ->name('materials.index');
-            Route::get('/materials/{material}', [StudentMaterialController::class, 'show'])
-                ->name('materials.show');
+        // Materials
+        Route::get('/materials', [StudentMaterialController::class, 'index'])
+            ->name('materials.index');
 
-            // Quizzes
-            Route::get('/quiz/{quiz}', [StudentQuizController::class, 'show'])
-                ->name('quiz.show');
-            Route::post('/quiz/{quiz}/submit', [StudentQuizController::class, 'submit'])
-                ->name('quiz.submit');
-            Route::post('/quiz/{quiz}/request-retake', [StudentQuizController::class, 'requestRetake'])
-                ->name('quiz.request-retake');
+        Route::get('/materials/{material}', [StudentMaterialController::class, 'show'])
+            ->name('materials.show');
 
-            // Results
-            Route::get('/results', [StudentResultController::class, 'index'])
-                ->name('results.index');
-            Route::get('/results/{result}', [StudentResultController::class, 'show'])
-                ->name('results.show');
+        // Quizzes
+        Route::get('/quiz/{quiz}', [StudentQuizController::class, 'show'])
+            ->name('quiz.show');
 
-            // Projects & Digital Portfolio
-            Route::get('/portfolio', [StudentProjectController::class, 'portfolio'])
-                ->name('portfolio');
-            Route::get('/projects', [StudentProjectController::class, 'index'])
-                ->name('projects.index');
-            Route::get('/my-projects', [StudentProjectController::class, 'myProjects'])
-                ->name('projects.my');
-            Route::get('/project-invitations', [StudentProjectController::class, 'invitations'])
-                ->name('projects.invitations');
-            Route::post('/projects/{project}/join', [StudentProjectController::class, 'join'])
-                ->name('projects.join');
-            Route::post('/projects/{project}/accept-invite', [StudentProjectController::class, 'acceptInvite'])
-                ->name('projects.accept-invite');
-            Route::post('/projects/{project}/decline-invite', [StudentProjectController::class, 'declineInvite'])
-                ->name('projects.decline-invite');
-            Route::patch('/projects/{project}/progress', [StudentProjectController::class, 'updateProgress'])
-                ->name('projects.update-progress');
-            Route::patch('/projects/{project}/complete', [StudentProjectController::class, 'complete'])
-                ->name('projects.complete');
+        Route::post('/quiz/{quiz}/submit', [StudentQuizController::class, 'submit'])
+            ->name('quiz.submit');
 
-            // Recommendations
-            Route::get('/recommendations', [StudentRecommendationController::class, 'index'])
-                ->name('recommendations.index');
-        });
+        Route::post('/quiz/{quiz}/request-retake', [StudentQuizController::class, 'requestRetake'])
+            ->name('quiz.request-retake');
+
+        // Results
+        Route::get('/results', [StudentResultController::class, 'index'])
+            ->name('results.index');
+
+        Route::get('/results/{result}', [StudentResultController::class, 'show'])
+            ->name('results.show');
+
+        // Certificates
+        Route::get('/certificates', [StudentCertificateController::class, 'index'])
+            ->name('certificate.index');
+
+        Route::get('/certificate/{course}', [StudentCertificateController::class, 'show'])
+            ->name('certificate.show');
+
+        Route::get('/certificate/{course}/download', [StudentCertificateController::class, 'download'])
+            ->name('certificate.download');
+
+        Route::get('/certificate/project/{project}', [StudentCertificateController::class, 'showProject'])
+            ->name('certificate.project.show');
+
+        Route::get('/certificate/project/{project}/download', [StudentCertificateController::class, 'downloadProject'])
+            ->name('certificate.project.download');
+
+        // Projects & Digital Portfolio
+        Route::get('/portfolio', [StudentProjectController::class, 'portfolio'])
+            ->name('portfolio');
+
+        Route::get('/projects', [StudentProjectController::class, 'index'])
+            ->name('projects.index');
+
+        Route::get('/my-projects', [StudentProjectController::class, 'myProjects'])
+            ->name('projects.my');
+
+        Route::get('/project-invitations', [StudentProjectController::class, 'invitations'])
+            ->name('projects.invitations');
+
+        Route::post('/projects/{project}/join', [StudentProjectController::class, 'join'])
+            ->name('projects.join');
+
+        Route::post('/projects/{project}/accept-invite', [StudentProjectController::class, 'acceptInvite'])
+            ->name('projects.accept-invite');
+
+        Route::post('/projects/{project}/decline-invite', [StudentProjectController::class, 'declineInvite'])
+            ->name('projects.decline-invite');
+
+        Route::patch('/projects/{project}/progress', [StudentProjectController::class, 'updateProgress'])
+            ->name('projects.update-progress');
+
+        Route::patch('/projects/{project}/complete', [StudentProjectController::class, 'complete'])
+            ->name('projects.complete');
+
+        Route::get('/projects/{project}', [StudentProjectController::class, 'show'])
+            ->name('projects.show');
+
+        // Recommendations
+        Route::get('/recommendations', [StudentRecommendationController::class, 'index'])
+            ->name('recommendations.index');
     });
 
 /*
@@ -314,8 +324,14 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/results/{result}', [AdminResultController::class, 'show'])
             ->name('results.show');
 
+        Route::get('/results/project/{participation}', [AdminResultController::class, 'showProject'])
+            ->name('results.project.show');
+
         Route::post('/results/{result}/verify', [AdminResultController::class, 'verify'])
             ->name('results.verify');
+
+        Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])
+            ->name('results.integrity');
 
         Route::post('/results/project/{participation}/verify', [AdminResultController::class, 'verifyProject'])
             ->name('results.project.verify');
