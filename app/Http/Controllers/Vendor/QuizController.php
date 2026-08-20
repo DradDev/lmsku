@@ -202,4 +202,33 @@ class QuizController extends Controller
 
         return back()->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' ditolak.");
     }
+
+    public function bulkApproveRetake(\App\Models\CourseOffering $course): RedirectResponse
+    {
+        $vendorId = Auth::id();
+        $ownerId = $course->lecturer_id ?? ($course->user_id ?? $course->masterCourse?->user_id);
+        abort_unless($ownerId === $vendorId || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
+
+        $quizzes = $course->masterCourse ? $course->masterCourse->quizzes : $course->quizzes;
+        $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
+
+        $count = \App\Models\QuizRetakeRequest::whereIn('quiz_id', $quizIds)
+            ->where('status', 'pending')
+            ->where(function ($q) use ($course) {
+                $q->where('course_offering_id', $course->id)
+                  ->orWhere(function ($sub) use ($course) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $course->enrollments->pluck('user_id'));
+                  });
+            })
+            ->update([
+                'status'      => 'approved',
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(),
+            ]);
+
+        return redirect()
+            ->back()
+            ->with('success', "Berhasil menyetujui seluruh permintaan retake ({$count} mahasiswa) pada angkatan ini!");
+    }
 }

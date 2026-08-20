@@ -244,6 +244,9 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/retake-requests/{retakeRequest}/reject', [LecturerQuizController::class, 'rejectRetake'])
             ->name('quizzes.retake.reject');
 
+        Route::post('/courses/{course}/quizzes/retake/bulk-approve', [LecturerQuizController::class, 'bulkApproveRetake'])
+            ->name('courses.quizzes.retake.bulk-approve');
+
         // Materials — hanya bisa dikelola dari dalam Course (nested)
         Route::get('/courses/{course}/materials/create', [LecturerMaterialController::class, 'create'])
             ->name('materials.create');
@@ -418,6 +421,7 @@ Route::middleware(['auth', 'role:vendor'])
         // Quiz Retake Requests Approval
         Route::post('/retake-requests/{retakeRequest}/approve', [VendorQuizController::class, 'approveRetake'])->name('quizzes.retake.approve');
         Route::post('/retake-requests/{retakeRequest}/reject', [VendorQuizController::class, 'rejectRetake'])->name('quizzes.retake.reject');
+        Route::post('/courses/{course}/quizzes/retake/bulk-approve', [VendorQuizController::class, 'bulkApproveRetake'])->name('courses.quizzes.retake.bulk-approve');
 
         // Question Builder & Batch Routes
         Route::post('/questions', [VendorQuestionController::class, 'store'])->name('questions.store');

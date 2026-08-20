@@ -174,4 +174,41 @@ class QuizController extends Controller
             ->back()
             ->with('success', 'Quiz berhasil dihapus.');
     }
+
+    public function bulkApproveRetake($course): RedirectResponse
+    {
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            : $course;
+
+        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
+        abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
+
+        $offeringId = $courseObj instanceof \App\Models\CourseOffering ? $courseObj->id : null;
+        $quizzes = $courseObj->masterCourse ? $courseObj->masterCourse->quizzes : $courseObj->quizzes;
+        $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
+
+        $query = \App\Models\QuizRetakeRequest::whereIn('quiz_id', $quizIds)
+            ->where('status', 'pending');
+
+        if ($offeringId) {
+            $query->where(function ($q) use ($offeringId, $courseObj) {
+                $q->where('course_offering_id', $offeringId)
+                  ->orWhere(function ($sub) use ($courseObj) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $courseObj->enrollments->pluck('user_id'));
+                  });
+            });
+        }
+
+        $count = $query->update([
+            'status'      => 'approved',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->back()
+            ->with('success', "Berhasil menyetujui seluruh permintaan retake ({$count} mahasiswa) sekaligus!");
+    }
 }

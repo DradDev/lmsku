@@ -520,58 +520,164 @@
             </div>
         </div>
 
-        <!-- PERMINTAAN RETAKE KUIS ANGKATAN INI (JIKA ADA) -->
+        <!-- PERMINTAAN RETAKE KUIS ANGKATAN INI (SCALABLE 50+ MAHASISWA) -->
         @if(isset($retakeRequests) && $retakeRequests->count() > 0)
-            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-xs">
-                <div class="flex items-center justify-between gap-2 mb-3">
-                    <h2 class="text-sm font-extrabold text-amber-950 flex items-center gap-2">
-                        <span>📩 Permintaan Retake Kuis Peserta — {{ $course->batch_name }}</span>
-                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black">{{ $retakeRequests->where('status', 'pending')->count() }} Pending</span>
-                    </h2>
-                    <span class="text-[11px] font-semibold text-amber-800">Passing Threshold: {{ $course->certificate_threshold ?? 75 }}%</span>
+            @php
+                $pendingCount = $retakeRequests->where('status', 'pending')->count();
+                $approvedCount = $retakeRequests->where('status', 'approved')->count();
+                $rejectedCount = $retakeRequests->where('status', 'rejected')->count();
+            @endphp
+            <div class="mb-6 rounded-3xl border border-amber-200 bg-amber-50/70 p-6 shadow-sm">
+                <!-- HEADER & SUMMARY STATS -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-amber-200/80">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-amber-950 flex items-center gap-2">
+                            <span>📩 Permintaan Retake Kuis — {{ $course->batch_name }}</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-black">{{ $pendingCount }} Pending</span>
+                        </h2>
+                        <p class="text-xs text-amber-800/80 mt-0.5">
+                            Kelola pengajuan ujian ulang kuis sertifikasi dari peserta angkatan ini. Passing Threshold: <strong>{{ $course->certificate_threshold ?? 75 }}%</strong>
+                        </p>
+                    </div>
+
+                    <!-- BULK ACTION -->
+                    @if($pendingCount > 0)
+                        <form action="{{ route('vendor.courses.quizzes.retake.bulk-approve', $course->id) }}" method="POST"
+                              onsubmit="return confirm('Apakah Anda yakin ingin menyetujui seluruh {{ $pendingCount }} permintaan retake yang pending pada angkatan ini?');">
+                            @csrf
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-sm transition whitespace-nowrap">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Setujui Semua Pending ({{ $pendingCount }})</span>
+                            </button>
+                        </form>
+                    @endif
                 </div>
 
-                <div class="space-y-2.5">
+                <!-- SEARCH & FILTER TOOLBAR -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 mb-3">
+                    <!-- LIVE SEARCH -->
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="vendor_retake_search_input" placeholder="Cari nama atau email..."
+                               oninput="filterVendorRetakeList()"
+                               class="w-full pl-8 pr-3 py-1.5 bg-white border border-amber-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-amber-400">
+                        <svg class="absolute left-2.5 top-2 text-slate-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    </div>
+
+                    <!-- FILTER TABS -->
+                    <div class="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                        <button type="button" onclick="setVendorRetakeFilter('all')" id="vrf_btn_all" class="vendor-retake-filter-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-600 text-white transition">
+                            Semua ({{ $retakeRequests->count() }})
+                        </button>
+                        <button type="button" onclick="setVendorRetakeFilter('pending')" id="vrf_btn_pending" class="vendor-retake-filter-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-amber-900 border border-amber-200 hover:bg-amber-100 transition">
+                            Pending ({{ $pendingCount }})
+                        </button>
+                        <button type="button" onclick="setVendorRetakeFilter('approved')" id="vrf_btn_approved" class="vendor-retake-filter-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-emerald-800 border border-amber-200 hover:bg-emerald-50 transition">
+                            Disetujui ({{ $approvedCount }})
+                        </button>
+                        <button type="button" onclick="setVendorRetakeFilter('rejected')" id="vrf_btn_rejected" class="vendor-retake-filter-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-rose-800 border border-amber-200 hover:bg-rose-50 transition">
+                            Ditolak ({{ $rejectedCount }})
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SCROLLABLE CONTAINER (MAX-HEIGHT 380PX) -->
+                <div id="vendor_retake_list_container" class="space-y-2 max-h-[380px] overflow-y-auto pr-1" style="scrollbar-width: thin;">
                     @foreach($retakeRequests as $req)
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white border border-amber-200 rounded-xl gap-3">
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="font-extrabold text-slate-900 text-xs">{{ $req->user->name ?? 'Mahasiswa' }}</span>
-                                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md {{ $req->status === 'approved' ? 'bg-emerald-100 text-emerald-800' : ($req->status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800') }}">
-                                        {{ ucfirst($req->status) }}
-                                    </span>
+                        <div class="vendor-retake-item-row flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white border border-amber-200/80 rounded-2xl gap-3 transition hover:border-amber-300"
+                             data-name="{{ strtolower($req->user->name ?? '') }} {{ strtolower($req->user->email ?? '') }} {{ strtolower($req->quiz->title ?? '') }}"
+                             data-status="{{ $req->status }}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-900 font-extrabold flex items-center justify-center text-xs flex-shrink-0">
+                                    {{ strtoupper(substr($req->user->name ?? 'M', 0, 1)) }}
                                 </div>
-                                <p class="text-xs text-slate-500 mt-0.5">
-                                    Kuis: <strong class="text-purple-950 font-bold">'{{ $req->quiz->title ?? 'Quiz' }}'</strong> • Diajukan: {{ $req->created_at ? $req->created_at->format('d M Y H:i') : '-' }}
-                                </p>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Alasan: {{ $req->reason ?: 'Nilai di bawah passing threshold' }}</p>
+                                <div>
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-extrabold text-slate-900 text-xs">{{ $req->user->name ?? 'Mahasiswa' }}</span>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md {{ $req->status === 'approved' ? 'bg-emerald-100 text-emerald-800' : ($req->status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800') }}">
+                                            {{ ucfirst($req->status) }}
+                                        </span>
+                                        <span class="text-[10.5px] text-slate-400">&bull; {{ $req->created_at ? $req->created_at->format('d M Y H:i') : '-' }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5 text-xs text-slate-600 mt-0.5">
+                                        <span class="text-slate-400">Kuis:</span>
+                                        <strong class="text-purple-900 font-bold text-xs">{{ $req->quiz->title ?? 'Quiz' }}</strong>
+                                        @if($req->reason)
+                                            <span class="text-slate-400">&bull;</span>
+                                            <span class="text-slate-500 text-[11px] italic line-clamp-1">"{{ $req->reason }}"</span>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
 
                             @if($req->status === 'pending')
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
                                     <form action="{{ route('vendor.quizzes.retake.approve', $req->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition">
-                                            ✓ Setujui Retake (+1)
+                                        <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition" title="Setujui dan beri +1 kesempatan mengerjakan kuis">
+                                            ✓ Setujui
                                         </button>
                                     </form>
-
                                     <form action="{{ route('vendor.quizzes.retake.reject', $req->id) }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition">
+                                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition" title="Tolak pengajuan retake">
                                             ✕ Tolak
                                         </button>
                                     </form>
                                 </div>
                             @else
-                                <span class="text-[11px] font-semibold text-slate-400">
+                                <div class="text-[11px] font-semibold text-slate-400 self-end sm:self-auto flex-shrink-0">
                                     Ditinjau: {{ $req->reviewed_at ? $req->reviewed_at->format('d M Y H:i') : '-' }}
-                                </span>
+                                </div>
                             @endif
                         </div>
                     @endforeach
                 </div>
+
+                <div id="vendor_retake_empty_search_msg" class="hidden text-center py-6 text-xs text-amber-800/70 font-semibold">
+                    Tidak ada pengajuan retake yang cocok dengan pencarian / filter.
+                </div>
             </div>
+
+            <script>
+                let currentVendorRetakeFilter = 'all';
+
+                function setVendorRetakeFilter(status) {
+                    currentVendorRetakeFilter = status;
+                    document.querySelectorAll('.vendor-retake-filter-btn').forEach(btn => {
+                        btn.className = 'vendor-retake-filter-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-white text-slate-700 border border-amber-200 hover:bg-amber-100 transition';
+                    });
+                    const activeBtn = document.getElementById('vrf_btn_' + status);
+                    if (activeBtn) {
+                        activeBtn.className = 'vendor-retake-filter-btn px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-600 text-white transition';
+                    }
+                    filterVendorRetakeList();
+                }
+
+                function filterVendorRetakeList() {
+                    const q = (document.getElementById('vendor_retake_search_input')?.value || '').toLowerCase().trim();
+                    const rows = document.querySelectorAll('.vendor-retake-item-row');
+                    let visibleCount = 0;
+
+                    rows.forEach(row => {
+                        const name = row.getAttribute('data-name') || '';
+                        const status = row.getAttribute('data-status') || '';
+                        const matchesSearch = !q || name.includes(q);
+                        const matchesStatus = currentVendorRetakeFilter === 'all' || status === currentVendorRetakeFilter;
+
+                        if (matchesSearch && matchesStatus) {
+                            row.classList.remove('hidden');
+                            visibleCount++;
+                        } else {
+                            row.classList.add('hidden');
+                        }
+                    });
+
+                    const emptyMsg = document.getElementById('vendor_retake_empty_search_msg');
+                    if (emptyMsg) {
+                        emptyMsg.classList.toggle('hidden', visibleCount > 0);
+                    }
+                }
+            </script>
         @endif
 
         <!-- MAIN 2-COLUMN LAYOUT -->
