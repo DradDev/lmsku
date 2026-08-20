@@ -231,6 +231,16 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->whereIn('course_offering_id', function ($sub) use ($quiz) {
+                $sub->select('id')->from('course_offerings')
+                    ->where('master_course_id', $quiz->master_course_id);
+            })
+            ->latest()
+            ->first();
+
+        $offeringId = $enrollment?->course_offering_id;
+
         $bestAttempt = QuizAttempt::where('user_id', $user->id)
             ->where('quiz_id', $quiz->id)
             ->orderByDesc('score')
@@ -246,20 +256,26 @@ class QuizController extends Controller
 
         $existingRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
             ->where('quiz_id', $quiz->id)
+            ->where(function ($q) use ($offeringId) {
+                if ($offeringId) {
+                    $q->where('course_offering_id', $offeringId);
+                }
+            })
             ->where('status', 'pending')
             ->exists();
 
         if ($existingRequest) {
-            return redirect()->back()->with('error', 'Permintaan retake Anda sudah terkirim dan sedang menunggu persetujuan Author.');
+            return redirect()->back()->with('error', 'Permintaan retake Anda sudah terkirim dan sedang menunggu persetujuan Pengajar.');
         }
 
         \App\Models\QuizRetakeRequest::create([
-            'user_id' => $user->id,
-            'quiz_id' => $quiz->id,
-            'status'  => 'pending',
-            'reason'  => 'Pengajuan ulang ujian karena nilai di bawah passing threshold.',
+            'user_id'            => $user->id,
+            'quiz_id'            => $quiz->id,
+            'course_offering_id' => $offeringId,
+            'status'             => 'pending',
+            'reason'             => 'Pengajuan ulang ujian karena nilai di bawah passing threshold.',
         ]);
 
-        return redirect()->back()->with('success', 'Permintaan retake kuis berhasil dikirim ke Author. Mohon menunggu persetujuan.');
+        return redirect()->back()->with('success', 'Permintaan retake kuis berhasil dikirim ke Pengajar. Mohon menunggu persetujuan.');
     }
 }

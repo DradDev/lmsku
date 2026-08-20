@@ -520,6 +520,60 @@
             </div>
         </div>
 
+        <!-- PERMINTAAN RETAKE KUIS ANGKATAN INI (JIKA ADA) -->
+        @if(isset($retakeRequests) && $retakeRequests->count() > 0)
+            <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-xs">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <h2 class="text-sm font-extrabold text-amber-950 flex items-center gap-2">
+                        <span>📩 Permintaan Retake Kuis Peserta — {{ $course->batch_name }}</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-black">{{ $retakeRequests->where('status', 'pending')->count() }} Pending</span>
+                    </h2>
+                    <span class="text-[11px] font-semibold text-amber-800">Passing Threshold: {{ $course->certificate_threshold ?? 75 }}%</span>
+                </div>
+
+                <div class="space-y-2.5">
+                    @foreach($retakeRequests as $req)
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white border border-amber-200 rounded-xl gap-3">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-extrabold text-slate-900 text-xs">{{ $req->user->name ?? 'Mahasiswa' }}</span>
+                                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md {{ $req->status === 'approved' ? 'bg-emerald-100 text-emerald-800' : ($req->status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800') }}">
+                                        {{ ucfirst($req->status) }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    Kuis: <strong class="text-purple-950 font-bold">'{{ $req->quiz->title ?? 'Quiz' }}'</strong> • Diajukan: {{ $req->created_at ? $req->created_at->format('d M Y H:i') : '-' }}
+                                </p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Alasan: {{ $req->reason ?: 'Nilai di bawah passing threshold' }}</p>
+                            </div>
+
+                            @if($req->status === 'pending')
+                                <div class="flex items-center gap-2">
+                                    <form action="{{ route('vendor.quizzes.retake.approve', $req->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition">
+                                            ✓ Setujui Retake (+1)
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ route('vendor.quizzes.retake.reject', $req->id) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-xl transition">
+                                            ✕ Tolak
+                                        </button>
+                                    </form>
+                                </div>
+                            @else
+                                <span class="text-[11px] font-semibold text-slate-400">
+                                    Ditinjau: {{ $req->reviewed_at ? $req->reviewed_at->format('d M Y H:i') : '-' }}
+                                </span>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <!-- MAIN 2-COLUMN LAYOUT -->
         <div class="content-grid">
 

@@ -82,6 +82,13 @@ class CourseController extends Controller
             $enrollments = $offering->enrollments;
             $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
                 ->whereIn('quiz_id', $quizzes->pluck('id'))
+                ->where(function ($q) use ($offering) {
+                    $q->where('course_offering_id', $offering->id)
+                      ->orWhere(function ($sub) use ($offering) {
+                          $sub->whereNull('course_offering_id')
+                              ->whereIn('user_id', $offering->enrollments->pluck('user_id'));
+                      });
+                })
                 ->latest()
                 ->get();
 
@@ -117,6 +124,7 @@ class CourseController extends Controller
         $enrollments = $course->enrollments;
         $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
             ->whereIn('quiz_id', $quizzes->pluck('id'))
+            ->whereIn('user_id', $enrollments->pluck('user_id'))
             ->latest()
             ->get();
 

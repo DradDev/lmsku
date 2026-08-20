@@ -219,6 +219,18 @@ class CourseController extends Controller
         $skills = Skill::orderBy('name')->get();
         $tags = Tag::orderBy('name')->get();
 
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
+            ->whereIn('quiz_id', $quizzes->pluck('id'))
+            ->where(function ($q) use ($course) {
+                $q->where('course_offering_id', $course->id)
+                  ->orWhere(function ($sub) use ($course) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $course->enrollments->pluck('user_id'));
+                  });
+            })
+            ->latest()
+            ->get();
+
         return view('vendor.courses.show', compact(
             'course',
             'masterCourse',
@@ -229,7 +241,8 @@ class CourseController extends Controller
             'allBatches',
             'otherBatches',
             'skills',
-            'tags'
+            'tags',
+            'retakeRequests'
         ));
     }
 

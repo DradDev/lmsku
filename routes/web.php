@@ -415,6 +415,10 @@ Route::middleware(['auth', 'role:vendor'])
         Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
         Route::delete('/questions/{question}', [VendorQuizController::class, 'destroyQuestion'])->name('questions.destroy');
 
+        // Quiz Retake Requests Approval
+        Route::post('/retake-requests/{retakeRequest}/approve', [VendorQuizController::class, 'approveRetake'])->name('quizzes.retake.approve');
+        Route::post('/retake-requests/{retakeRequest}/reject', [VendorQuizController::class, 'rejectRetake'])->name('quizzes.retake.reject');
+
         // Question Builder & Batch Routes
         Route::post('/questions', [VendorQuestionController::class, 'store'])->name('questions.store');
         Route::get('/questions/{question}/edit', [VendorQuestionController::class, 'edit'])->name('questions.edit');

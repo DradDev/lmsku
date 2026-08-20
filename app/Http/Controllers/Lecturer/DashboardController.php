@@ -64,9 +64,15 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz.masterCourse'])
-            ->whereHas('quiz.masterCourse.offerings', function ($query) {
-                $query->where('lecturer_id', Auth::id());
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz.masterCourse', 'courseOffering.academicTerm'])
+            ->where(function ($query) use ($offeringIds, $masterCourseIds) {
+                $query->whereIn('course_offering_id', $offeringIds)
+                    ->orWhere(function ($sub) use ($masterCourseIds) {
+                        $sub->whereNull('course_offering_id')
+                            ->whereHas('quiz', function ($q) use ($masterCourseIds) {
+                                $q->whereIn('master_course_id', $masterCourseIds);
+                            });
+                    });
             })
             ->latest()
             ->get();

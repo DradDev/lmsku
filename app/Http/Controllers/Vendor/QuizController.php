@@ -160,4 +160,46 @@ class QuizController extends Controller
 
         return back()->with('success', 'Kuis kelulusan berhasil dihapus.');
     }
+
+    public function approveRetake(\App\Models\QuizRetakeRequest $retakeRequest): RedirectResponse
+    {
+        $vendorId = Auth::id();
+        $quiz = $retakeRequest->quiz;
+        $offering = $retakeRequest->courseOffering;
+
+        $isAuthorized = ($offering && ($offering->lecturer_id === $vendorId || $offering->user_id === $vendorId)) ||
+                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        Auth::user()->isAdmin();
+
+        abort_unless($isAuthorized, 403, 'Akses ditolak.');
+
+        $retakeRequest->update([
+            'status' => 'approved',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return back()->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' berhasil disetujui!");
+    }
+
+    public function rejectRetake(\App\Models\QuizRetakeRequest $retakeRequest): RedirectResponse
+    {
+        $vendorId = Auth::id();
+        $quiz = $retakeRequest->quiz;
+        $offering = $retakeRequest->courseOffering;
+
+        $isAuthorized = ($offering && ($offering->lecturer_id === $vendorId || $offering->user_id === $vendorId)) ||
+                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        Auth::user()->isAdmin();
+
+        abort_unless($isAuthorized, 403, 'Akses ditolak.');
+
+        $retakeRequest->update([
+            'status' => 'rejected',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return back()->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' ditolak.");
+    }
 }

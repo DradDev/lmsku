@@ -345,7 +345,11 @@
                                             </span>
                                         </div>
                                         <p class="text-xs text-gray-500 mt-1">
-                                            Course: <strong>{{ $req->course->name ?? 'Course' }}</strong> • Quiz: <strong class="text-gray-800">{{ $req->quiz->title ?? 'Quiz' }}</strong> • Diajukan: {{ $req->created_at->format('d M Y H:i') }}
+                                            Course: <strong>{{ $req->courseOffering->name ?? ($req->quiz->masterCourse->name ?? ($req->course->name ?? 'Course')) }}</strong>
+                                            @if($req->courseOffering && $req->courseOffering->section_name)
+                                                • Kelas: <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-[10px]">{{ $req->courseOffering->section_name }}</span>
+                                            @endif
+                                            • Quiz: <strong class="text-gray-800">{{ $req->quiz->title ?? 'Quiz' }}</strong> • Diajukan: {{ $req->created_at->format('d M Y H:i') }}
                                         </p>
                                     </div>
 
