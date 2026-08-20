@@ -118,22 +118,26 @@
                     </button>
                 </div>
 
-                <!-- SEARCH BAR INPUT -->
-                <div style="position: relative; min-width: 280px; flex-grow: 1; max-width: 440px;">
-                    <div style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94A3B8; pointer-events: none; display: flex; align-items: center;">
+                <!-- SEARCH BAR INPUT (ROCK-SOLID FIXED HEIGHT & CENTERED ICONS) -->
+                <div style="position: relative; min-width: 280px; flex-grow: 1; max-width: 440px; height: 42px; display: flex; align-items: center;">
+                    <div style="position: absolute; left: 14px; top: 0; bottom: 0; margin: auto; height: 18px; width: 18px; color: #94A3B8; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 10;">
                         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                     </div>
                     <input type="text" 
                            id="user-search-input"
                            autocomplete="off"
                            placeholder="Cari nama, email, ID, atau institusi..."
-                           style="width: 100%; box-sizing: border-box; padding: 9px 38px 9px 40px; border: 1.5px solid #CBD5E1; border-radius: 10px; font-size: 13px; color: #0F172A; outline: none; background: #F8FAFC; transition: all 0.15s ease;">
+                           style="width: 100%; height: 42px; box-sizing: border-box; padding: 0 40px 0 40px; border: 1.5px solid #CBD5E1; border-radius: 10px; font-size: 13px; color: #0F172A; outline: none; background: #F8FAFC; transition: all 0.15s ease;"
+                           onfocus="this.style.background='#FFFFFF'; this.style.borderColor='#2563EB'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.1)'"
+                           onblur="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1'; this.style.boxShadow='none'">
                     <button type="button" 
                             id="clear-search-btn"
                             title="Hapus pencarian"
                             onclick="clearSearchInput()"
-                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); all: unset; cursor: pointer; color: #94A3B8; display: none; padding: 2px;">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                            style="position: absolute; right: 10px; top: 0; bottom: 0; margin: auto; height: 22px; width: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; background: #E2E8F0; color: #64748B; border: none; cursor: pointer; padding: 0; z-index: 10; transition: background 0.15s ease;"
+                            onmouseover="this.style.background='#CBD5E1'; this.style.color='#0F172A'"
+                            onmouseout="this.style.background='#E2E8F0'; this.style.color='#64748B'">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
                     </button>
                 </div>
             </div>
@@ -410,7 +414,7 @@
             const clearBtn = document.getElementById('clear-search-btn');
 
             if (clearBtn) {
-                clearBtn.style.display = rawSearch.length > 0 ? 'block' : 'none';
+                clearBtn.style.display = rawSearch.length > 0 ? 'inline-flex' : 'none';
             }
 
             const rows = document.querySelectorAll('.user-row');
