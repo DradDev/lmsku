@@ -22,30 +22,10 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    public function create(): RedirectResponse
-    {
-        return redirect()->route('admin.users.index')->with('info', 'Registrasi pengguna dilakukan mandiri oleh pengguna.');
-    }
-
-    public function store(Request $request): RedirectResponse
-    {
-        return redirect()->route('admin.users.index')->with('info', 'Registrasi pengguna dilakukan mandiri oleh pengguna.');
-    }
-
     public function show(User $user): View
     {
         $user->load('institution');
         return view('admin.users.show', compact('user'));
-    }
-
-    public function edit(User $user): RedirectResponse
-    {
-        return redirect()->route('admin.users.index')->with('info', 'Data pengguna bersifat mutlak dan dikelola mandiri oleh masing-masing pengguna.');
-    }
-
-    public function update(Request $request, User $user): RedirectResponse
-    {
-        return redirect()->route('admin.users.index')->with('info', 'Data pengguna bersifat mutlak dan dikelola mandiri oleh masing-masing pengguna.');
     }
 
     public function approve(Request $request, User $user): RedirectResponse

@@ -336,7 +336,7 @@ Route::middleware(['auth', 'role:admin'])
         // Users, Skills, Tags
         Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');
 
-        Route::resource('users', AdminUserController::class);
+        Route::resource('users', AdminUserController::class)->only(['index', 'show', 'destroy']);
 
         Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])
             ->name('users.approve');
