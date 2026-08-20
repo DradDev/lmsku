@@ -12,98 +12,69 @@ class SkillController extends Controller
 {
     public function index(): View
     {
-        $mainSkills = Skill::with(['tags', 'children' => function ($query) {
-                $query->with('tags')->orderBy('name');
-            }])
-            ->whereNull('parent_id')
+        $skills = Skill::with('tags')
             ->orderBy('name')
             ->get();
 
-        $orphanSkills = Skill::whereNotNull('parent_id')
-            ->whereDoesntHave('parent')
-            ->with('tags')
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.skills.index', compact('mainSkills', 'orphanSkills'));
+        return view('admin.skills.index', compact('skills'));
     }
 
     public function show(Skill $skill): View
     {
-        $skill->load(['tags', 'parent', 'children.tags']);
+        $skill->load('tags');
 
         return view('admin.skills.show', compact('skill'));
     }
 
     public function create(): View
     {
-        $parentSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.skills.create', compact('parentSkills'));
+        return view('admin.skills.create');
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:skills,name'],
+            'name'        => ['required', 'string', 'max:255', 'unique:skills,name'],
             'description' => ['nullable', 'string'],
-            'parent_id' => ['nullable', 'exists:skills,id'],
         ]);
 
-        Skill::create([
-            'name' => $validated['name'],
+        $skill = Skill::create([
+            'name'        => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
         return redirect()
-            ->route('admin.skills.index')
-            ->with('success', 'Skill berhasil ditambahkan.');
+            ->route('admin.skills.show', $skill)
+            ->with('success', "Main Skill '{$skill->name}' berhasil ditambahkan. Anda dapat langsung mengelola tag sub-topiknya di bawah.");
     }
 
     public function edit(Skill $skill): View
     {
-        $parentSkills = Skill::whereNull('parent_id')
-            ->where('id', '!=', $skill->id)
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.skills.edit', compact('skill', 'parentSkills'));
+        return view('admin.skills.edit', compact('skill'));
     }
 
     public function update(Request $request, Skill $skill): RedirectResponse
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:skills,name,' . $skill->id],
+            'name'        => ['required', 'string', 'max:255', 'unique:skills,name,' . $skill->id],
             'description' => ['nullable', 'string'],
-            'parent_id' => ['nullable', 'exists:skills,id'],
         ]);
-
-        if ((int) ($validated['parent_id'] ?? 0) === (int) $skill->id) {
-            return back()
-                ->withErrors(['parent_id' => 'Skill tidak boleh menjadi parent untuk dirinya sendiri.'])
-                ->withInput();
-        }
 
         $skill->update([
-            'name' => $validated['name'],
+            'name'        => $validated['name'],
             'description' => $validated['description'] ?? null,
-            'parent_id' => $validated['parent_id'] ?? null,
         ]);
 
-        return redirect()
-            ->route('admin.skills.index')
-            ->with('success', 'Skill berhasil diperbarui.');
+        return back()->with('success', "Data Main Skill '{$skill->name}' berhasil diperbarui.");
     }
 
     public function destroy(Skill $skill): RedirectResponse
     {
+        $skillName = $skill->name;
         $skill->delete();
 
         return redirect()
             ->route('admin.skills.index')
-            ->with('success', 'Skill berhasil dihapus.');
+            ->with('success', "Main Skill '{$skillName}' berhasil dihapus.");
     }
 }
