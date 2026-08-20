@@ -107,12 +107,15 @@ Route::middleware(['auth', 'role:student'])
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])
             ->name('courses.show');
 
-        // Materials
+        // Materials (Saved & Course-Linked)
         Route::get('/materials', [StudentMaterialController::class, 'index'])
             ->name('materials.index');
 
         Route::get('/materials/{material}', [StudentMaterialController::class, 'show'])
             ->name('materials.show');
+
+        Route::post('/materials/{material}/toggle-save', [StudentMaterialController::class, 'toggleSave'])
+            ->name('materials.toggle-save');
 
         // Quizzes
         Route::get('/quiz/{quiz}', [StudentQuizController::class, 'show'])

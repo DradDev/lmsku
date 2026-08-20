@@ -616,6 +616,40 @@
                     </div>
                 </div>
 
+                <!-- MATERI TERSIMPAN (SAVED STUDY MATERIALS) -->
+                @if(($savedMaterials ?? collect())->isNotEmpty())
+                    <div class="card">
+                        <div class="section-header">
+                            <div class="flex items-center gap-2">
+                                <h2 class="section-title">Materi Tersimpan</h2>
+                                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black">
+                                    {{ $savedMaterials->count() }}
+                                </span>
+                            </div>
+                            <a href="{{ route('student.materials.index') }}" class="section-meta">Lihat semua →</a>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            @foreach($savedMaterials as $saved)
+                                @php
+                                    $mat = $saved->material;
+                                    $cName = $saved->courseOffering?->masterCourse?->name ?? ($mat->masterCourse?->name ?? 'Course');
+                                @endphp
+                                <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-3 transition hover:bg-slate-100/70">
+                                    <div class="min-w-0 flex-1">
+                                        <span class="block text-[10px] font-bold text-indigo-600 truncate">{{ $cName }}</span>
+                                        <h4 class="text-xs font-bold text-slate-900 truncate mt-0.5">{{ $mat->title }}</h4>
+                                    </div>
+                                    <a href="{{ route('student.materials.show', $mat->id) }}"
+                                       class="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold rounded-lg shrink-0 transition">
+                                        Buka
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <!-- 3. RECENT ACTIVITY -->
                 <div class="card">
                     <div class="section-header">

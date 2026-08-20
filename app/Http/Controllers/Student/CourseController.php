@@ -148,7 +148,12 @@ class CourseController extends Controller
             $vc->can_get_certificate = $canGetCertificate;
         }
 
-        return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors', 'vendors'));
+        $savedMaterials = \App\Models\SavedMaterial::where('user_id', $user->id)
+            ->with(['material.masterCourse', 'courseOffering.masterCourse', 'courseOffering.lecturer'])
+            ->latest()
+            ->get();
+
+        return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors', 'vendors', 'savedMaterials'));
     }
 
     public function show(string $id): View

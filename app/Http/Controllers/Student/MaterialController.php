@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseOffering;
 use App\Models\LearningActivityLog;
 use App\Models\Material;
+use App\Models\SavedMaterial;
 use App\Services\CourseProgressService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -17,17 +19,12 @@ class MaterialController extends Controller
     {
         $user = Auth::user();
 
-        $enrolledMasterCourseIds = CourseOffering::whereIn('id', function ($q) use ($user) {
-            $q->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
-        })->pluck('master_course_id')->filter()->unique();
-
-        $materials = Material::query()
-            ->with(['masterCourse'])
-            ->whereIn('master_course_id', $enrolledMasterCourseIds)
+        $savedMaterials = SavedMaterial::where('user_id', $user->id)
+            ->with(['material.masterCourse', 'courseOffering.masterCourse', 'courseOffering.lecturer'])
             ->latest()
             ->get();
 
-        return view('student.materials.index', compact('materials'));
+        return view('student.materials.index', compact('savedMaterials'));
     }
 
     public function show(Material $material): View
@@ -44,6 +41,10 @@ class MaterialController extends Controller
 
         $material->load(['masterCourse']);
 
+        $isSaved = SavedMaterial::where('user_id', $user->id)
+            ->where('material_id', $material->id)
+            ->exists();
+
         app(CourseProgressService::class)->markMaterialAsCompleted(
             userId: $user->id,
             offeringId: $enrolledOffering->id,
@@ -59,6 +60,40 @@ class MaterialController extends Controller
             'created_at'         => now(),
         ]);
 
-        return view('student.materials.show', compact('material'));
+        return view('student.materials.show', [
+            'material'         => $material,
+            'enrolledOffering' => $enrolledOffering,
+            'isSaved'          => $isSaved,
+        ]);
+    }
+
+    public function toggleSave(Material $material): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $enrolledOffering = CourseOffering::where('master_course_id', $material->master_course_id)
+            ->whereIn('id', function ($q) use ($user) {
+                $q->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
+            })
+            ->first();
+
+        abort_unless($enrolledOffering, 403, 'Kamu tidak memiliki akses ke materi ini.');
+
+        $saved = SavedMaterial::where('user_id', $user->id)
+            ->where('material_id', $material->id)
+            ->first();
+
+        if ($saved) {
+            $saved->delete();
+            return back()->with('success', "Materi '{$material->title}' berhasil dihapus dari materi tersimpan.");
+        }
+
+        SavedMaterial::create([
+            'user_id'            => $user->id,
+            'material_id'        => $material->id,
+            'course_offering_id' => $enrolledOffering->id,
+        ]);
+
+        return back()->with('success', "Materi '{$material->title}' berhasil disimpan ke perpustakaan belajar kamu.");
     }
 }
