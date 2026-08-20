@@ -221,7 +221,12 @@ class CertificateController extends Controller
 
     public function showProject(Project $project): View
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (Certificate::where('project_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
@@ -252,7 +257,12 @@ class CertificateController extends Controller
 
     public function downloadProject(Project $project): Response
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (Certificate::where('project_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
@@ -288,14 +298,21 @@ class CertificateController extends Controller
 
     private function resolveCertificateData(object $course): array
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (Certificate::where('course_offering_id', $course->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $isEnrolled = DB::table('enrollments')
             ->where('user_id', $student->id)
             ->where('course_offering_id', $course->id)
             ->exists();
 
-        abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
+        if ($currentUser->role !== 'admin') {
+            abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
+        }
 
         $course->load(['quizzes.questions', 'lecturer.institution', 'masterCourse']);
 
