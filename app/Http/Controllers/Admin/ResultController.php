@@ -37,6 +37,23 @@ class ResultController extends Controller
             ->latest('id')
             ->get();
 
+        foreach ($results as $res) {
+            $masterCourseId = $res->quiz?->master_course_id ?? $res->quiz?->course?->master_course_id;
+            $res->certificate_record = \App\Models\Certificate::where('user_id', $res->user_id)
+                ->where(function ($q) use ($res, $masterCourseId) {
+                    if ($res->quiz?->course_id) {
+                        $q->where('course_offering_id', $res->quiz->course_id);
+                    }
+                    if ($masterCourseId) {
+                        $q->orWhereIn('course_offering_id', function ($sub) use ($masterCourseId) {
+                            $sub->select('id')->from('course_offerings')->where('master_course_id', $masterCourseId);
+                        });
+                    }
+                })
+                ->latest('id')
+                ->first();
+        }
+
         $totalQuizResults  = (clone $baseQuery)->count();
         $verifiedQuizCount = (clone $baseQuery)->where('is_verified', true)->count();
         $pendingQuizCount  = (clone $baseQuery)->where('is_verified', false)->count();

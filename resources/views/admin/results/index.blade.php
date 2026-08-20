@@ -12,7 +12,7 @@
                     {{ $activeTab === 'project' ? 'Project Results & Certificates' : 'Final Quiz Results' }}
                 </h1>
                 <p class="mt-2 text-slate-500">
-                    {{ $activeTab === 'project' ? 'Monitor student project completions, verify project certificates & track talent accomplishments.' : 'Monitor student quiz attempts, verification status, and detailed scores.' }}
+                    {{ $activeTab === 'project' ? 'Monitor kelulusan pengerjaan project, verifikasi integritas sertifikat resmi & penerbitan hash Blockchain.' : 'Monitor kelulusan ujian final, verifikasi integritas sertifikat kelulusan & penerbitan hash Blockchain.' }}
                 </p>
             </div>
 
@@ -21,6 +21,13 @@
                 <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm flex items-center gap-2">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
                     <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 shadow-sm flex items-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>{{ session('error') }}</span>
                 </div>
             @endif
 
@@ -160,12 +167,15 @@
                         <div class="divide-y divide-slate-200" id="results-list-container">
                             @foreach ($results as $result)
                                 @php
+                                    $cert = $result->certificate_record;
                                     $searchData = strtolower(
                                         ($result->user->name ?? '') . ' ' . 
                                         ($result->user->email ?? '') . ' ' . 
                                         ($result->quiz->course->name ?? '') . ' ' . 
                                         ($result->quiz->title ?? '') . ' ' . 
                                         $result->score . ' ' . 
+                                        ($cert->credential_code ?? '') . ' ' . 
+                                        ($result->blockchain_hash ?? '') . ' ' . 
                                         ($result->is_verified ? 'verified terverifikasi blockchain' : 'pending menunggu approval')
                                     );
                                 @endphp
@@ -173,65 +183,113 @@
                                      data-status="{{ $result->is_verified ? 'verified' : 'pending' }}"
                                      data-search="{{ $searchData }}">
                                     <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-                                        <div class="min-w-0">
+                                        <div class="min-w-0 flex-1">
                                             <div class="flex items-center gap-2 flex-wrap mb-2">
-                                                <h3 class="text-lg font-semibold text-slate-900">
+                                                <h3 class="text-lg font-bold text-slate-900">
                                                     {{ $result->quiz->title ?? 'Quiz' }}
                                                 </h3>
 
                                                 @if($result->is_verified)
-                                                    <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                                        ✓ Verified & Blockchain Registered
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-800">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                                                        <span>Verified Blockchain</span>
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                                        Pending Admin Approval
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-extrabold text-amber-800">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                        <span>Pending Admin Approval</span>
+                                                    </span>
+                                                @endif
+
+                                                @if($cert && $cert->credential_code)
+                                                    <span class="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded-md">
+                                                        {{ $cert->credential_code }}
                                                     </span>
                                                 @endif
                                             </div>
 
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 text-sm mt-3">
                                                 <div>
-                                                    <p class="text-slate-400">Student</p>
-                                                    <p class="font-medium text-slate-800">{{ $result->user->name ?? 'Unknown Student' }}</p>
+                                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Mahasiswa</p>
+                                                    <p class="font-bold text-slate-900 mt-0.5">{{ $result->user->name ?? 'Unknown Student' }}</p>
+                                                    <p class="text-xs text-slate-500">{{ $result->user->email ?? '-' }}</p>
                                                 </div>
 
                                                 <div>
-                                                    <p class="text-slate-400">Course</p>
-                                                    <p class="font-medium text-slate-800">{{ $result->quiz->course->name ?? '-' }}</p>
+                                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Mata Kuliah</p>
+                                                    <p class="font-semibold text-slate-800 mt-0.5">{{ $result->quiz->course->name ?? '-' }}</p>
+                                                    <p class="text-xs text-slate-500">Kelas Akademik</p>
                                                 </div>
 
                                                 <div>
-                                                    <p class="text-slate-400">Submitted</p>
-                                                    <p class="font-medium text-slate-800">
+                                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Waktu Submit & Nilai</p>
+                                                    <p class="font-semibold text-slate-800 mt-0.5">
                                                         {{ optional($result->created_at)->format('d M Y, H:i') }}
                                                     </p>
+                                                    <p class="text-xs text-emerald-600 font-bold">Skor Final: {{ $result->score }} (Lulus)</p>
+                                                </div>
+
+                                                <div>
+                                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Status Validasi</p>
+                                                    @if($result->is_verified)
+                                                        <p class="text-xs font-mono text-slate-700 truncate mt-0.5" title="{{ $result->blockchain_hash }}">
+                                                            Hash: {{ substr($result->blockchain_hash ?? '0x', 0, 16) }}...
+                                                        </p>
+                                                        <p class="text-[11px] text-emerald-700 font-bold">Terverifikasi {{ optional($result->completed_at ?? $result->updated_at)->format('d/m/Y H:i') }}</p>
+                                                    @else
+                                                        <p class="text-xs text-amber-700 font-medium mt-0.5">Menunggu Hash Admin</p>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="flex flex-col sm:flex-row sm:items-center gap-3 xl:justify-end">
-                                            <div class="rounded-2xl bg-emerald-50 border border-emerald-200 px-5 py-3 min-w-[120px] text-center">
-                                                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Nilai Final (Lulus)</p>
-                                                <p class="mt-0.5 text-2xl font-black text-emerald-800">{{ $result->score }}</p>
-                                            </div>
-
-                                            <div class="flex flex-wrap gap-2">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <!-- DETAIL HASIL BUTTON -->
                                                 <a href="{{ route('admin.results.show', $result->id) }}"
-                                                   class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition">
-                                                    Detail Hasil
+                                                   class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition shadow-sm"
+                                                   title="Lihat rincian jawaban dan skor mahasiswa">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    <span>Detail Hasil</span>
                                                 </a>
 
                                                 @if(!$result->is_verified)
+                                                    <!-- APPROVE BUTTON -->
                                                     <form method="POST" action="{{ route('admin.results.verify', $result->id) }}"
                                                           onsubmit="return confirm('Approve sertifikat & catat data kelulusan {{ addslashes($result->user->name ?? 'Mahasiswa') }} ke Blockchain?');">
                                                         @csrf
                                                         <button
                                                             type="submit"
-                                                            class="inline-flex items-center rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 text-sm font-extrabold text-white shadow-sm transition">
-                                                            Approve & Catat ke Blockchain
+                                                            class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-extrabold text-white transition shadow-sm">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            <span>Approve & Catat ke Blockchain</span>
                                                         </button>
                                                     </form>
+                                                @else
+                                                    <!-- CEK INTEGRITAS BUTTON -->
+                                                    <form method="POST" action="{{ route('admin.results.integrity', $result->id) }}">
+                                                        @csrf
+                                                        <button
+                                                            type="submit"
+                                                            class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-3.5 py-2 text-xs font-bold transition shadow-sm"
+                                                            title="Verifikasi keaslian hash data di Blockchain">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                                            <span>Cek Integritas Data</span>
+                                                        </button>
+                                                    </form>
+
+                                                    <!-- LIHAT SERTIFIKAT BUTTON -->
+                                                    @php
+                                                        $courseParam = $cert?->course_offering_id ?? $result->quiz?->course_id ?? $result->quiz?->master_course_id;
+                                                    @endphp
+                                                    @if($courseParam)
+                                                        <a href="{{ route('student.certificate.show', $courseParam) }}" target="_blank"
+                                                           class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-extrabold px-3.5 py-2 border border-emerald-200 hover:bg-emerald-100 transition shadow-sm"
+                                                           title="Buka Sertifikat Kelulusan Resmi">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                                                            <span>Lihat Sertifikat</span>
+                                                        </a>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
@@ -314,15 +372,17 @@
                                                 </h3>
 
                                                 @if($isVerified)
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-800">
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-800">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
                                                         <span>Verified Blockchain</span>
                                                     </span>
                                                 @elseif($isPending)
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-extrabold text-amber-800">
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-extrabold text-amber-800">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                                                         <span>Pending Admin Verification</span>
                                                     </span>
                                                 @else
-                                                    <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                                    <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                                                         <span>In Progress / Review</span>
                                                     </span>
                                                 @endif
@@ -348,11 +408,11 @@
                                                 </div>
 
                                                 <div>
-                                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Waktu Selesai</p>
+                                                    <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Waktu Selesai & Nilai</p>
                                                     <p class="font-semibold text-slate-800 mt-0.5">
                                                         {{ optional($part->completed_at ?? $part->created_at)->format('d M Y, H:i') }}
                                                     </p>
-                                                    <p class="text-xs text-emerald-600 font-medium">Progres 100% (Selesai)</p>
+                                                    <p class="text-xs text-emerald-600 font-bold">Progres: 100% (Selesai)</p>
                                                 </div>
 
                                                 <div>
@@ -370,34 +430,49 @@
                                         </div>
 
                                         <div class="flex flex-col sm:flex-row sm:items-center gap-3 xl:justify-end">
-                                            <div class="flex flex-wrap gap-2">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <!-- DETAIL PORTOFOLIO BUTTON -->
+                                                <a href="{{ route('lecturer.students.portfolio', $part->user_id) }}" target="_blank"
+                                                   class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition shadow-sm"
+                                                   title="Lihat portofolio & riwayat proyek mahasiswa">
+                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                    <span>Detail Portofolio</span>
+                                                </a>
+
                                                 @if(!$isVerified)
+                                                    <!-- APPROVE BUTTON -->
                                                     <form method="POST" action="{{ route('admin.results.project.verify', $part->id) }}"
                                                           onsubmit="return confirm('Verifikasi integritas sertifikat project {{ addslashes($part->user->name ?? 'Mahasiswa') }} dan terbitkan Hash Blockchain?');">
                                                         @csrf
                                                         <button
                                                             type="submit"
-                                                            class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-extrabold text-white transition shadow-sm">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                                            <span>Verifikasi & Catat ke Blockchain</span>
+                                                            class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3.5 py-2 text-xs font-extrabold text-white transition shadow-sm">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            <span>Approve & Catat ke Blockchain</span>
                                                         </button>
                                                     </form>
                                                 @else
+                                                    <!-- CEK INTEGRITAS BUTTON -->
                                                     <form method="POST" action="{{ route('admin.results.project.integrity', $part->id) }}">
                                                         @csrf
                                                         <button
                                                             type="submit"
-                                                            class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition shadow-sm"
+                                                            class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-3.5 py-2 text-xs font-bold transition shadow-sm"
                                                             title="Verifikasi keaslian hash data di Blockchain">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                                                             <span>Cek Integritas Data</span>
                                                         </button>
                                                     </form>
 
-                                                    <span class="px-3 py-2 bg-emerald-50 text-emerald-800 text-xs font-extrabold rounded-xl border border-emerald-200 flex items-center gap-1">
-                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
-                                                        <span>Blockchain Verified</span>
-                                                    </span>
+                                                    <!-- LIHAT SERTIFIKAT BUTTON -->
+                                                    @if($part->project_id)
+                                                        <a href="{{ route('student.certificate.project.show', $part->project_id) }}" target="_blank"
+                                                           class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-extrabold px-3 py-2 border border-emerald-200 hover:bg-emerald-100 transition shadow-sm"
+                                                           title="Buka Sertifikat Kelulusan Resmi">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
+                                                            <span>Lihat Sertifikat</span>
+                                                        </a>
+                                                    @endif
                                                 @endif
                                             </div>
                                         </div>
