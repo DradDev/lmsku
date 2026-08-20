@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -14,18 +13,20 @@ class CourseController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Course::with(['user', 'category', 'materials', 'quizzes', 'students'])
+        $query = Course::with(['user', 'materials', 'quizzes', 'students'])
             ->withCount(['materials', 'quizzes', 'students']);
 
         // Filter Provider Type (Vendor vs Lecturer)
         if ($request->filled('provider_type')) {
             if ($request->provider_type === 'vendor') {
-                $query->whereHas('user', function ($q) {
-                    $q->where('role', 'vendor');
+                $query->where(function ($q) {
+                    $q->where('offering_type', 'vendor')
+                      ->orWhereHas('user', fn($u) => $u->where('role', 'vendor'));
                 });
             } elseif ($request->provider_type === 'lecturer') {
-                $query->whereHas('user', function ($q) {
-                    $q->where('role', 'lecturer');
+                $query->where(function ($q) {
+                    $q->where('offering_type', 'academic')
+                      ->orWhereHas('user', fn($u) => $u->where('role', 'lecturer'));
                 });
             }
         }
@@ -43,9 +44,11 @@ class CourseController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+                $q->whereHas('masterCourse', function ($mc) use ($search) {
+                    $mc->where('name', 'like', "%{$search}%")
+                       ->orWhere('description', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user', fn($u) => $u->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -53,8 +56,8 @@ class CourseController extends Controller
 
         // Statistics
         $totalCourses = Course::count();
-        $vendorCourses = Course::whereHas('user', fn($q) => $q->where('role', 'vendor'))->count();
-        $lecturerCourses = Course::whereHas('user', fn($q) => $q->where('role', 'lecturer'))->count();
+        $vendorCourses = Course::where('offering_type', 'vendor')->orWhereHas('user', fn($q) => $q->where('role', 'vendor'))->count();
+        $lecturerCourses = Course::where('offering_type', 'academic')->orWhereHas('user', fn($q) => $q->where('role', 'lecturer'))->count();
         $activeCourses = Course::where('is_archived', false)->count();
 
         return view('admin.courses.index', compact(
@@ -68,9 +71,24 @@ class CourseController extends Controller
 
     public function show(Course $course): View
     {
-        $course->load(['user', 'category', 'materials', 'quizzes.questions', 'students', 'skills']);
+        $course->load([
+            'user',
+            'materials',
+            'quizzes.questions',
+            'students',
+            'skills',
+            'enrollments.user',
+            'masterCourse.courses.enrollments.user',
+        ]);
 
-        return view('admin.courses.show', compact('course'));
+        $allBatches = $course->masterCourse
+            ? $course->masterCourse->courses()->with(['enrollments.user'])->orderBy('id')->get()
+            : collect([$course]);
+
+        $completedCount = $course->enrollments->where('status', 'completed')->count();
+        $inProgressCount = $course->enrollments->where('status', 'in_progress')->count();
+
+        return view('admin.courses.show', compact('course', 'allBatches', 'completedCount', 'inProgressCount'));
     }
 
     public function suspend(Request $request, Course $course): RedirectResponse

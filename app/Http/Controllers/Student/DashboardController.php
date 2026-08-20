@@ -134,6 +134,12 @@ class DashboardController extends Controller
             ->whereIn('status', ['in_progress', 'development', 'review', 'completed'])
             ->count();
 
+        $savedMaterials = \App\Models\SavedMaterial::where('user_id', $user->id)
+            ->with(['material.masterCourse', 'courseOffering.masterCourse'])
+            ->latest()
+            ->take(3)
+            ->get();
+
         return view('student.dashboard', compact(
             'courses',
             'availableQuizzes',
@@ -145,7 +151,8 @@ class DashboardController extends Controller
             'pendingQuiz',
             'activeParticipations',
             'pendingInvitationsCount',
-            'totalJoinedProjectsCount'
+            'totalJoinedProjectsCount',
+            'savedMaterials'
         ));
     }
 }

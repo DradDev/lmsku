@@ -19,14 +19,14 @@ class RecalculateCourseProgress extends Command
         $userId = $this->option('user_id');
         $courseId = $this->option('course_id');
 
-        $query = Enrollment::query();
+        $query = Enrollment::query()->whereNotNull('course_offering_id');
 
         if ($userId) {
             $query->where('user_id', $userId);
         }
 
         if ($courseId) {
-            $query->where('course_id', $courseId);
+            $query->where('course_offering_id', $courseId);
         }
 
         $total = $query->count();
@@ -43,10 +43,12 @@ class RecalculateCourseProgress extends Command
 
         $query->chunkById(100, function ($enrollments) use ($courseProgressService, $bar) {
             foreach ($enrollments as $enrollment) {
-                $courseProgressService->recalculate(
-                    $enrollment->user_id,
-                    $enrollment->course_id
-                );
+                if ($enrollment->course_offering_id) {
+                    $courseProgressService->recalculate(
+                        $enrollment->user_id,
+                        $enrollment->course_offering_id
+                    );
+                }
 
                 $bar->advance();
             }

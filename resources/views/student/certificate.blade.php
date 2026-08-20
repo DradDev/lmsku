@@ -43,7 +43,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Final Score</p>
-                        <p class="mt-1 text-3xl font-bold text-slate-900">{{ $attempt->score }} / 100</p>
+                        <p class="mt-1 text-3xl font-bold text-slate-900">{{ $attempt->score ?? 100 }} / 100</p>
                     </div>
 
                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -60,7 +60,7 @@
                 <div class="mt-12 pt-8 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
                     <div>
                         <p class="font-bold text-slate-700">Instructor / Author</p>
-                        <p>{{ $course->user->name ?? 'Lecturer' }}</p>
+                        <p>{{ $course->user->name ?? $course->lecturer->name ?? 'Lecturer' }}</p>
                     </div>
                     <div class="text-right">
                         <p class="font-bold text-slate-700">Credential ID</p>

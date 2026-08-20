@@ -8,6 +8,7 @@ class CourseOffering extends Model
 {
     protected $fillable = [
         'master_course_id',
+        'type',
         'academic_term_id',
         'lecturer_id',
         'section_name',
@@ -17,6 +18,8 @@ class CourseOffering extends Model
         'is_archived',
         'certificate_threshold',
         'status',
+        'user_id',
+        'batch_name',
     ];
 
     protected $casts = [
@@ -47,18 +50,17 @@ class CourseOffering extends Model
         return $this->belongsTo(User::class, 'lecturer_id');
     }
 
+
     public function materials()
     {
-        return $this->hasMany(Material::class, 'master_course_id', 'master_course_id');
+        return $this->hasMany(Material::class, 'course_offering_id');
     }
 
     public function getMaterialsAttribute()
     {
-        return Material::where('master_course_id', $this->master_course_id)
-            ->where(function ($q) {
-                $q->whereNull('course_offering_id')
-                  ->orWhere('course_offering_id', $this->id)
-                  ->orWhere('course_id', $this->id);
+        return Material::where('course_offering_id', $this->id)
+            ->orWhere(function ($q) {
+                $q->where('master_course_id', $this->master_course_id)->whereNull('course_offering_id');
             })
             ->latest()
             ->get();
@@ -79,10 +81,62 @@ class CourseOffering extends Model
         return $this->hasMany(Certificate::class, 'course_offering_id');
     }
 
+    public function students()
+    {
+        return $this->belongsToMany(User::class, 'enrollments', 'course_offering_id', 'user_id')
+            ->withTimestamps();
+    }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class, 'master_course_skills', 'master_course_id', 'skill_id', 'master_course_id', 'id')
+            ->withPivot('is_main')
+            ->withTimestamps();
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'master_course_tags', 'master_course_id', 'tag_id', 'master_course_id', 'id')
+            ->withTimestamps();
+    }
+
     // Accessors for 100% Backward Compatibility with Blade Views
+    public function getUserIdAttribute(): ?int
+    {
+        return $this->lecturer_id;
+    }
+
+    public function setUserIdAttribute($value): void
+    {
+        $this->attributes['lecturer_id'] = $value;
+    }
+
     public function getNameAttribute(): string
     {
         return $this->masterCourse->name ?? 'Course';
+    }
+
+    public function getBatchNameAttribute(): string
+    {
+        return $this->section_name ?? 'Batch 1';
+    }
+
+    public function setBatchNameAttribute($value): void
+    {
+        $this->attributes['section_name'] = $value;
+    }
+
+    public function getDurationWeeksAttribute(): int
+    {
+        if ($this->start_date && $this->end_date) {
+            return max(1, (int) round($this->start_date->diffInWeeks($this->end_date)));
+        }
+        return 4;
+    }
+
+    public function getCodeAttribute(): ?string
+    {
+        return $this->masterCourse->code ?? null;
     }
 
     public function getDescriptionAttribute(): ?string
@@ -95,9 +149,25 @@ class CourseOffering extends Model
         return $this->masterCourse->level ?? 'Beginner';
     }
 
-    public function getCategoryIdAttribute(): ?int
+    public function getMainSkillAttribute()
     {
-        return $this->masterCourse->category_id ?? null;
+        return $this->masterCourse?->main_skill ?? null;
+    }
+
+    public function getCategoryAttribute()
+    {
+        $mainSkillName = $this->masterCourse?->main_skill?->name;
+        return $mainSkillName ? (object)['name' => $mainSkillName] : null;
+    }
+
+    public function getSkillsAttribute()
+    {
+        return $this->masterCourse ? $this->masterCourse->skills : collect();
+    }
+
+    public function getTagsAttribute()
+    {
+        return $this->masterCourse ? $this->masterCourse->tags : collect();
     }
 
     /**
@@ -142,11 +212,30 @@ class CourseOffering extends Model
     }
 
     /**
-     * Scope: hanya kelas yang published
+     * Scopes
      */
     public function scopePublished($query)
     {
         return $query->where('status', 'published');
+    }
+
+    public function scopeAcademic($query)
+    {
+        return $query->where('type', 'academic');
+    }
+
+    public function scopeVendor($query)
+    {
+        return $query->where('type', 'vendor');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('is_archived', false)
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now()->startOfDay());
+            });
     }
 }
 

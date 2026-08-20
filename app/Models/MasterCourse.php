@@ -13,7 +13,6 @@ class MasterCourse extends Model
         'description',
         'level',
         'certificate_threshold',
-        'category_id',
     ];
 
     public function user()
@@ -26,9 +25,9 @@ class MasterCourse extends Model
         return $this->hasMany(Course::class, 'master_course_id');
     }
 
-    public function category()
+    public function getMainSkillAttribute()
     {
-        return $this->belongsTo(Category::class);
+        return $this->skills->firstWhere('pivot.is_main', true) ?? $this->skills->first();
     }
 
     public function materials()

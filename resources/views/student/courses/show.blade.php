@@ -204,15 +204,27 @@
                                     </p>
                                 </div>
 
-                                <div class="flex gap-3">
+                                <div class="flex items-center gap-2">
                                     @if($enrollment)
+                                        @php $isSavedMat = in_array($material->id, $savedMaterialIds ?? []); @endphp
+                                        <form action="{{ route('student.materials.toggle-save', $material->id) }}" method="POST" class="inline-block">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="inline-flex items-center justify-center p-2 rounded-xl border {{ $isSavedMat ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50' }} transition shadow-2xs"
+                                                    title="{{ $isSavedMat ? 'Tersimpan di koleksi (Klik untuk menghapus)' : 'Simpan materi ini ke perpustakaan belajar' }}">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="{{ $isSavedMat ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2">
+                                                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+
                                         <a href="{{ route('student.materials.show', $material) }}"
-                                            class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
-                                            View Material
+                                            class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition">
+                                            Buka Materi
                                         </a>
                                     @else
                                         <span class="inline-flex items-center justify-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-500 border border-slate-200">
-                                            🔒 Terkunci (Ambil Course)
+                                            Terkunci (Ambil Course)
                                         </span>
                                     @endif
                                 </div>

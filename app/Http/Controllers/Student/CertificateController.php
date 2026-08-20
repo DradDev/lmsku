@@ -22,17 +22,15 @@ class CertificateController extends Controller
     {
         $student = Auth::user();
 
-        // 1. Ambil Seluruh Kursus Mahasiswa (3NF CourseOfferings & Legacy Course)
+        // 1. Ambil Seluruh Kursus Mahasiswa (3NF CourseOfferings)
         $enrollments = Enrollment::with([
             'courseOffering.masterCourse.quizzes.questions',
             'courseOffering.masterCourse.skills',
-            'courseOffering.masterCourse.category',
             'courseOffering.lecturer.institution',
             'courseOffering.academicTerm',
-            'course.quizzes.questions',
-            'course.skills',
+            'course.masterCourse.quizzes.questions',
+            'course.masterCourse.skills',
             'course.user.institution',
-            'course.category',
         ])
             ->where('user_id', $student->id)
             ->latest()
@@ -59,22 +57,15 @@ class CertificateController extends Controller
             $item->final_quiz = $quizzes->firstWhere('quiz_type', 'final');
 
             $certificateRecord = Certificate::where('user_id', $student->id)
-                ->where(function ($q) use ($enrollment, $item) {
-                    if ($enrollment->course_offering_id) {
-                        $q->where('course_offering_id', $enrollment->course_offering_id);
-                    } else {
-                        $q->where('course_id', $item->id);
-                    }
-                })
+                ->where('course_offering_id', $enrollment->course_offering_id)
                 ->first();
 
             $item->certificate_record = $certificateRecord;
 
             $tempCert = new Certificate([
-                'user_id' => $student->id,
+                'user_id'            => $student->id,
                 'course_offering_id' => $enrollment->course_offering_id,
-                'course_id' => $enrollment->course_id,
-                'completed_at' => $enrollment->updated_at ?? now(),
+                'completed_at'       => $enrollment->updated_at ?? now(),
             ]);
             $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
 
@@ -124,7 +115,6 @@ class CertificateController extends Controller
             'project.creator.institution',
             'project.user.institution',
             'project.skills',
-            'project.category',
             'project.tags',
         ])
             ->where('user_id', $student->id)
@@ -155,15 +145,18 @@ class CertificateController extends Controller
             $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
 
             // Cek kelayakan sertifikat proyek
-            $isCompleted = ($part->status === 'completed') || ($part->progress_percent >= 100);
-            $isVerified = ($certificateRecord && $certificateRecord->status === 'verified');
-            $isPending = ($certificateRecord && $certificateRecord->status === 'pending');
+            $isVerified = ($certificateRecord && $certificateRecord->status === 'verified' && !empty($certificateRecord->blockchain_hash));
+            $isPending = ($certificateRecord && $certificateRecord->status === 'pending') || (!$certificateRecord && $part->status === 'completed');
 
-            if ($isCompleted || $isVerified) {
+            if ($isVerified) {
                 $item->can_get_certificate = true;
-                $item->certificate_status_text = 'Sertifikat Project sudah selesai diverifikasi dan siap diunduh.';
+                $item->certificate_status_text = 'Sertifikat Project resmi telah diverifikasi Admin & tercatat di Blockchain.';
                 $item->status_badge = 'Verified';
-            } elseif ($isPending || $part->status === 'review') {
+            } elseif ($isPending) {
+                $item->can_get_certificate = false;
+                $item->certificate_status_text = 'Pengerjaan selesai & disetujui. Menunggu verifikasi integritas & penerbitan hash blockchain oleh Admin.';
+                $item->status_badge = 'Pending';
+            } elseif ($part->status === 'review') {
                 $item->can_get_certificate = false;
                 $item->certificate_status_text = 'Proyek sedang dalam tahap evaluasi/review akhir oleh Pembimbing.';
                 $item->status_badge = 'Review';
@@ -186,19 +179,15 @@ class CertificateController extends Controller
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
+        $offeringId = $courseOffering?->id ?? $course->id;
+
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where(function ($q) use ($courseOffering, $course) {
-                if ($courseOffering) {
-                    $q->where('course_offering_id', $courseOffering->id);
-                } else {
-                    $q->where('course_id', $course->id);
-                }
-            })->first();
+            ->where('course_offering_id', $offeringId)
+            ->first();
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
-            'user_id' => $student->id,
-            'course_id' => $course->id,
-            'course_offering_id' => $courseOffering?->id,
+            'user_id'            => $student->id,
+            'course_offering_id' => $offeringId,
         ]))->generateCredentialCode();
 
         return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'));
@@ -211,19 +200,15 @@ class CertificateController extends Controller
 
         [$student, $finalQuiz, $attempt] = $this->resolveCertificateData($course);
 
+        $offeringId = $courseOffering?->id ?? $course->id;
+
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where(function ($q) use ($courseOffering, $course) {
-                if ($courseOffering) {
-                    $q->where('course_offering_id', $courseOffering->id);
-                } else {
-                    $q->where('course_id', $course->id);
-                }
-            })->first();
+            ->where('course_offering_id', $offeringId)
+            ->first();
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
-            'user_id' => $student->id,
-            'course_id' => $course->id,
-            'course_offering_id' => $courseOffering?->id,
+            'user_id'            => $student->id,
+            'course_offering_id' => $offeringId,
         ]))->generateCredentialCode();
 
         $pdf = Pdf::loadView('student.certificate_pdf', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'))
@@ -236,7 +221,12 @@ class CertificateController extends Controller
 
     public function showProject(Project $project): View
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (Certificate::where('project_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
@@ -246,12 +236,17 @@ class CertificateController extends Controller
             ->where('project_id', $project->id)
             ->first();
 
-        $isEligible = ($participation && ($participation->status === 'completed' || $participation->progress_percent >= 100))
-            || ($certificateRecord && $certificateRecord->status === 'verified');
+        $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
 
-        abort_unless($isEligible, 403, 'Sertifikat project belum dapat diakses. Selesaikan seluruh tugas proyek hingga 100% terlebih dahulu.');
+        if ($currentUser->role !== 'admin') {
+            abort_unless(
+                $isEligible,
+                403,
+                'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
+            );
+        }
 
-        $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
+        $project->load(['creator.institution', 'user.institution', 'skills']);
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
@@ -264,7 +259,12 @@ class CertificateController extends Controller
 
     public function downloadProject(Project $project): Response
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (Certificate::where('project_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
@@ -274,12 +274,17 @@ class CertificateController extends Controller
             ->where('project_id', $project->id)
             ->first();
 
-        $isEligible = ($participation && ($participation->status === 'completed' || $participation->progress_percent >= 100))
-            || ($certificateRecord && $certificateRecord->status === 'verified');
+        $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
 
-        abort_unless($isEligible, 403, 'Sertifikat project belum dapat diakses. Selesaikan seluruh tugas proyek hingga 100% terlebih dahulu.');
+        if ($currentUser->role !== 'admin') {
+            abort_unless(
+                $isEligible,
+                403,
+                'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
+            );
+        }
 
-        $project->load(['creator.institution', 'user.institution', 'skills', 'category']);
+        $project->load(['creator.institution', 'user.institution', 'skills']);
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
@@ -297,30 +302,23 @@ class CertificateController extends Controller
 
     private function resolveCertificateData(object $course): array
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (Certificate::where('course_offering_id', $course->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                : $currentUser);
 
-        $isOffering = $course instanceof CourseOffering;
+        $isEnrolled = DB::table('enrollments')
+            ->where('user_id', $student->id)
+            ->where('course_offering_id', $course->id)
+            ->exists();
 
-        if ($isOffering) {
-            $isEnrolled = DB::table('enrollments')
-                ->where('user_id', $student->id)
-                ->where('course_offering_id', $course->id)
-                ->exists();
-        } else {
-            $isEnrolled = DB::table('enrollments')
-                ->where('user_id', $student->id)
-                ->where('course_id', $course->id)
-                ->exists();
+        if ($currentUser->role !== 'admin') {
+            abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
         }
 
-        abort_unless($isEnrolled, 403, 'Kamu tidak terdaftar di course ini.');
-
-        $course->load(['quizzes.questions']);
-        if ($isOffering) {
-            $course->load(['lecturer.institution', 'masterCourse']);
-        } else {
-            $course->load(['user.institution']);
-        }
+        $course->load(['quizzes.questions', 'lecturer.institution', 'masterCourse']);
 
         $quizzes = $course->quizzes ?? collect();
         if ($quizzes->isEmpty() && isset($course->masterCourse)) {
@@ -333,33 +331,42 @@ class CertificateController extends Controller
 
         $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
-        abort_if($approvedQuestions->count() === 0, 403, 'Certificate belum tersedia karena final quiz belum memiliki soal yang disetujui.');
+        if ($currentUser->role !== 'admin') {
+            abort_if($approvedQuestions->count() === 0, 403, 'Certificate belum tersedia karena final quiz belum memiliki soal yang disetujui.');
+        }
 
         $attempt = QuizAttempt::where('user_id', $student->id)
             ->where('quiz_id', $finalQuiz->id)
             ->orderByDesc('score')
             ->first();
 
+        if (!$attempt && $currentUser->role === 'admin') {
+            $attempt = QuizAttempt::where('quiz_id', $finalQuiz->id)
+                ->where('is_verified', true)
+                ->orderByDesc('score')
+                ->first()
+                ?? QuizAttempt::where('quiz_id', $finalQuiz->id)->latest()->first();
+
+            if ($attempt && $attempt->user) {
+                $student = $attempt->user;
+            }
+        }
+
         $threshold = $course->certificate_threshold ?? ($course->masterCourse?->certificate_threshold ?? 60);
 
-        abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
-        abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '%.');
-
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where(function ($q) use ($isOffering, $course) {
-                if ($isOffering) {
-                    $q->where('course_offering_id', $course->id);
-                } else {
-                    $q->where('course_id', $course->id);
-                }
-            })
+            ->where('course_offering_id', $course->id)
             ->first();
 
-        abort_if(
-            !$attempt->is_verified && (!$certificateRecord || $certificateRecord->status !== 'verified'),
-            403,
-            'Sertifikat sedang dalam proses verifikasi Admin. Harap tunggu persetujuan Admin.'
-        );
+        if ($currentUser->role !== 'admin') {
+            abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
+            abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '%.');
+            abort_if(
+                !$attempt->is_verified && (!$certificateRecord || $certificateRecord->status !== 'verified'),
+                403,
+                'Sertifikat sedang dalam proses verifikasi Admin. Harap tunggu persetujuan Admin.'
+            );
+        }
 
         return [$student, $finalQuiz, $attempt];
     }

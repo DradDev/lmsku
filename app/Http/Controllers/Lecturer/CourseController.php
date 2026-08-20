@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseOffering;
 use App\Models\Material;
@@ -32,8 +31,8 @@ class CourseController extends Controller
             ->get();
 
         // Fallback ke legacy Courses jika ada
-        $legacyCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags', 'category'])
-            ->where('user_id', $lecturerId)
+        $legacyCourses = Course::with(['materials', 'quizzes', 'students', 'skills', 'tags'])
+            ->where('lecturer_id', $lecturerId)
             ->where('is_archived', false)
             ->latest()
             ->get();
@@ -47,18 +46,19 @@ class CourseController extends Controller
     public function show($id): View
     {
         $lecturerId = Auth::id();
+        $targetId = is_object($id) ? $id->id : $id;
 
         // 1. Coba cari di CourseOffering (3NF)
         $offering = CourseOffering::with([
             'masterCourse.materials',
             'masterCourse.quizzes.questions',
-            'masterCourse.category',
+            'masterCourse.skills',
             'academicTerm',
             'enrollments.user',
             'quizzes',
         ])
         ->where('lecturer_id', $lecturerId)
-        ->find($id);
+        ->find($targetId);
 
         if ($offering) {
             $isTermActive = $offering->academicTerm ? (bool)$offering->academicTerm->is_active : true;
@@ -73,17 +73,22 @@ class CourseController extends Controller
             $materials = Material::where('master_course_id', $offering->master_course_id)
                 ->where(function ($q) use ($offering) {
                     $q->whereNull('course_offering_id')
-                      ->orWhere('course_offering_id', $offering->id)
-                      ->orWhere('course_id', $offering->id);
+                      ->orWhere('course_offering_id', $offering->id);
                 })
                 ->latest()
                 ->get();
             $quizzes = $offering->quizzes->count() > 0 ? $offering->quizzes : ($offering->masterCourse->quizzes ?? collect());
             $students = $offering->enrollments->map(fn($e) => $e->user)->filter();
             $enrollments = $offering->enrollments;
-            $categories = Category::orderBy('name')->get();
             $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
                 ->whereIn('quiz_id', $quizzes->pluck('id'))
+                ->where(function ($q) use ($offering) {
+                    $q->where('course_offering_id', $offering->id)
+                      ->orWhere(function ($sub) use ($offering) {
+                          $sub->whereNull('course_offering_id')
+                              ->whereIn('user_id', $offering->enrollments->pluck('user_id'));
+                      });
+                })
                 ->latest()
                 ->get();
 
@@ -93,7 +98,6 @@ class CourseController extends Controller
                 'quizzes',
                 'students',
                 'enrollments',
-                'categories',
                 'retakeRequests',
                 'siblingOfferings',
                 'isTermActive'
@@ -108,10 +112,9 @@ class CourseController extends Controller
             'user',
             'skills',
             'tags',
-            'category',
             'enrollments.user',
         ])
-        ->where('user_id', $lecturerId)
+        ->where('lecturer_id', $lecturerId)
         ->findOrFail($id);
 
         $isTermActive = true;
@@ -119,9 +122,9 @@ class CourseController extends Controller
         $quizzes = $course->quizzes;
         $students = $course->students;
         $enrollments = $course->enrollments;
-        $categories = Category::orderBy('name')->get();
         $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
-            ->where('course_id', $course->id)
+            ->whereIn('quiz_id', $quizzes->pluck('id'))
+            ->whereIn('user_id', $enrollments->pluck('user_id'))
             ->latest()
             ->get();
 
@@ -131,7 +134,6 @@ class CourseController extends Controller
             'quizzes',
             'students',
             'enrollments',
-            'categories',
             'retakeRequests',
             'isTermActive'
         ));
@@ -140,11 +142,12 @@ class CourseController extends Controller
     public function edit($id)
     {
         $lecturerId = Auth::id();
+        $targetId = is_object($id) ? $id->id : $id;
 
         // Check if CourseOffering 3NF
         $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'materials', 'academicTerm'])
             ->where('lecturer_id', $lecturerId)
-            ->find($id);
+            ->find($targetId);
 
         if ($offering) {
             if ($offering->academicTerm && !$offering->academicTerm->is_active) {
@@ -153,29 +156,28 @@ class CourseController extends Controller
             }
 
             $course = $offering;
-            $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
+            $mainSkills = Skill::orderBy('name')->get();
             $tags = Tag::with('skill')->orderBy('name')->get();
-            $categories = Category::orderBy('name')->get();
 
-            return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
+            return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags'));
         }
 
         // Fallback to legacy Course
-        $course = Course::with(['skills', 'tags', 'materials'])->where('user_id', $lecturerId)->findOrFail($id);
+        $course = Course::with(['skills', 'tags', 'materials'])->where('lecturer_id', $lecturerId)->findOrFail($targetId);
 
-        $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
+        $mainSkills = Skill::orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
-        $categories = Category::orderBy('name')->get();
 
-        return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags', 'categories'));
+        return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags'));
     }
 
     public function update(Request $request, $id): RedirectResponse
     {
         $lecturerId = Auth::id();
+        $targetId = is_object($id) ? $id->id : $id;
 
         // 1. Coba update CourseOffering 3NF
-        $offering = CourseOffering::with('academicTerm')->where('lecturer_id', $lecturerId)->find($id);
+        $offering = CourseOffering::with('academicTerm')->where('lecturer_id', $lecturerId)->find($targetId);
         if ($offering) {
             if ($offering->academicTerm && !$offering->academicTerm->is_active) {
                 return redirect()->back()
@@ -200,7 +202,7 @@ class CourseController extends Controller
         }
 
         // 2. Fallback update legacy Course
-        $course = Course::where('user_id', $lecturerId)->findOrFail($id);
+        $course = Course::where('lecturer_id', $lecturerId)->findOrFail($targetId);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -210,7 +212,6 @@ class CourseController extends Controller
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'certificate_threshold' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'category_id' => ['nullable', 'exists:categories,id'],
             'material_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,ppt,pptx,zip,rar', 'max:20480'],
 
             'skill_ids' => ['nullable', 'array'],
@@ -221,53 +222,24 @@ class CourseController extends Controller
             'tag_ids.*' => ['exists:tags,id'],
         ]);
 
-        $startDate = !empty($validated['start_date']) ? \Carbon\Carbon::parse($validated['start_date']) : ($course->start_date ? \Carbon\Carbon::parse($course->start_date) : now());
-        $durationWeeks = (int) $validated['duration_weeks'];
-        $endDate = !empty($validated['end_date']) ? \Carbon\Carbon::parse($validated['end_date']) : $startDate->copy()->addWeeks($durationWeeks);
-
         $updateData = [
             'name' => $validated['name'],
             'description' => $validated['description'] ?? null,
             'level' => $validated['level'],
-            'duration_weeks' => $durationWeeks,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'certificate_threshold' => $validated['certificate_threshold'] ?? 60,
-            'category_id' => $validated['category_id'] ?? null,
+            'duration_weeks' => $validated['duration_weeks'],
+            'start_date' => $validated['start_date'] ?? null,
+            'end_date' => $validated['end_date'] ?? null,
+            'certificate_threshold' => $validated['certificate_threshold'] ?? 75,
         ];
 
         $course->update($updateData);
 
-        $masterCourse = \App\Models\MasterCourse::firstOrCreate(
-            ['name' => $course->name],
-            [
-                'code' => 'MC-' . strtoupper(\Illuminate\Support\Str::slug($course->name)),
-                'description' => $course->description,
-                'level' => $course->level,
-                'category_id' => $course->category_id,
-            ]
-        );
-
-        // Sync 3NF CourseOffering
-        $defaultTerm = \App\Models\AcademicTerm::where('is_active', true)->first();
-        \App\Models\CourseOffering::updateOrCreate(
-            ['master_course_id' => $masterCourse->id],
-            [
-                'academic_term_id' => $defaultTerm->id ?? 1,
-                'lecturer_id' => Auth::id(),
-                'start_date' => $startDate,
-                'end_date' => $endDate,
-                'is_archived' => $course->is_archived,
-                'certificate_threshold' => $course->certificate_threshold,
-            ]
-        );
-
         if ($request->hasFile('material_file')) {
             $filePath = $request->file('material_file')->store('materials', 'public');
             Material::create([
-                'course_id' => $course->id,
-                'title' => $course->name . ' - Learning Material',
-                'file_path' => $filePath,
+                'master_course_id' => $course->master_course_id,
+                'title'            => $course->name . ' - Learning Material',
+                'file_path'        => $filePath,
             ]);
         }
 
@@ -281,15 +253,16 @@ class CourseController extends Controller
     public function archive($id): RedirectResponse
     {
         $lecturerId = Auth::id();
+        $targetId = is_object($id) ? $id->id : $id;
 
-        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($targetId);
         if ($offering) {
             $offering->update(['is_archived' => !$offering->is_archived]);
             $statusMsg = $offering->is_archived ? 'diarsip' : 'diaktifkan kembali';
             return back()->with('success', "Status penawaran kelas berhasil {$statusMsg}.");
         }
 
-        $course = Course::where('user_id', $lecturerId)->findOrFail($id);
+        $course = Course::where('lecturer_id', $lecturerId)->findOrFail($targetId);
         $course->update(['is_archived' => !$course->is_archived]);
         $statusMsg = $course->is_archived ? 'diarsip' : 'diaktifkan kembali';
 
@@ -299,8 +272,9 @@ class CourseController extends Controller
     public function duplicate($id): RedirectResponse
     {
         $lecturerId = Auth::id();
+        $targetId = is_object($id) ? $id->id : $id;
 
-        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($id);
+        $offering = CourseOffering::where('lecturer_id', $lecturerId)->find($targetId);
         if ($offering) {
             $newOffering = $offering->replicate();
             $newOffering->section_name = $offering->section_name . ' (Copy)';
@@ -314,8 +288,8 @@ class CourseController extends Controller
         }
 
         $original = Course::with(['materials', 'quizzes.questions', 'skills', 'tags'])
-            ->where('user_id', $lecturerId)
-            ->findOrFail($id);
+            ->where('lecturer_id', $lecturerId)
+            ->findOrFail($targetId);
 
         $newCourse = $original->replicate();
         $newCourse->name = $original->name . ' (Copy)';
@@ -325,13 +299,14 @@ class CourseController extends Controller
 
         foreach ($original->materials as $mat) {
             $newMat = $mat->replicate();
-            $newMat->course_id = $newCourse->id;
+            $newMat->master_course_id = $newCourse->master_course_id;
+            $newMat->course_offering_id = $newCourse->id;
             $newMat->save();
         }
 
         foreach ($original->quizzes as $quiz) {
             $newQuiz = $quiz->replicate();
-            $newQuiz->course_id = $newCourse->id;
+            $newQuiz->master_course_id = $newCourse->master_course_id;
             $newQuiz->save();
 
             foreach ($quiz->questions as $q) {

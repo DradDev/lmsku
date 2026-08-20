@@ -76,6 +76,7 @@
                             $maxStudents = $project->max_students ?? 1;
                             $isFull = $joinedCount >= $maxStudents;
                             $alreadyJoined = in_array($project->id, $joinedProjectIds);
+                            $isCompleted = in_array($project->id, $completedProjectIds ?? []);
                             $provType = $project->provider_type ?? (($project->user->role ?? '') === 'vendor' ? 'external' : 'internal');
                             $isEligible = $project->eligibility['is_eligible'] ?? false;
                         @endphp
@@ -103,9 +104,14 @@
                                         </h3>
                                     </div>
 
-                                    @if ($alreadyJoined)
-                                        <span class="shrink-0 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-full border border-green-200">
-                                            Diambil
+                                    @if ($isCompleted)
+                                        <span class="shrink-0 px-2.5 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-full border border-emerald-200 flex items-center gap-1">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                                            Selesai
+                                        </span>
+                                    @elseif ($alreadyJoined)
+                                        <span class="shrink-0 px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full border border-blue-200">
+                                            Aktif
                                         </span>
                                     @elseif(!$isEligible)
                                         <span class="shrink-0 px-2.5 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-200">
@@ -162,12 +168,21 @@
                             </div>
 
                             <div class="px-5 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
-                                @if ($alreadyJoined)
+                                @if ($isCompleted)
+                                    <a href="{{ route('student.projects.show', $project) }}"
+                                       class="text-sm text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1">
+                                        Buka Riwayat →
+                                    </a>
+                                    <a href="{{ route('student.certificate.index') }}"
+                                       class="inline-flex items-center justify-center px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition shadow-xs">
+                                        Sertifikat
+                                    </a>
+                                @elseif ($alreadyJoined)
                                     <a href="{{ route('student.projects.show', $project) }}"
                                        class="text-sm text-indigo-600 hover:text-indigo-700 font-bold">
-                                        Buka Proyek →
+                                        Lanjutkan Pengerjaan →
                                     </a>
-                                    <span class="text-xs font-bold text-emerald-700">
+                                    <span class="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
                                         Terdaftar
                                     </span>
                                 @elseif(!$isEligible)
@@ -186,8 +201,8 @@
                                         Detail Project →
                                     </a>
                                     <button type="button"
-                                            class="inline-flex items-center justify-center px-3 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
-                                            disabled>
+                                             class="inline-flex items-center justify-center px-3 py-2 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg cursor-not-allowed"
+                                             disabled>
                                         Kuota Penuh
                                     </button>
                                 @else

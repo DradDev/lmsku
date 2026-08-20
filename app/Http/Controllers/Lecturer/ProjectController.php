@@ -5,7 +5,12 @@ namespace App\Http\Controllers\Lecturer;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\CourseOffering;
+use App\Models\MasterCourse;
+use App\Models\LearningActivityLog;
 use App\Models\Project;
+use App\Models\ProjectParticipation;
+use App\Models\ProjectStatusHistory;
 use App\Models\Skill;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
@@ -27,7 +32,7 @@ class ProjectController extends Controller
         $bankProjects = $allProjects->where('is_published', false)->values();
 
         $skillsWithoutCourses = [];
-        $mainSkills = Skill::whereNull('parent_id')->get();
+        $mainSkills = Skill::all();
         foreach ($mainSkills as $skill) {
             if (!$this->checkSkillHasCourse($skill->id)) {
                 $skillsWithoutCourses[] = $skill->id;
@@ -61,8 +66,7 @@ class ProjectController extends Controller
 
     public function create(): View
     {
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
+        $mainSkills = Skill::orderBy('name')
             ->get();
 
         $tags = Tag::with('skill')
@@ -92,9 +96,8 @@ class ProjectController extends Controller
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip,rar', 'max:10240'],
             'is_published' => ['nullable', 'boolean'],
 
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
-            'main_skill_id' => ['nullable', 'exists:skills,id'],
 
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
@@ -125,13 +128,21 @@ class ProjectController extends Controller
 
         $this->syncProjectSkillsAndTags($project, $request);
 
-        $mainSkillId = $request->input('main_skill_id');
-        if ($mainSkillId && !$this->checkSkillHasCourse((int) $mainSkillId)) {
-            $skillName = Skill::find($mainSkillId)?->name ?? 'Main Skill';
+        $skillsWithoutCourses = [];
+        $skillIds = array_map('intval', $request->input('skill_ids', []));
+        foreach ($skillIds as $sId) {
+            if (!$this->checkSkillHasCourse((int) $sId)) {
+                $skillName = Skill::find($sId)?->name ?? 'Main Skill';
+                $skillsWithoutCourses[] = $skillName;
+            }
+        }
+
+        if (!empty($skillsWithoutCourses)) {
+            $skillNamesStr = implode(', ', $skillsWithoutCourses);
             return redirect()
                 ->route('lecturer.projects.index')
                 ->with('success', 'Project successfully created.')
-                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill '{$skillName}'. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk '{$skillName}'!");
+                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill [{$skillNamesStr}]. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk Main Skill terkait!");
         }
 
         return redirect()
@@ -147,8 +158,7 @@ class ProjectController extends Controller
             'You do not have access to this project.'
         );
 
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
+        $mainSkills = Skill::orderBy('name')
             ->get();
 
         $tags = Tag::with('skill')
@@ -156,6 +166,7 @@ class ProjectController extends Controller
             ->get();
 
         $project->load(['skills', 'tags']);
+        $projectSkillIds = $project->skills->pluck('id')->toArray();
 
         $skillsWithoutCourses = [];
         foreach ($mainSkills as $skill) {
@@ -164,7 +175,7 @@ class ProjectController extends Controller
             }
         }
 
-        return view('lecturer.projects.edit', compact('project', 'mainSkills', 'tags', 'skillsWithoutCourses'));
+        return view('lecturer.projects.edit', compact('project', 'mainSkills', 'tags', 'skillsWithoutCourses', 'projectSkillIds'));
     }
 
     public function update(Request $request, Project $project): RedirectResponse
@@ -186,9 +197,8 @@ class ProjectController extends Controller
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip,rar', 'max:10240'],
             'is_published' => ['nullable', 'boolean'],
 
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
-            'main_skill_id' => ['nullable', 'exists:skills,id'],
 
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
@@ -219,13 +229,21 @@ class ProjectController extends Controller
 
         $this->syncProjectSkillsAndTags($project, $request);
 
-        $mainSkillId = $request->input('main_skill_id');
-        if ($mainSkillId && !$this->checkSkillHasCourse((int) $mainSkillId)) {
-            $skillName = Skill::find($mainSkillId)?->name ?? 'Main Skill';
+        $skillsWithoutCourses = [];
+        $skillIds = array_map('intval', $request->input('skill_ids', []));
+        foreach ($skillIds as $sId) {
+            if (!$this->checkSkillHasCourse((int) $sId)) {
+                $skillName = Skill::find($sId)?->name ?? 'Main Skill';
+                $skillsWithoutCourses[] = $skillName;
+            }
+        }
+
+        if (!empty($skillsWithoutCourses)) {
+            $skillNamesStr = implode(', ', $skillsWithoutCourses);
             return redirect()
                 ->route('lecturer.projects.index')
                 ->with('success', 'Project berhasil diperbarui.')
-                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill '{$skillName}'. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk '{$skillName}'!");
+                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill [{$skillNamesStr}]. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk Main Skill terkait!");
         }
 
         return redirect()
@@ -254,18 +272,16 @@ class ProjectController extends Controller
             return true;
         }
 
-        $hasCourse = Course::where('is_archived', false)
+        $hasCourse = CourseOffering::where('is_archived', false)
             ->where(function ($query) use ($skillId) {
-                $query->whereHas('skills', function ($q) use ($skillId) {
-                    $q->where('skills.id', $skillId)
-                      ->orWhere('skills.parent_id', $skillId);
+                $query->whereHas('masterCourse.skills', function ($q) use ($skillId) {
+                    $q->where('skills.id', $skillId);
                 })
-                ->orWhereHas('tags', function ($q) use ($skillId) {
+                ->orWhereHas('masterCourse.tags', function ($q) use ($skillId) {
                     $q->where('tags.skill_id', $skillId);
                 })
-                ->orWhereHas('quizzes.questions.skills', function ($q) use ($skillId) {
-                    $q->where('skills.id', $skillId)
-                      ->orWhere('skills.parent_id', $skillId);
+                ->orWhereHas('masterCourse.quizzes.questions.skills', function ($q) use ($skillId) {
+                    $q->where('skills.id', $skillId);
                 });
             })
             ->exists();
@@ -280,8 +296,8 @@ class ProjectController extends Controller
             $skillWords = explode(' ', str_replace('&', '', $skill->name));
             $firstWord = trim($skillWords[0] ?? '');
             if (!empty($firstWord) && strlen($firstWord) >= 3) {
-                $hasNamedCourse = Course::where('is_archived', false)
-                    ->where(function ($q) use ($skill, $firstWord) {
+                $hasNamedCourse = CourseOffering::where('is_archived', false)
+                    ->whereHas('masterCourse', function ($q) use ($skill, $firstWord) {
                         $q->where('name', 'LIKE', "%{$skill->name}%")
                           ->orWhere('name', 'LIKE', "%{$firstWord}%")
                           ->orWhere('description', 'LIKE', "%{$skill->name}%");
@@ -300,33 +316,27 @@ class ProjectController extends Controller
     private function syncProjectSkillsAndTags(Project $project, Request $request): void
     {
         $skillIds = array_map('intval', $request->input('skill_ids', []));
-        $mainSkillId = $request->input('main_skill_id');
-
-        if ($mainSkillId && ! in_array((int) $mainSkillId, $skillIds, true)) {
-            $skillIds[] = (int) $mainSkillId;
-        }
-
         $skillSyncData = [];
 
         foreach ($skillIds as $skillId) {
             $skillSyncData[$skillId] = [
                 'weight' => 1.00,
-                'is_main' => (int) $skillId === (int) $mainSkillId,
+                'is_main' => true,
             ];
         }
 
         $project->skills()->sync($skillSyncData);
 
         $tagIds = array_map('intval', $request->input('tag_ids', []));
-        $tagSyncData = [];
-
-        foreach ($tagIds as $tagId) {
-            $tagSyncData[$tagId] = [
-                'weight' => 1.00,
-            ];
+        if (!empty($tagIds)) {
+            $tagSyncData = [];
+            foreach ($tagIds as $tagId) {
+                $tagSyncData[$tagId] = ['weight' => 1.00];
+            }
+            $project->tags()->sync($tagSyncData);
+        } else {
+            $project->tags()->detach();
         }
-
-        $project->tags()->sync($tagSyncData);
     }
 
     public function show(Project $project): View
@@ -418,8 +428,7 @@ class ProjectController extends Controller
             $courseName = $courseObj->name ?? 'Course';
             $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
             $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
-                return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
-                    || ($cert->course_id && $cert->course_id === $enrollment->course_id);
+                return $cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id;
             });
 
             foreach ($courseObj->skills as $skill) {
@@ -475,5 +484,82 @@ class ProjectController extends Controller
         return redirect()
             ->route('lecturer.projects.talent-pool', $project)
             ->with('success', "Undangan resmi telah dikirimkan kepada {$user->name}! Menunggu konfirmasi dari mahasiswa.");
+    }
+
+    public function approveCertificate(Project $project, ProjectParticipation $participation): RedirectResponse
+    {
+        abort_unless(
+            $project->created_by === Auth::id() && $participation->project_id === $project->id,
+            403,
+            'Kamu tidak memiliki akses untuk menyetujui sertifikat project ini.'
+        );
+
+        $oldStatus = $participation->status;
+        $oldProgress = $participation->progress_percent;
+
+        // 1. Update Participation Status to completed 100%
+        $participation->update([
+            'status' => 'completed',
+            'progress_percent' => 100,
+            'completed_at' => $participation->completed_at ?? now(),
+            'last_activity_at' => now(),
+        ]);
+
+        // 2. Create or Update Certificate in 'pending' status for Admin Blockchain Verification
+        $certificate = Certificate::firstOrNew([
+            'user_id' => $participation->user_id,
+            'project_id' => $project->id,
+        ]);
+
+        if (!$certificate->exists) {
+            $certificate->score = 100;
+            $certificate->completed_at = $participation->completed_at ?? now();
+            $certificate->status = 'pending';
+            $certificate->is_verified = false;
+            $certificate->credential_code = $certificate->generateCredentialCode();
+            $certificate->save();
+        } else {
+            if (!$certificate->is_verified) {
+                $certificate->status = 'pending';
+                $certificate->score = 100;
+                $certificate->completed_at = $participation->completed_at ?? now();
+                if (empty($certificate->credential_code)) {
+                    $certificate->credential_code = $certificate->generateCredentialCode();
+                }
+                $certificate->save();
+            }
+        }
+
+        // 3. Log Status History
+        ProjectStatusHistory::create([
+            'project_id' => $project->id,
+            'project_participation_id' => $participation->id,
+            'user_id' => Auth::id(),
+            'old_status' => $oldStatus,
+            'new_status' => 'completed',
+            'old_progress_percent' => $oldProgress,
+            'new_progress_percent' => 100,
+            'note' => 'Pengerjaan disetujui Pembimbing Dosen. Pengajuan sertifikat disalurkan ke Admin untuk verifikasi integritas & blockchain.',
+        ]);
+
+        // 4. Learning Activity Log
+        LearningActivityLog::create([
+            'user_id' => $participation->user_id,
+            'project_id' => $project->id,
+            'activity_type' => 'project_approved_by_mentor',
+            'activity_value' => 100,
+            'metadata' => [
+                'participation_id' => $participation->id,
+                'mentor_id' => Auth::id(),
+                'certificate_id' => $certificate->id,
+            ],
+            'occurred_at' => now(),
+        ]);
+
+        $studentName = $participation->user->name ?? 'Mahasiswa';
+
+        return redirect()
+            ->route('lecturer.projects.show', $project)
+            ->with('success', "Pengerjaan {$studentName} berhasil disetujui! Pengajuan penerbitan sertifikat telah disalurkan ke Admin untuk verifikasi integritas & blockchain.");
     }
 }

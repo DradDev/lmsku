@@ -87,20 +87,6 @@
                         @enderror
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Kategori Kurikulum</label>
-                        <select name="category_id" class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-xs font-bold bg-white">
-                            <option value="">-- Pilih Kategori (Opsional) --</option>
-                            @foreach($categories as $category)
-                                <option value="{{ $category->id }}" {{ old('category_id', $masterCourse->category_id) == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('category_id')
-                            <p class="text-rose-600 text-xs mt-1 font-semibold">{{ $message }}</p>
-                        @enderror
-                    </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1.5">Deskripsi Kurikulum Induk (Opsional)</label>

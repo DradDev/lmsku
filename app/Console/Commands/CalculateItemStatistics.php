@@ -24,27 +24,26 @@ class CalculateItemStatistics extends Command
 
     private function calculateCourseStatistics(): int
     {
-        $courses = DB::table('courses')->get();
+        $masterCourses = DB::table('master_courses')->get();
         $count = 0;
 
-        foreach ($courses as $course) {
+        foreach ($masterCourses as $masterCourse) {
+            $offeringIds = DB::table('course_offerings')
+                ->where('master_course_id', $masterCourse->id)
+                ->pluck('id')
+                ->toArray();
+
             $viewedCount = DB::table('learning_activity_logs')
                 ->where('activity_type', 'view_course')
-                ->where('course_id', $course->id)
+                ->whereIn('course_offering_id', $offeringIds)
                 ->count();
 
             $takenCount = DB::table('enrollments')
-                ->where('course_id', $course->id)
+                ->whereIn('course_offering_id', $offeringIds)
                 ->count();
 
-            /*
-             * Untuk sementara completed course dihitung dari final quiz:
-             * - quiz quiz_type = 'final'
-             * - attempt is_verified = true
-             * - score >= 70
-             */
             $finalQuiz = DB::table('quizzes')
-                ->where('course_id', $course->id)
+                ->where('master_course_id', $masterCourse->id)
                 ->where('quiz_type', 'final')
                 ->first();
 
@@ -53,8 +52,7 @@ class CalculateItemStatistics extends Command
             if ($finalQuiz) {
                 $completedCount = DB::table('quiz_attempts')
                     ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->where('score', '>=', 70)
+                    ->where('score', '>=', $masterCourse->certificate_threshold ?? 70)
                     ->distinct('user_id')
                     ->count('user_id');
             }
@@ -64,13 +62,13 @@ class CalculateItemStatistics extends Command
                 : 0;
 
             $lastActivityAt = DB::table('learning_activity_logs')
-                ->where('course_id', $course->id)
+                ->whereIn('course_offering_id', $offeringIds)
                 ->max('occurred_at');
 
             ItemStatistic::updateOrCreate(
                 [
                     'item_type' => 'course',
-                    'item_id' => $course->id,
+                    'item_id' => $masterCourse->id,
                 ],
                 [
                     'viewed_count' => $viewedCount,

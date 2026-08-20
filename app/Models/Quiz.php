@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Quiz extends Model
 {
     protected $fillable = [
-        'course_id',
         'master_course_id',
         'title',
         'time_limit',
@@ -30,7 +29,7 @@ class Quiz extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
     }
 
     public function questions()

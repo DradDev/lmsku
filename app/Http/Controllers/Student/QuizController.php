@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\Quiz;
@@ -19,19 +20,13 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
-        $isEnrolled = DB::table('enrollments')
-            ->where('user_id', $user->id)
-            ->where(function ($query) use ($quiz) {
-                $query->where('course_id', $quiz->course_id)
-                    ->orWhere('course_id', $quiz->master_course_id)
-                    ->orWhereIn('course_offering_id', function ($sub) use ($quiz) {
-                        $sub->select('id')->from('course_offerings')
-                            ->where('master_course_id', $quiz->master_course_id);
-                    });
+        $enrolledOffering = CourseOffering::where('master_course_id', $quiz->master_course_id)
+            ->whereIn('id', function ($sub) use ($user) {
+                $sub->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
             })
-            ->exists();
+            ->first();
 
-        abort_unless($isEnrolled, 403, 'Kamu tidak memiliki akses ke quiz ini.');
+        abort_unless($enrolledOffering, 403, 'Kamu tidak memiliki akses ke quiz ini.');
 
         // Cek apakah quiz masih dalam waktu yang tersedia
         if (! $quiz->isAvailable()) {
@@ -57,12 +52,12 @@ class QuizController extends Controller
         $remainingAttempts = $quiz->remainingAttempts($user->id);
 
         LearningActivityLog::create([
-            'user_id' => $user->id,
-            'course_id' => $quiz->master_course_id ?? $quiz->course_id,
-            'quiz_id' => $quiz->id,
-            'activity_type' => 'start_quiz',
-            'activity_value' => 1,
-            'occurred_at' => now(),
+            'user_id'            => $user->id,
+            'course_offering_id' => $enrolledOffering->id,
+            'quiz_id'            => $quiz->id,
+            'activity_type'      => 'start_quiz',
+            'activity_value'     => 1,
+            'created_at'         => now(),
         ]);
 
         return view('student.quiz.show', compact('quiz', 'remainingAttempts'));
@@ -73,13 +68,9 @@ class QuizController extends Controller
         $user = Auth::user();
 
         $enrollment = Enrollment::where('user_id', $user->id)
-            ->where(function ($query) use ($quiz) {
-                $query->where('course_id', $quiz->course_id)
-                    ->orWhere('course_id', $quiz->master_course_id)
-                    ->orWhereIn('course_offering_id', function ($sub) use ($quiz) {
-                        $sub->select('id')->from('course_offerings')
-                            ->where('master_course_id', $quiz->master_course_id);
-                    });
+            ->whereIn('course_offering_id', function ($sub) use ($quiz) {
+                $sub->select('id')->from('course_offerings')
+                    ->where('master_course_id', $quiz->master_course_id);
             })
             ->latest()
             ->first();
@@ -142,10 +133,8 @@ class QuizController extends Controller
                 'question_id' => $question->id,
                 'user_id' => $user->id,
                 'selected_option' => $answer,
-                'answer_text' => null,
                 'is_correct' => $isCorrect,
                 'score' => $isCorrect ? 1 : 0,
-                'feedback' => null,
             ]);
         }
 
@@ -159,44 +148,43 @@ class QuizController extends Controller
             'is_verified' => true,
         ]);
 
-        if ($quiz->course_id) {
+        if ($enrollment->course_offering_id) {
             app(CourseProgressService::class)->recalculate(
                 $user->id,
-                $quiz->course_id
+                $enrollment->course_offering_id
             );
         }
 
         LearningActivityLog::create([
-            'user_id' => $user->id,
-            'course_id' => $quiz->master_course_id ?? $quiz->course_id,
-            'quiz_id' => $quiz->id,
-            'activity_type' => 'finish_quiz',
-            'activity_value' => $finalScore,
-            'metadata' => [
+            'user_id'            => $user->id,
+            'course_offering_id' => $enrollment->course_offering_id,
+            'quiz_id'            => $quiz->id,
+            'activity_type'      => 'finish_quiz',
+            'activity_value'     => $finalScore,
+            'metadata'           => [
                 'quiz_attempt_id' => $attempt->id,
                 'total_questions' => $questions->count(),
-                'correct_count' => $correctCount,
+                'correct_count'   => $correctCount,
             ],
-            'occurred_at' => now(),
+            'created_at'          => now(),
         ]);
 
         // Handles Certificate creation for Final Quiz if score >= threshold
         $certificate = null;
         if ($quiz->isFinal()) {
             $offering = $enrollment->courseOffering;
-            $threshold = $offering?->certificate_threshold ?? ($quiz->course->certificate_threshold ?? 60);
+            $threshold = $offering?->certificate_threshold ?? ($quiz->masterCourse?->certificate_threshold ?? 75);
 
             if ($finalScore >= $threshold) {
                 $certificate = \App\Models\Certificate::firstOrCreate(
                     [
-                        'user_id' => $user->id,
+                        'user_id'            => $user->id,
                         'course_offering_id' => $enrollment->course_offering_id,
-                        'course_id' => $quiz->master_course_id ?? $quiz->course_id,
                     ],
                     [
-                        'score' => $finalScore,
-                        'status' => 'pending',
-                        'is_verified' => false,
+                        'score'        => $finalScore,
+                        'status'       => 'pending',
+                        'is_verified'  => false,
                         'completed_at' => now(),
                     ]
                 );
@@ -243,6 +231,16 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
+        $enrollment = Enrollment::where('user_id', $user->id)
+            ->whereIn('course_offering_id', function ($sub) use ($quiz) {
+                $sub->select('id')->from('course_offerings')
+                    ->where('master_course_id', $quiz->master_course_id);
+            })
+            ->latest()
+            ->first();
+
+        $offeringId = $enrollment?->course_offering_id;
+
         $bestAttempt = QuizAttempt::where('user_id', $user->id)
             ->where('quiz_id', $quiz->id)
             ->orderByDesc('score')
@@ -258,21 +256,26 @@ class QuizController extends Controller
 
         $existingRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
             ->where('quiz_id', $quiz->id)
+            ->where(function ($q) use ($offeringId) {
+                if ($offeringId) {
+                    $q->where('course_offering_id', $offeringId);
+                }
+            })
             ->where('status', 'pending')
             ->exists();
 
         if ($existingRequest) {
-            return redirect()->back()->with('error', 'Permintaan retake Anda sudah terkirim dan sedang menunggu persetujuan Author.');
+            return redirect()->back()->with('error', 'Permintaan retake Anda sudah terkirim dan sedang menunggu persetujuan Pengajar.');
         }
 
         \App\Models\QuizRetakeRequest::create([
-            'user_id' => $user->id,
-            'quiz_id' => $quiz->id,
-            'course_id' => $quiz->course_id,
-            'status' => 'pending',
-            'reason' => 'Pengajuan ulang ujian karena nilai di bawah passing threshold (70).',
+            'user_id'            => $user->id,
+            'quiz_id'            => $quiz->id,
+            'course_offering_id' => $offeringId,
+            'status'             => 'pending',
+            'reason'             => 'Pengajuan ulang ujian karena nilai di bawah passing threshold.',
         ]);
 
-        return redirect()->back()->with('success', 'Permintaan retake kuis berhasil dikirim ke Author. Mohon menunggu persetujuan.');
+        return redirect()->back()->with('success', 'Permintaan retake kuis berhasil dikirim ke Pengajar. Mohon menunggu persetujuan.');
     }
 }

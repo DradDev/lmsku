@@ -29,6 +29,38 @@ class Enrollment extends Model
         'last_activity_at' => 'datetime',
     ];
 
+    public function setCourseIdAttribute($value): void
+    {
+        $this->attributes['course_offering_id'] = $value;
+    }
+
+    public function getCourseIdAttribute(): ?int
+    {
+        return $this->attributes['course_offering_id'] ?? null;
+    }
+
+    protected static function booted()
+    {
+        static::saving(function ($enrollment) {
+            if (empty($enrollment->course_offering_id) && !empty($enrollment->course_id)) {
+                $offering = CourseOffering::find($enrollment->course_id);
+                if ($offering) {
+                    $enrollment->course_offering_id = $offering->id;
+                } else {
+                    $course = Course::find($enrollment->course_id);
+                    if ($course && $course->master_course_id) {
+                        $mapped = CourseOffering::where('master_course_id', $course->master_course_id)
+                            ->where('section_name', $course->batch_name)
+                            ->first();
+                        if ($mapped) {
+                            $enrollment->course_offering_id = $mapped->id;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -41,7 +73,7 @@ class Enrollment extends Model
 
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
     }
 }
 

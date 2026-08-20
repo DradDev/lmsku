@@ -11,10 +11,8 @@ class QuizAnswer extends Model
         'question_id',
         'user_id',
         'selected_option',
-        'answer_text',
         'is_correct',
         'score',
-        'feedback',
     ];
 
     public function attempt()

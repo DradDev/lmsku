@@ -9,7 +9,7 @@ class QuizRetakeRequest extends Model
     protected $fillable = [
         'user_id',
         'quiz_id',
-        'course_id',
+        'course_offering_id',
         'status',
         'reason',
         'reviewed_by',
@@ -30,9 +30,14 @@ class QuizRetakeRequest extends Model
         return $this->belongsTo(Quiz::class);
     }
 
+    public function courseOffering()
+    {
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
+    }
+
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
     }
 
     public function reviewer()

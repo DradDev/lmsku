@@ -23,8 +23,8 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        // 6 Skill Utama (tanpa parent) untuk peminatan student
-        $skills = Skill::whereNull('parent_id')->orderBy('name')->get();
+        // Skill Utama untuk peminatan student
+        $skills = Skill::orderBy('name')->get();
 
         // Daftar Institusi Resmi untuk dropdown vendor mitra
         $institutions = Institution::where('is_verified', true)->orderBy('name')->get();

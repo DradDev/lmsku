@@ -1,0 +1,74 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        if (!Schema::hasTable('item_statistics')) {
+            Schema::create('item_statistics', function (Blueprint $table) {
+                $table->id();
+                $table->enum('item_type', ['course', 'project']);
+                $table->unsignedBigInteger('item_id');
+                $table->unsignedInteger('viewed_count')->default(0);
+                $table->unsignedInteger('clicked_count')->default(0);
+                $table->unsignedInteger('taken_count')->default(0);
+                $table->unsignedInteger('completed_count')->default(0);
+                $table->decimal('popularity_score', 10, 2)->default(0);
+                $table->decimal('completion_rate', 8, 2)->default(0);
+                $table->timestamp('last_activity_at')->nullable();
+                $table->timestamp('last_calculated_at')->nullable();
+                $table->timestamps();
+                $table->unique(['item_type', 'item_id']);
+                $table->index(['item_type', 'popularity_score']);
+                $table->index(['item_type', 'completion_rate']);
+            });
+        }
+
+        if (!Schema::hasTable('recommendation_feature_snapshots')) {
+            Schema::create('recommendation_feature_snapshots', function (Blueprint $table) {
+                $table->id();
+                $table->date('snapshot_date');
+                $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+                $table->enum('item_type', ['course', 'project']);
+                $table->unsignedTinyInteger('item_type_encoded');
+                $table->unsignedBigInteger('item_id');
+                $table->decimal('user_avg_skill_score', 8, 2)->default(0);
+                $table->decimal('user_lowest_skill_score', 8, 2)->default(0);
+                $table->unsignedInteger('user_completed_course_count')->default(0);
+                $table->unsignedInteger('user_completed_project_count')->default(0);
+                $table->decimal('user_recent_activity_score', 8, 2)->default(0);
+                $table->unsignedBigInteger('user_top_interest_tag_id')->nullable();
+                $table->foreign('user_top_interest_tag_id', 'rf_interest_tag_fk')->references('id')->on('tags')->nullOnDelete();
+                $table->unsignedTinyInteger('item_difficulty_level')->default(1);
+                $table->unsignedBigInteger('item_main_skill_id')->nullable();
+                $table->foreign('item_main_skill_id', 'rf_main_skill_fk')->references('id')->on('skills')->nullOnDelete();
+                $table->decimal('item_popularity_score', 10, 2)->default(0);
+                $table->decimal('item_completion_rate', 8, 2)->default(0);
+                $table->decimal('interest_match_score', 8, 2)->default(0);
+                $table->decimal('weakness_match_score', 8, 2)->default(0);
+                $table->decimal('readiness_score', 8, 2)->default(0);
+                $table->boolean('label_clicked')->default(false);
+                $table->boolean('label_taken')->default(false);
+                $table->boolean('label_completed')->default(false);
+                $table->boolean('already_started_flag')->default(false);
+                $table->unsignedInteger('item_skill_count')->default(0);
+                $table->unsignedInteger('item_tag_count')->default(0);
+                $table->timestamps();
+                $table->unique(['snapshot_date', 'user_id', 'item_type', 'item_id'], 'unique_snapshot_user_item');
+                $table->index(['snapshot_date', 'user_id']);
+                $table->index(['item_type', 'item_id']);
+                $table->index(['label_taken']);
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('recommendation_feature_snapshots');
+        Schema::dropIfExists('item_statistics');
+    }
+};

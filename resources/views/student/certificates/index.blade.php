@@ -133,12 +133,16 @@
                                     <h2 class="text-lg font-bold text-slate-900 leading-snug">{{ $project->title }}</h2>
                                 </div>
 
-                                @if($project->can_get_certificate)
-                                    <span class="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 shrink-0">
-                                        Verified
+                                @if($project->status_badge === 'Verified')
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-extrabold text-emerald-800 shrink-0">
+                                        <span>⛓️ Verified Blockchain</span>
+                                    </span>
+                                @elseif($project->status_badge === 'Pending')
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-800 shrink-0">
+                                        <span>⏳ Menunggu Verifikasi Admin</span>
                                     </span>
                                 @elseif($project->status_badge === 'Review')
-                                    <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 shrink-0">
+                                    <span class="inline-flex items-center rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 shrink-0">
                                         Under Review
                                     </span>
                                 @else
@@ -168,8 +172,8 @@
                                 </div>
 
                                 <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                                    <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Status Pengerjaan</p>
-                                    <p class="mt-0.5 font-semibold text-slate-700">{{ $project->certificate_status_text }}</p>
+                                    <p class="font-bold text-slate-400 uppercase tracking-wider text-[10px]">Status Sertifikat</p>
+                                    <p class="mt-0.5 font-semibold text-slate-700 leading-relaxed">{{ $project->certificate_status_text }}</p>
                                 </div>
 
                                 @if($project->skills->count() > 0)
@@ -187,17 +191,17 @@
                                 @if($project->can_get_certificate)
                                     <a href="{{ route('student.certificate.project.show', $project->id) }}"
                                        class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition">
-                                        View Certificate
+                                        <span>👁️ Lihat Sertifikat</span>
                                     </a>
 
                                     <a href="{{ route('student.certificate.project.download', $project->id) }}"
                                        class="inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-purple-700 transition shadow-sm">
-                                        Download PDF
+                                        <span>📥 Unduh PDF</span>
                                     </a>
                                 @else
                                     <a href="{{ route('student.projects.show', $project->id) }}"
                                        class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
-                                        Buka Detail Proyek
+                                        <span>Buka Detail Proyek</span>
                                     </a>
                                 @endif
                             </div>

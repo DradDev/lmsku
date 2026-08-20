@@ -101,8 +101,14 @@ class Project extends Model
         return $this->hasMany(ProjectComment::class);
     }
     
-    public function category()
+    public function getMainSkillAttribute()
     {
-        return $this->belongsTo(Category::class);
+        return $this->skills->firstWhere('pivot.is_main', true) ?? $this->skills->first();
+    }
+
+    public function getCategoryAttribute()
+    {
+        $mainSkillName = $this->main_skill?->name;
+        return $mainSkillName ? (object)['name' => $mainSkillName] : null;
     }
 }

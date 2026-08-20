@@ -3,14 +3,12 @@
 namespace App\Http\Controllers\Lecturer;
 
 use App\Http\Controllers\Controller;
+use App\Models\CourseOffering;
 use App\Models\Material;
-use App\Models\Question;
 use App\Models\Quiz;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use App\Models\Skill;
-
 
 class DashboardController extends Controller
 {
@@ -19,73 +17,49 @@ class DashboardController extends Controller
         $tab = $request->input('tab', 'overview');
         $lecturerId = Auth::id();
 
-        // Ambil master_course_id dari course_offerings milik Dosen
-        $masterCourseIds = \App\Models\CourseOffering::where('lecturer_id', $lecturerId)
-            ->pluck('master_course_id')
-            ->toArray();
-
-        // Ambil legacy course_id jika ada
-        $legacyCourseIds = \App\Models\Course::where('user_id', $lecturerId)
-            ->pluck('id')
-            ->toArray();
-
-        $materials = Material::query()
-            ->where(function ($query) use ($masterCourseIds, $legacyCourseIds) {
-                $query->whereIn('master_course_id', $masterCourseIds)
-                    ->orWhereIn('course_id', $legacyCourseIds);
-            })
+        // Ambil rombel & mata kuliah milik Dosen
+        $offerings = CourseOffering::where('lecturer_id', $lecturerId)
+            ->with(['masterCourse', 'academicTerm', 'enrollments'])
             ->latest()
             ->get();
 
-        $questions = Question::query()
-            ->where('user_id', $lecturerId)
-            ->with(['quiz.course'])
-            ->orderBy('id', 'asc')
+        $masterCourseIds = $offerings->pluck('master_course_id')->filter()->unique()->toArray();
+        $offeringIds = $offerings->pluck('id')->toArray();
+
+        $rawMaterials = Material::query()
+            ->where(function ($query) use ($masterCourseIds, $offeringIds) {
+                $query->whereIn('master_course_id', $masterCourseIds)
+                    ->orWhereIn('course_offering_id', $offeringIds);
+            })
+            ->with(['masterCourse', 'courseOffering'])
+            ->latest()
             ->get();
 
-        $selectedQuizId = $request->input('quiz_id');
+        $materials = $rawMaterials->groupBy(function ($m) {
+            return ($m->master_course_id ?? 0) . '_' . trim(strtolower($m->title));
+        })->map(function ($group) {
+            $first = $group->first();
+            $first->assigned_offerings = $group->pluck('courseOffering')->filter();
+            $first->is_all_classes = $group->contains(fn($m) => is_null($m->course_offering_id));
+            $first->related_ids = $group->pluck('id')->toArray();
+            return $first;
+        })->values();
 
         $quizzes = Quiz::query()
-            ->where(function ($query) use ($masterCourseIds, $legacyCourseIds) {
-                $query->whereIn('master_course_id', $masterCourseIds)
-                    ->orWhereIn('course_id', $legacyCourseIds);
-            })
-            ->with(['course'])
+            ->whereIn('master_course_id', $masterCourseIds)
+            ->with(['masterCourse'])
             ->withCount('questions')
-            ->when($selectedQuizId, function ($query) use ($selectedQuizId) {
-                $query->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [(int) $selectedQuizId]);
-            })
             ->latest()
             ->get();
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
-        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'course'])
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
-            })
-            ->latest()
-            ->get();
+        $totalStudents = $offerings->flatMap->enrollments->unique('user_id')->count();
 
         return view('lecturer.dashboard', compact(
             'tab',
+            'offerings',
             'materials',
-            'questions',
             'quizzes',
-            'mainSkills',
-            'retakeRequests'
+            'totalStudents'
         ));
     }
 }

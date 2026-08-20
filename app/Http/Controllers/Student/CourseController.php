@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\QuizAttempt;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Services\CourseProgressService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
 
 class CourseController extends Controller
 {
@@ -19,7 +21,7 @@ class CourseController extends Controller
         $user = Auth::user();
 
         // 3NF CourseOfferings yang dipublish di semester aktif
-        $offerings = \App\Models\CourseOffering::with(['masterCourse.category', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
+        $offerings = \App\Models\CourseOffering::with(['masterCourse.skills', 'masterCourse.tags', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
             ->where('status', 'published')
             ->whereHas('academicTerm', function ($query) {
                 $query->where('is_active', true);
@@ -30,7 +32,7 @@ class CourseController extends Controller
 
         $enrollments = Enrollment::where('user_id', $user->id)->get();
         $enrolledOfferingIds = $enrollments->pluck('course_offering_id')->filter()->toArray();
-        $enrolledCourseIds = $enrollments->pluck('course_id')->filter()->toArray();
+        $enrolledCourseIds = $enrolledOfferingIds;
 
         // Group offerings by master_course_id
         $groupedOfferings = $offerings->groupBy('master_course_id');
@@ -90,8 +92,18 @@ class CourseController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Vendor Certification Courses (Hanya yang tidak diarsip & tidak dibekukan Admin)
-        $vendorCourses = Course::with(['user.institution', 'category', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
+        // Vendor Certification Courses (3NF CourseOfferings type=vendor)
+        $vendorOfferings = \App\Models\CourseOffering::vendor()
+            ->with(['lecturer.institution', 'masterCourse.materials', 'masterCourse.quizzes.questions', 'masterCourse.skills', 'masterCourse.tags'])
+            ->where('is_archived', false)
+            ->where(function ($query) {
+                $query->whereNull('status')
+                    ->orWhere('status', 'published');
+            })
+            ->latest()
+            ->get();
+
+        $vendorCourses = $vendorOfferings->isNotEmpty() ? $vendorOfferings : Course::with(['user.institution', 'materials', 'quizzes.questions', 'skills', 'tags', 'masterCourse'])
             ->whereHas('user', function ($query) {
                 $query->where('role', 'vendor');
             })
@@ -103,13 +115,16 @@ class CourseController extends Controller
             ->latest()
             ->get();
 
+        $vendorUserIds = $vendorCourses->map(fn($vc) => $vc->lecturer_id ?? $vc->user_id)->filter()->unique();
         $vendors = User::with('institution')
-            ->whereIn('id', $vendorCourses->pluck('user_id')->filter()->unique())
+            ->whereIn('id', $vendorUserIds)
             ->orderBy('name')
             ->get();
 
         foreach ($vendorCourses as $vc) {
-            $userEnrollment = $enrollments->firstWhere('course_id', $vc->id);
+            $userEnrollment = $enrollments->first(function ($e) use ($vc) {
+                return $e->course_offering_id == $vc->id;
+            });
             $vc->is_enrolled = (bool) $userEnrollment;
             $vc->progress = $userEnrollment?->progress_percent ?? 0;
             $vc->is_completed = $userEnrollment?->status === 'completed';
@@ -133,198 +148,72 @@ class CourseController extends Controller
             $vc->can_get_certificate = $canGetCertificate;
         }
 
-        return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors', 'vendors'));
+        $savedMaterials = \App\Models\SavedMaterial::where('user_id', $user->id)
+            ->with(['material.masterCourse', 'courseOffering.masterCourse', 'courseOffering.lecturer'])
+            ->latest()
+            ->get();
+
+        return view('student.courses.index', compact('groupedCourses', 'vendorCourses', 'enrolledCourseIds', 'enrolledOfferingIds', 'authors', 'vendors', 'savedMaterials'));
     }
 
-    public function show(string $id)
+    public function show(string $id): View
     {
         $user = Auth::user();
 
-        // 1. Coba di Course Vendor (Explicit Vendor Check)
-        $vendorCourse = Course::with(['materials', 'quizzes.questions', 'user', 'masterCourse.materials', 'masterCourse.quizzes'])
-            ->where('id', $id)
-            ->whereHas('user', function ($query) {
-                $query->where('role', 'vendor');
-            })
+        // 1. Resolve CourseOffering (either direct ID or via master_course_id)
+        $offering = CourseOffering::with([
+            'masterCourse.materials',
+            'masterCourse.quizzes.questions',
+            'masterCourse.skills',
+            'masterCourse.tags',
+            'academicTerm',
+            'lecturer.institution',
+            'materials',
+            'quizzes.questions',
+        ])->find($id);
+
+        if (! $offering) {
+            $offering = CourseOffering::with([
+                'masterCourse.materials',
+                'masterCourse.quizzes.questions',
+                'masterCourse.skills',
+                'masterCourse.tags',
+                'academicTerm',
+                'lecturer.institution',
+                'materials',
+                'quizzes.questions',
+            ])
+            ->where('master_course_id', $id)
+            ->where('status', 'published')
             ->first();
-
-        if ($vendorCourse) {
-            $course = $vendorCourse;
-            $enrollment = Enrollment::where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->first();
-
-            if ($enrollment) {
-                app(CourseProgressService::class)->recalculate($user->id, $course->id);
-                $enrollment->refresh();
-            }
-
-            $this->logActivity(
-                activityType: 'view_course',
-                courseId: $course->id
-            );
-
-            // Combined 3NF materials & quizzes
-            if ($course->masterCourse) {
-                $combinedMaterials = $course->materials->merge($course->masterCourse->materials ?? collect())->unique('id');
-                $combinedQuizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
-                $course->setRelation('materials', $combinedMaterials);
-                $course->setRelation('quizzes', $combinedQuizzes);
-            }
-
-            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
-            $verifiedFinalAttempt = null;
-            $canDownloadCertificate = false;
-            $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
-
-            if ($finalQuiz && $enrollment) {
-                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
-                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
-
-                $verifiedFinalAttempt = QuizAttempt::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->orderByDesc('score')
-                    ->first();
-
-                $threshold = $course->certificate_threshold ?? 75;
-
-                if (! $onlyMultipleChoice) {
-                    $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
-                } elseif (! $verifiedFinalAttempt) {
-                    $certificateStatusText = 'Kerjakan final quiz untuk membuka certificate.';
-                } elseif ($verifiedFinalAttempt->score < $threshold) {
-                    $certificateStatusText = "Nilai final quiz minimal {$threshold}% untuk membuka certificate.";
-                } else {
-                    $canDownloadCertificate = true;
-                    $certificateStatusText = 'Certificate Sertifikasi Industri sudah tersedia untuk diunduh.';
-                }
-            } elseif (! $enrollment) {
-                $certificateStatusText = 'Silakan ambil course sertifikasi ini untuk mengakses kuis dan sertifikat.';
-            }
-
-            $retakeRequest = null;
-            if ($finalQuiz && $enrollment) {
-                $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->latest()
-                    ->first();
-            }
-
-            $isReadOnly = $course->isExpired() || $course->is_archived;
-
-            return view('student.courses.show', compact(
-                'course',
-                'enrollment',
-                'finalQuiz',
-                'verifiedFinalAttempt',
-                'canDownloadCertificate',
-                'certificateStatusText',
-                'isReadOnly',
-                'retakeRequest'
-            ));
         }
 
-        // 2. Coba di CourseOffering (3NF Academic)
-        $offering = \App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'lecturer', 'materials', 'quizzes.questions'])
-            ->find($id);
+        abort_unless($offering, 404, 'Kelas atau program kursus tidak ditemukan.');
 
-        if ($offering) {
-            $enrollment = Enrollment::where('user_id', $user->id)
-                ->where('course_offering_id', $offering->id)
-                ->first();
-
-            $course = $offering; // Magic accessors handle backward compatibility!
-
-            $this->logActivity(
-                activityType: 'view_course',
-                courseId: $offering->master_course_id
-            );
-
-            $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
-            $verifiedFinalAttempt = null;
-            $canDownloadCertificate = false;
-            $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
-
-            if ($finalQuiz && $enrollment) {
-                $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
-
-                $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
-                    $approvedQuestions->every(function ($question) {
-                        return $question->question_type === 'multiple_choice';
-                    });
-
-                $verifiedFinalAttempt = QuizAttempt::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->orderByDesc('score')
-                    ->first();
-
-                $threshold = $offering->certificate_threshold ?? 60;
-
-                if (! $onlyMultipleChoice) {
-                    $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
-                } elseif (! $verifiedFinalAttempt) {
-                    $certificateStatusText = 'Kerjakan final quiz dan tunggu verifikasi admin untuk membuka certificate.';
-                } elseif ($verifiedFinalAttempt->score < $threshold) {
-                    $certificateStatusText = "Nilai final quiz minimal {$threshold} untuk membuka certificate.";
-                } else {
-                    $canDownloadCertificate = true;
-                    $certificateStatusText = 'Certificate sudah tersedia untuk diunduh.';
-                }
-            } elseif (! $enrollment) {
-                $certificateStatusText = 'Silakan ambil rombel kelas ini untuk mengakses materi dan kuis.';
-            }
-
-            $retakeRequest = null;
-            if ($finalQuiz && $enrollment) {
-                $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->latest()
-                    ->first();
-            }
-
-            $isReadOnly = $offering->isExpired() || $offering->status === 'cancelled';
-
-            return view('student.courses.show', compact(
-                'course',
-                'enrollment',
-                'finalQuiz',
-                'verifiedFinalAttempt',
-                'canDownloadCertificate',
-                'certificateStatusText',
-                'isReadOnly',
-                'retakeRequest'
-            ));
-        }
-
-        // 3. Fallback ke legacy Course
-        $course = Course::findOrFail($id);
+        $course = $offering; // Magic accessors provide seamless compatibility
 
         $enrollment = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
+            ->where('course_offering_id', $offering->id)
             ->first();
 
-        abort_unless($enrollment, 403, 'Kamu tidak terdaftar di course sertifikasi ini.');
+        if ($enrollment) {
+            app(CourseProgressService::class)->recalculate($user->id, $offering->id);
+            $enrollment->refresh();
+        }
 
-        app(CourseProgressService::class)->recalculate($user->id, $course->id);
+        $this->logActivity('view_course', $offering->id);
 
-        $enrollment->refresh();
+        // Combined materials & quizzes from Master Course & Offering
+        $classMaterials = Material::where('course_offering_id', $offering->id)
+            ->orWhere(function ($q) use ($offering) {
+                $q->where('master_course_id', $offering->master_course_id)->whereNull('course_offering_id');
+            })
+            ->latest()
+            ->get();
+        $course->setRelation('materials', $classMaterials);
 
-        $this->logActivity(
-            activityType: 'view_course',
-            courseId: $course->id
-        );
-
-        // Combined 3NF materials & quizzes
         if ($course->masterCourse) {
-            $combinedMaterials = $course->materials->merge($course->masterCourse->materials ?? collect())->unique('id');
             $combinedQuizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
-            $course->setRelation('materials', $combinedMaterials);
             $course->setRelation('quizzes', $combinedQuizzes);
         }
 
@@ -333,7 +222,7 @@ class CourseController extends Controller
         $canDownloadCertificate = false;
         $certificateStatusText = 'Certificate belum tersedia karena final quiz belum ditentukan.';
 
-        if ($finalQuiz) {
+        if ($finalQuiz && $enrollment) {
             $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
             $onlyMultipleChoice = $approvedQuestions->count() > 0 &&
@@ -347,7 +236,7 @@ class CourseController extends Controller
                 ->orderByDesc('score')
                 ->first();
 
-            $threshold = $course->certificate_threshold ?? 75;
+            $threshold = $offering->certificate_threshold ?? $course->masterCourse?->certificate_threshold ?? 75;
 
             if (! $onlyMultipleChoice) {
                 $certificateStatusText = 'Final quiz untuk certificate harus berisi multiple choice saja.';
@@ -357,19 +246,25 @@ class CourseController extends Controller
                 $certificateStatusText = "Nilai final quiz minimal {$threshold}% untuk membuka certificate.";
             } else {
                 $canDownloadCertificate = true;
-                $certificateStatusText = 'Certificate Sertifikasi Industri sudah tersedia untuk diunduh.';
+                $certificateStatusText = 'Certificate sudah tersedia untuk diunduh.';
             }
+        } elseif (! $enrollment) {
+            $certificateStatusText = 'Silakan ambil/daftar program ini untuk mengakses materi dan kuis.';
         }
 
         $retakeRequest = null;
-        if ($finalQuiz) {
+        if ($finalQuiz && $enrollment) {
             $retakeRequest = \App\Models\QuizRetakeRequest::where('user_id', $user->id)
                 ->where('quiz_id', $finalQuiz->id)
                 ->latest()
                 ->first();
         }
 
-        $isReadOnly = $course->isExpired() || $course->is_archived;
+        $isReadOnly = $offering->isExpired() || $offering->is_archived || $offering->status === 'cancelled';
+
+        $savedMaterialIds = \App\Models\SavedMaterial::where('user_id', $user->id)
+            ->pluck('material_id')
+            ->toArray();
 
         return view('student.courses.show', compact(
             'course',
@@ -379,7 +274,8 @@ class CourseController extends Controller
             'canDownloadCertificate',
             'certificateStatusText',
             'isReadOnly',
-            'retakeRequest'
+            'retakeRequest',
+            'savedMaterialIds'
         ));
     }
 
@@ -387,167 +283,70 @@ class CourseController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Explicit Vendor Course Enrollment Check
-        $vendorCourse = Course::where('id', $id)
-            ->whereHas('user', fn($q) => $q->where('role', 'vendor'))
-            ->first();
+        // 1. Resolve CourseOffering (either direct ID or via master_course_id)
+        $offering = CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
 
-        if ($vendorCourse) {
-            $alreadyEnrolled = Enrollment::where('user_id', $user->id)
-                ->where('course_id', $vendorCourse->id)
-                ->exists();
-
-            if ($alreadyEnrolled) {
-                return redirect()
-                    ->route('student.courses.show', $vendorCourse->id)
-                    ->with('success', 'Kamu sudah terdaftar di course sertifikasi vendor ini.');
-            }
-
-            if ($vendorCourse->is_archived) {
-                return redirect()->back()->with('error', 'Course sertifikasi vendor ini tidak sedang menerima pendaftaran baru.');
-            }
-
-            Enrollment::create([
-                'user_id' => $user->id,
-                'course_id' => $vendorCourse->id,
-                'progress_percent' => 0,
-                'completed_material_count' => 0,
-                'completed_quiz_count' => 0,
-                'total_material_count' => $vendorCourse->materials->count(),
-                'total_quiz_count' => $vendorCourse->quizzes->count(),
-                'status' => 'not_started',
-                'started_at' => now(),
-                'last_activity_at' => now(),
-            ]);
-
-            $this->logActivity(
-                activityType: 'enroll_course',
-                courseId: $vendorCourse->id
-            );
-
-            return redirect()
-                ->route('student.courses.show', $vendorCourse->id)
-                ->with('success', 'Enrollment berhasil! Selamat mengikuti Sertifikasi Industri.');
-        }
-
-        // 2. Coba enroll di CourseOffering (3NF Academic)
-        $offering = \App\Models\CourseOffering::with(['masterCourse', 'materials', 'quizzes'])->find($id);
-
-        // Jika $id bukan CourseOffering ID langsung, periksa apakah $id merupakan master_course_id
         if (! $offering) {
-            $masterOfferings = \App\Models\CourseOffering::where('master_course_id', $id)
+            $masterOfferings = CourseOffering::where('master_course_id', $id)
                 ->where('status', 'published')
-                ->whereHas('academicTerm', function ($query) {
-                    $query->where('is_active', true);
-                })
+                ->where('is_archived', false)
                 ->get();
 
-            if ($masterOfferings->count() > 0) {
-                // Cari rombel yang masih memiliki kuota
-                $offering = $masterOfferings->first(fn($o) => $o->hasAvailableCapacity());
-
-                if (! $offering) {
-                    return redirect()
-                        ->back()
-                        ->with('error', 'Pendaftaran gagal: Seluruh rombel kelas untuk mata kuliah ini sudah memenuhi kuota maksimum (kuota habis).');
-                }
+            if ($masterOfferings->isNotEmpty()) {
+                $offering = $masterOfferings->first(fn($o) => $o->hasAvailableCapacity()) ?? $masterOfferings->first();
             }
         }
 
-        if ($offering) {
-            $alreadyEnrolled = Enrollment::where('user_id', $user->id)
-                ->where('course_offering_id', $offering->id)
-                ->exists();
-
-            if ($alreadyEnrolled) {
-                return redirect()
-                    ->route('student.courses.show', $offering->id)
-                    ->with('success', 'Kamu sudah terdaftar di kelas ini.');
-            }
-
-            // CAPACITY CHECK: Kuota Mahasiswa
-            if (! $offering->hasAvailableCapacity()) {
-                return redirect()->back()->with('error', 'Pendaftaran gagal: Rombel ' . $offering->section_name . ' sudah memenuhi kuota maksimum (' . $offering->capacity . ' mahasiswa).');
-            }
-
-            if ($offering->isExpired() || $offering->status !== 'published' || ($offering->academicTerm && ! $offering->academicTerm->is_active)) {
-                return redirect()->back()->with('error', 'Kelas ini tidak tersedia untuk pendaftaran baru karena semester sedang non-aktif, kelas berstatus draft, atau sudah ditutup.');
-            }
-
-            Enrollment::create([
-                'user_id' => $user->id,
-                'course_offering_id' => $offering->id,
-                'course_id' => $offering->master_course_id,
-                'progress_percent' => 0,
-                'completed_material_count' => 0,
-                'completed_quiz_count' => 0,
-                'total_material_count' => $offering->materials->count(),
-                'total_quiz_count' => $offering->quizzes->count(),
-                'status' => 'not_started',
-                'started_at' => now(),
-                'last_activity_at' => now(),
-            ]);
-
-            $this->logActivity(
-                activityType: 'enroll_course',
-                courseId: $offering->master_course_id
-            );
-
-            return redirect()
-                ->route('student.courses.show', $offering->id)
-                ->with('success', 'Enrollment berhasil! Selamat belajar.');
+        if (! $offering) {
+            return redirect()->back()->with('error', 'Kelas atau program sertifikasi tidak ditemukan.');
         }
-
-        // 2. Fallback ke legacy Course
-        $course = Course::findOrFail($id);
 
         $alreadyEnrolled = Enrollment::where('user_id', $user->id)
-            ->where('course_id', $course->id)
+            ->where('course_offering_id', $offering->id)
             ->exists();
 
         if ($alreadyEnrolled) {
             return redirect()
-                ->route('student.courses.show', $course->id)
-                ->with('success', 'Kamu sudah terdaftar di course ini.');
+                ->route('student.courses.show', $offering->id)
+                ->with('success', 'Kamu sudah terdaftar di program ini.');
         }
 
-        if ($course->isExpired() || $course->is_archived) {
-            return redirect()->back()->with('error', 'Course ini tidak tersedia untuk enrollment baru.');
+        if (! $offering->hasAvailableCapacity()) {
+            return redirect()->back()->with('error', 'Pendaftaran gagal: Kuota rombel ' . $offering->section_name . ' sudah penuh.');
+        }
+
+        if ($offering->isExpired() || $offering->status === 'draft' || $offering->is_archived) {
+            return redirect()->back()->with('error', 'Program ini tidak menerima pendaftaran baru.');
         }
 
         Enrollment::create([
-            'user_id' => $user->id,
-            'course_id' => $course->id,
-            'progress_percent' => 0,
+            'user_id'                  => $user->id,
+            'course_offering_id'       => $offering->id,
+            'progress_percent'         => 0,
             'completed_material_count' => 0,
-            'completed_quiz_count' => 0,
-            'total_material_count' => $course->materials->count(),
-            'total_quiz_count' => $course->quizzes->count(),
-            'status' => 'not_started',
-            'started_at' => now(),
-            'last_activity_at' => now(),
+            'completed_quiz_count'     => 0,
+            'total_material_count'     => $offering->materials->count(),
+            'total_quiz_count'         => $offering->quizzes->count(),
+            'status'                   => 'not_started',
+            'started_at'               => now(),
+            'last_activity_at'         => now(),
         ]);
 
-        $this->logActivity(
-            activityType: 'enroll_course',
-            courseId: $course->id
-        );
+        $this->logActivity('enroll_course', $offering->id);
 
         return redirect()
-            ->route('student.courses.show', $course->id)
+            ->route('student.courses.show', $offering->id)
             ->with('success', 'Enrollment berhasil! Selamat belajar.');
     }
 
-    private function logActivity(string $activityType, int $courseId): void
+    private function logActivity(string $activityType, int $offeringId): void
     {
-        $validCourseId = Course::where('id', $courseId)->exists() ? $courseId : null;
-
         LearningActivityLog::create([
-            'user_id' => Auth::id(),
-            'course_id' => $validCourseId,
-            'activity_type' => $activityType,
-            'activity_value' => 1,
-            'occurred_at' => now(),
+            'user_id'            => Auth::id(),
+            'course_offering_id' => $offeringId,
+            'activity_type'      => $activityType,
+            'activity_value'     => 1,
+            'created_at'         => now(),
         ]);
     }
 }

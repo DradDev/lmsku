@@ -28,7 +28,6 @@ use App\Http\Controllers\Lecturer\ResultController as LecturerResultController;
 use App\Http\Controllers\Lecturer\ProjectController as LecturerProjectController;
 
 // Admin Controllers
-use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\ResultController as AdminResultController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
@@ -108,12 +107,15 @@ Route::middleware(['auth', 'role:student'])
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])
             ->name('courses.show');
 
-        // Materials
+        // Materials (Saved & Course-Linked)
         Route::get('/materials', [StudentMaterialController::class, 'index'])
             ->name('materials.index');
 
         Route::get('/materials/{material}', [StudentMaterialController::class, 'show'])
             ->name('materials.show');
+
+        Route::post('/materials/{material}/toggle-save', [StudentMaterialController::class, 'toggleSave'])
+            ->name('materials.toggle-save');
 
         // Quizzes
         Route::get('/quiz/{quiz}', [StudentQuizController::class, 'show'])
@@ -220,11 +222,20 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/courses/{course}/quizzes', [LecturerQuizController::class, 'store'])
             ->name('courses.quizzes.store');
 
+        Route::get('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'show'])
+            ->name('courses.quizzes.show');
+
+        Route::get('/quizzes/{quiz}', [LecturerQuizController::class, 'show'])
+            ->name('quizzes.show');
+
         Route::put('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'update'])
             ->name('courses.quizzes.update');
 
         Route::delete('/courses/{course}/quizzes/{quiz}', [LecturerQuizController::class, 'destroy'])
             ->name('courses.quizzes.destroy');
+
+        Route::post('/quizzes/{quiz}/questions', [LecturerQuizController::class, 'storeQuestion'])
+            ->name('quizzes.questions.store');
 
         Route::get('/courses/{course}/quizzes/{quiz}/essay-answers', [LecturerQuizAnswerController::class, 'index'])
             ->name('courses.quizzes.answers.index');
@@ -238,12 +249,18 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::get('/courses/{course}/quizzes/{quiz}/results/{result}', [LecturerResultController::class, 'show'])
             ->name('courses.quizzes.results.show');
 
-        // Retake Requests Approval
+        // Retake Requests Approval & Dedicated Management
+        Route::get('/courses/{course}/retake-requests', [LecturerQuizController::class, 'retakeRequests'])
+            ->name('courses.retake-requests.index');
+
         Route::post('/retake-requests/{retakeRequest}/approve', [LecturerQuizController::class, 'approveRetake'])
             ->name('quizzes.retake.approve');
 
         Route::post('/retake-requests/{retakeRequest}/reject', [LecturerQuizController::class, 'rejectRetake'])
             ->name('quizzes.retake.reject');
+
+        Route::post('/courses/{course}/quizzes/retake/bulk-approve', [LecturerQuizController::class, 'bulkApproveRetake'])
+            ->name('courses.quizzes.retake.bulk-approve');
 
         // Materials — hanya bisa dikelola dari dalam Course (nested)
         Route::get('/courses/{course}/materials/create', [LecturerMaterialController::class, 'create'])
@@ -299,6 +316,9 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/projects/{project}/toggle-publish', [LecturerProjectController::class, 'togglePublish'])
             ->name('projects.toggle-publish');
 
+        Route::post('/projects/{project}/participations/{participation}/approve-certificate', [LecturerProjectController::class, 'approveCertificate'])
+            ->name('projects.approve-certificate');
+
         Route::resource('projects', LecturerProjectController::class);
     });
 
@@ -322,19 +342,25 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/results/{result}', [AdminResultController::class, 'show'])
             ->name('results.show');
 
+        Route::get('/results/project/{participation}', [AdminResultController::class, 'showProject'])
+            ->name('results.project.show');
+
         Route::post('/results/{result}/verify', [AdminResultController::class, 'verify'])
             ->name('results.verify');
+
+        Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])
+            ->name('results.integrity');
 
         Route::post('/results/project/{participation}/verify', [AdminResultController::class, 'verifyProject'])
             ->name('results.project.verify');
 
+        Route::post('/results/project/{participation}/integrity', [AdminResultController::class, 'checkProjectIntegrity'])
+            ->name('results.project.integrity');
+
         // Users, Skills, Tags
         Route::post('/results/{result}/integrity', [AdminResultController::class, 'checkIntegrity'])->name('results.integrity');
 
-        Route::resource('users', AdminUserController::class);
-
-        Route::resource('categories', AdminCategoryController::class)
-            ->except(['show']);
+        Route::resource('users', AdminUserController::class)->only(['index', 'show', 'destroy']);
 
         Route::post('/users/{user}/approve', [AdminUserController::class, 'approve'])
             ->name('users.approve');
@@ -393,6 +419,7 @@ Route::middleware(['auth', 'role:vendor'])
         // Industry Certified Courses
         Route::post('/courses/{course}/toggle-archive', [VendorCourseController::class, 'toggleArchive'])->name('courses.toggle-archive');
         Route::post('/courses/{course}/launch-batch', [VendorCourseController::class, 'launchBatch'])->name('courses.launch-batch');
+        Route::put('/courses/{course}/batch', [VendorCourseController::class, 'updateBatch'])->name('courses.update-batch');
         Route::resource('courses', VendorCourseController::class);
 
         // Course Materials & Quizzes
@@ -400,11 +427,18 @@ Route::middleware(['auth', 'role:vendor'])
         Route::delete('/materials/{material}', [VendorMaterialController::class, 'destroy'])->name('materials.destroy');
 
         Route::post('/courses/{course}/quizzes', [VendorQuizController::class, 'store'])->name('quizzes.store');
+        Route::get('/courses/{course}/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('courses.quizzes.show');
         Route::put('/courses/{course}/quizzes/{quiz}', [VendorQuizController::class, 'update'])->name('courses.quizzes.update');
         Route::get('/quizzes/{quiz}', [VendorQuizController::class, 'show'])->name('quizzes.show');
         Route::delete('/quizzes/{quiz}', [VendorQuizController::class, 'destroy'])->name('quizzes.destroy');
         Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
         Route::delete('/questions/{question}', [VendorQuizController::class, 'destroyQuestion'])->name('questions.destroy');
+
+        // Quiz Retake Requests Approval & Dedicated Management
+        Route::get('/courses/{course}/retake-requests', [VendorQuizController::class, 'retakeRequests'])->name('courses.retake-requests.index');
+        Route::post('/retake-requests/{retakeRequest}/approve', [VendorQuizController::class, 'approveRetake'])->name('quizzes.retake.approve');
+        Route::post('/retake-requests/{retakeRequest}/reject', [VendorQuizController::class, 'rejectRetake'])->name('quizzes.retake.reject');
+        Route::post('/courses/{course}/quizzes/retake/bulk-approve', [VendorQuizController::class, 'bulkApproveRetake'])->name('courses.quizzes.retake.bulk-approve');
 
         // Question Builder & Batch Routes
         Route::post('/questions', [VendorQuestionController::class, 'store'])->name('questions.store');
@@ -414,6 +448,8 @@ Route::middleware(['auth', 'role:vendor'])
         // Industry Projects
         Route::get('/students/{student}/portfolio', [VendorProjectController::class, 'studentPortfolio'])->name('students.portfolio');
         Route::post('/projects/{project}/toggle-publish', [VendorProjectController::class, 'togglePublish'])->name('projects.toggle-publish');
+        Route::post('/projects/{project}/participations/{participation}/approve-certificate', [VendorProjectController::class, 'approveCertificate'])
+            ->name('projects.approve-certificate');
         Route::get('/projects/{project}/talent-pool', [VendorProjectController::class, 'talentPool'])->name('projects.talent-pool');
         Route::post('/projects/{project}/invite/{user}', [VendorProjectController::class, 'inviteTalent'])->name('projects.invite');
         Route::resource('projects', VendorProjectController::class);

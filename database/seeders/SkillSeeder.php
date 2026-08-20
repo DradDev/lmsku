@@ -37,7 +37,6 @@ class SkillSeeder extends Seeder
                 ['name' => $mainSkill['name']],
                 [
                     'description' => $mainSkill['description'],
-                    'parent_id' => null,
                 ]
             );
         }

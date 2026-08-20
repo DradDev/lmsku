@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 class Material extends Model
 {
     protected $fillable = [
-        'course_id',
         'master_course_id',
         'course_offering_id',
         'title',
@@ -31,11 +30,11 @@ class Material extends Model
     }
 
     /**
-     * Legacy course relationship
+     * Backward compatibility course relationship
      */
     public function course()
     {
-        return $this->belongsTo(Course::class, 'course_id');
+        return $this->belongsTo(MasterCourse::class, 'master_course_id');
     }
 }
 

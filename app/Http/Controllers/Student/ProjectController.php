@@ -41,25 +41,34 @@ class ProjectController extends Controller
             ->pluck('project_id')
             ->toArray();
 
+        $completedProjectIds = ProjectParticipation::where('user_id', $student->id)
+            ->where('status', 'completed')
+            ->pluck('project_id')
+            ->toArray();
+
         $invitedParticipations = ProjectParticipation::with(['project', 'project.user', 'project.skills'])
             ->where('user_id', $student->id)
             ->where('status', 'invited')
             ->latest()
             ->get();
 
-        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'authors', 'invitedParticipations'));
+        return view('student.projects.index', compact('projects', 'joinedProjectIds', 'completedProjectIds', 'authors', 'invitedParticipations'));
     }
 
     public function show(Project $project): View
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (ProjectParticipation::where('project_id', $project->id)->where('status', 'completed')->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $project->load([
             'user.institution',
             'creator.institution',
             'skills',
             'tags',
-            'category',
             'participations.user',
             'comments.user',
             'comments.participation',
@@ -69,10 +78,22 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->first();
 
+        if (!$participation && $currentUser->role === 'admin') {
+            $participation = ProjectParticipation::where('project_id', $project->id)->first();
+        }
+
+        $certificate = Certificate::where('user_id', $student->id)
+            ->where('project_id', $project->id)
+            ->first();
+
+        if (!$certificate && $currentUser->role === 'admin') {
+            $certificate = Certificate::where('project_id', $project->id)->first();
+        }
+
         $eligibility = $this->checkStudentEligibility($student, $project);
 
         $skillIds = $project->skills->pluck('id')->toArray();
-        $prerequisiteCourses = \App\Models\MasterCourse::with(['skills', 'category'])
+        $prerequisiteCourses = \App\Models\MasterCourse::with(['skills'])
             ->whereHas('skills', function ($q) use ($skillIds) {
                 $q->whereIn('skills.id', $skillIds);
             })
@@ -90,7 +111,7 @@ class ProjectController extends Controller
             ->latest()
             ->get();
 
-        return view('student.projects.show', compact('project', 'participation', 'eligibility', 'statusHistories', 'prerequisiteCourses'));
+        return view('student.projects.show', compact('project', 'participation', 'certificate', 'eligibility', 'statusHistories', 'prerequisiteCourses'));
     }
 
     public function myProjects(): View
@@ -198,7 +219,6 @@ class ProjectController extends Controller
             'enrollments.courseOffering.lecturer',
             'enrollments.course.skills',
             'enrollments.course.tags',
-            'enrollments.course.category',
         ]);
 
         $certificates = Certificate::with([
@@ -225,8 +245,7 @@ class ProjectController extends Controller
             $courseName = $masterCourse->name ?? ($enrollment->course->name ?? 'Course');
             $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
             $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
-                return ($cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id)
-                    || ($cert->course_id && $cert->course_id === $enrollment->course_id);
+                return $cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id;
             });
 
             foreach ($courseObj->skills as $skill) {
@@ -387,6 +406,12 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->firstOrFail();
 
+        if ($participation->status === 'completed') {
+            return redirect()
+                ->route('student.projects.show', $project)
+                ->with('info', 'Proyek ini telah selesai. Status pengerjaan tidak dapat diubah lagi.');
+        }
+
         $oldStatus = $participation->status;
         $oldProgress = $participation->progress_percent;
 
@@ -441,7 +466,20 @@ class ProjectController extends Controller
     {
         $student = Auth::user();
 
-        // Cek kelayakan kompetensi sebelum join
+        // 1. Cek publikasi dan kuota
+        if (!$project->is_published) {
+            return redirect()
+                ->route('student.projects.index')
+                ->with('error', "Pendaftaran untuk project '{$project->title}' saat ini sedang ditutup.");
+        }
+
+        if ($project->is_full) {
+            return redirect()
+                ->route('student.projects.index')
+                ->with('error', "Kuota pendaftaran untuk project '{$project->title}' sudah penuh.");
+        }
+
+        // 2. Cek kelayakan kompetensi sebelum join
         $eligibility = $this->checkStudentEligibility($student, $project);
         if (!($eligibility['is_eligible'] ?? false)) {
             $reasonsText = implode(' ', $eligibility['reasons'] ?? []);
@@ -450,18 +488,25 @@ class ProjectController extends Controller
                 ->with('error', "Gagal mengambil proyek: Proyek '{$project->title}' saat ini terkunci. " . $reasonsText);
         }
 
+        // 3. Cek partisipasi yang sudah ada
         $existingParticipation = ProjectParticipation::where('user_id', $student->id)
             ->where('project_id', $project->id)
             ->first();
 
         if ($existingParticipation) {
+            if ($existingParticipation->status === 'completed') {
+                return redirect()
+                    ->route('student.projects.show', $project)
+                    ->with('info', "Anda telah menyelesaikan project '{$project->title}'. Silakan akses sertifikat kelulusan Anda.");
+            }
+
             if ($existingParticipation->status === 'invited') {
                 return redirect()
                     ->route('student.projects.my')
                     ->with('info', "Anda memiliki undangan pending untuk project '{$project->title}'. Silakan konfirmasi pada daftar undangan.");
             }
 
-            if (in_array($existingParticipation->status, ['in_progress', 'development', 'review', 'completed'])) {
+            if (in_array($existingParticipation->status, ['in_progress', 'development', 'review'])) {
                 return redirect()
                     ->route('student.projects.show', $project)
                     ->with('info', "Anda sudah terdaftar dan sedang mengerjakan project '{$project->title}'.");

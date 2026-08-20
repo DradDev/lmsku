@@ -4,9 +4,9 @@
 
             {{-- HEADER NAVIGATION --}}
             <div class="flex items-center justify-between mb-4">
-                <a href="{{ route('vendor.courses.show', $course) }}"
+                <a href="{{ isset($course) ? route('vendor.courses.show', $course->id) : route('vendor.courses.index') }}"
                     class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition">
-                    ← Kembali ke Course {{ $course->name }}
+                    ← Kembali ke Course {{ $course->name ?? 'Sertifikasi' }}
                 </a>
 
                 <div class="flex items-center gap-2">

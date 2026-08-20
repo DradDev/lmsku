@@ -2,8 +2,12 @@
     <div class="min-h-screen bg-slate-50 py-10">
         <div class="max-w-6xl mx-auto px-6">
 
+            @php
+                $backOffering = $material->courseOffering ?? ($material->masterCourse?->offerings?->first());
+                $backOfferingId = $material->course_offering_id ?? ($backOffering?->id ?? 1);
+            @endphp
             <div class="mb-8">
-                <a href="{{ route('lecturer.courses.show', $material->course_offering_id ?? $material->course_id) }}"
+                <a href="{{ route('lecturer.courses.show', $backOfferingId) }}"
                    class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
                     ← Back to Course
                 </a>
@@ -18,8 +22,9 @@
             </div>
 
             @if ($errors->any())
-                <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
-                    <ul class="list-disc pl-5 text-sm space-y-1">
+                <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                    <p class="font-semibold">Please fix the following errors:</p>
+                    <ul class="mt-2 list-disc list-inside space-y-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -27,64 +32,42 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                <div class="xl:col-span-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <form action="{{ route('lecturer.materials.update', $material->id) }}"
-                          method="POST"
-                          enctype="multipart/form-data"
-                          class="space-y-6">
-                        @csrf
-                        @method('PUT')
+            <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <form action="{{ route('lecturer.materials.update', $material->id) }}"
+                      method="POST"
+                      enctype="multipart/form-data"
+                      class="space-y-6">
+                    @csrf
+                    @method('PUT')
 
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-slate-700">Judul Materi</label>
-                            <input type="text"
-                                   name="title"
-                                   value="{{ old('title', $material->title) }}"
-                                   placeholder="Contoh: Modul HTML Dasar"
-                                   class="w-full rounded-2xl border border-slate-300 bg-slate-50 p-3 text-slate-900 placeholder:text-slate-400 focus:border-violet-500 focus:outline-none"
-                                   required>
-                        </div>
+                    <div>
+                        <label for="title" class="block text-sm font-semibold text-slate-700 mb-2">
+                            Material Title
+                        </label>
+                        <input type="text"
+                               id="title"
+                               name="title"
+                               value="{{ old('title', $material->title) }}"
+                               class="w-full rounded-2xl border border-slate-300 bg-white p-3 text-slate-900 focus:border-indigo-500 focus:ring-indigo-500"
+                               placeholder="e.g. Pertemuan 1 - Pengenalan Laravel"
+                               required>
+                    </div>
 
-                        <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                            <p class="text-sm font-medium text-slate-700">File Saat Ini</p>
-                            <p class="mt-2 text-sm text-slate-500 break-all">
-                                {{ $material->file_path ? basename($material->file_path) : 'Belum ada file' }}
-                            </p>
-
-                            @if(!empty($material->file_path))
-                                <div class="mt-4 flex flex-wrap gap-2">
-                                    <a href="{{ asset('storage/' . $material->file_path) }}"
-                                       target="_blank"
-                                       class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800">
-                                        Open File
-                                    </a>
-                                </div>
+                    @if(!empty($material->master_course_id))
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                        <label class="block text-sm font-bold text-slate-800 mb-1">Cakupan Distribusi Materi</label>
+                        <p class="text-xs text-slate-500 mb-3">Tentukan apakah materi ini berlaku untuk seluruh kelas mata kuliah ini atau hanya kelas spesifik.</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                                <input type="radio" name="target_scope" value="all" {{ empty($material->course_offering_id) ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
+                                <span><strong class="text-slate-900">Pustaka Induk (Semua Kelas)</strong> — Tersedia otomatis untuk seluruh kelas mata kuliah ini</span>
+                            </label>
+                            @if($material->courseOffering)
+                            <label class="flex items-center gap-2.5 text-xs text-slate-700 cursor-pointer">
+                                <input type="radio" name="target_scope" value="class" {{ !empty($material->course_offering_id) ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500">
+                                <span><strong class="text-slate-900">Khusus {{ $material->courseOffering->section_name ?: 'Kelas Ini' }}</strong> — Hanya dapat diakses oleh mahasiswa di kelas ini</span>
+                            </label>
                             @endif
-                        </div>
-
-                        <div>
-                            <label class="block mb-2 text-sm font-medium text-slate-700">Ganti File Materi</label>
-                            <input type="file"
-                                   name="file"
-                                   class="w-full rounded-2xl border border-slate-300 bg-white p-3 text-slate-900 file:mr-4 file:rounded-xl file:border-0 file:bg-violet-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-violet-700"
-                                   accept=".pdf,.doc,.docx,.ppt,.pptx">
-
-                            <p class="mt-2 text-xs text-slate-500">
-                                Kosongkan jika tidak ingin mengganti file. Format: PDF, DOC, DOCX, PPT, PPTX. Maksimal 20MB.
-                            </p>
-                        </div>
-
-                        <div class="flex justify-end gap-3 pt-2">
-                            <a href="{{ route('lecturer.courses.show', $material->course_offering_id ?? $material->course_id) }}"
-                               class="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                                Cancel
-                            </a>
-
-                            <button type="submit"
-                                    class="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-700">
-                                Update Material
-                            </button>
                         </div>
                     </form>
                 </div>

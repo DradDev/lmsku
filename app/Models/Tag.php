@@ -19,8 +19,13 @@ class Tag extends Model
 
     public function courses()
     {
-        return $this->belongsToMany(Course::class, 'course_tags')
-            ->withPivot('weight')
+        return $this->belongsToMany(MasterCourse::class, 'master_course_tags')
+            ->withTimestamps();
+    }
+
+    public function masterCourses()
+    {
+        return $this->belongsToMany(MasterCourse::class, 'master_course_tags')
             ->withTimestamps();
     }
 

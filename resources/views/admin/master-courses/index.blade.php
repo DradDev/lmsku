@@ -81,12 +81,12 @@
                 </div>
 
                 <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-1">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-purple-600">Mitra Vendor (Sertifikasi)</span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-purple-600">Eksternal (Mitra Vendor)</span>
                     <div class="flex items-baseline justify-between pt-1">
                         <h3 class="text-3xl font-extrabold text-purple-600">{{ $vendorCourses->count() }}</h3>
                         <span class="text-xs font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700">Bootcamp</span>
                     </div>
-                    <p class="text-[11px] text-purple-500">Course sertifikasi industri</p>
+                    <p class="text-[11px] text-purple-500">Course sertifikasi industri mitra</p>
                 </div>
             </div>
 
@@ -118,7 +118,7 @@
                             @click="tab = 'vendor'" 
                             :class="tab === 'vendor' ? 'bg-purple-700 text-white font-bold shadow-sm' : 'bg-white text-gray-600 hover:bg-gray-100 font-semibold border border-gray-200'"
                             class="px-4 py-2 rounded-xl text-xs transition flex items-center gap-2 whitespace-nowrap">
-                        <span>Sertifikasi Vendor</span>
+                        <span>Eksternal (Mitra Vendor)</span>
                         <span class="px-2 py-0.5 rounded-full text-[10px]" :class="tab === 'vendor' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'">
                             {{ $vendorCourses->count() }}
                         </span>
@@ -147,7 +147,7 @@
                 <!-- 1. ACADEMIC INTERNAL MASTER COURSES CARDS -->
                 @foreach ($masterCourses as $mc)
                     @php
-                        $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . ($mc->description ?? '') . ' ' . ($mc->category->name ?? ''));
+                        $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . ($mc->description ?? '') . ' ' . ($mc->main_skill->name ?? ''));
                         $levelBadges = [
                             'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
@@ -190,7 +190,7 @@
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
-                                    {{ $mc->category->name ?? 'Umum' }}
+                                    {{ $mc->main_skill->name ?? 'Umum' }}
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
@@ -247,17 +247,21 @@
                     </div>
                 @endforeach
 
-                <!-- 2. VENDOR CERTIFICATION COURSES CARDS -->
-                @foreach ($vendorCourses as $vc)
+                <!-- 2. VENDOR CERTIFICATION COURSES CARDS (STRICT 3NF - 1 CARD PER MASTER CURRICULUM) -->
+                @php $vendorList = $vendorMasterCourses ?? $vendorCourses; @endphp
+                @foreach ($vendorList as $vmc)
                     @php
-                        $vendorName = $vc->user->name ?? 'Mitra Vendor';
-                        $searchHaystack = strtolower($vc->name . ' ' . ($vc->batch_name ?? '') . ' ' . $vendorName . ' ' . ($vc->category->name ?? ''));
+                        $vendorName = $vmc->user->name ?? 'Mitra Vendor';
+                        $batchesList = $vmc->courses ?? collect();
+                        $latestBatch = $batchesList->first();
+                        $totalStudents = $batchesList->sum(fn($c) => $c->enrollments ? $c->enrollments->count() : 0);
+                        $searchHaystack = strtolower($vmc->name . ' ' . ($vmc->code ?? '') . ' ' . $vendorName . ' ' . ($vmc->main_skill->name ?? ''));
                         $levelBadges = [
                             'Beginner' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                             'Intermediate' => 'bg-amber-50 text-amber-700 border-amber-200',
                             'Advanced' => 'bg-rose-50 text-rose-700 border-rose-200',
                         ];
-                        $badgeClass = $levelBadges[$vc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+                        $badgeClass = $levelBadges[$vmc->level] ?? 'bg-gray-50 text-gray-700 border-gray-200';
                     @endphp
 
                     <div x-show="(tab === 'all' || tab === 'vendor') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
@@ -270,50 +274,81 @@
                                 </span>
 
                                 <span class="font-mono text-xs font-bold text-purple-900 bg-purple-100 px-2.5 py-1 rounded-md border border-purple-200">
-                                    {{ $vc->batch_name ?? 'Batch 1' }}
+                                    {{ $vmc->code ?? 'VMC-' . $vmc->id }}
                                 </span>
                             </div>
 
                             <!-- Course Title & Vendor Name -->
                             <h3 class="font-extrabold text-base text-gray-900 group-hover:text-purple-700 transition-colors line-clamp-2 leading-snug">
-                                <a href="{{ route('admin.courses.show', $vc) }}">
-                                    {{ $vc->name }}
-                                </a>
+                                @if($latestBatch)
+                                    <a href="{{ route('admin.courses.show', $latestBatch) }}">
+                                        {{ $vmc->name }}
+                                    </a>
+                                @else
+                                    {{ $vmc->name }}
+                                @endif
                             </h3>
 
                             <p class="text-xs font-bold text-purple-700 mt-1 flex items-center gap-1">
-                                <span>{{ $vendorName }}</span>
+                                <span>🏢 {{ $vendorName }}</span>
                             </p>
 
-                            @if($vc->description)
+                            @if($vmc->description)
                                 <p class="text-xs text-gray-500 mt-2 line-clamp-2 leading-relaxed">
-                                    {{ $vc->description }}
+                                    {{ $vmc->description }}
                                 </p>
                             @endif
 
                             <!-- Meta Info Badges Row -->
                             <div class="mt-4 flex flex-wrap items-center gap-2">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $badgeClass }}">
-                                    {{ $vc->level }}
+                                    {{ $vmc->level }}
+                                </span>
+
+                                <span class="inline-flex items-center px-2.5 py-0.5 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-100">
+                                    {{ $vmc->main_skill->name ?? 'Sertifikasi' }}
                                 </span>
 
                                 <span class="inline-flex items-center px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
-                                    Threshold {{ $vc->certificate_threshold ?? 75 }}%
+                                    Threshold {{ $vmc->certificate_threshold ?? 75 }}%
                                 </span>
+                            </div>
+
+                            <!-- BATCHES CONTAINER (LIST OF SIBLING BATCHES UNDER THIS MASTER COURSE) -->
+                            <div class="mt-4 p-3 bg-purple-50/50 rounded-xl border border-purple-100">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-purple-900 mb-1.5">
+                                    <span>Angkatan Terdaftar:</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-200 text-purple-800 font-extrabold">
+                                        {{ $batchesList->count() }} Batch
+                                    </span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    @forelse($batchesList as $bItem)
+                                        <a href="{{ route('admin.courses.show', $bItem) }}"
+                                           class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10.5px] font-bold {{ $bItem->is_archived ? 'bg-slate-100 text-slate-600' : 'bg-white text-purple-800 border border-purple-200 shadow-2xs hover:bg-purple-50' }}">
+                                            <span>{{ $bItem->batch_name ?: 'Batch ' . $loop->iteration }}</span>
+                                            <span class="text-[9.5px] text-purple-600 font-extrabold">({{ $bItem->enrollments ? $bItem->enrollments->count() : 0 }} Mhs)</span>
+                                        </a>
+                                    @empty
+                                        <span class="text-[11px] text-slate-400">Belum ada batch dibuka</span>
+                                    @endforelse
+                                </div>
                             </div>
                         </div>
 
                         <!-- Card Footer Action Buttons -->
                         <div class="mt-5 pt-4 border-t border-purple-100 flex items-center justify-between gap-2">
                             <span class="text-[11px] text-purple-600 font-bold">
-                                {{ $vc->materials->count() }} Materi • {{ $vc->quizzes->count() }} Kuis
+                                {{ $vmc->materials->count() }} Materi • {{ $vmc->quizzes->count() }} Kuis • {{ $totalStudents }} Total Mhs
                             </span>
 
-                            <a href="{{ route('admin.courses.show', $vc) }}" 
-                               class="inline-flex items-center gap-1.5 px-3 py-2 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl shadow-xs transition">
-                                <span>Detail Vendor</span>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                            </a>
+                            @if($latestBatch)
+                                <a href="{{ route('admin.courses.show', $latestBatch) }}" 
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                                    <span>Detail Program</span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                </a>
+                            @endif
                         </div>
                     </div>
                 @endforeach

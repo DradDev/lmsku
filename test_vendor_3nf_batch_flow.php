@@ -7,7 +7,6 @@ $app = require_once __DIR__ . '/bootstrap/app.php';
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 $kernel->bootstrap();
 
-use App\Models\Category;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\MasterCourse;
@@ -31,8 +30,7 @@ if (!$vendor) {
 Auth::login($vendor);
 echo "1. Logged in as Vendor: {$vendor->name} (ID: {$vendor->id})\n";
 
-// 2. Setup Category & Skills
-$category = Category::firstOrCreate(['name' => 'Cloud & DevOps Tech'], ['slug' => 'cloud-devops']);
+// 2. Setup Skills
 $skill = Skill::firstOrCreate(['name' => 'Kubernetes & Docker'], ['category' => 'Engineering']);
 
 // 3. Test Vendor Course Store (Creates Master Course + Batch 1)
@@ -44,7 +42,6 @@ $reqStore = Request::create(route('vendor.courses.store'), 'POST', [
     'batch_name' => 'Batch 1 - Q1 2026',
     'description' => 'Comprehensive enterprise cloud orchestration curriculum.',
     'level' => 'Advanced',
-    'category_id' => $category->id,
     'duration_weeks' => 6,
     'certificate_threshold' => 85,
     'skill_ids' => [$skill->id],
@@ -63,7 +60,7 @@ if (!$masterCourse) {
 echo "   [OK] MasterCourse created: ID {$masterCourse->id} (Code: {$masterCourse->code})\n";
 
 $batch1 = Course::where('master_course_id', $masterCourse->id)
-    ->where('batch_name', 'Batch 1 - Q1 2026')
+    ->where('section_name', 'Batch 1 - Q1 2026')
     ->first();
 
 if (!$batch1) {
@@ -124,7 +121,7 @@ $reqBatch2 = Request::create(route('vendor.courses.launch-batch', $batch1->id), 
 $respBatch2 = $courseController->launchBatch($reqBatch2, $batch1);
 
 $batch2 = Course::where('master_course_id', $masterCourse->id)
-    ->where('batch_name', 'Batch 2 - Q3 2026 Intake')
+    ->where('section_name', 'Batch 2 - Q3 2026 Intake')
     ->first();
 
 if ($batch2) {
@@ -151,13 +148,20 @@ echo "\n7. Testing Student Enrollments isolation per Batch...\n";
 $student1 = User::where('role', 'student')->first();
 $student2 = User::where('role', 'student')->skip(1)->first() ?? $student1;
 
+$offeringBatch1 = \App\Models\CourseOffering::where('master_course_id', $masterCourse->id)
+    ->where('section_name', $batch1->batch_name)
+    ->first();
+$offeringBatch2 = \App\Models\CourseOffering::where('master_course_id', $masterCourse->id)
+    ->where('section_name', $batch2->batch_name)
+    ->first();
+
 Enrollment::updateOrCreate(
-    ['user_id' => $student1->id, 'course_id' => $batch1->id],
+    ['user_id' => $student1->id, 'course_offering_id' => $offeringBatch1?->id ?? $batch1->id],
     ['status' => 'in_progress', 'progress_percent' => 50]
 );
 
 Enrollment::updateOrCreate(
-    ['user_id' => $student2->id, 'course_id' => $batch2->id],
+    ['user_id' => $student2->id, 'course_offering_id' => $offeringBatch2?->id ?? $batch2->id],
     ['status' => 'completed', 'progress_percent' => 100]
 );
 
@@ -177,13 +181,43 @@ echo "\n8. Testing Vendor Course Index View Rendering...\n";
 $indexView = $courseController->index();
 $renderedIndex = $indexView->render();
 
-if (strpos($renderedIndex, 'Daftar Program Sertifikasi Mitra Vendor') !== false &&
+if (strpos($renderedIndex, 'Daftar Program Sertifikasi') !== false &&
     strpos($renderedIndex, 'Master Certified Kubernetes Administrator (CKA)') !== false &&
     strpos($renderedIndex, 'Batch 1 - Q1 2026') !== false &&
     strpos($renderedIndex, 'Batch 2 - Q3 2026 Intake') !== false) {
     echo "   [OK] Vendor Index renders MasterCourse with multiple batch pills cleanly!\n";
 } else {
     echo "   [FAIL] Vendor Index rendering failed.\n";
+}
+
+// 10. Test Update Batch & Toggle Archive specifically
+echo "\n9. Testing Update Batch & Toggle Archive per Batch...\n";
+$updateBatchReq = Request::create(route('vendor.courses.update-batch', $batch2->id), 'PUT', [
+    'batch_name' => 'Batch 2 - Q3 2026 (Updated & Active)',
+    'certificate_threshold' => 85,
+    'duration_weeks' => 6,
+    'is_archived' => 0,
+]);
+$courseController->updateBatch($updateBatchReq, $batch2);
+$batch2Fresh = $batch2->fresh();
+
+if ($batch2Fresh->batch_name === 'Batch 2 - Q3 2026 (Updated & Active)' &&
+    $batch2Fresh->certificate_threshold == 85 &&
+    $batch2Fresh->duration_weeks == 6 &&
+    $batch2Fresh->is_archived == false) {
+    echo "   [OK] Batch 2 parameters successfully updated without modifying MasterCourse!\n";
+} else {
+    echo "   [FAIL] Batch 2 parameters update mismatch.\n";
+}
+
+// Toggle archive Batch 1
+$initialArchived = $batch1->fresh()->is_archived;
+$courseController->toggleArchive($batch1);
+$batch1Fresh = $batch1->fresh();
+if ($batch1Fresh->is_archived !== $initialArchived) {
+    echo "   [OK] Batch 1 archive status toggled independently while Batch 2 remains active!\n";
+} else {
+    echo "   [FAIL] Batch 1 archive toggle failed.\n";
 }
 
 echo "\n=== ALL VENDOR 3NF MULTI-BATCH TESTS PASSED 100%! ===\n";

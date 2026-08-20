@@ -16,12 +16,12 @@ class QuestionController extends Controller
 {
     public function index(): RedirectResponse
     {
-        return redirect()->route('lecturer.dashboard', ['tab' => 'questions']);
+        return redirect()->route('lecturer.courses.index');
     }
 
     public function create(): RedirectResponse
     {
-        return redirect()->route('lecturer.dashboard', ['tab' => 'questions']);
+        return redirect()->route('lecturer.courses.index');
     }
 
     public function store(Request $request): RedirectResponse
@@ -78,8 +78,8 @@ class QuestionController extends Controller
         }
 
         $quiz = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->whereIn('master_course_id', function($sub) {
+                $sub->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
             })
             ->findOrFail($validated['quiz_id']);
 
@@ -111,34 +111,31 @@ class QuestionController extends Controller
         }
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', $createdMultipleChoice . ' multiple choice question berhasil dibuat dan langsung aktif.');
+            ->route('lecturer.quizzes.show', $quiz->id)
+            ->with('success', $createdMultipleChoice . ' multiple choice question berhasil ditambahkan.');
     }
 
     public function show(Question $question): RedirectResponse
     {
-        return redirect()->route('lecturer.dashboard', ['tab' => 'questions']);
+        return redirect()->route('lecturer.courses.index');
     }
 
     public function edit(Question $question): View
     {
         $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && $question->quiz->course && $question->quiz->course->user_id === Auth::id());
+            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists());
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $quizzes = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->whereIn('master_course_id', function ($query) {
+                $query->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
             })
-            ->with('course')
+            ->with('masterCourse')
             ->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [$question->quiz_id])
             ->latest()
             ->get();
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-                $query->orderBy('name');
-            }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::with('tags')
             ->orderBy('name')
             ->get();
 
@@ -150,7 +147,7 @@ class QuestionController extends Controller
     public function update(Request $request, Question $question): RedirectResponse
     {
         $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && $question->quiz->course && $question->quiz->course->user_id === Auth::id());
+            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists());
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $rules = [
@@ -177,8 +174,8 @@ class QuestionController extends Controller
         unset($data['skill_ids'], $data['main_skill_id']);
 
         $quiz = Quiz::query()
-            ->whereHas('course', function ($query) {
-                $query->where('user_id', Auth::id());
+            ->whereIn('master_course_id', function ($query) {
+                $query->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
             })
             ->findOrFail($data['quiz_id']);
 
@@ -190,19 +187,23 @@ class QuestionController extends Controller
         $this->syncQuestionSkills($question, $skillIds, $mainSkillId);
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions', 'quiz_id' => $quiz->id])
+            ->route('lecturer.quizzes.show', $quiz->id)
             ->with('success', 'Question berhasil diperbarui dan tetap aktif untuk student.');
     }
 
     public function destroy(Question $question): RedirectResponse
     {
-        abort_unless($question->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke question ini.');
+        $isOwner = $question->user_id === Auth::id() || 
+            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists()) ||
+            Auth::user()->isAdmin();
+
+        abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $question->delete();
 
         return redirect()
-            ->route('lecturer.dashboard', ['tab' => 'questions'])
-            ->with('success', 'Question deleted successfully.');
+            ->back()
+            ->with('success', 'Soal evaluasi berhasil dihapus.');
     }
 
     private function syncQuestionSkills(Question $question, array $skillIds, mixed $mainSkillId = null): void

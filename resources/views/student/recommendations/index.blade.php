@@ -98,10 +98,15 @@
                 $isFull = false;
 
                 if ($isCourse) {
-                $alreadyEnrolled = \Illuminate\Support\Facades\DB::table('enrollments')
-                ->where('user_id', $userId)
-                ->where('course_id', $item->id)
-                ->exists();
+                    $alreadyEnrolled = \Illuminate\Support\Facades\DB::table('enrollments')
+                        ->where('user_id', $userId)
+                        ->where(function($q) use ($item) {
+                            $q->where('course_offering_id', $item->id)
+                              ->orWhereIn('course_offering_id', function($sub) use ($item) {
+                                  $sub->select('id')->from('course_offerings')->where('master_course_id', $item->id);
+                              });
+                        })
+                        ->exists();
                 }
 
                 if ($isProject) {

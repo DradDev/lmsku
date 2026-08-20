@@ -16,33 +16,21 @@ class MaterialController extends Controller
     {
         $lecturerId = Auth::id();
 
-        // 1. Check via course_offering_id
+        // 1. Check via master_course_id
+        if ($material->master_course_id) {
+            $hasTeachingRole = CourseOffering::where('master_course_id', $material->master_course_id)
+                ->where('lecturer_id', $lecturerId)
+                ->exists();
+
+            if ($hasTeachingRole) {
+                return;
+            }
+        }
+
+        // 2. Check via course_offering_id
         if ($material->course_offering_id) {
             $offering = CourseOffering::find($material->course_offering_id);
             if ($offering && (int)$offering->lecturer_id === (int)$lecturerId) {
-                return;
-            }
-        }
-
-        // 2. Check via master_course_id (is lecturer assigned to any offering of this master course?)
-        if ($material->master_course_id) {
-            $isAssigned = CourseOffering::where('master_course_id', $material->master_course_id)
-                ->where('lecturer_id', $lecturerId)
-                ->exists();
-            if ($isAssigned) {
-                return;
-            }
-        }
-
-        // 3. Check via course_id
-        if ($material->course_id) {
-            $offering = CourseOffering::find($material->course_id);
-            if ($offering && (int)$offering->lecturer_id === (int)$lecturerId) {
-                return;
-            }
-
-            $legacyCourse = Course::find($material->course_id);
-            if ($legacyCourse && (int)$legacyCourse->user_id === (int)$lecturerId) {
                 return;
             }
         }
@@ -59,7 +47,7 @@ class MaterialController extends Controller
             }
         }
         if ($material) {
-            $offeringId = $material->course_offering_id ?? $material->course_id;
+            $offeringId = $material->course_offering_id;
             if ($offeringId) {
                 $offering = CourseOffering::with('academicTerm')->find($offeringId);
                 if ($offering && $offering->academicTerm && !$offering->academicTerm->is_active) {
@@ -85,7 +73,7 @@ class MaterialController extends Controller
                     ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan materi dikunci (Read-Only).');
             }
         } else {
-            $isLecturer = (int)$courseObj->user_id === (int)$lecturerId;
+            $isLecturer = (int)($courseObj->lecturer_id ?? $courseObj->user_id) === (int)$lecturerId;
         }
 
         abort_unless($isLecturer, 403, 'Kamu tidak memiliki akses ke course ini.');
@@ -109,7 +97,7 @@ class MaterialController extends Controller
                     ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Penambahan materi ditolak.');
             }
         } else {
-            $isLecturer = (int)$courseObj->user_id === (int)$lecturerId;
+            $isLecturer = (int)($courseObj->lecturer_id ?? $courseObj->user_id) === (int)$lecturerId;
         }
 
         abort_unless($isLecturer, 403, 'Kamu tidak memiliki akses ke course ini.');
@@ -126,18 +114,45 @@ class MaterialController extends Controller
         $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
         $offeringId = ($courseObj instanceof CourseOffering) ? $courseObj->id : null;
 
-        Material::create([
-            'course_id' => $courseObj->id,
-            'master_course_id' => $masterCourseId,
-            'course_offering_id' => $targetScope === 'class' ? $offeringId : null,
-            'title' => $validated['title'],
-            'file_path' => $filePath,
-        ]);
+        if ($targetScope === 'all' && $courseObj instanceof CourseOffering) {
+            $siblingOfferings = CourseOffering::where('lecturer_id', $lecturerId)
+                ->where('master_course_id', $masterCourseId)
+                ->where('academic_term_id', $courseObj->academic_term_id)
+                ->get();
 
-        app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseObj->id);
+            if ($siblingOfferings->isNotEmpty()) {
+                foreach ($siblingOfferings as $sibling) {
+                    Material::create([
+                        'master_course_id' => $masterCourseId,
+                        'course_offering_id' => $sibling->id,
+                        'title' => $validated['title'],
+                        'file_path' => $filePath,
+                    ]);
+                    app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($sibling->id);
+                }
+            } else {
+                Material::create([
+                    'master_course_id' => $masterCourseId,
+                    'course_offering_id' => $offeringId,
+                    'title' => $validated['title'],
+                    'file_path' => $filePath,
+                ]);
+                app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseObj->id);
+            }
+        } else {
+            Material::create([
+                'master_course_id' => $masterCourseId,
+                'course_offering_id' => $offeringId,
+                'title' => $validated['title'],
+                'file_path' => $filePath,
+            ]);
+            if ($offeringId) {
+                app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($offeringId);
+            }
+        }
 
         $scopeMsg = $targetScope === 'all'
-            ? 'Pustaka Induk (Semua Kelas)'
+            ? 'Semua Kelas Rombel'
             : "khusus " . ($courseObj->section_name ?: 'Kelas Ini');
 
         return redirect()
@@ -178,8 +193,8 @@ class MaterialController extends Controller
         if (isset($validated['target_scope'])) {
             if ($validated['target_scope'] === 'all') {
                 $updateData['course_offering_id'] = null;
-            } elseif ($material->course_id) {
-                $updateData['course_offering_id'] = $material->course_id;
+            } elseif (!empty($request->course_offering_id)) {
+                $updateData['course_offering_id'] = $request->course_offering_id;
             }
         }
 
@@ -193,33 +208,67 @@ class MaterialController extends Controller
 
         $material->update($updateData);
 
-        $redirectId = $material->course_offering_id ?? $material->course_id;
+        $offering = CourseOffering::where('master_course_id', $material->master_course_id)
+            ->where('lecturer_id', Auth::id())
+            ->first();
+        $redirectId = $material->course_offering_id ?? ($offering?->id ?? 1);
 
         return redirect()
             ->route('lecturer.courses.show', $redirectId)
             ->with('success', 'Materi berhasil diperbarui.');
     }
 
-    public function destroy(Material $material)
+    public function destroy(Request $request, Material $material)
     {
         $this->authorizeLecturer($material);
         $this->checkTermActive($material);
 
-        $redirectId = $material->course_offering_id ?? $material->course_id;
+        $lecturerId = Auth::id();
+        $offering = CourseOffering::where('master_course_id', $material->master_course_id)
+            ->where('lecturer_id', $lecturerId)
+            ->first();
 
-        if (!empty($material->file_path) && Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
+        $currentCourseId = $request->input('course_id') ?? ($material->course_offering_id ?? $offering?->id);
+
+        // Jika materi berstatus global (course_offering_id is null) dan dihapus dari kelas tertentu:
+        // Amankan materi untuk kelas-kelas rombel lain (sibling) milik dosen sebelum materi ini dihapus dari kelas aktif
+        if ($material->course_offering_id === null && $currentCourseId) {
+            $currentOffering = CourseOffering::find($currentCourseId);
+            if ($currentOffering) {
+                $otherOfferings = CourseOffering::where('lecturer_id', $lecturerId)
+                    ->where('master_course_id', $material->master_course_id)
+                    ->where('id', '!=', $currentCourseId)
+                    ->get();
+
+                foreach ($otherOfferings as $otherOff) {
+                    Material::create([
+                        'master_course_id'   => $material->master_course_id,
+                        'course_offering_id' => $otherOff->id,
+                        'title'              => $material->title,
+                        'file_path'          => $material->file_path,
+                    ]);
+                    app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($otherOff->id);
+                }
+            }
         }
 
-        $courseId = $material->course_offering_id ?? $material->course_id;
+        $filePath = $material->file_path;
         $material->delete();
 
-        if ($courseId) {
-            app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($courseId);
+        // Hapus file fisik dari storage hanya jika sudah tidak ada baris materi lain yang menggunakannya
+        if (!empty($filePath)) {
+            $stillUsed = Material::where('file_path', $filePath)->exists();
+            if (!$stillUsed && Storage::disk('public')->exists($filePath)) {
+                Storage::disk('public')->delete($filePath);
+            }
+        }
+
+        if ($currentCourseId) {
+            app(\App\Services\CourseProgressService::class)->recalculateAllForCourse($currentCourseId);
         }
 
         return redirect()
-            ->route('lecturer.courses.show', $redirectId)
-            ->with('success', 'Materi berhasil dihapus.');
+            ->route('lecturer.courses.show', $currentCourseId ?? 1)
+            ->with('success', 'Materi berhasil dihapus dari kelas ini.');
     }
 }

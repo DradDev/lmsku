@@ -29,7 +29,10 @@ class GenerateRecommendationFeatureSnapshots extends Command
             return self::SUCCESS;
         }
 
-        $courseItems = DB::table('courses')->get();
+        $courseItems = DB::table('course_offerings')
+            ->where('status', 'published')
+            ->orWhereNull('status')
+            ->get();
         $projectItems = DB::table('projects')
             ->where('is_published', true)
             ->get();
@@ -128,30 +131,27 @@ class GenerateRecommendationFeatureSnapshots extends Command
 
     private function getCourseItemFeatures(int $courseId, object $course): array
     {
-        $mainSkill = DB::table('course_skills')
-            ->where('course_id', $courseId)
+        $masterCourseId = $course->master_course_id ?? $courseId;
+
+        $mainSkill = DB::table('master_course_skills')
+            ->where('master_course_id', $masterCourseId)
             ->where('is_main', true)
             ->first();
 
-        $skillCount = DB::table('course_skills')
-            ->where('course_id', $courseId)
+        $skillCount = DB::table('master_course_skills')
+            ->where('master_course_id', $masterCourseId)
             ->count();
 
-        $tagCount = DB::table('course_tags')
-            ->where('course_id', $courseId)
+        $tagCount = DB::table('master_course_tags')
+            ->where('master_course_id', $masterCourseId)
             ->count();
-
-        $statistic = DB::table('item_statistics')
-            ->where('item_type', 'course')
-            ->where('item_id', $courseId)
-            ->first();
 
         return [
             'item_difficulty_level' => $this->encodeDifficulty($course->level ?? 'Beginner'),
             'item_main_skill_id' => $mainSkill->skill_id ?? null,
 
-            'item_popularity_score' => round((float) ($statistic->popularity_score ?? 0), 2),
-            'item_completion_rate' => round((float) ($statistic->completion_rate ?? 0), 2),
+            'item_popularity_score' => 0.0,
+            'item_completion_rate' => 0.0,
 
             'item_skill_count' => $skillCount,
             'item_tag_count' => $tagCount,
@@ -207,13 +207,16 @@ class GenerateRecommendationFeatureSnapshots extends Command
     {
         $enrollment = DB::table('enrollments')
             ->where('user_id', $userId)
-            ->where('course_id', $courseId)
+            ->where('course_offering_id', $courseId)
             ->first();
 
         $isCompleted = false;
 
+        $offering = DB::table('course_offerings')->where('id', $courseId)->first();
+        $masterCourseId = $offering?->master_course_id ?? $courseId;
+
         $finalQuiz = DB::table('quizzes')
-            ->where('course_id', $courseId)
+            ->where('master_course_id', $masterCourseId)
             ->where('quiz_type', 'final')
             ->first();
 
@@ -253,68 +256,72 @@ class GenerateRecommendationFeatureSnapshots extends Command
 
     private function calculateInterestMatchScore(int $userId, string $itemType, int $itemId): float
     {
-        $itemTagTable = $itemType === 'course'
-            ? 'course_tags'
-            : 'project_tags';
+        if ($itemType === 'course') {
+            $offering = DB::table('course_offerings')->where('id', $itemId)->first();
+            $masterCourseId = $offering?->master_course_id ?? $itemId;
 
-        $itemIdColumn = $itemType === 'course'
-            ? 'course_id'
-            : 'project_id';
-
-        $score = DB::table('user_interest_profiles')
-            ->join($itemTagTable, 'user_interest_profiles.tag_id', '=', $itemTagTable . '.tag_id')
-            ->where('user_interest_profiles.user_id', $userId)
-            ->where($itemTagTable . '.' . $itemIdColumn, $itemId)
-            ->selectRaw('SUM(user_interest_profiles.interest_score * ' . $itemTagTable . '.weight) as score')
-            ->value('score');
+            $score = DB::table('user_interest_profiles')
+                ->join('master_course_tags', 'user_interest_profiles.tag_id', '=', 'master_course_tags.tag_id')
+                ->where('user_interest_profiles.user_id', $userId)
+                ->where('master_course_tags.master_course_id', $masterCourseId)
+                ->selectRaw('SUM(user_interest_profiles.interest_score) as score')
+                ->value('score');
+        } else {
+            $score = DB::table('user_interest_profiles')
+                ->join('project_tags', 'user_interest_profiles.tag_id', '=', 'project_tags.tag_id')
+                ->where('user_interest_profiles.user_id', $userId)
+                ->where('project_tags.project_id', $itemId)
+                ->selectRaw('SUM(user_interest_profiles.interest_score * project_tags.weight) as score')
+                ->value('score');
+        }
 
         return round((float) ($score ?? 0), 2);
     }
 
     private function calculateWeaknessMatchScore(int $userId, string $itemType, int $itemId): float
     {
-        $itemSkillTable = $itemType === 'course'
-            ? 'course_skills'
-            : 'project_skills';
+        if ($itemType === 'course') {
+            $offering = DB::table('course_offerings')->where('id', $itemId)->first();
+            $masterCourseId = $offering?->master_course_id ?? $itemId;
 
-        $itemIdColumn = $itemType === 'course'
-            ? 'course_id'
-            : 'project_id';
-
-        /*
-         * Semakin rendah avg_score user pada skill item,
-         * semakin tinggi weakness_match_score.
-         */
-        $score = DB::table('user_skill_profiles')
-            ->join($itemSkillTable, 'user_skill_profiles.skill_id', '=', $itemSkillTable . '.skill_id')
-            ->where('user_skill_profiles.user_id', $userId)
-            ->where($itemSkillTable . '.' . $itemIdColumn, $itemId)
-            ->selectRaw('AVG((100 - user_skill_profiles.avg_score) * ' . $itemSkillTable . '.weight) as score')
-            ->value('score');
+            $score = DB::table('user_skill_profiles')
+                ->join('master_course_skills', 'user_skill_profiles.skill_id', '=', 'master_course_skills.skill_id')
+                ->where('user_skill_profiles.user_id', $userId)
+                ->where('master_course_skills.master_course_id', $masterCourseId)
+                ->selectRaw('AVG(100 - user_skill_profiles.avg_score) as score')
+                ->value('score');
+        } else {
+            $score = DB::table('user_skill_profiles')
+                ->join('project_skills', 'user_skill_profiles.skill_id', '=', 'project_skills.skill_id')
+                ->where('user_skill_profiles.user_id', $userId)
+                ->where('project_skills.project_id', $itemId)
+                ->selectRaw('AVG((100 - user_skill_profiles.avg_score) * project_skills.weight) as score')
+                ->value('score');
+        }
 
         return round((float) ($score ?? 0), 2);
     }
 
     private function calculateReadinessScore(int $userId, string $itemType, int $itemId): float
     {
-        $itemSkillTable = $itemType === 'course'
-            ? 'course_skills'
-            : 'project_skills';
+        if ($itemType === 'course') {
+            $offering = DB::table('course_offerings')->where('id', $itemId)->first();
+            $masterCourseId = $offering?->master_course_id ?? $itemId;
 
-        $itemIdColumn = $itemType === 'course'
-            ? 'course_id'
-            : 'project_id';
-
-        /*
-         * Readiness sementara:
-         * rata-rata avg_score user pada skill yang dibutuhkan item.
-         */
-        $score = DB::table('user_skill_profiles')
-            ->join($itemSkillTable, 'user_skill_profiles.skill_id', '=', $itemSkillTable . '.skill_id')
-            ->where('user_skill_profiles.user_id', $userId)
-            ->where($itemSkillTable . '.' . $itemIdColumn, $itemId)
-            ->selectRaw('AVG(user_skill_profiles.avg_score * ' . $itemSkillTable . '.weight) as score')
-            ->value('score');
+            $score = DB::table('user_skill_profiles')
+                ->join('master_course_skills', 'user_skill_profiles.skill_id', '=', 'master_course_skills.skill_id')
+                ->where('user_skill_profiles.user_id', $userId)
+                ->where('master_course_skills.master_course_id', $masterCourseId)
+                ->selectRaw('AVG(user_skill_profiles.avg_score) as score')
+                ->value('score');
+        } else {
+            $score = DB::table('user_skill_profiles')
+                ->join('project_skills', 'user_skill_profiles.skill_id', '=', 'project_skills.skill_id')
+                ->where('user_skill_profiles.user_id', $userId)
+                ->where('project_skills.project_id', $itemId)
+                ->selectRaw('AVG(user_skill_profiles.avg_score * project_skills.weight) as score')
+                ->value('score');
+        }
 
         return round((float) ($score ?? 0), 2);
     }
@@ -336,7 +343,7 @@ class GenerateRecommendationFeatureSnapshots extends Command
                 ->exists();
 
             if ($hasPassed) {
-                $completedCourseIds[] = $quiz->course_id;
+                $completedCourseIds[] = $quiz->master_course_id ?? $quiz->id;
             }
         }
 

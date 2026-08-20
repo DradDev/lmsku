@@ -100,6 +100,9 @@
                 $project = $participation->project;
                 $status = $participation->status ?? 'in_progress';
                 $progress = $participation->progress_percent ?? 0;
+                $deadline = $participation->started_at ? $participation->started_at->copy()->addDays($project->duration_days ?? 30) : null;
+                $isOverdue = $deadline && now()->gt($deadline) && $status !== 'completed';
+                $daysLeft = $deadline ? (int) now()->diffInDays($deadline, false) : null;
                 @endphp
 
                 <div class="bg-white shadow-sm border border-gray-100 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition">
@@ -128,9 +131,20 @@
                                 </p>
                             </div>
 
-                            <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-700' }}">
-                                {{ $statusLabels[$status] ?? $status }}
-                            </span>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="shrink-0 px-3 py-1 rounded-full text-xs font-bold {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-700' }}">
+                                    {{ $statusLabels[$status] ?? $status }}
+                                </span>
+                                @if($status !== 'completed' && $deadline)
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-md {{ $isOverdue ? 'bg-red-50 text-red-700 border border-red-200' : ($daysLeft <= 3 ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-slate-50 text-slate-600') }}">
+                                        @if($isOverdue)
+                                            ⚠️ Lewat Tenggat
+                                        @else
+                                            ⏳ Sisa {{ max(0, $daysLeft) }} Hari
+                                        @endif
+                                    </span>
+                                @endif
+                            </div>
                         </div>
 
                         <p class="text-sm text-gray-600 mb-4 line-clamp-2">
@@ -165,8 +179,11 @@
                             </p>
 
                             <p>
-                                <strong>Durasi:</strong>
-                                {{ $project->duration_days ?? '-' }} hari
+                                <strong>Durasi & Batas Waktu:</strong>
+                                {{ $project->duration_days ?? '-' }} hari 
+                                @if($deadline)
+                                    <span class="text-xs text-gray-500">(Batas: {{ $deadline->format('d M Y') }})</span>
+                                @endif
                             </p>
 
                             <p>
@@ -183,7 +200,7 @@
 
                             <div class="flex flex-wrap gap-1">
                                 @foreach ($project->skills->take(3) as $skill)
-                                <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">
+                                <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-semibold">
                                     {{ $skill->name }}
                                 </span>
                                 @endforeach
@@ -199,8 +216,8 @@
 
                             <div class="flex flex-wrap gap-1">
                                 @foreach ($project->tags->take(3) as $tag)
-                                <span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs">
-                                    {{ $tag->name }}
+                                <span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-semibold">
+                                    #{{ $tag->name }}
                                 </span>
                                 @endforeach
                             </div>
@@ -208,25 +225,34 @@
                         @endif
                     </div>
 
-                    <div class="pt-4 border-t flex flex-wrap gap-2">
+                    <div class="pt-4 border-t flex flex-wrap items-center justify-between gap-2">
                         @if ($project)
-                        <a href="{{ route('student.projects.show', $project) }}"
-                            class="px-4 py-2 bg-blue-600 text-white rounded text-sm">
-                            Detail / Update
-                        </a>
-                        @endif
+                            @if($status === 'completed')
+                                <a href="{{ route('student.projects.show', $project) }}"
+                                    class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition">
+                                    Buka Riwayat
+                                </a>
+                                <a href="{{ route('student.certificate.index') }}"
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                                    Sertifikat Proyek
+                                </a>
+                            @else
+                                <a href="{{ route('student.projects.show', $project) }}"
+                                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                                    Update Progres
+                                </a>
 
-                        @if ($status !== 'completed' && $project)
-                        <form action="{{ route('student.projects.complete', $project) }}" method="POST"
-                            onsubmit="return confirm('Tandai project ini sebagai selesai?')">
-                            @csrf
-                            @method('PATCH')
+                                <form action="{{ route('student.projects.complete', $project) }}" method="POST"
+                                    onsubmit="return confirm('Tandai project ini sebagai selesai?')">
+                                    @csrf
+                                    @method('PATCH')
 
-                            <button type="submit"
-                                class="px-4 py-2 bg-green-600 text-white rounded text-sm">
-                                Tandai Selesai
-                            </button>
-                        </form>
+                                    <button type="submit"
+                                        class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold rounded-xl text-xs transition">
+                                        Tandai Selesai
+                                    </button>
+                                </form>
+                            @endif
                         @endif
                     </div>
                 </div>

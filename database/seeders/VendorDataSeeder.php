@@ -34,9 +34,9 @@ class VendorDataSeeder extends Seeder
         $category = Category::first() ?? Category::create(['name' => 'Teknologi Informasi & Cloud']);
 
         // 2. Ensure Skills & Tags
-        $skillCloud = Skill::firstOrCreate(['name' => 'Cloud Computing & DevOps'], ['parent_id' => null]);
-        $skillWeb = Skill::firstOrCreate(['name' => 'Web Development & API'], ['parent_id' => null]);
-        $skillSecurity = Skill::firstOrCreate(['name' => 'Cyber Security & Audit'], ['parent_id' => null]);
+        $skillCloud = Skill::firstOrCreate(['name' => 'Cloud Computing & DevOps']);
+        $skillWeb = Skill::firstOrCreate(['name' => 'Web Development & API']);
+        $skillSecurity = Skill::firstOrCreate(['name' => 'Cyber Security & Audit']);
 
         $tagDocker = Tag::firstOrCreate(['name' => 'Docker & Kubernetes'], ['skill_id' => $skillCloud->id]);
         $tagLaravel = Tag::firstOrCreate(['name' => 'Laravel & Microservices'], ['skill_id' => $skillWeb->id]);

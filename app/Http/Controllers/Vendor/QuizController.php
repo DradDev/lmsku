@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseOffering;
 use App\Models\Question;
 use App\Models\Quiz;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,8 @@ class QuizController extends Controller
     {
         $courseObj = is_numeric($course) ? Course::findOrFail($course) : $course;
 
-        if ($courseObj->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $ownerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? $courseObj->masterCourse?->user_id);
+        if ($ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -34,16 +36,19 @@ class QuizController extends Controller
         $isUnlimited = $request->boolean('is_unlimited');
         $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
-        $quiz = Quiz::create([
-            'course_id' => $courseObj->id,
-            'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
-            'title' => $validated['title'],
-            'quiz_type' => $validated['quiz_type'],
-            'time_limit' => $validated['time_limit'] ?? null,
-            'max_attempts' => $maxAttemptsValue,
-            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
-            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
-        ]);
+        $quiz = Quiz::firstOrCreate(
+            [
+                'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
+                'title'            => $validated['title'],
+            ],
+            [
+                'quiz_type'    => $validated['quiz_type'],
+                'time_limit'   => $validated['time_limit'] ?? null,
+                'max_attempts' => $maxAttemptsValue,
+                'start_date'   => !empty($validated['start_date']) ? $validated['start_date'] : null,
+                'end_date'     => !empty($validated['end_date']) ? $validated['end_date'] : null,
+            ]
+        );
 
         return back()->with('success', "Kuis '{$quiz->title}' berhasil dibuat. Silakan tambahkan soal evaluasi.");
     }
@@ -52,7 +57,8 @@ class QuizController extends Controller
     {
         $courseObj = is_numeric($course) ? Course::findOrFail($course) : $course;
 
-        if ($courseObj->user_id !== Auth::id() && !Auth::user()->isAdmin()) {
+        $ownerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? $courseObj->masterCourse?->user_id);
+        if ($ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course ini.');
         }
 
@@ -79,22 +85,52 @@ class QuizController extends Controller
         return back()->with('success', "Waktu rilis dan deadline Kuis '{$quiz->title}' berhasil diperbarui!");
     }
 
-    public function show(Quiz $quiz): View
+    public function show($courseOrQuiz, $quizParam = null): View
     {
-        $course = $quiz->course;
-        if ($course && $course->user_id !== Auth::id()) {
+        $quiz = $quizParam instanceof Quiz
+            ? $quizParam
+            : ($courseOrQuiz instanceof Quiz ? $courseOrQuiz : Quiz::findOrFail(is_numeric($quizParam) ? $quizParam : $courseOrQuiz));
+
+        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        if ($ownerId && $ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 
-        $quiz->load(['questions', 'course']);
+        $courseObj = null;
+        if ($quizParam) {
+            $courseObj = is_numeric($courseOrQuiz)
+                ? (CourseOffering::find($courseOrQuiz) ?? Course::find($courseOrQuiz))
+                : $courseOrQuiz;
+        } else {
+            $courseIdFromReq = request('course_id');
+            if ($courseIdFromReq) {
+                $courseObj = CourseOffering::find($courseIdFromReq);
+            }
+            if (!$courseObj) {
+                $courseObj = CourseOffering::where('master_course_id', $quiz->master_course_id)
+                    ->where(function ($q) {
+                        if (!Auth::user()->isAdmin()) {
+                            $q->where('lecturer_id', Auth::id())
+                              ->orWhereHas('masterCourse', function ($mc) {
+                                  $mc->where('user_id', Auth::id());
+                              });
+                        }
+                    })
+                    ->latest()
+                    ->first();
+            }
+        }
+
+        $course = $courseObj ?? $quiz->course;
+        $quiz->load(['questions', 'masterCourse']);
 
         return view('vendor.quizzes.show', compact('quiz', 'course'));
     }
 
     public function storeQuestion(Request $request, Quiz $quiz): RedirectResponse
     {
-        $course = $quiz->course;
-        if ($course && $course->user_id !== Auth::id()) {
+        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        if ($ownerId && $ownerId !== Auth::id()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 
@@ -128,10 +164,11 @@ class QuizController extends Controller
     {
         $quiz = $question->quiz;
         $vendorId = Auth::id();
-        $isAuthorized = ($quiz && $quiz->course && $quiz->course->user_id === $vendorId) ||
-                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId);
+        $isAuthorized = ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        ($quiz && $quiz->course && (($quiz->course->lecturer_id ?? $quiz->course->user_id) === $vendorId)) ||
+                        Auth::user()->isAdmin();
 
-        if (!$isAuthorized && !Auth::user()->isAdmin()) {
+        if (!$isAuthorized) {
             abort(403, 'Anda tidak memiliki akses ke soal ini.');
         }
 
@@ -143,15 +180,112 @@ class QuizController extends Controller
     public function destroy(Quiz $quiz): RedirectResponse
     {
         $vendorId = Auth::id();
-        $isAuthorized = ($quiz->course && $quiz->course->user_id === $vendorId) ||
-                        ($quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId);
+        $isAuthorized = ($quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        ($quiz->course && (($quiz->course->lecturer_id ?? $quiz->course->user_id) === $vendorId)) ||
+                        Auth::user()->isAdmin();
 
-        if (!$isAuthorized && !Auth::user()->isAdmin()) {
+        if (!$isAuthorized) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
 
         $quiz->delete();
 
         return back()->with('success', 'Kuis kelulusan berhasil dihapus.');
+    }
+
+    public function approveRetake(\App\Models\QuizRetakeRequest $retakeRequest): RedirectResponse
+    {
+        $vendorId = Auth::id();
+        $quiz = $retakeRequest->quiz;
+        $offering = $retakeRequest->courseOffering;
+
+        $isAuthorized = ($offering && ($offering->lecturer_id === $vendorId || $offering->user_id === $vendorId)) ||
+                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        Auth::user()->isAdmin();
+
+        abort_unless($isAuthorized, 403, 'Akses ditolak.');
+
+        $retakeRequest->update([
+            'status' => 'approved',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return back()->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' berhasil disetujui!");
+    }
+
+    public function rejectRetake(\App\Models\QuizRetakeRequest $retakeRequest): RedirectResponse
+    {
+        $vendorId = Auth::id();
+        $quiz = $retakeRequest->quiz;
+        $offering = $retakeRequest->courseOffering;
+
+        $isAuthorized = ($offering && ($offering->lecturer_id === $vendorId || $offering->user_id === $vendorId)) ||
+                        ($quiz && $quiz->masterCourse && $quiz->masterCourse->user_id === $vendorId) ||
+                        Auth::user()->isAdmin();
+
+        abort_unless($isAuthorized, 403, 'Akses ditolak.');
+
+        $retakeRequest->update([
+            'status' => 'rejected',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        return back()->with('success', "Permintaan retake kuis mahasiswa '{$retakeRequest->user->name}' ditolak.");
+    }
+
+    public function bulkApproveRetake(\App\Models\CourseOffering $course): RedirectResponse
+    {
+        $vendorId = Auth::id();
+        $ownerId = $course->lecturer_id ?? ($course->user_id ?? $course->masterCourse?->user_id);
+        abort_unless($ownerId === $vendorId || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
+
+        $quizzes = $course->masterCourse ? $course->masterCourse->quizzes : $course->quizzes;
+        $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
+
+        $count = \App\Models\QuizRetakeRequest::whereIn('quiz_id', $quizIds)
+            ->where('status', 'pending')
+            ->where(function ($q) use ($course) {
+                $q->where('course_offering_id', $course->id)
+                  ->orWhere(function ($sub) use ($course) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $course->enrollments->pluck('user_id'));
+                  });
+            })
+            ->update([
+                'status'      => 'approved',
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(),
+            ]);
+
+        return redirect()
+            ->back()
+            ->with('success', "Berhasil menyetujui seluruh permintaan retake ({$count} mahasiswa) pada angkatan ini!");
+    }
+
+    public function retakeRequests(\App\Models\CourseOffering $course): \Illuminate\View\View
+    {
+        $vendorId = Auth::id();
+        $ownerId = $course->lecturer_id ?? ($course->user_id ?? $course->masterCourse?->user_id);
+        abort_unless($ownerId === $vendorId || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
+
+        $course->load(['masterCourse', 'enrollments.user']);
+        $quizzes = $course->masterCourse ? $course->masterCourse->quizzes : $course->quizzes;
+        $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
+
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'courseOffering'])
+            ->whereIn('quiz_id', $quizIds)
+            ->where(function ($q) use ($course) {
+                $q->where('course_offering_id', $course->id)
+                  ->orWhere(function ($sub) use ($course) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $course->enrollments->pluck('user_id'));
+                  });
+            })
+            ->latest()
+            ->get();
+
+        return view('vendor.courses.retakes', compact('course', 'quizzes', 'retakeRequests'));
     }
 }

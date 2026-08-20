@@ -10,48 +10,64 @@
         <div class="max-w-7xl mx-auto px-6">
 
             <div class="mb-8">
-                <a href="{{ route('student.materials.index') }}"
-                   class="inline-flex items-center text-sm text-slate-500 hover:text-slate-700 mb-4">
-                    ← Back to Materials
+                <a href="{{ route('student.courses.show', $enrolledOffering->id ?? ($material->master_course_id ?? 1)) }}"
+                   class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition mb-4">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+                    <span>Kembali ke Kursus ({{ $enrolledOffering->masterCourse->name ?? ($material->masterCourse->name ?? ($material->course->name ?? 'Course')) }})</span>
                 </a>
 
                 <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                     <div>
                         <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
-                            Student Portal
+                            Portal Belajar Mahasiswa
                         </p>
 
                         <p class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 mb-4">
-                            {{ $material->course->name ?? $material->course->title ?? 'Course' }}
+                            {{ $enrolledOffering->masterCourse->name ?? ($material->masterCourse->name ?? ($material->course->name ?? 'Course')) }}
                         </p>
 
                         <h1 class="text-3xl font-bold text-slate-900">
                             {{ $material->title }}
                         </h1>
 
-                        <p class="text-slate-500 mt-2">
-                            Instructor: {{ $material->course->user->name ?? 'Unknown Instructor' }}
+                        <p class="text-slate-500 mt-2 text-xs">
+                            Pengajar: {{ $enrolledOffering->lecturer->name ?? ($material->course->user->name ?? 'Dosen / Instruktur') }}
                         </p>
                     </div>
 
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- TOGGLE BOOKMARK / SIMPAN MATERI -->
+                        <form action="{{ route('student.materials.toggle-save', $material->id) }}" method="POST">
+                            @csrf
+                            <button type="submit"
+                                    class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs {{ ($isSaved ?? false) ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-white border border-slate-200 hover:bg-slate-50 text-slate-700' }}"
+                                    title="{{ ($isSaved ?? false) ? 'Hapus dari materi tersimpan' : 'Simpan materi ini ke perpustakaan belajar kamu' }}">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="{{ ($isSaved ?? false) ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2">
+                                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+                                </svg>
+                                <span>{{ ($isSaved ?? false) ? 'Tersimpan di Koleksi' : 'Simpan Materi' }}</span>
+                            </button>
+                        </form>
+
                         @if($fileUrl)
                             <a href="{{ $fileUrl }}"
                                target="_blank"
-                               class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">
-                                Open File
+                               class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                <span>Buka File</span>
                             </a>
 
                             <a href="{{ $fileUrl }}"
                                download
-                               class="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
-                                Download
+                               class="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 transition">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                <span>Download</span>
                             </a>
                         @endif
 
-                        <a href="{{ route('student.courses.show', $material->course_id) }}"
-                           class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                            Back to Course
+                        <a href="{{ route('student.courses.show', $enrolledOffering->id ?? ($material->master_course_id ?? 1)) }}"
+                           class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                            <span>Detail Kursus</span>
                         </a>
                     </div>
                 </div>
@@ -182,14 +198,14 @@
                                 </a>
                             @endif
 
-                            <a href="{{ route('student.courses.show', $material->course_id) }}"
-                               class="block w-full text-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                                Back to Course
+                            <a href="{{ route('student.courses.show', $enrolledOffering->id ?? ($material->master_course_id ?? 1)) }}"
+                               class="block w-full text-center rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition">
+                                Kembali ke Kursus
                             </a>
 
                             <a href="{{ route('student.materials.index') }}"
-                               class="block w-full text-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                                Back to Materials
+                               class="block w-full text-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+                                Koleksi Materi Tersimpan
                             </a>
                         </div>
                     </div>

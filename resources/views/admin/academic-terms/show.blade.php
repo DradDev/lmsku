@@ -75,6 +75,22 @@
                 </div>
             @endif
 
+            @if(isset($errors) && $errors->any())
+                <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-xs text-xs">
+                    <div class="flex items-center gap-2 font-bold mb-1 text-rose-900">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        Mohon periksa kembali kesalahan berikut:
+                    </div>
+                    <ul class="list-disc pl-6 space-y-1 text-rose-700">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <!-- EXECUTIVE METRICS CARDS FOR THIS SEMESTER -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-1">
@@ -156,7 +172,7 @@
                                                 </h4>
                                             </div>
                                             <p class="text-xs text-slate-500 mt-0.5">
-                                                Level: <strong>{{ $masterCourse->level }}</strong> • Kategori: <strong>{{ optional($masterCourse->category)->name ?? 'Umum' }}</strong>
+                                                Level: <strong>{{ $masterCourse->level }}</strong> • Skill: <strong>{{ $masterCourse->main_skill->name ?? 'Umum' }}</strong>
                                             </p>
                                         </div>
                                     </div>
@@ -279,13 +295,22 @@
                                                                 Edit Rombel
                                                             </button>
 
-                                                            <form action="{{ route('admin.academic-terms.offerings.destroy', $off->id) }}" method="POST" onsubmit="return confirm('Tutup / Batalkan rombel kelas ini?')">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition">
+                                                            @if($enrolledCount > 0)
+                                                                <button type="button" 
+                                                                        onclick="alert('Rombel kelas \'{{ addslashes($off->section_name) }}\' tidak dapat dihapus karena sudah memiliki {{ $enrolledCount }} mahasiswa yang terdaftar.')"
+                                                                        class="px-2 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 text-[11px] font-bold rounded-lg cursor-not-allowed"
+                                                                        title="Kelas memiliki mahasiswa terdaftar sehingga tidak dapat dihapus">
                                                                     Hapus
                                                                 </button>
-                                                            </form>
+                                                            @else
+                                                                <form action="{{ route('admin.academic-terms.offerings.destroy', $off->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus rombel kelas \'{{ addslashes($off->section_name) }}\'?')">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="submit" class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold rounded-lg transition">
+                                                                        Hapus
+                                                                    </button>
+                                                                </form>
+                                                            @endif
                                                         </div>
                                                     </td>
                                                 </tr>

@@ -349,6 +349,15 @@
                         Pilih mata kuliah akademik internal maupun pelatihan sertifikasi industri dari mitra eksternal.
                     </p>
                 </div>
+
+                <a href="{{ route('student.materials.index') }}"
+                   class="inline-flex items-center gap-2 rounded-2xl bg-white border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-slate-50 transition shadow-xs">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="{{ ($savedMaterials ?? collect())->count() > 0 ? '#f59e0b' : 'none' }}" stroke="{{ ($savedMaterials ?? collect())->count() > 0 ? '#f59e0b' : 'currentColor' }}" stroke-width="2"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+                    <span>Materi Tersimpan</span>
+                    <span class="px-2 py-0.5 rounded-full {{ ($savedMaterials ?? collect())->count() > 0 ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600' }} text-[10px] font-black">
+                        {{ ($savedMaterials ?? collect())->count() }}
+                    </span>
+                </a>
             </div>
 
             <!-- FILTER BAR (SUMBER KURIKULUS & DAFTAR PENYELENGGARA / VENDOR) -->
@@ -551,8 +560,8 @@
                             </div>
 
                             <div class="course-meta-item">
-                                <strong>Kategori:</strong>
-                                <span>{{ $master->category->name ?? 'General' }}</span>
+                                <strong>Skill:</strong>
+                                <span>{{ $master->main_skill->name ?? optional($master->category)->name ?? 'General' }}</span>
                             </div>
                         </div>
 

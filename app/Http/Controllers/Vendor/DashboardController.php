@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
-use App\Models\Course;
+use App\Models\CourseOffering;
+use App\Models\MasterCourse;
 use App\Models\Material;
 use App\Models\Project;
 use App\Models\ProjectParticipation;
-use App\Models\Question;
 use App\Models\Quiz;
-use App\Models\Skill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -21,8 +20,12 @@ class DashboardController extends Controller
         $tab = $request->input('tab', 'overview');
         $vendorId = Auth::id();
 
-        // Vendor Industry Certified Courses
-        $courses = Course::where('user_id', $vendorId)
+        // Vendor Master Courses & Batches
+        $masterCourses = MasterCourse::where('user_id', $vendorId)->get();
+        $masterCourseIds = $masterCourses->pluck('id')->toArray();
+
+        $courses = CourseOffering::where('lecturer_id', $vendorId)
+            ->orWhereIn('master_course_id', $masterCourseIds)
             ->withCount(['students', 'materials', 'quizzes'])
             ->latest()
             ->get();
@@ -38,34 +41,26 @@ class DashboardController extends Controller
         $projectIds = $projects->pluck('id')->toArray();
 
         // Materials & Quizzes created by Vendor
-        $materials = Material::whereIn('course_id', $courseIds)
-            ->with('course')
+        $rawMaterials = Material::whereIn('master_course_id', $masterCourseIds)
+            ->orWhereIn('course_offering_id', $courseIds)
+            ->with(['masterCourse', 'courseOffering'])
             ->latest()
             ->get();
 
-        $selectedQuizId = $request->input('quiz_id');
+        $materials = $rawMaterials->groupBy(function ($m) {
+            return ($m->master_course_id ?? 0) . '_' . trim(strtolower($m->title));
+        })->map(function ($group) {
+            $first = $group->first();
+            $first->assigned_offerings = $group->pluck('courseOffering')->filter();
+            $first->is_all_classes = $group->contains(fn($m) => is_null($m->course_offering_id));
+            $first->related_ids = $group->pluck('id')->toArray();
+            return $first;
+        })->values();
 
-        $quizzes = Quiz::whereIn('course_id', $courseIds)
-            ->with(['course', 'questions'])
+        $quizzes = Quiz::whereIn('master_course_id', $masterCourseIds)
+            ->with(['masterCourse'])
             ->withCount('questions')
-            ->when($selectedQuizId, function ($query) use ($selectedQuizId) {
-                $query->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [(int) $selectedQuizId]);
-            })
             ->latest()
-            ->get();
-
-        $questions = Question::where('user_id', $vendorId)
-            ->with(['quiz.course', 'skills'])
-            ->orderBy('id', 'asc')
-            ->get();
-
-        $groupedQuestions = $questions->groupBy('quiz_id');
-
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
-            ->orderBy('name')
             ->get();
 
         // Participations in Vendor Projects
@@ -86,9 +81,6 @@ class DashboardController extends Controller
             'projects',
             'materials',
             'quizzes',
-            'questions',
-            'groupedQuestions',
-            'mainSkills',
             'participations',
             'totalCourses',
             'totalProjects',

@@ -122,10 +122,10 @@
                                     </span>
                                 </td>
 
-                                <!-- LEVEL & CATEGORY -->
+                                <!-- LEVEL & SKILL -->
                                 <td style="padding: 16px 20px;">
                                     <div style="font-weight: 700; color: #334155;">{{ $course->level }}</div>
-                                    <div style="font-size: 11.5px; color: #64748B;">Kategori: {{ optional($course->category)->name ?? 'General' }}</div>
+                                    <div style="font-size: 11.5px; color: #64748B;">Skill: {{ $course->main_skill->name ?? optional($course->category)->name ?? 'General' }}</div>
                                 </td>
 
                                 <!-- STATUS -->

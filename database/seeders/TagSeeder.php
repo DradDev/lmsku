@@ -71,7 +71,7 @@ class TagSeeder extends Seeder
         ];
 
         foreach ($mapping as $skillName => $tags) {
-            $skill = Skill::where('name', $skillName)->whereNull('parent_id')->first();
+            $skill = Skill::where('name', $skillName)->first();
 
             if (! $skill) {
                 continue;

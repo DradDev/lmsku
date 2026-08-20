@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Category;
 use App\Models\MasterCourse;
 use App\Models\Skill;
 use App\Models\Tag;
@@ -12,11 +11,6 @@ class MasterCourseSeeder extends Seeder
 {
     public function run(): void
     {
-        $catEmbedded = Category::where('name', 'Embedded Systems & Microcontroller')->first();
-        $catWeb = Category::where('name', 'Web & Software Engineering')->first();
-        $catNetwork = Category::where('name', 'Network Infrastructure & Cybersecurity')->first();
-        $catAI = Category::where('name', 'Artificial Intelligence & Data Science')->first();
-
         $skillEmbedded = Skill::where('name', 'Embedded Systems & Robotics')->first();
         $skillSoftware = Skill::where('name', 'Software Engineering')->first();
         $skillNetwork = Skill::where('name', 'Networking & Security')->first();
@@ -29,7 +23,6 @@ class MasterCourseSeeder extends Seeder
                 'name' => 'Praktikum Pemrograman Web Enterprise & Microservices',
                 'level' => 'Advanced',
                 'certificate_threshold' => 80,
-                'category_id' => $catWeb ? $catWeb->id : null,
                 'description' => "Silabus mata kuliah Pemrograman Web Enterprise. Membahas arsitektur microservices, pembuatan RESTful API, otentikasi JWT/Sanctum, otorisasi Role/Policy, serta deployment aplikasi ke cloud server.\n\nCapaian Pembelajaran (CPMK):\n1. Mampu merancang backend microservices terdistribusi.\n2. Menguasai arsitektur software dan optimasi database enterprise.",
             ]
         );
@@ -46,7 +39,6 @@ class MasterCourseSeeder extends Seeder
                 'name' => 'Praktikum Sistem Tertanam & Mikroprosesor ESP32',
                 'level' => 'Intermediate',
                 'certificate_threshold' => 75,
-                'category_id' => $catEmbedded ? $catEmbedded->id : null,
                 'description' => "Silabus mata kuliah Praktikum Sistem Tertanam. Membahas arsitektur ESP32, penggunaan periferal GPIO, komunikasi I2C/SPI, pembacaan sensor digital/analog, serta integrasi gateway IoT industrial.\n\nCapaian Pembelajaran (CPMK):\n1. Mampu merancang skematik sistem mikrokontroler.\n2. Menguasai pemrograman sensor dan gateway telemetri.",
             ]
         );
@@ -63,7 +55,6 @@ class MasterCourseSeeder extends Seeder
                 'name' => 'Keamanan Jaringan & Administrasi Server Cloud',
                 'level' => 'Beginner',
                 'certificate_threshold' => 75,
-                'category_id' => $catNetwork ? $catNetwork->id : null,
                 'description' => "Silabus mata kuliah Keamanan Jaringan. Membahas fondasi protokol TCP/IP, routing & switching Cisco, konfigurasi Firewall, hardening server Linux, dan mitigasi ancaman cyber.",
             ]
         );
@@ -80,7 +71,6 @@ class MasterCourseSeeder extends Seeder
                 'name' => 'Penerapan Machine Learning & Computer Vision',
                 'level' => 'Advanced',
                 'certificate_threshold' => 80,
-                'category_id' => $catAI ? $catAI->id : null,
                 'description' => "Silabus mata kuliah Machine Learning. Membahas algoritma pemrosesan citra digital, Convolutional Neural Networks (CNN), deteksi objek real-time, dan ekstraksi fitur visual.",
             ]
         );
