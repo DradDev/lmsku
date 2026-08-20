@@ -1,6 +1,8 @@
 <x-app-layout>
     <div class="min-h-screen bg-slate-50 py-10">
         <div class="max-w-7xl mx-auto px-6">
+            
+            <!-- HEADER -->
             <div class="mb-8">
                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
                     Admin Panel
@@ -14,10 +16,18 @@
                 </p>
             </div>
 
+            <!-- ALERT NOTIFICATIONS -->
             @if(session('success'))
                 <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 shadow-sm flex items-center gap-2">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
                     <span>{{ session('success') }}</span>
+                </div>
+            @endif
+
+            @if(session('info'))
+                <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 shadow-sm flex items-center gap-2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span>{{ session('info') }}</span>
                 </div>
             @endif
 
@@ -29,12 +39,12 @@
                 </div>
 
                 <div class="rounded-2xl border border-emerald-200 bg-white p-5 shadow-xs">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Verified</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Verified Blockchain</p>
                     <p class="mt-3 text-3xl font-bold text-emerald-600">{{ $verifiedCount }}</p>
                 </div>
 
                 <div class="rounded-2xl border border-amber-200 bg-white p-5 shadow-xs">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pending Verification</p>
                     <p class="mt-3 text-3xl font-bold text-amber-500">{{ $pendingCount }}</p>
                 </div>
             </div>
@@ -52,6 +62,81 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
                     <span>Project Results ({{ $totalProjectResults }})</span>
                 </a>
+            </div>
+
+            {{-- SEARCH & STATUS FILTER TOOLBAR --}}
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-6 shadow-xs flex flex-col gap-3">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    
+                    <!-- STATUS FILTER BUTTONS -->
+                    <div class="flex items-center gap-2 flex-wrap" id="status-filter-container">
+                        <button type="button" 
+                                data-status-target="all"
+                                onclick="setStatusFilter('all')"
+                                class="status-filter-btn active-status-btn"
+                                style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; background: #0F172A; color: #FFFFFF; transition: all 0.15s ease;">
+                            <span>Semua Status</span>
+                            <span class="status-badge" style="background: rgba(255,255,255,0.25); color: #FFFFFF; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                                {{ $totalResults }}
+                            </span>
+                        </button>
+
+                        <button type="button" 
+                                data-status-target="pending"
+                                onclick="setStatusFilter('pending')"
+                                class="status-filter-btn"
+                                style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #F1F5F9; color: #475569; transition: all 0.15s ease;">
+                            <span>Menunggu Verifikasi</span>
+                            <span class="status-badge" style="background: #FEF3C7; color: #B45309; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                                {{ $pendingCount }}
+                            </span>
+                        </button>
+
+                        <button type="button" 
+                                data-status-target="verified"
+                                onclick="setStatusFilter('verified')"
+                                class="status-filter-btn"
+                                style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #F1F5F9; color: #475569; transition: all 0.15s ease;">
+                            <span>Terverifikasi Blockchain</span>
+                            <span class="status-badge" style="background: #DCFCE7; color: #166534; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                                {{ $verifiedCount }}
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- SEARCH BAR (ROCK-SOLID FIXED HEIGHT & CENTERED ICONS) -->
+                    <div style="position: relative; min-width: 280px; flex-grow: 1; max-width: 480px; height: 42px; display: flex; align-items: center;">
+                        <div style="position: absolute; left: 14px; top: 0; bottom: 0; margin: auto; height: 18px; width: 18px; color: #94A3B8; pointer-events: none; display: flex; align-items: center; justify-content: center; z-index: 10;">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        </div>
+                        <input type="text" 
+                               id="result-search-input"
+                               autocomplete="off"
+                               placeholder="{{ $activeTab === 'project' ? 'Cari mahasiswa, proyek, dosen/vendor, kode, atau hash...' : 'Cari nama mahasiswa, email, mata kuliah, kuis, atau nilai...' }}"
+                               style="width: 100%; height: 42px; box-sizing: border-box; padding: 0 40px 0 40px; border: 1.5px solid #CBD5E1; border-radius: 10px; font-size: 13px; color: #0F172A; outline: none; background: #F8FAFC; transition: all 0.15s ease;"
+                               onfocus="this.style.background='#FFFFFF'; this.style.borderColor='#2563EB'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.1)'"
+                               onblur="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1'; this.style.boxShadow='none'">
+                        <button type="button" 
+                                id="clear-result-search-btn"
+                                title="Hapus pencarian"
+                                onclick="clearResultSearch()"
+                                style="position: absolute; right: 10px; top: 0; bottom: 0; margin: auto; height: 22px; width: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; background: #E2E8F0; color: #64748B; border: none; cursor: pointer; padding: 0; z-index: 10; transition: background 0.15s ease;"
+                                onmouseover="this.style.background='#CBD5E1'; this.style.color='#0F172A'"
+                                onmouseout="this.style.background='#E2E8F0'; this.style.color='#64748B'">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RESULT COUNTER STATUS -->
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #64748B; padding-top: 6px; border-top: 1px dashed #F1F5F9;">
+                    <div>
+                        <span id="result-count-display">Menampilkan <strong>{{ $totalResults }}</strong> dari {{ $totalResults }} hasil</span>
+                    </div>
+                    <div id="active-filter-indicator" style="display: none;">
+                        <span style="background: #EFF6FF; color: #1D4ED8; padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11px;">Filter Aktif</span>
+                    </div>
+                </div>
             </div>
 
             {{-- TAB CONTENT 1: FINAL QUIZ RESULTS --}}
@@ -72,9 +157,21 @@
                     </div>
 
                     @if($results->count())
-                        <div class="divide-y divide-slate-200">
+                        <div class="divide-y divide-slate-200" id="results-list-container">
                             @foreach ($results as $result)
-                                <div class="px-6 py-5 hover:bg-slate-50 transition">
+                                @php
+                                    $searchData = strtolower(
+                                        ($result->user->name ?? '') . ' ' . 
+                                        ($result->user->email ?? '') . ' ' . 
+                                        ($result->quiz->course->name ?? '') . ' ' . 
+                                        ($result->quiz->title ?? '') . ' ' . 
+                                        $result->score . ' ' . 
+                                        ($result->is_verified ? 'verified terverifikasi blockchain' : 'pending menunggu approval')
+                                    );
+                                @endphp
+                                <div class="result-item px-6 py-5 hover:bg-slate-50 transition"
+                                     data-status="{{ $result->is_verified ? 'verified' : 'pending' }}"
+                                     data-search="{{ $searchData }}">
                                     <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                                         <div class="min-w-0">
                                             <div class="flex items-center gap-2 flex-wrap mb-2">
@@ -152,6 +249,19 @@
                             </div>
                         </div>
                     @endif
+
+                    <!-- DYNAMIC EMPTY STATE -->
+                    <div id="no-matching-results" class="px-6 py-12 text-center" style="display: none;">
+                        <div class="mx-auto max-w-md flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-900">Hasil Tidak Ditemukan</h3>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Tidak ada data hasil kelulusan yang cocok dengan kriteria kata kunci atau filter status yang dipilih.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -176,14 +286,26 @@
                     </div>
 
                     @if($projectParticipations->count())
-                        <div class="divide-y divide-slate-200">
+                        <div class="divide-y divide-slate-200" id="results-list-container">
                             @foreach ($projectParticipations as $part)
                                 @php
                                     $cert = $part->certificate_record;
                                     $isVerified = $part->is_verified;
                                     $isPending = $part->is_pending;
+                                    $searchData = strtolower(
+                                        ($part->user->name ?? '') . ' ' . 
+                                        ($part->user->email ?? '') . ' ' . 
+                                        ($part->project->title ?? '') . ' ' . 
+                                        ($part->project->creator->name ?? '') . ' ' . 
+                                        ($part->project->creator->institution->name ?? '') . ' ' . 
+                                        ($cert->credential_code ?? '') . ' ' . 
+                                        ($cert->blockchain_hash ?? '') . ' ' . 
+                                        ($isVerified ? 'verified terverifikasi blockchain' : ($isPending ? 'pending menunggu verifikasi' : 'in progress'))
+                                    );
                                 @endphp
-                                <div class="px-6 py-5 hover:bg-slate-50 transition">
+                                <div class="result-item px-6 py-5 hover:bg-slate-50 transition"
+                                     data-status="{{ $isVerified ? 'verified' : ($isPending ? 'pending' : 'other') }}"
+                                     data-search="{{ $searchData }}">
                                     <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                                         <div class="min-w-0 flex-1">
                                             <div class="flex items-center gap-2 flex-wrap mb-2">
@@ -193,11 +315,11 @@
 
                                                 @if($isVerified)
                                                     <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-100 px-3 py-1 text-xs font-extrabold text-emerald-800">
-                                                        <span>⛓️ Verified Blockchain</span>
+                                                        <span>Verified Blockchain</span>
                                                     </span>
                                                 @elseif($isPending)
                                                     <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-xs font-extrabold text-amber-800">
-                                                        <span>⏳ Pending Admin Verification</span>
+                                                        <span>Pending Admin Verification</span>
                                                     </span>
                                                 @else
                                                     <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -256,7 +378,8 @@
                                                         <button
                                                             type="submit"
                                                             class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2.5 text-xs font-extrabold text-white transition shadow-sm">
-                                                            <span>🛡️ Verifikasi & Catat ke Blockchain</span>
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                            <span>Verifikasi & Catat ke Blockchain</span>
                                                         </button>
                                                     </form>
                                                 @else
@@ -266,12 +389,14 @@
                                                             type="submit"
                                                             class="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 px-3.5 py-2 text-xs font-bold text-white transition shadow-sm"
                                                             title="Verifikasi keaslian hash data di Blockchain">
-                                                            <span>🔍 Cek Integritas Data</span>
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                                            <span>Cek Integritas Data</span>
                                                         </button>
                                                     </form>
 
                                                     <span class="px-3 py-2 bg-emerald-50 text-emerald-800 text-xs font-extrabold rounded-xl border border-emerald-200 flex items-center gap-1">
-                                                        <span>✓ Blockchain Verified</span>
+                                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                                                        <span>Blockchain Verified</span>
                                                     </span>
                                                 @endif
                                             </div>
@@ -290,9 +415,136 @@
                             </div>
                         </div>
                     @endif
+
+                    <!-- DYNAMIC EMPTY STATE -->
+                    <div id="no-matching-results" class="px-6 py-12 text-center" style="display: none;">
+                        <div class="mx-auto max-w-md flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            </div>
+                            <h3 class="text-base font-bold text-slate-900">Hasil Tidak Ditemukan</h3>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Tidak ada data pengerjaan project yang cocok dengan kriteria kata kunci atau filter status yang dipilih.
+                            </p>
+                        </div>
+                    </div>
                 </div>
             @endif
 
         </div>
     </div>
+
+    <!-- JAVASCRIPT SEARCH & STATUS FILTER ENGINE -->
+    <script>
+        let currentActiveStatus = 'all';
+
+        function setStatusFilter(status) {
+            currentActiveStatus = status;
+
+            // Update button styles
+            document.querySelectorAll('.status-filter-btn').forEach(btn => {
+                const target = btn.getAttribute('data-status-target');
+                const badge = btn.querySelector('.status-badge');
+
+                if (target === status) {
+                    btn.style.background = '#0F172A';
+                    btn.style.color = '#FFFFFF';
+                    btn.style.fontWeight = '700';
+                    if (badge) {
+                        badge.style.background = 'rgba(255,255,255,0.25)';
+                        badge.style.color = '#FFFFFF';
+                    }
+                } else {
+                    btn.style.background = '#F1F5F9';
+                    btn.style.color = '#475569';
+                    btn.style.fontWeight = '600';
+                    if (badge) {
+                        if (target === 'pending') {
+                            badge.style.background = '#FEF3C7';
+                            badge.style.color = '#B45309';
+                        } else if (target === 'verified') {
+                            badge.style.background = '#DCFCE7';
+                            badge.style.color = '#166534';
+                        } else {
+                            badge.style.background = '#E2E8F0';
+                            badge.style.color = '#334155';
+                        }
+                    }
+                }
+            });
+
+            applyResultFilters();
+        }
+
+        function clearResultSearch() {
+            const searchInput = document.getElementById('result-search-input');
+            if (searchInput) {
+                searchInput.value = '';
+                const clearBtn = document.getElementById('clear-result-search-btn');
+                if (clearBtn) clearBtn.style.display = 'none';
+                applyResultFilters();
+                searchInput.focus();
+            }
+        }
+
+        function applyResultFilters() {
+            const searchInput = document.getElementById('result-search-input');
+            const rawSearch = (searchInput ? searchInput.value : '') || '';
+            const searchTokens = rawSearch.trim().toLowerCase().split(/\s+/).filter(Boolean);
+            const clearBtn = document.getElementById('clear-result-search-btn');
+
+            if (clearBtn) {
+                clearBtn.style.display = rawSearch.length > 0 ? 'inline-flex' : 'none';
+            }
+
+            const items = document.querySelectorAll('.result-item');
+            let visibleCount = 0;
+
+            items.forEach(item => {
+                const itemStatus = (item.getAttribute('data-status') || '').toLowerCase();
+                const itemSearch = (item.getAttribute('data-search') || '').toLowerCase();
+
+                const matchesStatus = (currentActiveStatus === 'all' || itemStatus === currentActiveStatus);
+                const matchesSearch = searchTokens.length === 0 || searchTokens.every(token => itemSearch.includes(token));
+
+                if (matchesStatus && matchesSearch) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update result counter display
+            const countDisplay = document.getElementById('result-count-display');
+            if (countDisplay) {
+                countDisplay.innerHTML = `Menampilkan <strong>${visibleCount}</strong> dari ${items.length} hasil`;
+            }
+
+            // Update active filter badge
+            const activeFilterBadge = document.getElementById('active-filter-indicator');
+            if (activeFilterBadge) {
+                activeFilterBadge.style.display = (currentActiveStatus !== 'all' || searchTokens.length > 0) ? 'block' : 'none';
+            }
+
+            // Dynamic Empty State display
+            const noMatchElem = document.getElementById('no-matching-results');
+            if (noMatchElem) {
+                if (visibleCount === 0 && items.length > 0) {
+                    noMatchElem.style.display = 'block';
+                } else {
+                    noMatchElem.style.display = 'none';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('result-search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', applyResultFilters);
+                searchInput.addEventListener('keyup', applyResultFilters);
+                searchInput.addEventListener('change', applyResultFilters);
+            }
+        });
+    </script>
 </x-app-layout>
