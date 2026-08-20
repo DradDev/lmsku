@@ -491,6 +491,20 @@
                                                 {{ $batchItem->is_archived ? 'Buka Batch' : 'Tutup / Arsip' }}
                                             </button>
                                         </form>
+
+                                        @if($stdCount === 0)
+                                            <form action="{{ route('vendor.courses.destroy', $batchItem->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus angkatan {{ $batchItem->batch_name }} secara permanen?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-lg border border-rose-200 transition" title="Hapus angkatan ini (0 peserta)">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button type="button" onclick="alert('Angkatan {{ $batchItem->batch_name }} sudah memiliki {{ $stdCount }} mahasiswa terdaftar sehingga tidak dapat dihapus. Silakan gunakan tombol Tutup/Arsip.')" class="px-2.5 py-1 bg-slate-50 text-slate-400 font-bold text-xs rounded-lg border border-slate-200 cursor-not-allowed opacity-60" title="Tidak dapat dihapus karena memiliki mahasiswa terdaftar">
+                                                Hapus
+                                            </button>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -1017,17 +1031,35 @@
                             </select>
                         </div>
 
-                        <div class="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
-                            <button type="button" onclick="document.getElementById('edit_batch_modal_{{ $b->id }}').classList.add('hidden')"
-                                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">
-                                Batal
-                            </button>
-                            <button type="submit"
-                                    class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md">
-                                Simpan Perubahan Batch
-                            </button>
+                        <div class="pt-3 flex items-center justify-between gap-2 border-t border-slate-100">
+                            <div>
+                                @if(($b->enrollments_count ?? $b->enrollments->count()) === 0)
+                                    <button type="button" 
+                                            onclick="if(confirm('Yakin ingin menghapus angkatan {{ $b->batch_name }} secara permanen?')) { document.getElementById('delete_batch_form_{{ $b->id }}').submit(); }"
+                                            class="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-xl border border-rose-200 transition">
+                                        Hapus Batch
+                                    </button>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="document.getElementById('edit_batch_modal_{{ $b->id }}').classList.add('hidden')"
+                                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                        class="px-5 py-2 bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs rounded-xl shadow-md">
+                                    Simpan Perubahan Batch
+                                </button>
+                            </div>
                         </div>
                     </form>
+
+                    @if(($b->enrollments_count ?? $b->enrollments->count()) === 0)
+                        <form id="delete_batch_form_{{ $b->id }}" action="{{ route('vendor.courses.destroy', $b->id) }}" method="POST" class="hidden">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                    @endif
                 </div>
             </div>
         @endforeach

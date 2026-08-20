@@ -321,9 +321,9 @@ class CourseController extends Controller
             ->with('success', 'Informasi Program Sertifikasi Industri berhasil diperbarui.');
     }
 
-    public function updateBatch(Request $request, Course $course): RedirectResponse
+    public function updateBatch(Request $request, CourseOffering $course): RedirectResponse
     {
-        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke batch ini.');
         }
 
@@ -363,7 +363,7 @@ class CourseController extends Controller
 
     public function launchBatch(Request $request, CourseOffering $course): RedirectResponse
     {
-        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
@@ -413,18 +413,30 @@ class CourseController extends Controller
 
     public function destroy(CourseOffering $course): RedirectResponse
     {
-        if (($course->lecturer_id ?? $course->user_id) !== Auth::id()) {
+        if (($course->lecturer_id ?? $course->user_id) !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
         }
 
-        if ($course->enrollments()->count() > 0) {
-            return back()->with('error', 'Tidak dapat menghapus angkatan yang sudah memiliki mahasiswa terdaftar. Silakan gunakan fitur arsip.');
+        $enrollmentCount = $course->enrollments()->count();
+        if ($enrollmentCount > 0) {
+            return back()->with('error', "Tidak dapat menghapus angkatan '{$course->batch_name}' karena sudah memiliki {$enrollmentCount} mahasiswa terdaftar. Silakan gunakan fitur 'Tutup / Arsip' untuk menonaktifkan pendaftaran tanpa merusak riwayat akademik mahasiswa.");
         }
+
+        $masterCourseId = $course->master_course_id;
+        $batchName = $course->batch_name;
 
         $course->delete();
 
+        $siblingBatch = CourseOffering::where('master_course_id', $masterCourseId)->latest()->first();
+
+        if ($siblingBatch) {
+            return redirect()
+                ->route('vendor.courses.show', $siblingBatch->id)
+                ->with('success', "Angkatan '{$batchName}' berhasil dihapus.");
+        }
+
         return redirect()
             ->route('vendor.courses.index')
-            ->with('success', 'Angkatan Course Sertifikasi berhasil dihapus.');
+            ->with('success', "Angkatan '{$batchName}' berhasil dihapus.");
     }
 }
