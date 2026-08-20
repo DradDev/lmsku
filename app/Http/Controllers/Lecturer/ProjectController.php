@@ -96,9 +96,8 @@ class ProjectController extends Controller
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip,rar', 'max:10240'],
             'is_published' => ['nullable', 'boolean'],
 
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
-            'main_skill_id' => ['nullable', 'exists:skills,id'],
 
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
@@ -129,13 +128,21 @@ class ProjectController extends Controller
 
         $this->syncProjectSkillsAndTags($project, $request);
 
-        $mainSkillId = $request->input('main_skill_id');
-        if ($mainSkillId && !$this->checkSkillHasCourse((int) $mainSkillId)) {
-            $skillName = Skill::find($mainSkillId)?->name ?? 'Main Skill';
+        $skillsWithoutCourses = [];
+        $skillIds = array_map('intval', $request->input('skill_ids', []));
+        foreach ($skillIds as $sId) {
+            if (!$this->checkSkillHasCourse((int) $sId)) {
+                $skillName = Skill::find($sId)?->name ?? 'Main Skill';
+                $skillsWithoutCourses[] = $skillName;
+            }
+        }
+
+        if (!empty($skillsWithoutCourses)) {
+            $skillNamesStr = implode(', ', $skillsWithoutCourses);
             return redirect()
                 ->route('lecturer.projects.index')
                 ->with('success', 'Project successfully created.')
-                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill '{$skillName}'. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk '{$skillName}'!");
+                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill [{$skillNamesStr}]. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk Main Skill terkait!");
         }
 
         return redirect()
@@ -159,6 +166,7 @@ class ProjectController extends Controller
             ->get();
 
         $project->load(['skills', 'tags']);
+        $projectSkillIds = $project->skills->pluck('id')->toArray();
 
         $skillsWithoutCourses = [];
         foreach ($mainSkills as $skill) {
@@ -167,7 +175,7 @@ class ProjectController extends Controller
             }
         }
 
-        return view('lecturer.projects.edit', compact('project', 'mainSkills', 'tags', 'skillsWithoutCourses'));
+        return view('lecturer.projects.edit', compact('project', 'mainSkills', 'tags', 'skillsWithoutCourses', 'projectSkillIds'));
     }
 
     public function update(Request $request, Project $project): RedirectResponse
@@ -189,9 +197,8 @@ class ProjectController extends Controller
             'brief_file' => ['nullable', 'file', 'mimes:pdf,doc,docx,zip,rar', 'max:10240'],
             'is_published' => ['nullable', 'boolean'],
 
-            'skill_ids' => ['nullable', 'array'],
+            'skill_ids' => ['required', 'array', 'min:1'],
             'skill_ids.*' => ['exists:skills,id'],
-            'main_skill_id' => ['nullable', 'exists:skills,id'],
 
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['exists:tags,id'],
@@ -222,13 +229,21 @@ class ProjectController extends Controller
 
         $this->syncProjectSkillsAndTags($project, $request);
 
-        $mainSkillId = $request->input('main_skill_id');
-        if ($mainSkillId && !$this->checkSkillHasCourse((int) $mainSkillId)) {
-            $skillName = Skill::find($mainSkillId)?->name ?? 'Main Skill';
+        $skillsWithoutCourses = [];
+        $skillIds = array_map('intval', $request->input('skill_ids', []));
+        foreach ($skillIds as $sId) {
+            if (!$this->checkSkillHasCourse((int) $sId)) {
+                $skillName = Skill::find($sId)?->name ?? 'Main Skill';
+                $skillsWithoutCourses[] = $skillName;
+            }
+        }
+
+        if (!empty($skillsWithoutCourses)) {
+            $skillNamesStr = implode(', ', $skillsWithoutCourses);
             return redirect()
                 ->route('lecturer.projects.index')
                 ->with('success', 'Project berhasil diperbarui.')
-                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill '{$skillName}'. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk '{$skillName}'!");
+                ->with('warning', "⚠️ Catatan: Belum terdapat Course aktif di sistem yang menguji Main Skill [{$skillNamesStr}]. Mahasiswa belum bisa membangun kompetensi untuk mendaftar project ini sebelum Course terkait dibuat. Disarankan untuk membuat Course untuk Main Skill terkait!");
         }
 
         return redirect()
@@ -301,33 +316,27 @@ class ProjectController extends Controller
     private function syncProjectSkillsAndTags(Project $project, Request $request): void
     {
         $skillIds = array_map('intval', $request->input('skill_ids', []));
-        $mainSkillId = $request->input('main_skill_id');
-
-        if ($mainSkillId && ! in_array((int) $mainSkillId, $skillIds, true)) {
-            $skillIds[] = (int) $mainSkillId;
-        }
-
         $skillSyncData = [];
 
         foreach ($skillIds as $skillId) {
             $skillSyncData[$skillId] = [
                 'weight' => 1.00,
-                'is_main' => (int) $skillId === (int) $mainSkillId,
+                'is_main' => true,
             ];
         }
 
         $project->skills()->sync($skillSyncData);
 
         $tagIds = array_map('intval', $request->input('tag_ids', []));
-        $tagSyncData = [];
-
-        foreach ($tagIds as $tagId) {
-            $tagSyncData[$tagId] = [
-                'weight' => 1.00,
-            ];
+        if (!empty($tagIds)) {
+            $tagSyncData = [];
+            foreach ($tagIds as $tagId) {
+                $tagSyncData[$tagId] = ['weight' => 1.00];
+            }
+            $project->tags()->sync($tagSyncData);
+        } else {
+            $project->tags()->detach();
         }
-
-        $project->tags()->sync($tagSyncData);
     }
 
     public function show(Project $project): View

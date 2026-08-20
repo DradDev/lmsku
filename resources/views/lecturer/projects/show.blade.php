@@ -392,17 +392,17 @@
                         </h4>
 
                         <!-- Main Skill Card -->
-                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">Primary Skill Requirement</span>
-                            @forelse ($project->skills as $skill)
-                                @if($skill->pivot->is_main)
-                                    <div class="font-bold text-sm text-slate-900 flex items-center gap-1.5">
-                                        <span>{{ $skill->name }}</span>
-                                    </div>
-                                @endif
-                            @empty
-                                <span class="text-xs text-slate-400 italic">No main skill specified.</span>
-                            @endforelse
+                        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500 block">Primary Main Skills Requirement</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                @forelse ($project->skills as $skill)
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 font-bold rounded-lg text-xs">
+                                        {{ $skill->name }}
+                                    </span>
+                                @empty
+                                    <span class="text-xs text-slate-400 italic">No main skill specified.</span>
+                                @endforelse
+                            </div>
                         </div>
 
                         <!-- Specialty Tags -->
