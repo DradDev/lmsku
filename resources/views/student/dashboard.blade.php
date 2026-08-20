@@ -617,18 +617,18 @@
                 </div>
 
                 <!-- MATERI TERSIMPAN (SAVED STUDY MATERIALS) -->
-                @if(($savedMaterials ?? collect())->isNotEmpty())
-                    <div class="card">
-                        <div class="section-header">
-                            <div class="flex items-center gap-2">
-                                <h2 class="section-title">Materi Tersimpan</h2>
-                                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black">
-                                    {{ $savedMaterials->count() }}
-                                </span>
-                            </div>
-                            <a href="{{ route('student.materials.index') }}" class="section-meta">Lihat semua →</a>
+                <div class="card">
+                    <div class="section-header">
+                        <div class="flex items-center gap-2">
+                            <h2 class="section-title">Materi Tersimpan</h2>
+                            <span class="px-2 py-0.5 rounded-full {{ ($savedMaterials ?? collect())->count() > 0 ? 'bg-amber-100 text-amber-900' : 'bg-slate-100 text-slate-600' }} text-[10px] font-black">
+                                {{ ($savedMaterials ?? collect())->count() }}
+                            </span>
                         </div>
+                        <a href="{{ route('student.materials.index') }}" class="section-meta">Buka Koleksi →</a>
+                    </div>
 
+                    @if(($savedMaterials ?? collect())->isNotEmpty())
                         <div class="space-y-2.5">
                             @foreach($savedMaterials as $saved)
                                 @php
@@ -647,8 +647,15 @@
                                 </div>
                             @endforeach
                         </div>
-                    </div>
-                @endif
+                    @else
+                        <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                            <p class="text-xs text-slate-500 mb-2">Belum ada materi yang disimpan.</p>
+                            <a href="{{ route('student.materials.index') }}" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800">
+                                Pelajari Cara Menyimpan →
+                            </a>
+                        </div>
+                    @endif
+                </div>
 
                 <!-- 3. RECENT ACTIVITY -->
                 <div class="card">

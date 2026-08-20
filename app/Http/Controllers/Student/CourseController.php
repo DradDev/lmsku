@@ -256,6 +256,10 @@ class CourseController extends Controller
 
         $isReadOnly = $offering->isExpired() || $offering->is_archived || $offering->status === 'cancelled';
 
+        $savedMaterialIds = \App\Models\SavedMaterial::where('user_id', $user->id)
+            ->pluck('material_id')
+            ->toArray();
+
         return view('student.courses.show', compact(
             'course',
             'enrollment',
@@ -264,7 +268,8 @@ class CourseController extends Controller
             'canDownloadCertificate',
             'certificateStatusText',
             'isReadOnly',
-            'retakeRequest'
+            'retakeRequest',
+            'savedMaterialIds'
         ));
     }
 
