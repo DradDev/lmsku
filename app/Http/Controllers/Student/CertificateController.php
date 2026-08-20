@@ -238,11 +238,13 @@ class CertificateController extends Controller
 
         $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
 
-        abort_unless(
-            $isEligible,
-            403,
-            'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
-        );
+        if ($currentUser->role !== 'admin') {
+            abort_unless(
+                $isEligible,
+                403,
+                'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
+            );
+        }
 
         $project->load(['creator.institution', 'user.institution', 'skills']);
 
@@ -274,11 +276,13 @@ class CertificateController extends Controller
 
         $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
 
-        abort_unless(
-            $isEligible,
-            403,
-            'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
-        );
+        if ($currentUser->role !== 'admin') {
+            abort_unless(
+                $isEligible,
+                403,
+                'Sertifikat project belum dapat diakses. Sertifikat sedang menunggu verifikasi integritas & penerbitan blockchain hash oleh Admin.'
+            );
+        }
 
         $project->load(['creator.institution', 'user.institution', 'skills']);
 
@@ -327,27 +331,42 @@ class CertificateController extends Controller
 
         $approvedQuestions = $finalQuiz->questions->where('status', 'approved');
 
-        abort_if($approvedQuestions->count() === 0, 403, 'Certificate belum tersedia karena final quiz belum memiliki soal yang disetujui.');
+        if ($currentUser->role !== 'admin') {
+            abort_if($approvedQuestions->count() === 0, 403, 'Certificate belum tersedia karena final quiz belum memiliki soal yang disetujui.');
+        }
 
         $attempt = QuizAttempt::where('user_id', $student->id)
             ->where('quiz_id', $finalQuiz->id)
             ->orderByDesc('score')
             ->first();
 
-        $threshold = $course->certificate_threshold ?? ($course->masterCourse?->certificate_threshold ?? 60);
+        if (!$attempt && $currentUser->role === 'admin') {
+            $attempt = QuizAttempt::where('quiz_id', $finalQuiz->id)
+                ->where('is_verified', true)
+                ->orderByDesc('score')
+                ->first()
+                ?? QuizAttempt::where('quiz_id', $finalQuiz->id)->latest()->first();
 
-        abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
-        abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '%.');
+            if ($attempt && $attempt->user) {
+                $student = $attempt->user;
+            }
+        }
+
+        $threshold = $course->certificate_threshold ?? ($course->masterCourse?->certificate_threshold ?? 60);
 
         $certificateRecord = Certificate::where('user_id', $student->id)
             ->where('course_offering_id', $course->id)
             ->first();
 
-        abort_if(
-            !$attempt->is_verified && (!$certificateRecord || $certificateRecord->status !== 'verified'),
-            403,
-            'Sertifikat sedang dalam proses verifikasi Admin. Harap tunggu persetujuan Admin.'
-        );
+        if ($currentUser->role !== 'admin') {
+            abort_if(!$attempt, 403, 'Certificate belum tersedia. Selesaikan final quiz terlebih dahulu.');
+            abort_if($attempt->score < $threshold, 403, 'Certificate belum tersedia karena nilai final quiz masih di bawah ' . $threshold . '%.');
+            abort_if(
+                !$attempt->is_verified && (!$certificateRecord || $certificateRecord->status !== 'verified'),
+                403,
+                'Sertifikat sedang dalam proses verifikasi Admin. Harap tunggu persetujuan Admin.'
+            );
+        }
 
         return [$student, $finalQuiz, $attempt];
     }

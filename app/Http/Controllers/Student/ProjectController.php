@@ -57,7 +57,12 @@ class ProjectController extends Controller
 
     public function show(Project $project): View
     {
-        $student = Auth::user();
+        $currentUser = Auth::user();
+        $student = ($currentUser->role === 'admin' && request('user_id'))
+            ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
+            : ($currentUser->role === 'admin'
+                ? (ProjectParticipation::where('project_id', $project->id)->where('status', 'completed')->first()?->user ?? $currentUser)
+                : $currentUser);
 
         $project->load([
             'user.institution',
@@ -73,9 +78,17 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->first();
 
+        if (!$participation && $currentUser->role === 'admin') {
+            $participation = ProjectParticipation::where('project_id', $project->id)->first();
+        }
+
         $certificate = Certificate::where('user_id', $student->id)
             ->where('project_id', $project->id)
             ->first();
+
+        if (!$certificate && $currentUser->role === 'admin') {
+            $certificate = Certificate::where('project_id', $project->id)->first();
+        }
 
         $eligibility = $this->checkStudentEligibility($student, $project);
 
