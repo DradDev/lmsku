@@ -237,7 +237,10 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::get('/courses/{course}/quizzes/{quiz}/results/{result}', [LecturerResultController::class, 'show'])
             ->name('courses.quizzes.results.show');
 
-        // Retake Requests Approval
+        // Retake Requests Approval & Dedicated Management
+        Route::get('/courses/{course}/retake-requests', [LecturerQuizController::class, 'retakeRequests'])
+            ->name('courses.retake-requests.index');
+
         Route::post('/retake-requests/{retakeRequest}/approve', [LecturerQuizController::class, 'approveRetake'])
             ->name('quizzes.retake.approve');
 
@@ -418,7 +421,8 @@ Route::middleware(['auth', 'role:vendor'])
         Route::post('/quizzes/{quiz}/questions', [VendorQuizController::class, 'storeQuestion'])->name('quizzes.questions.store');
         Route::delete('/questions/{question}', [VendorQuizController::class, 'destroyQuestion'])->name('questions.destroy');
 
-        // Quiz Retake Requests Approval
+        // Quiz Retake Requests Approval & Dedicated Management
+        Route::get('/courses/{course}/retake-requests', [VendorQuizController::class, 'retakeRequests'])->name('courses.retake-requests.index');
         Route::post('/retake-requests/{retakeRequest}/approve', [VendorQuizController::class, 'approveRetake'])->name('quizzes.retake.approve');
         Route::post('/retake-requests/{retakeRequest}/reject', [VendorQuizController::class, 'rejectRetake'])->name('quizzes.retake.reject');
         Route::post('/courses/{course}/quizzes/retake/bulk-approve', [VendorQuizController::class, 'bulkApproveRetake'])->name('courses.quizzes.retake.bulk-approve');

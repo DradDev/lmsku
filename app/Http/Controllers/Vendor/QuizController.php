@@ -231,4 +231,29 @@ class QuizController extends Controller
             ->back()
             ->with('success', "Berhasil menyetujui seluruh permintaan retake ({$count} mahasiswa) pada angkatan ini!");
     }
+
+    public function retakeRequests(\App\Models\CourseOffering $course): \Illuminate\View\View
+    {
+        $vendorId = Auth::id();
+        $ownerId = $course->lecturer_id ?? ($course->user_id ?? $course->masterCourse?->user_id);
+        abort_unless($ownerId === $vendorId || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
+
+        $course->load(['masterCourse', 'enrollments.user']);
+        $quizzes = $course->masterCourse ? $course->masterCourse->quizzes : $course->quizzes;
+        $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
+
+        $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'courseOffering'])
+            ->whereIn('quiz_id', $quizIds)
+            ->where(function ($q) use ($course) {
+                $q->where('course_offering_id', $course->id)
+                  ->orWhere(function ($sub) use ($course) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $course->enrollments->pluck('user_id'));
+                  });
+            })
+            ->latest()
+            ->get();
+
+        return view('vendor.courses.retakes', compact('course', 'quizzes', 'retakeRequests'));
+    }
 }

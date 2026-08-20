@@ -211,4 +211,36 @@ class QuizController extends Controller
             ->back()
             ->with('success', "Berhasil menyetujui seluruh permintaan retake ({$count} mahasiswa) sekaligus!");
     }
+
+    public function retakeRequests($course): \Illuminate\View\View
+    {
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::with(['masterCourse', 'academicTerm', 'enrollments.user'])->find($course) ?? Course::findOrFail($course))
+            : $course;
+
+        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
+        abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
+
+        $course = $courseObj;
+        $offeringId = $courseObj instanceof \App\Models\CourseOffering ? $courseObj->id : null;
+        $quizzes = $courseObj->masterCourse ? $courseObj->masterCourse->quizzes : $courseObj->quizzes;
+        $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
+
+        $query = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'courseOffering'])
+            ->whereIn('quiz_id', $quizIds);
+
+        if ($offeringId) {
+            $query->where(function ($q) use ($offeringId, $courseObj) {
+                $q->where('course_offering_id', $offeringId)
+                  ->orWhere(function ($sub) use ($courseObj) {
+                      $sub->whereNull('course_offering_id')
+                          ->whereIn('user_id', $courseObj->enrollments->pluck('user_id'));
+                  });
+            });
+        }
+
+        $retakeRequests = $query->latest()->get();
+
+        return view('lecturer.courses.retakes', compact('course', 'quizzes', 'retakeRequests'));
+    }
 }
