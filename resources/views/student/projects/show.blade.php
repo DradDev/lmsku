@@ -24,6 +24,10 @@
         $currentStatus = $participation?->status;
         $currentProgress = $participation?->progress_percent ?? 0;
 
+        $deadline = $participation?->started_at ? $participation->started_at->copy()->addDays($project->duration_days) : null;
+        $isOverdue = $deadline && now()->gt($deadline) && $currentStatus !== 'completed';
+        $daysLeft = $deadline ? (int) now()->diffInDays($deadline, false) : null;
+
         $joinedCount = $project->participations()->count();
         $maxStudents = $project->max_students ?? 1;
         $isFull = $joinedCount >= $maxStudents;
@@ -106,6 +110,16 @@
                                 <span class="px-3 py-1 rounded-full font-bold {{ $statusColors[$currentStatus] ?? 'bg-gray-100 text-gray-700' }}">
                                     Status Anda: {{ $statusLabels[$currentStatus] ?? $currentStatus }}
                                 </span>
+
+                                @if($currentStatus !== 'completed' && $deadline)
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold {{ $isOverdue ? 'bg-red-100 text-red-800 border border-red-200' : ($daysLeft <= 3 ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-blue-50 text-blue-700 border border-blue-200') }}">
+                                        @if($isOverdue)
+                                            ⚠️ Lewat Tenggat (Batas: {{ $deadline->format('d M Y') }})
+                                        @else
+                                            ⏳ Tenggat: {{ $deadline->format('d M Y') }} (Sisa {{ max(0, $daysLeft) }} Hari)
+                                        @endif
+                                    </span>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -194,78 +208,126 @@
 
             <!-- 2. PARTICIPATION STATUS OR PREREQUISITE ELIGIBILITY BOX -->
             @if ($participation)
-                <div class="bg-white shadow-sm border border-gray-200 rounded-2xl p-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
-                        <div>
-                            <h4 class="font-semibold text-lg text-gray-900">
-                                Progres Pengerjaan Proyek Anda
-                            </h4>
-                            <p class="text-sm text-gray-500 mt-1">
-                                Perbarui status tahap pengerjaan proyek Anda secara berkala.
-                            </p>
-                        </div>
+                @if ($currentStatus === 'completed')
+                    <!-- KARTU HASIL KELULUSAN & AKSES SERTIFIKAT RESMI -->
+                    <div class="bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 shadow-sm border-2 border-emerald-300 rounded-2xl p-6 relative overflow-hidden">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                            <div>
+                                <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-black uppercase tracking-wider mb-2">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>
+                                    Proyek Berhasil Diselesaikan (100%)
+                                </div>
+                                <h3 class="text-xl font-extrabold text-slate-900">
+                                    Selamat! Anda telah menyelesaikan seluruh rangkaian proyek ini.
+                                </h3>
+                                <p class="text-xs text-slate-600 mt-1">
+                                    Diselesaikan pada: <strong>{{ optional($participation->completed_at)->format('d M Y, H:i') ?? '-' }}</strong>. 
+                                    Proyek ini telah tercatat secara permanen pada <strong>Portofolio Digital</strong> Anda.
+                                </p>
+                            </div>
 
-                        <div class="text-left md:text-right">
-                            <p class="text-xs text-gray-500">Status Saat Ini</p>
-                            <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold {{ $statusColors[$currentStatus] ?? 'bg-gray-100 text-gray-700' }}">
-                                {{ $statusLabels[$currentStatus] ?? $currentStatus }}
-                            </span>
+                            <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+                                @if(isset($certificate) && $certificate && $certificate->is_verified && !empty($certificate->blockchain_hash))
+                                    <a href="{{ route('student.certificate.project.show', $project->id) }}"
+                                       class="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow transition">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Lihat Sertifikat
+                                    </a>
+
+                                    <a href="{{ route('student.certificate.project.download', $project->id) }}"
+                                       class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        Unduh PDF
+                                    </a>
+                                @else
+                                    <div class="inline-flex items-center gap-2 px-3.5 py-2 bg-amber-50 border border-amber-200 text-amber-800 font-bold text-xs rounded-xl">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        Menunggu Verifikasi Blockchain Admin
+                                    </div>
+                                @endif
+
+                                <a href="{{ route('student.portfolio') }}"
+                                   class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl transition">
+                                    Buka Portofolio →
+                                </a>
+                            </div>
                         </div>
                     </div>
+                @else
+                    <!-- PROGRES UPDATE FORM KETIKA MASIH BERJALAN -->
+                    <div class="bg-white shadow-sm border border-gray-200 rounded-2xl p-6">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+                            <div>
+                                <h4 class="font-semibold text-lg text-gray-900">
+                                    Progres Pengerjaan Proyek Anda
+                                </h4>
+                                <p class="text-sm text-gray-500 mt-1">
+                                    Perbarui status tahap pengerjaan proyek Anda secara berkala.
+                                </p>
+                            </div>
 
-                    <div class="mb-6">
-                        <div class="flex justify-between text-xs font-bold text-gray-600 mb-2">
-                            <span>Kemajuan Penyelesaian</span>
-                            <span class="text-indigo-600 font-extrabold">{{ $currentProgress }}%</span>
-                        </div>
-
-                        <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-200">
-                            <div class="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600"
-                                 style="width: {{ $currentProgress }}%">
+                            <div class="text-left md:text-right">
+                                <p class="text-xs text-gray-500">Status Saat Ini</p>
+                                <span class="inline-block mt-1 px-3 py-1 rounded-full text-xs font-bold {{ $statusColors[$currentStatus] ?? 'bg-gray-100 text-gray-700' }}">
+                                    {{ $statusLabels[$currentStatus] ?? $currentStatus }}
+                                </span>
                             </div>
                         </div>
+
+                        <div class="mb-6">
+                            <div class="flex justify-between text-xs font-bold text-gray-600 mb-2">
+                                <span>Kemajuan Penyelesaian</span>
+                                <span class="text-indigo-600 font-extrabold">{{ $currentProgress }}%</span>
+                            </div>
+
+                            <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden border border-gray-200">
+                                <div class="h-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600"
+                                     style="width: {{ $currentProgress }}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <form action="{{ route('student.projects.update-progress', $project) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block font-bold mb-2 text-xs text-gray-700">
+                                        Update Status Tahapan
+                                    </label>
+
+                                    <select name="status"
+                                            class="border border-gray-300 rounded-xl w-full p-2.5 text-xs font-semibold"
+                                            required>
+                                        <option value="in_progress" @selected($currentStatus === 'in_progress')>In Progress (25%)</option>
+                                        <option value="development" @selected($currentStatus === 'development')>Development (50%)</option>
+                                        <option value="review" @selected($currentStatus === 'review')>Review (75%)</option>
+                                        <option value="completed" @selected($currentStatus === 'completed')>Selesai / Done (100%)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block font-bold mb-2 text-xs text-gray-700">
+                                        Catatan Perkembangan Proyek
+                                    </label>
+
+                                    <textarea name="note"
+                                              class="border border-gray-300 rounded-xl w-full p-2.5 text-xs"
+                                              rows="3"
+                                              placeholder="Contoh: Modul utama sudah selesai, sedang integrasi sensor..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="mt-5">
+                                <button type="submit"
+                                        class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                                    Simpan Progres
+                                </button>
+                            </div>
+                        </form>
                     </div>
-
-                    <form action="{{ route('student.projects.update-progress', $project) }}" method="POST">
-                        @csrf
-                        @method('PATCH')
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block font-bold mb-2 text-xs text-gray-700">
-                                    Update Status Tahapan
-                                </label>
-
-                                <select name="status"
-                                        class="border border-gray-300 rounded-xl w-full p-2.5 text-xs font-semibold"
-                                        required>
-                                    <option value="in_progress" @selected($currentStatus === 'in_progress')>In Progress (25%)</option>
-                                    <option value="development" @selected($currentStatus === 'development')>Development (50%)</option>
-                                    <option value="review" @selected($currentStatus === 'review')>Review (75%)</option>
-                                    <option value="completed" @selected($currentStatus === 'completed')>Selesai / Done (100%)</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label class="block font-bold mb-2 text-xs text-gray-700">
-                                    Catatan Perkembangan Proyek
-                                </label>
-
-                                <textarea name="note"
-                                          class="border border-gray-300 rounded-xl w-full p-2.5 text-xs"
-                                          rows="3"
-                                          placeholder="Contoh: Modul utama sudah selesai, sedang integrasi sensor..."></textarea>
-                            </div>
-                        </div>
-
-                        <div class="mt-5">
-                            <button type="submit"
-                                    class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
-                                Simpan Progres
-                            </button>
-                        </div>
-                    </form>
-                </div>
+                @endif
             @else
                 <!-- MODE PRA-PENDAFTARAN (ELIGIBLE VS TERKUNCI) -->
                 <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-200">
