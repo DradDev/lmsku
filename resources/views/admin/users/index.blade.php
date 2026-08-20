@@ -20,7 +20,7 @@
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                    <span style="background: #EFF6FF; color: #2563EB; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-text-transform: uppercase;">Pengelolaan Hak Akses & Peran</span>
+                    <span style="background: #EFF6FF; color: #2563EB; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase;">Pengelolaan Hak Akses & Peran</span>
                 </div>
                 <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">Manajemen Pengguna System</h1>
                 <p style="font-size: 13px; color: #64748B; margin: 4px 0 0 0;">
@@ -56,10 +56,87 @@
             </div>
         </div>
 
+        <!-- SEARCH & ROLE FILTER CONTROLS -->
+        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+            
+            <!-- ROLE CATEGORY TABS -->
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;" id="role-tabs-container">
+                <button type="button" 
+                        onclick="setRoleFilter('all', this)"
+                        class="role-filter-tab active"
+                        style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 700; background: #0F172A; color: #FFFFFF; transition: all 0.15s ease;">
+                    <span>Semua</span>
+                    <span style="background: rgba(255,255,255,0.2); padding: 1px 7px; border-radius: 100px; font-size: 11px;">
+                        {{ $users->count() }}
+                    </span>
+                </button>
+
+                <button type="button" 
+                        onclick="setRoleFilter('student', this)"
+                        class="role-filter-tab"
+                        style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #F1F5F9; color: #475569; transition: all 0.15s ease;">
+                    <span>Mahasiswa</span>
+                    <span style="background: #DCFCE7; color: #166534; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                        {{ $users->where('role', 'student')->count() }}
+                    </span>
+                </button>
+
+                <button type="button" 
+                        onclick="setRoleFilter('lecturer', this)"
+                        class="role-filter-tab"
+                        style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #F1F5F9; color: #475569; transition: all 0.15s ease;">
+                    <span>Dosen Pengampu</span>
+                    <span style="background: #EFF6FF; color: #1D4ED8; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                        {{ $users->where('role', 'lecturer')->count() }}
+                    </span>
+                </button>
+
+                <button type="button" 
+                        onclick="setRoleFilter('vendor', this)"
+                        class="role-filter-tab"
+                        style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #F1F5F9; color: #475569; transition: all 0.15s ease;">
+                    <span>Mitra Vendor</span>
+                    <span style="background: #F3E8FF; color: #6B21A8; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                        {{ $users->where('role', 'vendor')->count() }}
+                    </span>
+                </button>
+
+                <button type="button" 
+                        onclick="setRoleFilter('admin', this)"
+                        class="role-filter-tab"
+                        style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; background: #F1F5F9; color: #475569; transition: all 0.15s ease;">
+                    <span>Administrator</span>
+                    <span style="background: #E2E8F0; color: #334155; padding: 1px 7px; border-radius: 100px; font-size: 11px; font-weight: 700;">
+                        {{ $users->where('role', 'admin')->count() }}
+                    </span>
+                </button>
+            </div>
+
+            <!-- SEARCH BAR INPUT -->
+            <div style="position: relative; min-width: 280px; flex-grow: 1; max-width: 420px;">
+                <div style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94A3B8; pointer-events: none; display: flex; align-items: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <input type="text" 
+                       id="user-search-input"
+                       oninput="applyUserFilters()"
+                       placeholder="Cari nama pengguna, email, atau ID..."
+                       style="width: 100%; padding: 8px 36px 8px 36px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; color: #0F172A; outline: none; background: #F8FAFC; transition: all 0.15s ease;"
+                       onfocus="this.style.background='#FFFFFF'; this.style.borderColor='#2563EB'; this.style.boxShadow='0 0 0 3px rgba(37,99,235,0.1)'"
+                       onblur="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1'; this.style.boxShadow='none'">
+                <button type="button" 
+                        id="clear-search-btn"
+                        onclick="clearSearchInput()"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); all: unset; cursor: pointer; color: #94A3B8; display: none; padding: 2px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+        </div>
+
         <!-- USERS TABLE CARD -->
         <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
             <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;" id="users-data-table">
                     <thead>
                         <tr style="background: #FAFAFA; border-bottom: 1px solid #E2E8F0; color: #475569; font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
                             <th style="padding: 14px 20px;">Pengguna</th>
@@ -73,7 +150,13 @@
 
                     <tbody style="divide-y: 1px solid #F1F5F9;">
                         @forelse($users as $user)
-                            <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.15s ease;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
+                            <tr class="user-row" 
+                                data-role="{{ $user->role }}"
+                                data-search="{{ strtolower($user->name . ' ' . $user->email . ' ' . $user->id . ' ' . ($user->institution->name ?? '')) }}"
+                                style="border-bottom: 1px solid #F1F5F9; transition: background 0.15s ease;" 
+                                onmouseover="this.style.background='#F8FAFC'" 
+                                onmouseout="this.style.background='#FFFFFF'">
+                                
                                 <!-- PENGGUNA AVATAR & NAME -->
                                 <td style="padding: 16px 20px;">
                                     <div style="display: flex; align-items: center; gap: 12px;">
@@ -104,7 +187,7 @@
                                 <td style="padding: 16px 20px;">
                                     @php
                                         $roleBadges = match($user->role) {
-                                            'admin' => ['bg' => '#F3E8FF', 'color' => '#7E22CE', 'label' => 'Administrator'],
+                                             'admin' => ['bg' => '#F3E8FF', 'color' => '#7E22CE', 'label' => 'Administrator'],
                                             'lecturer' => ['bg' => '#EFF6FF', 'color' => '#2563EB', 'label' => 'Dosen Pengampu'],
                                             'vendor' => ['bg' => '#F3E8FF', 'color' => '#6B21A8', 'label' => 'Mitra Vendor'],
                                             default => ['bg' => '#DCFCE7', 'color' => '#15803D', 'label' => 'Mahasiswa'],
@@ -197,16 +280,100 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
+                            <tr id="empty-initial-row">
                                 <td colspan="6" style="padding: 3rem; text-align: center; color: #94A3B8;">
                                     Belum ada pengguna terdaftar dalam sistem.
                                 </td>
                             </tr>
                         @endforelse
+
+                        <!-- DYNAMIC EMPTY STATE ROW (FOR SEARCH/FILTER NO MATCHES) -->
+                        <tr id="no-matching-users-row" style="display: none;">
+                            <td colspan="6" style="padding: 3.5rem 1.5rem; text-align: center;">
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #64748B;">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; color: #94A3B8; margin-bottom: 4px;">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                    </div>
+                                    <div style="font-size: 14px; font-weight: 700; color: #1E293B;">Pengguna Tidak Ditemukan</div>
+                                    <div style="font-size: 12.5px; color: #64748B; max-width: 380px;">
+                                        Tidak ada akun pengguna yang cocok dengan kriteria kata kunci atau kategori peran yang dipilih.
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
     </div>
+
+    <!-- JAVASCRIPT REAL-TIME FILTER & SEARCH ENGINE -->
+    <script>
+        let currentActiveRole = 'all';
+
+        function setRoleFilter(role, buttonElement) {
+            currentActiveRole = role;
+
+            // Update Tab UI styling
+            document.querySelectorAll('.role-filter-tab').forEach(btn => {
+                btn.style.background = '#F1F5F9';
+                btn.style.color = '#475569';
+                btn.style.fontWeight = '600';
+            });
+
+            buttonElement.style.background = '#0F172A';
+            buttonElement.style.color = '#FFFFFF';
+            buttonElement.style.fontWeight = '700';
+
+            applyUserFilters();
+        }
+
+        function clearSearchInput() {
+            const searchInput = document.getElementById('user-search-input');
+            searchInput.value = '';
+            document.getElementById('clear-search-btn').style.display = 'none';
+            applyUserFilters();
+            searchInput.focus();
+        }
+
+        function applyUserFilters() {
+            const searchInput = document.getElementById('user-search-input');
+            const searchKeyword = (searchInput.value || '').trim().toLowerCase();
+            const clearBtn = document.getElementById('clear-search-btn');
+
+            if (searchKeyword.length > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+
+            const rows = document.querySelectorAll('.user-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const userRole = (row.getAttribute('data-role') || '').toLowerCase();
+                const searchData = (row.getAttribute('data-search') || '').toLowerCase();
+
+                const matchesRole = (currentActiveRole === 'all' || userRole === currentActiveRole);
+                const matchesSearch = (searchKeyword === '' || searchData.includes(searchKeyword));
+
+                if (matchesRole && matchesSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const noMatchRow = document.getElementById('no-matching-users-row');
+            if (noMatchRow) {
+                if (visibleCount === 0 && rows.length > 0) {
+                    noMatchRow.style.display = '';
+                } else {
+                    noMatchRow.style.display = 'none';
+                }
+            }
+        }
+    </script>
 </x-app-layout>
