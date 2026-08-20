@@ -9,19 +9,7 @@ class Skill extends Model
     protected $fillable = [
         'name',
         'description',
-        'parent_id',
     ];
-
-
-    public function parent()
-    {
-        return $this->belongsTo(Skill::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(Skill::class, 'parent_id');
-    }
 
     public function courses()
     {

@@ -68,10 +68,7 @@ class DashboardController extends Controller
 
         $groupedQuestions = $questions->groupBy('quiz_id');
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::with('tags')
             ->orderBy('name')
             ->get();
 

@@ -1,7 +1,7 @@
 <x-app-layout>
     @php
         $selectedSkillIds = $question->skills->pluck('id')->toArray();
-        $mainSkillId = optional($question->skills->firstWhere('parent_id', null))->id;
+        $mainSkillId = optional($question->skills->first())->id;
     @endphp
 
     <div class="min-h-screen bg-slate-50 py-10">

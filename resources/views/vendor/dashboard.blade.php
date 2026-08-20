@@ -332,19 +332,20 @@
                                         </div>
 
                                         <div>
-                                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Detail Skill yang Diuji</label>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">Specialty Tags yang Diuji</label>
                                             @foreach($mainSkills as $mainSkill)
                                                 <div class="question-skill-detail-group hidden" data-question-index="0" data-parent-id="{{ $mainSkill->id }}">
                                                     <div class="bg-white border border-gray-200 rounded-xl p-3 space-y-2">
-                                                        <p class="text-xs font-bold text-gray-800">Detail {{ $mainSkill->name }}</p>
-                                                        @forelse($mainSkill->children as $childSkill)
-                                                            <label class="flex items-center gap-2 text-xs text-gray-700 cursor-pointer">
-                                                                <input type="checkbox" name="questions[0][skill_ids][]" value="{{ $childSkill->id }}" class="rounded text-purple-600 focus:ring-purple-500">
-                                                                {{ $childSkill->name }}
-                                                            </label>
-                                                        @empty
-                                                            <p class="text-[11px] text-gray-400">Belum ada detail skill untuk bidang ini.</p>
-                                                        @endforelse
+                                                        <p class="text-xs font-bold text-gray-800">Tags {{ $mainSkill->name }}</p>
+                                                        <div class="flex flex-wrap gap-1.5">
+                                                            @forelse($mainSkill->tags as $childTag)
+                                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700">
+                                                                    #{{ $childTag->name }}
+                                                                </span>
+                                                            @empty
+                                                                <p class="text-[11px] text-gray-400">Belum ada tag untuk bidang ini.</p>
+                                                            @endforelse
+                                                        </div>
                                                     </div>
                                                 </div>
                                             @endforeach

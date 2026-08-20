@@ -156,7 +156,7 @@ class CourseController extends Controller
             }
 
             $course = $offering;
-            $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
+            $mainSkills = Skill::orderBy('name')->get();
             $tags = Tag::with('skill')->orderBy('name')->get();
 
             return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags'));
@@ -165,7 +165,7 @@ class CourseController extends Controller
         // Fallback to legacy Course
         $course = Course::with(['skills', 'tags', 'materials'])->where('lecturer_id', $lecturerId)->findOrFail($targetId);
 
-        $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
+        $mainSkills = Skill::orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
 
         return view('lecturer.courses.edit', compact('course', 'mainSkills', 'tags'));

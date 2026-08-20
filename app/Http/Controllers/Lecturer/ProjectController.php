@@ -32,7 +32,7 @@ class ProjectController extends Controller
         $bankProjects = $allProjects->where('is_published', false)->values();
 
         $skillsWithoutCourses = [];
-        $mainSkills = Skill::whereNull('parent_id')->get();
+        $mainSkills = Skill::all();
         foreach ($mainSkills as $skill) {
             if (!$this->checkSkillHasCourse($skill->id)) {
                 $skillsWithoutCourses[] = $skill->id;
@@ -66,8 +66,7 @@ class ProjectController extends Controller
 
     public function create(): View
     {
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
+        $mainSkills = Skill::orderBy('name')
             ->get();
 
         $tags = Tag::with('skill')
@@ -152,8 +151,7 @@ class ProjectController extends Controller
             'You do not have access to this project.'
         );
 
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
+        $mainSkills = Skill::orderBy('name')
             ->get();
 
         $tags = Tag::with('skill')
@@ -262,15 +260,13 @@ class ProjectController extends Controller
         $hasCourse = CourseOffering::where('is_archived', false)
             ->where(function ($query) use ($skillId) {
                 $query->whereHas('masterCourse.skills', function ($q) use ($skillId) {
-                    $q->where('skills.id', $skillId)
-                      ->orWhere('skills.parent_id', $skillId);
+                    $q->where('skills.id', $skillId);
                 })
                 ->orWhereHas('masterCourse.tags', function ($q) use ($skillId) {
                     $q->where('tags.skill_id', $skillId);
                 })
                 ->orWhereHas('masterCourse.quizzes.questions.skills', function ($q) use ($skillId) {
-                    $q->where('skills.id', $skillId)
-                      ->orWhere('skills.parent_id', $skillId);
+                    $q->where('skills.id', $skillId);
                 });
             })
             ->exists();

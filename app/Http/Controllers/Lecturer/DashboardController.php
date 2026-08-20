@@ -50,17 +50,7 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
-            ->orderBy('name')
-            ->get();
-
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::with('tags')
             ->orderBy('name')
             ->get();
 

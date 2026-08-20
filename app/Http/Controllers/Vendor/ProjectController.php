@@ -34,8 +34,7 @@ class ProjectController extends Controller
 
     public function create(): View
     {
-        $mainSkills = Skill::whereNull('parent_id')
-            ->orderBy('name')
+        $mainSkills = Skill::orderBy('name')
             ->get();
 
         $tags = Tag::with('skill')
@@ -138,7 +137,7 @@ class ProjectController extends Controller
             abort(403, 'Anda tidak memiliki akses ke project industri ini.');
         }
 
-        $mainSkills = Skill::whereNull('parent_id')->orderBy('name')->get();
+        $mainSkills = Skill::orderBy('name')->get();
         $tags = Tag::with('skill')->orderBy('name')->get();
         $projectSkillIds = $project->skills->pluck('id')->toArray();
 

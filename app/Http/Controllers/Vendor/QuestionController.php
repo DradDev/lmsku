@@ -128,10 +128,7 @@ class QuestionController extends Controller
             $query->where('user_id', Auth::id());
         })->get();
 
-        $mainSkills = Skill::with(['children' => function ($query) {
-            $query->orderBy('name');
-        }])
-            ->whereNull('parent_id')
+        $mainSkills = Skill::with('tags')
             ->orderBy('name')
             ->get();
 

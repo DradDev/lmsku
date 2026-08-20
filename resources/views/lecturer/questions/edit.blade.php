@@ -1,7 +1,7 @@
 <x-app-layout>
     @php
         $selectedSkillIds = $question->skills->pluck('id')->toArray();
-        $mainSkillId = optional($question->skills->firstWhere('parent_id', null))->id;
+        $mainSkillId = optional($question->skills->first())->id;
     @endphp
 
     <div class="min-h-screen bg-slate-50 py-10">
@@ -158,18 +158,15 @@
                                 <div class="skill-detail-group hidden" data-parent-id="{{ $mainSkill->id }}">
                                     <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
                                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500">
-                                            Detail {{ $mainSkill->name }}
+                                            Specialty Tags {{ $mainSkill->name }}
                                         </p>
 
-                                        @forelse ($mainSkill->children as $childSkill)
-                                            <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-                                                <input type="checkbox" name="skill_ids[]" value="{{ $childSkill->id }}"
-                                                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                    @checked(in_array($childSkill->id, old('skill_ids', $selectedSkillIds)))>
-                                                <span>{{ $childSkill->name }}</span>
-                                            </label>
+                                        @forelse ($mainSkill->tags as $childTag)
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700">
+                                                #{{ $childTag->name }}
+                                            </span>
                                         @empty
-                                            <p class="text-xs text-slate-400">Belum ada detail skill untuk bidang ini.</p>
+                                            <p class="text-xs text-slate-400">Belum ada tag untuk bidang ini.</p>
                                         @endforelse
                                     </div>
                                 </div>
