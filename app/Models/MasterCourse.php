@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class MasterCourse extends Model
 {
@@ -14,6 +15,18 @@ class MasterCourse extends Model
         'level',
         'certificate_threshold',
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function ($model) {
+            $model->skills()->detach();
+            $model->tags()->detach();
+            // Optional: delete related polymorphic children if needed
+            $model->materials()->delete();
+            $model->quizzes()->delete();
+            $model->certificates()->delete();
+        });
+    }
 
     public function user()
     {
@@ -30,14 +43,28 @@ class MasterCourse extends Model
         return $this->skills->firstWhere('pivot.is_main', true) ?? $this->skills->first();
     }
 
-    public function materials()
+    /**
+     * Polymorphic materials relation (Induk Kurikulum)
+     */
+    public function materials(): MorphMany
     {
-        return $this->hasMany(Material::class, 'master_course_id');
+        return $this->morphMany(Material::class, 'materialable');
     }
 
-    public function quizzes()
+    /**
+     * Polymorphic quizzes relation (Induk Kurikulum)
+     */
+        /**
+     * Polymorphic certificates relation
+     */
+    public function certificates(): MorphMany
     {
-        return $this->hasMany(Quiz::class, 'master_course_id');
+        return $this->morphMany(Certificate::class, 'certifiable');
+    }
+
+    public function quizzes(): MorphMany
+    {
+        return $this->morphMany(Quiz::class, 'quizzable');
     }
 
     public function offerings()
@@ -47,14 +74,15 @@ class MasterCourse extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'master_course_skills', 'master_course_id', 'skill_id')
-            ->withPivot('is_main')
+        return $this->morphToMany(Skill::class, 'skillable')
+            ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'master_course_tags', 'master_course_id', 'tag_id')
+        return $this->morphToMany(Tag::class, 'taggable')
+            ->withPivot('weight')
             ->withTimestamps();
     }
 }

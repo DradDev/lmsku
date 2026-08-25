@@ -12,7 +12,7 @@ class ResultController extends Controller
     {
         $user = Auth::user();
 
-        $results = QuizAttempt::with(['quiz.course'])
+        $results = QuizAttempt::with(['quiz.quizzable'])
             ->where('user_id', $user->id)
             ->latest()
             ->get();
@@ -34,7 +34,7 @@ class ResultController extends Controller
     {
         abort_unless($result->user_id === Auth::id(), 403, 'Kamu tidak memiliki akses ke hasil ini.');
 
-        $result->load(['quiz.course', 'answers.question']);
+        $result->load(['quiz.quizzable', 'answers.question']);
 
         return view('student.results.show', compact('result'));
     }

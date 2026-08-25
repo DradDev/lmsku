@@ -25,6 +25,16 @@ class Project extends Model
         'is_published' => 'boolean',
     ];
 
+    protected static function booted()
+    {
+        static::deleting(function ($model) {
+            $model->skills()->detach();
+            $model->tags()->detach();
+            $model->materials()->delete();
+            $model->certificates()->delete();
+        });
+    }
+
     public function getBriefFileUrlAttribute()
     {
         if (empty($this->brief_file)) {
@@ -49,6 +59,25 @@ class Project extends Model
         return $this->hasMany(ProjectParticipation::class);
     }
 
+        /**
+     * Polymorphic certificates relation
+     */
+    public function certificates(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Certificate::class, 'certifiable');
+    }
+
+    public function certificate(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(Certificate::class, 'certifiable');
+    }
+
+    public function materials(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Material::class, 'materialable');
+    }
+
+
     public function students()
     {
         return $this->belongsToMany(User::class, 'project_participations')
@@ -64,14 +93,14 @@ class Project extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'project_skills')
+        return $this->morphToMany(Skill::class, 'skillable')
             ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'project_tags')
+        return $this->morphToMany(Tag::class, 'taggable')
             ->withPivot('weight')
             ->withTimestamps();
     }

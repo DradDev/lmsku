@@ -41,27 +41,32 @@ class DashboardController extends Controller
         $projectIds = $projects->pluck('id')->toArray();
 
         // Materials & Quizzes created by Vendor
-        $rawMaterials = Material::whereIn('master_course_id', $masterCourseIds)
-            ->orWhereIn('course_offering_id', $courseIds)
-            ->with(['masterCourse', 'courseOffering'])
-            ->latest()
-            ->get();
+        $materials = Material::where(function ($query) use ($masterCourseIds, $courseIds) {
+            $query->where(function ($sub) use ($masterCourseIds) {
+                $sub->where('materialable_type', MasterCourse::class)
+                    ->whereIn('materialable_id', $masterCourseIds);
+            })->orWhere(function ($sub) use ($courseIds) {
+                $sub->where('materialable_type', CourseOffering::class)
+                    ->whereIn('materialable_id', $courseIds);
+            });
+        })
+        ->with(['materialable'])
+        ->latest()
+        ->get();
 
-        $materials = $rawMaterials->groupBy(function ($m) {
-            return ($m->master_course_id ?? 0) . '_' . trim(strtolower($m->title));
-        })->map(function ($group) {
-            $first = $group->first();
-            $first->assigned_offerings = $group->pluck('courseOffering')->filter();
-            $first->is_all_classes = $group->contains(fn($m) => is_null($m->course_offering_id));
-            $first->related_ids = $group->pluck('id')->toArray();
-            return $first;
-        })->values();
-
-        $quizzes = Quiz::whereIn('master_course_id', $masterCourseIds)
-            ->with(['masterCourse'])
-            ->withCount('questions')
-            ->latest()
-            ->get();
+        $quizzes = Quiz::where(function ($q) use ($masterCourseIds, $courseIds) {
+            $q->where(function ($sub) use ($masterCourseIds) {
+                $sub->where('quizzable_type', \App\Models\MasterCourse::class)
+                    ->whereIn('quizzable_id', $masterCourseIds);
+            })->orWhere(function ($sub) use ($courseIds) {
+                $sub->where('quizzable_type', CourseOffering::class)
+                    ->whereIn('quizzable_id', $courseIds);
+            });
+        })
+        ->with(['quizzable'])
+        ->withCount('questions')
+        ->latest()
+        ->get();
 
         // Participations in Vendor Projects
         $participations = ProjectParticipation::whereIn('project_id', $projectIds)

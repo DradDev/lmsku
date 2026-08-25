@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CourseOffering;
 use App\Models\Enrollment;
+use App\Models\MasterCourse;
 use App\Models\Material;
 use App\Models\MaterialProgress;
 use App\Models\Quiz;
@@ -52,29 +53,47 @@ class CourseProgressService
         $offering = CourseOffering::with(['masterCourse.materials', 'masterCourse.quizzes'])->find($offeringId);
         $masterCourseId = $offering?->master_course_id;
 
-        $totalMaterialCount = $masterCourseId 
-            ? Material::where('master_course_id', $masterCourseId)->count()
+        // Ambil ID seluruh materi yang berlaku untuk rombel/batch ini (Materi Induk + Materi Khusus Rombel)
+        $applicableMaterialIds = Material::where(function ($q) use ($offeringId, $masterCourseId) {
+            $q->where(function ($sub) use ($masterCourseId) {
+                $sub->where('materialable_type', MasterCourse::class)
+                    ->where('materialable_id', $masterCourseId);
+            })->orWhere(function ($sub) use ($offeringId) {
+                $sub->where('materialable_type', CourseOffering::class)
+                    ->where('materialable_id', $offeringId);
+            });
+        })->pluck('id')->unique();
+
+        $totalMaterialCount = $applicableMaterialIds->count();
+
+        // Ambil ID seluruh kuis yang berlaku untuk rombel/batch ini (Kuis Induk + Kuis Khusus Rombel)
+        $applicableQuizIds = Quiz::where(function ($q) use ($offeringId, $masterCourseId) {
+            $q->where(function ($sub) use ($masterCourseId) {
+                $sub->where('quizzable_type', MasterCourse::class)
+                    ->where('quizzable_id', $masterCourseId);
+            })->orWhere(function ($sub) use ($offeringId) {
+                $sub->where('quizzable_type', CourseOffering::class)
+                    ->where('quizzable_id', $offeringId);
+            });
+        })->pluck('id')->unique();
+
+        $totalQuizCount = $applicableQuizIds->count();
+
+        $completedMaterialCount = $applicableMaterialIds->isNotEmpty()
+            ? MaterialProgress::where('user_id', $userId)
+                ->where('is_completed', true)
+                ->whereIn('material_id', $applicableMaterialIds)
+                ->distinct('material_id')
+                ->count('material_id')
             : 0;
 
-        $totalQuizCount = $masterCourseId
-            ? Quiz::where('master_course_id', $masterCourseId)->count()
+        $completedQuizCount = $applicableQuizIds->isNotEmpty()
+            ? QuizAttempt::where('user_id', $userId)
+                ->where('is_verified', true)
+                ->whereIn('quiz_id', $applicableQuizIds)
+                ->distinct('quiz_id')
+                ->count('quiz_id')
             : 0;
-
-        $completedMaterialCount = MaterialProgress::where('user_id', $userId)
-            ->where('is_completed', true)
-            ->whereIn('material_id', function($q) use ($masterCourseId) {
-                $q->select('id')->from('materials')->where('master_course_id', $masterCourseId);
-            })
-            ->distinct('material_id')
-            ->count('material_id');
-
-        $completedQuizCount = QuizAttempt::query()
-            ->join('quizzes', 'quiz_attempts.quiz_id', '=', 'quizzes.id')
-            ->where('quiz_attempts.user_id', $userId)
-            ->where('quiz_attempts.is_verified', true)
-            ->where('quizzes.master_course_id', $masterCourseId)
-            ->distinct('quiz_attempts.quiz_id')
-            ->count('quiz_attempts.quiz_id');
 
         $totalItemCount = $totalMaterialCount + $totalQuizCount;
         $completedItemCount = $completedMaterialCount + $completedQuizCount;
@@ -120,9 +139,9 @@ class CourseProgressService
     public function recalculateAllForUser(int $userId): void
     {
         Enrollment::where('user_id', $userId)
-            ->chunkById(100, function ($enrollments) use ($userId) {
+            ->chunkById(100, function ($enrollments) {
                 foreach ($enrollments as $enrollment) {
-                    $this->recalculate($userId, $enrollment->course_offering_id);
+                    $this->recalculate($enrollment->user_id, $enrollment->course_offering_id);
                 }
             });
     }

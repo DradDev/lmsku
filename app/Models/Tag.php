@@ -19,19 +19,21 @@ class Tag extends Model
 
     public function courses()
     {
-        return $this->belongsToMany(MasterCourse::class, 'master_course_tags')
+        return $this->morphedByMany(MasterCourse::class, 'taggable')
+            ->withPivot('weight')
             ->withTimestamps();
     }
 
     public function masterCourses()
     {
-        return $this->belongsToMany(MasterCourse::class, 'master_course_tags')
+        return $this->morphedByMany(MasterCourse::class, 'taggable')
+            ->withPivot('weight')
             ->withTimestamps();
     }
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'project_tags')
+        return $this->morphedByMany(Project::class, 'taggable')
             ->withPivot('weight')
             ->withTimestamps();
     }

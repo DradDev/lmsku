@@ -19,11 +19,9 @@ class ResultController extends Controller
             'Kamu tidak memiliki akses ke course ini.'
         );
 
-        abort_unless(
-            $quiz->master_course_id === $course->master_course_id,
-            403,
-            'Quiz tidak valid.'
-        );
+        $isValidQuiz = ($quiz->quizzable_type === \App\Models\CourseOffering::class && $quiz->quizzable_id === $course->id)
+            || ($quiz->quizzable_type === \App\Models\MasterCourse::class && $quiz->quizzable_id === ($course->master_course_id ?? $course->id));
+        abort_unless($isValidQuiz, 403, 'Quiz tidak valid.');
 
         $attempts = QuizAttempt::with('user')
             ->where('quiz_id', $quiz->id)
@@ -41,11 +39,9 @@ class ResultController extends Controller
             'Kamu tidak memiliki akses ke course ini.'
         );
 
-        abort_unless(
-            $quiz->master_course_id === $course->master_course_id,
-            403,
-            'Quiz tidak valid.'
-        );
+        $isValidQuiz = ($quiz->quizzable_type === \App\Models\CourseOffering::class && $quiz->quizzable_id === $course->id)
+            || ($quiz->quizzable_type === \App\Models\MasterCourse::class && $quiz->quizzable_id === ($course->master_course_id ?? $course->id));
+        abort_unless($isValidQuiz, 403, 'Quiz tidak valid.');
 
         abort_unless(
             $result->quiz_id === $quiz->id,
@@ -53,7 +49,7 @@ class ResultController extends Controller
             'Result tidak valid untuk quiz ini.'
         );
 
-        $result->load(['user', 'quiz.course', 'answers.question']);
+        $result->load(['user', 'quiz.quizzable', 'answers.question']);
 
         return view('lecturer.results.show', compact('course', 'quiz', 'result'));
     }

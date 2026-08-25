@@ -17,10 +17,13 @@ class CalculateUserSkillProfiles extends Command
         $userId = $this->option('user_id');
 
         $query = DB::table('quiz_answers')
-            ->join('question_skills', 'quiz_answers.question_id', '=', 'question_skills.question_id')
+            ->join('skillables', function ($join) {
+                $join->on('quiz_answers.question_id', '=', 'skillables.skillable_id')
+                     ->where('skillables.skillable_type', \App\Models\Question::class);
+            })
             ->select(
                 'quiz_answers.user_id',
-                'question_skills.skill_id',
+                'skillables.skill_id',
                 DB::raw('AVG(COALESCE(quiz_answers.score, 0)) * 100 as avg_score'),
                 DB::raw('MIN(COALESCE(quiz_answers.score, 0)) * 100 as lowest_score'),
                 DB::raw('MAX(COALESCE(quiz_answers.score, 0)) * 100 as highest_score'),
@@ -30,7 +33,7 @@ class CalculateUserSkillProfiles extends Command
                 DB::raw('MAX(quiz_answers.created_at) as last_activity_at')
             )
             ->whereNotNull('quiz_answers.score')
-            ->groupBy('quiz_answers.user_id', 'question_skills.skill_id');
+            ->groupBy('quiz_answers.user_id', 'skillables.skill_id');
 
         if ($userId) {
             $query->where('quiz_answers.user_id', $userId);

@@ -194,7 +194,10 @@
                                         $latestHistory = $participation->statusHistories->sortByDesc('created_at')->first();
                                         $status = $participation->status;
                                         $progress = $participation->progress_percent ?? 0;
-                                        $cert = \App\Models\Certificate::where('user_id', $participation->user_id)->where('project_id', $project->id)->first();
+                                        $cert = \App\Models\Certificate::where('user_id', $participation->user_id)
+                                            ->where('certifiable_type', \App\Models\Project::class)
+                                            ->where('certifiable_id', $project->id)
+                                            ->first();
                                     @endphp
 
                                     <tr>

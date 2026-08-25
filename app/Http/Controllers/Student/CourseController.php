@@ -7,7 +7,10 @@ use App\Models\Course;
 use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
+use App\Models\MasterCourse;
+use App\Models\Material;
 use App\Models\QuizAttempt;
+use App\Models\Quiz;
 use App\Models\User;
 use App\Services\CourseProgressService;
 use Illuminate\Http\RedirectResponse;
@@ -203,19 +206,30 @@ class CourseController extends Controller
 
         $this->logActivity('view_course', $offering->id);
 
-        // Combined materials & quizzes from Master Course & Offering
-        $classMaterials = Material::where('course_offering_id', $offering->id)
-            ->orWhere(function ($q) use ($offering) {
-                $q->where('master_course_id', $offering->master_course_id)->whereNull('course_offering_id');
-            })
-            ->latest()
-            ->get();
+        // Combined polymorphic materials from Master Course & Offering
+        $masterCourseId = $offering->master_course_id;
+        $classMaterials = Material::where(function ($q) use ($offering, $masterCourseId) {
+            $q->where(function ($sub) use ($masterCourseId) {
+                $sub->where('materialable_type', MasterCourse::class)
+                    ->where('materialable_id', $masterCourseId);
+            })->orWhere(function ($sub) use ($offering) {
+                $sub->where('materialable_type', CourseOffering::class)
+                    ->where('materialable_id', $offering->id);
+            });
+        })->latest()->get();
         $course->setRelation('materials', $classMaterials);
 
-        if ($course->masterCourse) {
-            $combinedQuizzes = $course->quizzes->merge($course->masterCourse->quizzes ?? collect())->unique('id');
-            $course->setRelation('quizzes', $combinedQuizzes);
-        }
+        // Combined polymorphic quizzes from Master Course & Offering
+        $classQuizzes = Quiz::where(function ($q) use ($offering, $masterCourseId) {
+            $q->where(function ($sub) use ($masterCourseId) {
+                $sub->where('quizzable_type', MasterCourse::class)
+                    ->where('quizzable_id', $masterCourseId);
+            })->orWhere(function ($sub) use ($offering) {
+                $sub->where('quizzable_type', CourseOffering::class)
+                    ->where('quizzable_id', $offering->id);
+            });
+        })->with('questions')->latest()->get();
+        $course->setRelation('quizzes', $classQuizzes);
 
         $finalQuiz = $course->quizzes->firstWhere('quiz_type', 'final');
         $verifiedFinalAttempt = null;

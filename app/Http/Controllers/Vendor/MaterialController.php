@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourseOffering;
+use App\Models\MasterCourse;
 use App\Models\Material;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,12 +13,21 @@ use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
-    public function store(Request $request, CourseOffering $course): RedirectResponse
+    public function store(Request $request, $course): RedirectResponse
     {
         $vendorId = Auth::id();
-        $isOwner = $course->lecturer_id === $vendorId ||
-                   ($course->masterCourse && $course->masterCourse->user_id === $vendorId) ||
-                   Auth::user()->isAdmin();
+        $courseObj = is_numeric($course)
+            ? (CourseOffering::find($course) ?? MasterCourse::findOrFail($course))
+            : $course;
+
+        $isOwner = false;
+        if ($courseObj instanceof CourseOffering) {
+            $isOwner = $courseObj->lecturer_id === $vendorId ||
+                       ($courseObj->masterCourse && $courseObj->masterCourse->user_id === $vendorId) ||
+                       Auth::user()->isAdmin();
+        } elseif ($courseObj instanceof MasterCourse) {
+            $isOwner = $courseObj->user_id === $vendorId || Auth::user()->isAdmin();
+        }
 
         if (!$isOwner) {
             abort(403, 'Anda tidak memiliki akses ke course sertifikasi ini.');
@@ -25,94 +35,73 @@ class MaterialController extends Controller
 
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'file' => ['required', 'file', 'mimes:pdf,docx,pptx,mp4,zip', 'max:51200'],
+            'file' => ['required', 'file', 'mimes:pdf,docx,pptx,mp4,zip,rar', 'max:51200'],
+            'target_scope' => ['nullable', \Illuminate\Validation\Rule::in(['all', 'batch'])],
         ]);
 
         $path = $request->file('file')->store('materials', 'public');
-        $masterCourseId = $course->master_course_id ?? $course->id;
+        $targetScope = $validated['target_scope'] ?? $request->input('scope', 'all');
 
-        // Ambil semua batch milik vendor di bawah kurikulum sertifikasi ini
-        $vendorBatches = CourseOffering::where('master_course_id', $masterCourseId)
-            ->where(function ($q) use ($vendorId) {
-                if (!Auth::user()->isAdmin()) {
-                    $q->where('lecturer_id', $vendorId)
-                      ->orWhereHas('masterCourse', function ($mc) use ($vendorId) {
-                          $mc->where('user_id', $vendorId);
-                      });
-                }
-            })
-            ->get();
+        $masterCourseId = ($courseObj instanceof MasterCourse) ? $courseObj->id : ($courseObj->master_course_id ?? $courseObj->id);
+        $masterCourse = MasterCourse::find($masterCourseId);
 
-        if ($vendorBatches->isNotEmpty()) {
-            foreach ($vendorBatches as $batch) {
-                Material::create([
-                    'master_course_id'   => $masterCourseId,
-                    'course_offering_id' => $batch->id,
-                    'title'              => $validated['title'],
-                    'file_path'          => $path,
-                ]);
-            }
-        } else {
-            Material::create([
-                'master_course_id'   => $masterCourseId,
-                'course_offering_id' => $course->id,
-                'title'              => $validated['title'],
-                'file_path'          => $path,
+        if ($targetScope === 'all' && $masterCourse) {
+            // Polymorphic upload to MasterCourse (Induk Sertifikasi -> Semua Batch)
+            $masterCourse->materials()->create([
+                'title' => $validated['title'],
+                'file_path' => $path,
             ]);
+            $scopeMsg = 'Semua Batch Pelatihan';
+        } else {
+            // Polymorphic upload to CourseOffering (Khusus Batch Ini)
+            $targetOffering = ($courseObj instanceof CourseOffering) ? $courseObj : $masterCourse->offerings()->first();
+            if ($targetOffering) {
+                $targetOffering->materials()->create([
+                    'title' => $validated['title'],
+                    'file_path' => $path,
+                ]);
+                $scopeMsg = 'Batch ' . ($targetOffering->batch_name ?: $targetOffering->id);
+            } else {
+                $masterCourse->materials()->create([
+                    'title' => $validated['title'],
+                    'file_path' => $path,
+                ]);
+                $scopeMsg = 'Semua Batch';
+            }
         }
 
-        return back()->with('success', "Materi pembelajaran '{$validated['title']}' berhasil diunggah.");
+        return back()->with('success', "Materi pembelajaran '{$validated['title']}' berhasil diunggah untuk {$scopeMsg}.");
     }
 
     public function destroy(Request $request, Material $material): RedirectResponse
     {
         $vendorId = Auth::id();
-        $isAuthorized = ($material->courseOffering && $material->courseOffering->lecturer_id === $vendorId) ||
-                        ($material->masterCourse && $material->masterCourse->user_id === $vendorId) ||
-                        Auth::user()->isAdmin();
+        $isAuthorized = false;
+
+        if ($material->materialable) {
+            if ($material->materialable instanceof MasterCourse) {
+                $isAuthorized = $material->materialable->user_id === $vendorId || Auth::user()->isAdmin();
+            } elseif ($material->materialable instanceof CourseOffering) {
+                $isAuthorized = $material->materialable->lecturer_id === $vendorId ||
+                                ($material->materialable->masterCourse && $material->materialable->masterCourse->user_id === $vendorId) ||
+                                Auth::user()->isAdmin();
+            }
+        } else {
+            $isAuthorized = ($material->courseOffering && $material->courseOffering->lecturer_id === $vendorId) ||
+                            ($material->masterCourse && $material->masterCourse->user_id === $vendorId) ||
+                            Auth::user()->isAdmin();
+        }
 
         if (!$isAuthorized) {
             abort(403, 'Anda tidak memiliki akses ke materi ini.');
         }
 
-        $currentCourseId = $request->input('course_id') ?? $material->course_offering_id;
-
-        // Jika materi berstatus global (course_offering_id is null) dan dihapus dari batch tertentu:
-        // Salin ke batch lain milik vendor agar batch lain tidak kehilangan materi
-        if ($material->course_offering_id === null && $currentCourseId) {
-            $otherBatches = CourseOffering::where('master_course_id', $material->master_course_id)
-                ->where('id', '!=', $currentCourseId)
-                ->where(function ($q) use ($vendorId) {
-                    if (!Auth::user()->isAdmin()) {
-                        $q->where('lecturer_id', $vendorId)
-                          ->orWhereHas('masterCourse', function ($mc) use ($vendorId) {
-                              $mc->where('user_id', $vendorId);
-                          });
-                    }
-                })
-                ->get();
-
-            foreach ($otherBatches as $otherBatch) {
-                Material::create([
-                    'master_course_id'   => $material->master_course_id,
-                    'course_offering_id' => $otherBatch->id,
-                    'title'              => $material->title,
-                    'file_path'          => $material->file_path,
-                ]);
-            }
+        if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
+            Storage::disk('public')->delete($material->file_path);
         }
 
-        $filePath = $material->file_path;
         $material->delete();
 
-        // Hapus file fisik dari storage hanya jika sudah tidak digunakan oleh baris material lain
-        if (!empty($filePath)) {
-            $stillUsed = Material::where('file_path', $filePath)->exists();
-            if (!$stillUsed && Storage::disk('public')->exists($filePath)) {
-                Storage::disk('public')->delete($filePath);
-            }
-        }
-
-        return back()->with('success', 'Materi pembelajaran berhasil dihapus dari course ini.');
+        return back()->with('success', 'Materi pembelajaran berhasil dihapus.');
     }
 }

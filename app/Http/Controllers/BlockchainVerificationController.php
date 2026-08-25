@@ -47,12 +47,8 @@ class BlockchainVerificationController extends Controller
         // 1. CARI DI TABEL CERTIFICATES (Project Certificates & Course Certificates)
         $certificate = Certificate::with([
             'user',
-            'project.creator.institution',
-            'project.user.institution',
-            'courseOffering.masterCourse',
-            'courseOffering.academicTerm',
-            'courseOffering.lecturer.institution',
             'verifiedByAdmin',
+            'certifiable',
         ])
         ->where(function ($q) use ($queryStr) {
             $q->where('blockchain_hash', $queryStr)
@@ -79,24 +75,29 @@ class BlockchainVerificationController extends Controller
             $issuer = 'LMS Telkom University';
             $category = 'Academic Course';
 
-            if ($certificate->project) {
+            $entity = $certificate->certifiable;
+
+            if ($entity instanceof \App\Models\Project) {
+                $entity->loadMissing(['creator.institution', 'user.institution']);
                 $certType = 'Project Certificate';
-                $title = $certificate->project->title;
-                $category = $certificate->project->provider_type === 'external' ? 'Proyek Industri Mitra Vendor' : 'Proyek Kampus Dosen';
-                $creator = $certificate->project->creator ?? $certificate->project->user;
+                $title = $entity->title;
+                $category = $entity->provider_type === 'external' ? 'Proyek Industri Mitra Vendor' : 'Proyek Kampus Dosen';
+                $creator = $entity->creator ?? $entity->user;
                 $issuer = $creator ? ($creator->name . ($creator->institution ? ' (' . $creator->institution->name . ')' : '')) : 'Dosen / Mitra Vendor';
-            } elseif ($certificate->courseOffering) {
-                $certType = 'Course Certificate';
-                $title = $certificate->courseOffering->masterCourse->name ?? 'Course Offering';
-                $category = 'Mata Kuliah Akademik';
-                $lecturer = $certificate->courseOffering->lecturer;
+            } elseif ($entity instanceof \App\Models\CourseOffering) {
+                $entity->loadMissing(['masterCourse', 'academicTerm', 'lecturer.institution', 'user.institution']);
+                $certType = $entity->type === 'vendor' ? 'Industry Certification' : 'Course Certificate';
+                $title = $entity->masterCourse->name ?? ($entity->section_name ?? 'Course Offering');
+                $category = $entity->type === 'vendor' ? 'Pelatihan & Sertifikasi Vendor' : 'Mata Kuliah Akademik';
+                $lecturer = $entity->lecturer ?? $entity->user;
                 $issuer = $lecturer ? ($lecturer->name . ($lecturer->institution ? ' (' . $lecturer->institution->name . ')' : '')) : 'Fakultas Teknik';
-            } elseif ($certificate->course) {
-                $certType = 'Course Certificate';
-                $title = $certificate->course->name ?? ($certificate->course->masterCourse->name ?? 'Course');
-                $category = 'Pelatihan & Sertifikasi Vendor';
-                $vendor = $certificate->course->user;
-                $issuer = $vendor ? ($vendor->name . ($vendor->institution ? ' (' . $vendor->institution->name . ')' : '')) : 'Mitra Vendor';
+            } elseif ($entity instanceof \App\Models\MasterCourse) {
+                $entity->loadMissing(['user.institution']);
+                $certType = 'Master Course Certificate';
+                $title = $entity->name;
+                $category = 'Kurikulum Akademik';
+                $author = $entity->user;
+                $issuer = $author ? ($author->name . ($author->institution ? ' (' . $author->institution->name . ')' : '')) : 'Fakultas Teknik';
             }
 
             $resultData = (object) [
@@ -126,7 +127,7 @@ class BlockchainVerificationController extends Controller
         }
 
         // 2. CARI DI TABEL QUIZ ATTEMPTS (Quiz Results & Exam Hashing)
-        $attempt = QuizAttempt::with(['user', 'quiz.masterCourse', 'quiz.course'])
+        $attempt = QuizAttempt::with(['user', 'quiz.quizzable'])
             ->where(function ($q) use ($queryStr) {
                 $q->where('blockchain_hash', $queryStr)
                   ->orWhere('blockchain_id', $queryStr)
@@ -147,7 +148,7 @@ class BlockchainVerificationController extends Controller
             }
 
             $quizTitle = $attempt->quiz->title ?? $attempt->quiz->name ?? 'Quiz Assessment';
-            $masterName = $attempt->quiz->masterCourse->name ?? ($attempt->quiz->course->name ?? 'Course Evaluation');
+            $masterName = $attempt->quiz->course->name ?? 'Course Evaluation';
 
             $resultData = (object) [
                 'record_type' => 'quiz_attempt',

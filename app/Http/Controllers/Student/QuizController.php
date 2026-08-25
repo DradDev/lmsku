@@ -20,11 +20,20 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
-        $enrolledOffering = CourseOffering::where('master_course_id', $quiz->master_course_id)
-            ->whereIn('id', function ($sub) use ($user) {
-                $sub->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
-            })
-            ->first();
+        $enrolledOffering = null;
+        if ($quiz->quizzable_type === CourseOffering::class) {
+            $enrolledOffering = CourseOffering::where('id', $quiz->quizzable_id)
+                ->whereIn('id', function ($sub) use ($user) {
+                    $sub->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
+                })
+                ->first();
+        } elseif ($quiz->quizzable_type === \App\Models\MasterCourse::class) {
+            $enrolledOffering = CourseOffering::where('master_course_id', $quiz->quizzable_id)
+                ->whereIn('id', function ($sub) use ($user) {
+                    $sub->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
+                })
+                ->first();
+        }
 
         abort_unless($enrolledOffering, 403, 'Kamu tidak memiliki akses ke quiz ini.');
 
@@ -67,13 +76,21 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
-        $enrollment = Enrollment::where('user_id', $user->id)
-            ->whereIn('course_offering_id', function ($sub) use ($quiz) {
-                $sub->select('id')->from('course_offerings')
-                    ->where('master_course_id', $quiz->master_course_id);
-            })
-            ->latest()
-            ->first();
+        $enrollment = null;
+        if ($quiz->quizzable_type === CourseOffering::class) {
+            $enrollment = Enrollment::where('user_id', $user->id)
+                ->where('course_offering_id', $quiz->quizzable_id)
+                ->latest()
+                ->first();
+        } elseif ($quiz->quizzable_type === \App\Models\MasterCourse::class) {
+            $enrollment = Enrollment::where('user_id', $user->id)
+                ->whereIn('course_offering_id', function ($sub) use ($quiz) {
+                    $sub->select('id')->from('course_offerings')
+                        ->where('master_course_id', $quiz->quizzable_id);
+                })
+                ->latest()
+                ->first();
+        }
 
         abort_unless($enrollment, 403, 'Kamu tidak memiliki akses ke quiz ini.');
 
@@ -173,13 +190,14 @@ class QuizController extends Controller
         $certificate = null;
         if ($quiz->isFinal()) {
             $offering = $enrollment->courseOffering;
-            $threshold = $offering?->certificate_threshold ?? ($quiz->masterCourse?->certificate_threshold ?? 75);
+            $threshold = $offering?->certificate_threshold ?? ($quiz->course?->certificate_threshold ?? 75);
 
             if ($finalScore >= $threshold) {
                 $certificate = \App\Models\Certificate::firstOrCreate(
                     [
-                        'user_id'            => $user->id,
-                        'course_offering_id' => $enrollment->course_offering_id,
+                        'user_id'          => $user->id,
+                        'certifiable_type' => \App\Models\CourseOffering::class,
+                        'certifiable_id'   => $enrollment->course_offering_id,
                     ],
                     [
                         'score'        => $finalScore,
@@ -231,13 +249,21 @@ class QuizController extends Controller
     {
         $user = Auth::user();
 
-        $enrollment = Enrollment::where('user_id', $user->id)
-            ->whereIn('course_offering_id', function ($sub) use ($quiz) {
-                $sub->select('id')->from('course_offerings')
-                    ->where('master_course_id', $quiz->master_course_id);
-            })
-            ->latest()
-            ->first();
+        $enrollment = null;
+        if ($quiz->quizzable_type === CourseOffering::class) {
+            $enrollment = Enrollment::where('user_id', $user->id)
+                ->where('course_offering_id', $quiz->quizzable_id)
+                ->latest()
+                ->first();
+        } elseif ($quiz->quizzable_type === \App\Models\MasterCourse::class) {
+            $enrollment = Enrollment::where('user_id', $user->id)
+                ->whereIn('course_offering_id', function ($sub) use ($quiz) {
+                    $sub->select('id')->from('course_offerings')
+                        ->where('master_course_id', $quiz->quizzable_id);
+                })
+                ->latest()
+                ->first();
+        }
 
         $offeringId = $enrollment?->course_offering_id;
 

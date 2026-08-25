@@ -57,14 +57,15 @@ class CertificateController extends Controller
             $item->final_quiz = $quizzes->firstWhere('quiz_type', 'final');
 
             $certificateRecord = Certificate::where('user_id', $student->id)
-                ->where('course_offering_id', $enrollment->course_offering_id)
+                ->where('certifiable_type', CourseOffering::class)->where('certifiable_id', $enrollment->course_offering_id)
                 ->first();
 
             $item->certificate_record = $certificateRecord;
 
             $tempCert = new Certificate([
                 'user_id'            => $student->id,
-                'course_offering_id' => $enrollment->course_offering_id,
+                'certifiable_type' => CourseOffering::class,
+                'certifiable_id' => $enrollment->course_offering_id,
                 'completed_at'       => $enrollment->updated_at ?? now(),
             ]);
             $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
@@ -132,14 +133,15 @@ class CertificateController extends Controller
             $item->participation = $part;
 
             $certificateRecord = Certificate::where('user_id', $student->id)
-                ->where('project_id', $prj->id)
+                ->where('certifiable_type', Project::class)->where('certifiable_id', $prj->id)
                 ->first();
 
             $item->certificate_record = $certificateRecord;
 
             $tempCert = new Certificate([
                 'user_id' => $student->id,
-                'project_id' => $prj->id,
+                'certifiable_type' => Project::class,
+                'certifiable_id' => $prj->id,
                 'completed_at' => $part->completed_at ?? $part->updated_at ?? now(),
             ]);
             $item->credential_code = $certificateRecord?->credential_code ?? $tempCert->generateCredentialCode();
@@ -182,12 +184,13 @@ class CertificateController extends Controller
         $offeringId = $courseOffering?->id ?? $course->id;
 
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where('course_offering_id', $offeringId)
+            ->where('certifiable_type', CourseOffering::class)->where('certifiable_id', $offeringId)
             ->first();
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id'            => $student->id,
-            'course_offering_id' => $offeringId,
+            'certifiable_type' => CourseOffering::class,
+            'certifiable_id' => $offeringId,
         ]))->generateCredentialCode();
 
         return view('student.certificate', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'));
@@ -203,12 +206,13 @@ class CertificateController extends Controller
         $offeringId = $courseOffering?->id ?? $course->id;
 
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where('course_offering_id', $offeringId)
+            ->where('certifiable_type', CourseOffering::class)->where('certifiable_id', $offeringId)
             ->first();
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id'            => $student->id,
-            'course_offering_id' => $offeringId,
+            'certifiable_type' => CourseOffering::class,
+            'certifiable_id' => $offeringId,
         ]))->generateCredentialCode();
 
         $pdf = Pdf::loadView('student.certificate_pdf', compact('course', 'student', 'finalQuiz', 'attempt', 'credentialCode'))
@@ -225,7 +229,7 @@ class CertificateController extends Controller
         $student = ($currentUser->role === 'admin' && request('user_id'))
             ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
             : ($currentUser->role === 'admin'
-                ? (Certificate::where('project_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                ? (Certificate::where('certifiable_type', Project::class)->where('certifiable_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
                 : $currentUser);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
@@ -233,7 +237,7 @@ class CertificateController extends Controller
             ->first();
 
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where('project_id', $project->id)
+            ->where('certifiable_type', Project::class)->where('certifiable_id', $project->id)
             ->first();
 
         $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
@@ -250,7 +254,8 @@ class CertificateController extends Controller
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
-            'project_id' => $project->id,
+            'certifiable_type' => Project::class,
+            'certifiable_id' => $project->id,
             'completed_at' => $participation?->completed_at ?? $project->created_at ?? now(),
         ]))->generateCredentialCode();
 
@@ -263,7 +268,7 @@ class CertificateController extends Controller
         $student = ($currentUser->role === 'admin' && request('user_id'))
             ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
             : ($currentUser->role === 'admin'
-                ? (Certificate::where('project_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                ? (Certificate::where('certifiable_type', Project::class)->where('certifiable_id', $project->id)->where('is_verified', true)->first()?->user ?? $currentUser)
                 : $currentUser);
 
         $participation = ProjectParticipation::where('user_id', $student->id)
@@ -271,7 +276,7 @@ class CertificateController extends Controller
             ->first();
 
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where('project_id', $project->id)
+            ->where('certifiable_type', Project::class)->where('certifiable_id', $project->id)
             ->first();
 
         $isEligible = ($certificateRecord && $certificateRecord->is_verified && !empty($certificateRecord->blockchain_hash));
@@ -288,7 +293,8 @@ class CertificateController extends Controller
 
         $credentialCode = $certificateRecord?->credential_code ?? (new Certificate([
             'user_id' => $student->id,
-            'project_id' => $project->id,
+            'certifiable_type' => Project::class,
+            'certifiable_id' => $project->id,
             'completed_at' => $participation?->completed_at ?? $project->created_at ?? now(),
         ]))->generateCredentialCode();
 
@@ -306,12 +312,18 @@ class CertificateController extends Controller
         $student = ($currentUser->role === 'admin' && request('user_id'))
             ? (\App\Models\User::find(request('user_id')) ?? $currentUser)
             : ($currentUser->role === 'admin'
-                ? (Certificate::where('course_offering_id', $course->id)->where('is_verified', true)->first()?->user ?? $currentUser)
+                ? (Certificate::where('certifiable_type', CourseOffering::class)->where('certifiable_id', $course->id)->where('is_verified', true)->first()?->user ?? $currentUser)
                 : $currentUser);
 
         $isEnrolled = DB::table('enrollments')
             ->where('user_id', $student->id)
-            ->where('course_offering_id', $course->id)
+            ->where(function($q) use ($course) {
+                if (isset($course->master_course_id)) {
+                    $q->where('course_offering_id', $course->id);
+                } else {
+                    $q->where('course_id', $course->id);
+                }
+            })
             ->exists();
 
         if ($currentUser->role !== 'admin') {
@@ -355,7 +367,7 @@ class CertificateController extends Controller
         $threshold = $course->certificate_threshold ?? ($course->masterCourse?->certificate_threshold ?? 60);
 
         $certificateRecord = Certificate::where('user_id', $student->id)
-            ->where('course_offering_id', $course->id)
+            ->where('certifiable_type', CourseOffering::class)->where('certifiable_id', $course->id)
             ->first();
 
         if ($currentUser->role !== 'admin') {

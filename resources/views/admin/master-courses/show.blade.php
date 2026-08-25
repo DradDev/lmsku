@@ -1,397 +1,455 @@
 <x-app-layout>
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-        <!-- ALERTS -->
-        @if (session('success'))
-            <div style="padding: 1rem 1.25rem; background: #ECFDF5; border: 1px solid #A7F3D0; color: #047857; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg>
-                <span>{{ session('success') }}</span>
-            </div>
-        @endif
+.admin-mc-wrap {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #0f172a;
+    padding-bottom: 3.5rem;
+}
 
-        @if (session('error'))
-            <div style="padding: 1rem 1.25rem; background: #FEF2F2; border: 1px solid #FECACA; color: #B91C1C; border-radius: 12px; font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                <span>{{ session('error') }}</span>
-            </div>
-        @endif
+.compro-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
 
-        <!-- TOP NAVIGATION / BACK BUTTON ROW -->
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
-            <a href="{{ route('admin.master-courses.index') }}" 
-               style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 12px; color: #1E293B; font-size: 13px; font-weight: 700; text-decoration: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: all 0.2s;"
-               onmouseover="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1';"
-               onmouseout="this.style.background='#FFFFFF'; this.style.borderColor='#E2E8F0';">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                <span>Kembali ke Katalog Master Course</span>
+.compro-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.selector-banner {
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f8fafc 100%);
+    border: 2px solid #bfdbfe;
+    border-radius: 18px;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.06);
+}
+
+.custom-select-control {
+    background-color: #ffffff;
+    border: 2px solid #93c5fd;
+    border-radius: 14px;
+    padding: 0.65rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: #0f172a;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.08);
+}
+
+.custom-select-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    outline: none;
+}
+
+.quick-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 10px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    transition: all 0.15s ease;
+}
+
+.quick-pill:hover {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+}
+
+.quick-pill.active {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+}
+
+.item-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    transition: all 0.2s;
+}
+
+.item-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+</style>
+
+<div class="admin-mc-wrap max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6" 
+     x-data="{ selectedOfferingId: 'null' }">
+
+    {{-- ALERTS --}}
+    @if (session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 text-xs font-bold shadow-xs">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-3 text-xs font-bold shadow-xs">
+            <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+
+    {{-- TOP NAVIGATION / BACK BUTTON ROW --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <a href="{{ route('admin.master-courses.index') }}" 
+           class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-900 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span>Kembali ke Katalog Master Course</span>
+        </a>
+
+        <div class="flex items-center gap-2">
+            <a href="{{ route('admin.course-offerings.create') }}" 
+               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                + Buka Rombel Baru
             </a>
+            <a href="{{ route('admin.master-courses.edit', $masterCourse) }}" 
+               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
+                Edit Matkul
+            </a>
+        </div>
+    </div>
 
-            <span style="font-size: 12px; font-weight: 600; color: #64748B;">
-                Kode: <strong style="color: #0F172A;">{{ $masterCourse->code }}</strong>
+    {{-- 1. MASTER COURSE HERO CARD --}}
+    <div class="compro-card p-6 space-y-3">
+        <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-extrabold">
+                Master Course Induk
+            </span>
+            <span class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-bold font-mono">
+                {{ $masterCourse->code }}
+            </span>
+            <span class="px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-100 text-[11px] font-extrabold">
+                Level: {{ $masterCourse->level }}
+            </span>
+            <span class="text-xs font-bold text-slate-400">
+                • Total {{ $courseOfferings->count() }} Rombel Kelas Terbuka
             </span>
         </div>
 
-        <!-- TOP BANNER CARD -->
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="display: flex; align-items: flex-start; gap: 1.25rem; flex: 1; min-width: 300px;">
-                <div style="width: 56px; height: 56px; border-radius: 14px; background: #F3E8FF; color: #7E22CE; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; flex-shrink: 0;">
-                    MC-{{ $masterCourse->id }}
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                {{ $masterCourse->name }}
+            </h1>
+            <p class="text-xs text-slate-500 mt-1 max-w-3xl leading-relaxed">
+                {{ $masterCourse->description ?: 'Silabus kurikulum induk. Kelola penawaran rombel kelas paralel, penugasan dosen pengampu, dan target kompetensi skill.' }}
+            </p>
+        </div>
+
+        @if($masterCourse->skills && $masterCourse->skills->isNotEmpty())
+            <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+                <span class="text-[11px] font-bold text-slate-400">Target Skill:</span>
+                @foreach($masterCourse->skills as $cSkill)
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                        {{ $cSkill->name }}
+                    </span>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
+    {{-- 2. CONTROL CENTER: PEMILIHAN KELAS / ROMBEL (PROMINENT & SANGAT KELIHATAN) --}}
+    <div class="selector-banner p-5 sm:p-6 space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            
+            {{-- LABEL & IKON --}}
+            <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-extrabold shadow-md shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                 </div>
                 <div>
-                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-                        <h1 style="font-size: 20px; font-weight: 800; color: #0F172A; margin: 0; letter-spacing: -0.3px;">{{ $masterCourse->name }}</h1>
-                        <span style="background: #DCFCE7; color: #15803D; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->level }}</span>
-                        @if($masterCourse->main_skill)
-                            <span style="background: #EFF6FF; color: #1D4ED8; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 100px;">{{ $masterCourse->main_skill->name }}</span>
-                        @endif
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-extrabold text-blue-600 uppercase tracking-wider">Pemantauan Rombel</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                        <span class="text-xs font-bold text-slate-500">{{ $courseOfferings->count() }} Rombel Terbuka</span>
                     </div>
-                    <p style="font-size: 13px; color: #64748B; margin: 6px 0 0 0; line-height: 1.5; max-width: 650px;">
-                        {{ $masterCourse->description ?: 'Silabus induk mata kuliah. Kelola penawaran kelas paralel untuk semester aktif dan atur target kompetensi skill.' }}
+                    <h2 class="text-lg font-extrabold text-slate-900 tracking-tight mt-0.5">
+                        Pilih Rombel Kelas untuk Dipantau/Dikelola
+                    </h2>
+                    <p class="text-xs text-slate-600 mt-0.5">
+                        Pilih kelas rombel aktif untuk melihat penugasan dosen, modul silabus, kuis, dan data mahasiswa.
                     </p>
                 </div>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 2rem; border-left: 1px solid #F1F5F9; padding-left: 1.5rem;">
-                <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Total Kelas Paralel</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 2px;">{{ $totalOfferings }}</div>
+            {{-- DROPDOWN UTAMA --}}
+            <div class="flex items-center gap-2.5 w-full lg:w-auto shrink-0">
+                <div class="relative flex-1 lg:w-80">
+                    <select x-model="selectedOfferingId" 
+                            class="custom-select-control w-full pr-10 cursor-pointer">
+                        <option value="null">-- Silakan Pilih Rombel Kelas --</option>
+                        @foreach($courseOfferings as $offeringItem)
+                            <option value="{{ $offeringItem->id }}">
+                                {{ $offeringItem->section_name ?: 'Rombel ' . $loop->iteration }} • Dosen: {{ $offeringItem->lecturer->name ?? 'Belum Ditugaskan' }} ({{ $offeringItem->academicTerm->name ?? 'Semester Aktif' }})
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
-                <div style="text-align: center;">
-                    <div style="font-size: 11px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Riwayat Semester</div>
-                    <div style="font-size: 22px; font-weight: 800; color: #0F172A; margin-top: 2px;">{{ $totalSemesters }}</div>
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 6px;">
-                    <a href="#edit-master-course-section" 
-                       onclick="document.getElementById('edit-master-course-section').scrollIntoView({behavior: 'smooth'}); return false;"
-                       style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 10px; color: #334155; font-size: 12.5px; font-weight: 600; text-decoration: none;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-                        Edit Master Course
-                    </a>
-
-                    <form action="{{ route('admin.master-courses.destroy', $masterCourse) }}" method="POST" 
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus Master Course &quot;{{ addslashes($masterCourse->name) }}&quot;?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: 10px; color: #991B1B; font-size: 12px; font-weight: 700; cursor: pointer;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                            Hapus Master Course
-                        </button>
-                    </form>
-
-                    <a href="{{ route('admin.master-courses.index') }}" 
-                       style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 10px; color: #64748B; font-size: 12.5px; font-weight: 600; text-decoration: none;">
-                        &larr; Kembali ke Daftar
-                    </a>
-                </div>
+                <button type="button" 
+                        x-show="selectedOfferingId !== 'null' && selectedOfferingId !== null" 
+                        @click="selectedOfferingId = 'null'"
+                        style="display: none;"
+                        class="px-3.5 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition whitespace-nowrap shadow-2xs">
+                    ✕ Reset
+                </button>
             </div>
+
         </div>
 
-
-
-        <!-- SECTION 2: TARGET SKILL & TAG KOMPETENSI CARD (MASTER-DETAIL DYNAMIC FORM) -->
-        <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Skill & Tag Target Kompetensi Matkul</h2>
-                    <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Centang satu atau beberapa Skill Utama di sebelah kiri. Kelompok Tag Sub-Topik yang berhubungan dengan Skill yang dicentang akan otomatis muncul di sebelah kanan.</p>
-                </div>
-            </div>
-
-            <!-- ACTIVE SKILL & TAG PILLS DISPLAY -->
-            <div style="margin-bottom: 1.5rem; background: #FAFAFA; border: 1px solid #F1F5F9; border-radius: 12px; padding: 1rem;">
-                <div style="font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 8px;">Target Skill & Tag Aktif Terpasang Saat Ini:</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    @forelse($masterCourse->skills as $s)
-                        <span style="background: #FEF3C7; color: #B45309; border: 1px solid #FDE68A; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 5px;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                            Skill: {{ $s->name }}
+        {{-- QUICK PILL BUTTONS (PILIHAN CEPAT 1-KLIK) --}}
+        @if($courseOfferings->isNotEmpty())
+            <div class="pt-3 border-t border-blue-200/70 flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-extrabold uppercase text-slate-400 mr-1">Pintasan Rombel:</span>
+                @foreach($courseOfferings as $offeringItem)
+                    <button type="button" 
+                            @click="selectedOfferingId = {{ $offeringItem->id }}"
+                            :class="selectedOfferingId == {{ $offeringItem->id }} ? 'active' : ''"
+                            class="quick-pill">
+                        <span class="w-2 h-2 rounded-full" 
+                              :class="selectedOfferingId == {{ $offeringItem->id }} ? 'bg-white' : 'bg-blue-600'"></span>
+                        <span>{{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
+                        <span class="text-[10.5px] px-1.5 py-0.2 rounded-md font-mono"
+                              :class="selectedOfferingId == {{ $offeringItem->id }} ? 'bg-blue-800 text-white' : 'bg-slate-100 text-slate-700'">
+                            {{ $offeringItem->lecturer->name ?? 'Dosen' }}
                         </span>
-                    @empty
-                    @endforelse
-
-                    @forelse($masterCourse->tags as $t)
-                        <span style="background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 100px; display: inline-flex; align-items: center; gap: 4px;">
-                            #{{ $t->name }}
-                        </span>
-                    @empty
-                    @endforelse
-
-                    @if($masterCourse->skills->isEmpty() && $masterCourse->tags->isEmpty())
-                        <span style="font-size: 12.5px; color: #94A3B8; italic;">Belum ada Skill atau Tag yang dihubungkan ke Master Course ini. Gunakan form di bawah untuk menentukan target kompetensi.</span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- FORM SYNC SKILL & TAG DINAMIS DI-GROUP PER SKILL -->
-            <form action="{{ route('admin.master-courses.competencies.sync', $masterCourse) }}" method="POST">
-                @csrf
-                <div style="display: grid; grid-template-columns: minmax(300px, 1fr) minmax(340px, 1.6fr); gap: 1.5rem; margin-bottom: 1.25rem;">
-                    
-                    <!-- LANGKAH 1: PILIH SKILL INDUK -->
-                    <div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <label style="font-size: 12.5px; font-weight: 800; color: #1E293B;">1. Pilih Skill Utama (Bisa Multiple):</label>
-                            <span id="skill-count-badge" style="font-size: 11px; font-weight: 700; color: #2563EB; background: #EFF6FF; border: 1px solid #BFDBFE; padding: 2px 10px; border-radius: 100px;">0 Terpilih</span>
-                        </div>
-
-                        <div style="max-height: 420px; overflow-y: auto; border: 1px solid #CBD5E1; border-radius: 12px; padding: 10px; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px;">
-                            @foreach($allSkills as $sk)
-                                @php
-                                    $subTagCount = $allTags->where('skill_id', $sk->id)->count();
-                                    $isChecked = $masterCourse->skills->contains($sk->id);
-                                @endphp
-                                <label class="skill-checkbox-card" 
-                                       data-skill-card-id="{{ $sk->id }}"
-                                       style="display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: #0F172A; cursor: pointer; padding: 10px 12px; border-radius: 10px; border: 1px solid {{ $isChecked ? '#3B82F6' : '#E2E8F0' }}; background: {{ $isChecked ? '#EFF6FF' : '#FFFFFF' }}; transition: all 0.15s ease;">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="checkbox" 
-                                               name="skill_ids[]" 
-                                               value="{{ $sk->id }}" 
-                                               class="skill-dynamic-checkbox" 
-                                               data-skill-id="{{ $sk->id }}"
-                                               {{ $isChecked ? 'checked' : '' }}
-                                               style="width: 16px; height: 16px; accent-color: #2563EB; cursor: pointer;">
-                                        <span style="font-weight: 700;">{{ $sk->name }}</span>
-                                    </div>
-                                    <span style="font-size: 11px; font-weight: 600; color: #64748B; background: #F1F5F9; padding: 2px 8px; border-radius: 6px; flex-shrink: 0;">
-                                        {{ $subTagCount }} Sub-Tag
-                                    </span>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- LANGKAH 2: DAFTAR TAG SUB-TOPIK -->
-                    <div>
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-                            <label style="font-size: 12.5px; font-weight: 800; color: #1E293B;">2. Tag Sub-Topik (Otomatis Tampil Per Skill):</label>
-                            <span id="tag-count-badge" style="font-size: 11px; font-weight: 700; color: #4338CA; background: #EEF2FF; border: 1px solid #C7D2FE; padding: 2px 10px; border-radius: 100px;">0 Terpilih</span>
-                        </div>
-
-                        <!-- PESAN JIKA BELUM ADA SKILL DIPILIH -->
-                        <div id="no-skill-selected-notice" style="display: none; padding: 3rem 1.5rem; text-align: center; background: #FAFAFA; border: 2px dashed #CBD5E1; border-radius: 12px; color: #64748B; font-size: 13px;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="margin: 0 auto 10px auto;"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                            <div style="font-weight: 700; color: #334155; margin-bottom: 4px;">Pilih Skill Utama Terlebih Dahulu</div>
-                            <span>Centang minimal 1 Skill Utama di sebelah kiri untuk menampilkan daftar kelompok Tag Sub-Topik yang sesuai.</span>
-                        </div>
-
-                        <!-- CONTAINER KELOMPOK TAG TERPISAH PER SKILL INDUK -->
-                        <div id="tags-grouped-wrapper" style="max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem;">
-                            @foreach($allSkills as $sk)
-                                @php
-                                    $skillTags = $allTags->where('skill_id', $sk->id);
-                                @endphp
-                                <div class="skill-tag-group-card" 
-                                     data-parent-skill-id="{{ $sk->id }}"
-                                     style="background: #FAFAFA; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; display: none;">
-                                    
-                                    <!-- HEADER SKILL GROUP -->
-                                    <div style="background: #F8FAFC; padding: 10px 14px; border-bottom: 1px solid #E2E8F0; font-size: 12.5px; font-weight: 800; color: #1E293B; display: flex; align-items: center; justify-content: space-between;">
-                                        <div style="display: flex; align-items: center; gap: 6px;">
-                                            <span style="width: 8px; height: 8px; border-radius: 50%; background: #2563EB; display: inline-block;"></span>
-                                            <span>TAG SUB-TOPIK: {{ strtoupper($sk->name) }}</span>
-                                        </div>
-                                        
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <button type="button" 
-                                                    onclick="toggleSelectAllTagsInGroup({{ $sk->id }}, true)"
-                                                    style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; cursor: pointer;">
-                                                Pilih Semua
-                                            </button>
-                                            <button type="button" 
-                                                    onclick="toggleSelectAllTagsInGroup({{ $sk->id }}, false)"
-                                                    style="background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; cursor: pointer;">
-                                                Batal Semua
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <!-- GRID TAG CHECKBOXES UNTUK SKILL INI -->
-                                    <div style="padding: 12px 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; background: #FFFFFF;">
-                                        @forelse($skillTags as $tg)
-                                            @php
-                                                $isTagChecked = $masterCourse->tags->contains($tg->id);
-                                            @endphp
-                                            <label style="display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #334155; cursor: pointer; padding: 6px 8px; border-radius: 6px; border: 1px solid #F1F5F9; background: #FAFAFA; transition: background 0.15s;" onmouseover="this.style.background='#F1F5F9'" onmouseout="this.style.background='#FAFAFA'">
-                                                <input type="checkbox" 
-                                                       name="tag_ids[]" 
-                                                       value="{{ $tg->id }}" 
-                                                       class="tag-dynamic-checkbox"
-                                                       data-parent-skill-id="{{ $sk->id }}"
-                                                       {{ $isTagChecked ? 'checked' : '' }}
-                                                       style="width: 15px; height: 15px; accent-color: #4338CA; cursor: pointer;">
-                                                <span style="font-weight: 600;">#{{ $tg->name }}</span>
-                                            </label>
-                                        @empty
-                                            <span style="font-size: 12px; color: #94A3B8; italic; grid-column: 1 / -1;">Belum ada tag terdaftar di bawah skill ini.</span>
-                                        @endforelse
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: flex-end;">
-                    <button type="submit" style="padding: 10px 24px; background: #2563EB; color: #FFFFFF; font-weight: 800; font-size: 13px; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-                        Simpan Skill & Tag Kompetensi
                     </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- SECTION 3: EDIT MASTER COURSE FORM INLINE -->
-        <div id="edit-master-course-section" style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="margin-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; padding-bottom: 0.75rem;">
-                <h2 style="font-size: 16px; font-weight: 800; color: #0F172A; margin: 0;">Edit Metadata Master Course</h2>
-                <p style="font-size: 12.5px; color: #64748B; margin: 3px 0 0 0;">Perbarui informasi dasar mata kuliah induk ini secara langsung.</p>
+                @endforeach
             </div>
-
-            <form action="{{ route('admin.master-courses.update', $masterCourse) }}" method="POST">
-                @csrf
-                @method('PUT')
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem;">
-                    <div>
-                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Kode Matkul</label>
-                        <input type="text" name="code" value="{{ old('code', $masterCourse->code) }}" required style="width: 100%; padding: 9px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; outline: none;">
-                    </div>
-
-                    <div>
-                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Nama Mata Kuliah</label>
-                        <input type="text" name="name" value="{{ old('name', $masterCourse->name) }}" required style="width: 100%; padding: 9px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; outline: none;">
-                    </div>
-
-                    <div>
-                        <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Level Kesulitan</label>
-                        <select name="level" required style="width: 100%; padding: 9px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; outline: none; background: #FFF;">
-                            <option value="Beginner" {{ old('level', $masterCourse->level) === 'Beginner' ? 'selected' : '' }}>Beginner</option>
-                            <option value="Intermediate" {{ old('level', $masterCourse->level) === 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
-                            <option value="Advanced" {{ old('level', $masterCourse->level) === 'Advanced' ? 'selected' : '' }}>Advanced</option>
-                        </select>
-                    </div>
-
-
-                </div>
-
-                <div style="margin-bottom: 1.25rem;">
-                    <label style="display: block; font-size: 12.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Deskripsi Mata Kuliah</label>
-                    <textarea name="description" rows="3" style="width: 100%; padding: 9px 14px; border: 1px solid #CBD5E1; border-radius: 10px; font-size: 13px; outline: none;">{{ old('description', $masterCourse->description) }}</textarea>
-                </div>
-
-                <div style="display: flex; gap: 10px;">
-                    <button type="submit" style="padding: 9px 22px; background: #2563EB; color: #FFF; font-weight: 700; font-size: 13px; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-                        Simpan Perubahan Matkul
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- BOTTOM CALLOUT INFO BOX -->
-        <div style="background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px;">
-            <div style="width: 28px; height: 28px; border-radius: 50%; background: #2563EB; color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; flex-shrink: 0;">
-                i
-            </div>
-            <div>
-                <strong style="color: #1E40AF; font-size: 13.5px;">Struktur 3NF: Master Course &rarr; Semester (Academic Term) &rarr; Course Offering (Kelas Paralel)</strong>
-                <p style="color: #1E3A8A; font-size: 12.5px; margin: 2px 0 0 0;">Gunakan dropdown Semester di atas untuk melihat penawaran kelas paralel atau membuka kelas baru pada semester akademik berjalan.</p>
-            </div>
-        </div>
-
+        @endif
     </div>
 
-    <!-- SCRIPT FILTERING & GROUPING DINAMIS SKILL TO TAGS -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const skillCheckboxes = document.querySelectorAll('.skill-dynamic-checkbox');
-            const tagGroupCards = document.querySelectorAll('.skill-tag-group-card');
-            const tagsWrapper = document.getElementById('tags-grouped-wrapper');
-            const noSkillNotice = document.getElementById('no-skill-selected-notice');
-            const skillBadge = document.getElementById('skill-count-badge');
-            const tagBadge = document.getElementById('tag-count-badge');
+    {{-- 3. STATE AWAL: BELUM MEMILIH KELAS --}}
+    <div x-show="selectedOfferingId === 'null' || selectedOfferingId === null" class="compro-card p-12 text-center space-y-3">
+        <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto shadow-xs">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+        </div>
+        <h3 class="text-base font-extrabold text-slate-800">Silakan Pilih Rombel Kelas</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            Gunakan menu dropdown atau tombol pintasan kelas di atas untuk melihat detail penugasan dosen, silabus materi, kuis, dan data mahasiswa.
+        </p>
+    </div>
 
-            function updateGroupedDynamicTags() {
-                const selectedSkillIds = Array.from(skillCheckboxes)
-                    .filter(cb => cb.checked)
-                    .map(cb => cb.getAttribute('data-skill-id'));
+    {{-- 4. STATE TERPILIH: WORKSPACE DETAIL ROMBEL TERPILIH --}}
+    <div x-show="selectedOfferingId !== 'null' && selectedOfferingId !== null" style="display: none;" class="space-y-6">
+        @foreach($courseOfferings as $offeringItem)
+            @php
+                $offeringEnrollments = $offeringItem->enrollments ?? collect();
+            @endphp
+            <div x-show="selectedOfferingId == {{ $offeringItem->id }}" class="space-y-6">
 
-                skillBadge.textContent = selectedSkillIds.length + ' Skill Terpilih';
+                {{-- SUB-BAR KELAS AKTIF DENGAN STATS MINI --}}
+                <div class="p-4 bg-blue-50/80 border border-blue-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-extrabold text-base shadow-xs">
+                            ✓
+                        </div>
+                        <div>
+                            <div class="text-xs font-extrabold text-blue-950 flex items-center gap-2">
+                                <span>Sedang Memantau: {{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
+                                <span class="px-2 py-0.5 rounded-md bg-blue-600 text-white text-[10px] font-extrabold uppercase">Aktif</span>
+                            </div>
+                            <div class="text-[11px] text-blue-700 mt-0.5 flex items-center gap-2">
+                                <span>Dosen Pengampu: <strong>{{ $offeringItem->lecturer->name ?? 'Belum Ditugaskan' }}</strong></span>
+                                <span>•</span>
+                                <span>{{ $offeringItem->academicTerm->name ?? 'Semester Aktif' }}</span>
+                                <span>•</span>
+                                <span>KKM: <strong>{{ $offeringItem->certificate_threshold ?? 75 }}%</strong></span>
+                            </div>
+                        </div>
+                    </div>
 
-                // Highlight active skill cards on left panel
-                document.querySelectorAll('.skill-checkbox-card').forEach(card => {
-                    const skillId = card.getAttribute('data-skill-card-id');
-                    if (selectedSkillIds.includes(skillId)) {
-                        card.style.background = '#EFF6FF';
-                        card.style.borderColor = '#3B82F6';
-                    } else {
-                        card.style.background = '#FFFFFF';
-                        card.style.borderColor = '#E2E8F0';
-                    }
-                });
+                    <button type="button" 
+                            @click="selectedOfferingId = 'null'"
+                            class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition self-start sm:self-auto shadow-2xs">
+                        ✕ Tutup Rombel Ini
+                    </button>
+                </div>
 
-                if (selectedSkillIds.length === 0) {
-                    noSkillNotice.style.display = 'block';
-                    tagsWrapper.style.display = 'none';
-                    tagBadge.textContent = '0 Tag Terpilih';
-                } else {
-                    noSkillNotice.style.display = 'none';
-                    tagsWrapper.style.display = 'flex';
+                {{-- WORKSPACE 2 KOLOM (MATERI & KUIS vs DETAIL PENUGASAN & MAHASISWA) --}}
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                    let selectedTagCount = 0;
+                    {{-- LEFT COLUMN: SILABUS & KUIS --}}
+                    <div class="lg:col-span-8 space-y-6">
 
-                    tagGroupCards.forEach(card => {
-                        const parentSkillId = card.getAttribute('data-parent-skill-id');
-                        const tagCbs = card.querySelectorAll('.tag-dynamic-checkbox');
+                        {{-- SILABUS MATERI --}}
+                        <div class="compro-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-slate-900">Modul Materi Pembelajaran</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">Slide materi dan panduan kurikulum untuk rombel ini</p>
+                                </div>
+                            </div>
 
-                        if (selectedSkillIds.includes(parentSkillId)) {
-                            card.style.display = 'block';
-                            tagCbs.forEach(cb => {
-                                if (cb.checked) selectedTagCount++;
-                            });
-                        } else {
-                            card.style.display = 'none';
-                            // Uncheck hidden tags automatically
-                            tagCbs.forEach(cb => {
-                                cb.checked = false;
-                            });
-                        }
-                    });
+                            <div class="space-y-3">
+                                @forelse ($materials as $material)
+                                    <div class="item-card flex items-center justify-between gap-3">
+                                        <div class="flex items-start gap-3 min-w-0">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                                </svg>
+                                            </div>
+                                            <div class="min-w-0">
+                                                <h4 class="font-bold text-xs text-slate-900 truncate">{{ $material->title }}</h4>
+                                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                                    Diunggah: {{ optional($material->created_at)->format('d M Y') ?: '-' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-6 text-xs text-slate-400">
+                                        Belum ada modul materi pembelajaran diunggah.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
 
-                    tagBadge.textContent = selectedTagCount + ' Tag Terpilih';
-                }
-            }
+                        {{-- BANK KUIS --}}
+                        <div class="compro-card p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-base font-extrabold text-slate-900">Bank Kuis & Evaluasi</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">Kuis kurikulum akademik dan kelulusan sertifikasi</p>
+                                </div>
+                            </div>
 
-            // Global function to select or unselect all tags in a skill group
-            window.toggleSelectAllTagsInGroup = function(skillId, selectAll) {
-                const card = document.querySelector(`.skill-tag-group-card[data-parent-skill-id="${skillId}"]`);
-                if (card) {
-                    const tagCbs = card.querySelectorAll('.tag-dynamic-checkbox');
-                    tagCbs.forEach(cb => cb.checked = selectAll);
-                    updateGroupedDynamicTags();
-                }
-            };
+                            <div class="space-y-3">
+                                @forelse ($quizzes as $quiz)
+                                    <div class="item-card flex items-center justify-between gap-3">
+                                        <div>
+                                            <div class="flex items-center gap-2 flex-wrap">
+                                                <h4 class="font-bold text-xs text-slate-900">{{ $quiz->title }}</h4>
+                                                <span class="px-2 py-0.5 rounded-md text-[10.5px] font-extrabold bg-slate-100 text-slate-700">
+                                                    {{ $quiz->quiz_type_label ?? 'Kuis' }}
+                                                </span>
+                                            </div>
+                                            <div class="text-[11px] text-slate-500 mt-1">
+                                                Durasi: <strong>{{ $quiz->time_limit ? $quiz->time_limit . ' Menit' : 'Tanpa Batas' }}</strong> • Percobaan: <strong>{{ $quiz->max_attempts === 0 ? 'Unlimited' : $quiz->max_attempts . 'x' }}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @empty
+                                    <div class="text-center py-6 text-xs text-slate-400">
+                                        Belum ada kuis pada mata kuliah ini.
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
 
-            // Bind change listeners to skill checkboxes
-            skillCheckboxes.forEach(cb => {
-                cb.addEventListener('change', updateGroupedDynamicTags);
-            });
+                    </div>
 
-            // Bind change listeners to tag checkboxes
-            document.querySelectorAll('.tag-dynamic-checkbox').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const checkedTags = document.querySelectorAll('.tag-dynamic-checkbox:checked');
-                    tagBadge.textContent = checkedTags.length + ' Tag Terpilih';
-                });
-            });
+                    {{-- RIGHT COLUMN: INFO PENUGASAN DOSEN & MAHASISWA --}}
+                    <div class="lg:col-span-4 space-y-6">
 
-            // Run initial update on page load
-            updateGroupedDynamicTags();
-        });
-    </script>
+                        {{-- INFO PENUGASAN DOSEN --}}
+                        <div class="compro-card p-5 space-y-3">
+                            <h4 class="text-sm font-extrabold text-slate-900">Penugasan Dosen & Kelas</h4>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                    <span class="text-slate-500">Dosen Pengampu:</span>
+                                    <strong class="text-slate-900">{{ $offeringItem->lecturer->name ?? 'Belum Ditugaskan' }}</strong>
+                                </div>
+                                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                    <span class="text-slate-500">Semester:</span>
+                                    <strong class="text-slate-900">{{ $offeringItem->academicTerm->name ?? '-' }}</strong>
+                                </div>
+                                <div class="flex justify-between py-1.5 border-b border-slate-100">
+                                    <span class="text-slate-500">Kapasitas Kursi:</span>
+                                    <strong class="text-slate-900">{{ $offeringItem->capacity ? $offeringItem->capacity . ' Kursi' : 'Unlimited' }}</strong>
+                                </div>
+                                <div class="flex justify-between py-1.5">
+                                    <span class="text-slate-500">KKM Kelulusan:</span>
+                                    <strong class="text-emerald-700 font-extrabold">{{ $offeringItem->certificate_threshold ?? 75 }}%</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        @endforeach
+    </div>
+
+    {{-- 5. BOTTOM SECTION: TARGET SKILL & TAG KOMPETENSI KURIKULUM --}}
+    <div class="compro-card p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+            <div>
+                <h2 class="text-base font-extrabold text-slate-900">Target Skill & Tag Kompetensi Matkul</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Tentukan skill utama dan sub-topik tag yang harus dicapai mahasiswa pada kurikulum ini.</p>
+            </div>
+        </div>
+
+        <form action="{{ route('admin.master-courses.competencies.sync', $masterCourse) }}" method="POST" class="space-y-4">
+            @csrf
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">1. Pilih Skill Utama:</label>
+                    <div class="max-h-60 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-1.5">
+                        @foreach($allSkills as $sk)
+                            @php
+                                $isChecked = $masterCourse->skills->contains($sk->id);
+                            @endphp
+                            <label class="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-slate-200 text-xs cursor-pointer hover:bg-blue-50/50 transition">
+                                <input type="checkbox" name="skill_ids[]" value="{{ $sk->id }}" {{ $isChecked ? 'checked' : '' }} class="rounded text-blue-600 focus:ring-blue-500">
+                                <span class="font-bold text-slate-900">{{ $sk->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">2. Pilih Tag Sub-Topik:</label>
+                    <div class="max-h-60 overflow-y-auto border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-1.5">
+                        @foreach($allTags as $tg)
+                            @php
+                                $isTagChecked = $masterCourse->tags->contains($tg->id);
+                            @endphp
+                            <label class="flex items-center gap-2.5 p-2 bg-white rounded-lg border border-slate-200 text-xs cursor-pointer hover:bg-blue-50/50 transition">
+                                <input type="checkbox" name="tag_ids[]" value="{{ $tg->id }}" {{ $isTagChecked ? 'checked' : '' }} class="rounded text-blue-600 focus:ring-blue-500">
+                                <span class="font-semibold text-slate-700">#{{ $tg->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2 border-t border-slate-100">
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                    Simpan Skill & Tag Kompetensi
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
 </x-app-layout>

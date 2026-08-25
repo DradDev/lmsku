@@ -77,9 +77,20 @@ class QuestionController extends Controller
             ]];
         }
 
+        $teachingMasterIds = \App\Models\CourseOffering::where('lecturer_id', Auth::id())->pluck('master_course_id')->filter()->unique();
+        $teachingOfferingIds = \App\Models\CourseOffering::where('lecturer_id', Auth::id())->pluck('id');
+        $createdMasterIds = \App\Models\MasterCourse::where('user_id', Auth::id())->pluck('id');
+        $allMasterIds = $teachingMasterIds->merge($createdMasterIds)->unique();
+
         $quiz = Quiz::query()
-            ->whereIn('master_course_id', function($sub) {
-                $sub->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
+            ->where(function($q) use ($allMasterIds, $teachingOfferingIds) {
+                $q->where(function($sub) use ($allMasterIds) {
+                    $sub->where('quizzable_type', \App\Models\MasterCourse::class)
+                        ->whereIn('quizzable_id', $allMasterIds);
+                })->orWhere(function($sub) use ($teachingOfferingIds) {
+                    $sub->where('quizzable_type', \App\Models\CourseOffering::class)
+                        ->whereIn('quizzable_id', $teachingOfferingIds);
+                });
             })
             ->findOrFail($validated['quiz_id']);
 
@@ -122,15 +133,25 @@ class QuestionController extends Controller
 
     public function edit(Question $question): View
     {
-        $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists());
+        $isOwner = $this->authorizeQuestionAccess($question);
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
+        $teachingMasterIds = \App\Models\CourseOffering::where('lecturer_id', Auth::id())->pluck('master_course_id')->filter()->unique();
+        $teachingOfferingIds = \App\Models\CourseOffering::where('lecturer_id', Auth::id())->pluck('id');
+        $createdMasterIds = \App\Models\MasterCourse::where('user_id', Auth::id())->pluck('id');
+        $allMasterIds = $teachingMasterIds->merge($createdMasterIds)->unique();
+
         $quizzes = Quiz::query()
-            ->whereIn('master_course_id', function ($query) {
-                $query->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
+            ->where(function($q) use ($allMasterIds, $teachingOfferingIds) {
+                $q->where(function($sub) use ($allMasterIds) {
+                    $sub->where('quizzable_type', \App\Models\MasterCourse::class)
+                        ->whereIn('quizzable_id', $allMasterIds);
+                })->orWhere(function($sub) use ($teachingOfferingIds) {
+                    $sub->where('quizzable_type', \App\Models\CourseOffering::class)
+                        ->whereIn('quizzable_id', $teachingOfferingIds);
+                });
             })
-            ->with('masterCourse')
+            ->with('quizzable')
             ->orderByRaw("CASE WHEN id = ? THEN 0 ELSE 1 END", [$question->quiz_id])
             ->latest()
             ->get();
@@ -146,8 +167,7 @@ class QuestionController extends Controller
 
     public function update(Request $request, Question $question): RedirectResponse
     {
-        $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists());
+        $isOwner = $this->authorizeQuestionAccess($question);
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $rules = [
@@ -173,9 +193,20 @@ class QuestionController extends Controller
 
         unset($data['skill_ids'], $data['main_skill_id']);
 
+        $teachingMasterIds = \App\Models\CourseOffering::where('lecturer_id', Auth::id())->pluck('master_course_id')->filter()->unique();
+        $teachingOfferingIds = \App\Models\CourseOffering::where('lecturer_id', Auth::id())->pluck('id');
+        $createdMasterIds = \App\Models\MasterCourse::where('user_id', Auth::id())->pluck('id');
+        $allMasterIds = $teachingMasterIds->merge($createdMasterIds)->unique();
+
         $quiz = Quiz::query()
-            ->whereIn('master_course_id', function ($query) {
-                $query->select('master_course_id')->from('course_offerings')->where('lecturer_id', Auth::id());
+            ->where(function($q) use ($allMasterIds, $teachingOfferingIds) {
+                $q->where(function($sub) use ($allMasterIds) {
+                    $sub->where('quizzable_type', \App\Models\MasterCourse::class)
+                        ->whereIn('quizzable_id', $allMasterIds);
+                })->orWhere(function($sub) use ($teachingOfferingIds) {
+                    $sub->where('quizzable_type', \App\Models\CourseOffering::class)
+                        ->whereIn('quizzable_id', $teachingOfferingIds);
+                });
             })
             ->findOrFail($data['quiz_id']);
 
@@ -193,10 +224,7 @@ class QuestionController extends Controller
 
     public function destroy(Question $question): RedirectResponse
     {
-        $isOwner = $question->user_id === Auth::id() || 
-            ($question->quiz && \App\Models\CourseOffering::where('master_course_id', $question->quiz->master_course_id)->where('lecturer_id', Auth::id())->exists()) ||
-            Auth::user()->isAdmin();
-
+        $isOwner = $this->authorizeQuestionAccess($question);
         abort_unless($isOwner, 403, 'Kamu tidak memiliki akses ke question ini.');
 
         $question->delete();
@@ -204,6 +232,29 @@ class QuestionController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Soal evaluasi berhasil dihapus.');
+    }
+
+    private function authorizeQuestionAccess(Question $question): bool
+    {
+        if (Auth::user()->isAdmin() || $question->user_id === Auth::id()) {
+            return true;
+        }
+
+        if (!$question->quiz) {
+            return false;
+        }
+
+        $quiz = $question->quiz;
+        if ($quiz->quizzable_type === \App\Models\CourseOffering::class) {
+            return \App\Models\CourseOffering::where('id', $quiz->quizzable_id)->where('lecturer_id', Auth::id())->exists();
+        }
+
+        if ($quiz->quizzable_type === \App\Models\MasterCourse::class) {
+            return \App\Models\CourseOffering::where('master_course_id', $quiz->quizzable_id)->where('lecturer_id', Auth::id())->exists()
+                || \App\Models\MasterCourse::where('id', $quiz->quizzable_id)->where('user_id', Auth::id())->exists();
+        }
+
+        return false;
     }
 
     private function syncQuestionSkills(Question $question, array $skillIds, mixed $mainSkillId = null): void

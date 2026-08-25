@@ -34,6 +34,12 @@ class DashboardController extends Controller
         $courses = collect();
         $allQuizIds = collect();
 
+        // Eager load all verified attempts for this user to avoid N+1 query in loop
+        $userVerifiedAttempts = QuizAttempt::where('user_id', $user->id)
+            ->where('is_verified', true)
+            ->get()
+            ->groupBy('quiz_id');
+
         foreach ($enrollments as $enrollment) {
             $offering = $enrollment->courseOffering;
             $courseObj = $offering ?? $enrollment->course;
@@ -44,15 +50,11 @@ class DashboardController extends Controller
 
             $item = clone $courseObj;
             $item->enrollment_id = $enrollment->id;
-            $item->progress = $enrollment->progress_percent ?? 0;
-            $item->is_completed = $enrollment->progress_percent >= 100 || $enrollment->status === 'completed';
+            $item->progress = $enrollment->is_completed ? 100 : ($enrollment->progress_percent ?? 0);
+            $item->is_completed = $enrollment->is_completed;
             $item->can_get_certificate = false;
 
-            $quizzes = $courseObj->quizzes ?? collect();
-            if ($quizzes->isEmpty() && isset($courseObj->masterCourse)) {
-                $quizzes = $courseObj->masterCourse->quizzes ?? collect();
-            }
-
+            $quizzes = $courseObj instanceof CourseOffering ? $courseObj->all_quizzes : ($courseObj->quizzes ?? collect());
             $allQuizIds = $allQuizIds->merge($quizzes->pluck('id'));
 
             $finalQuiz = $quizzes->firstWhere('quiz_type', 'final');
@@ -62,11 +64,7 @@ class DashboardController extends Controller
                     ?? $item->certificate_threshold 
                     ?? 70;
 
-                $verifiedAttempt = QuizAttempt::where('user_id', $user->id)
-                    ->where('quiz_id', $finalQuiz->id)
-                    ->where('is_verified', true)
-                    ->orderByDesc('score')
-                    ->first();
+                $verifiedAttempt = $userVerifiedAttempts->get($finalQuiz->id)?->sortByDesc('score')->first();
 
                 if ($verifiedAttempt && $verifiedAttempt->score >= $threshold) {
                     $item->can_get_certificate = true;
@@ -81,7 +79,7 @@ class DashboardController extends Controller
         $inProgress = max($totalCourses - $completed, 0);
 
         // 2. Kuis yang Tersedia untuk Mahasiswa
-        $availableQuizzes = Quiz::with(['course'])
+        $availableQuizzes = Quiz::with(['quizzable'])
             ->whereIn('id', $allQuizIds->unique())
             ->whereHas('questions', function ($query) {
                 $query->where('status', 'approved');
@@ -96,20 +94,20 @@ class DashboardController extends Controller
             ->get();
 
         // 3. Riwayat Hasil Kuis Terakhir
-        $latestQuiz = QuizAttempt::with(['quiz.course'])
+        $latestQuiz = QuizAttempt::with(['quiz.quizzable'])
             ->where('user_id', $user->id)
             ->where('is_verified', true)
             ->latest()
             ->first();
 
-        $latestQuizResults = QuizAttempt::with(['quiz.course'])
+        $latestQuizResults = QuizAttempt::with(['quiz.quizzable'])
             ->where('user_id', $user->id)
             ->where('is_verified', true)
             ->latest()
             ->take(3)
             ->get();
 
-        $pendingQuiz = QuizAttempt::with(['quiz.course'])
+        $pendingQuiz = QuizAttempt::with(['quiz.quizzable'])
             ->where('user_id', $user->id)
             ->where('is_verified', false)
             ->latest()
@@ -135,6 +133,7 @@ class DashboardController extends Controller
             ->count();
 
         $savedMaterials = \App\Models\SavedMaterial::where('user_id', $user->id)
+            ->whereHas('material')
             ->with(['material.masterCourse', 'courseOffering.masterCourse'])
             ->latest()
             ->take(3)

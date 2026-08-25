@@ -20,37 +20,32 @@ class ResultController extends Controller
         $activeTab = $request->query('tab', 'quiz');
 
         // Tab 1: Final Quiz Results - Deduplikasi Attempt Terbaik (Nilai Tertinggi) per User & Quiz
-        $bestAttemptIds = QuizAttempt::whereHas('quiz', function ($query) {
-                $query->where('quiz_type', 'final');
-            })
-            ->where(function ($q) {
-                $q->where('score', '>=', 75)->orWhere('is_verified', true);
-            })
-            ->select(DB::raw('MAX(id) as id'))
-            ->groupBy('user_id', 'quiz_id')
-            ->pluck('id');
-
-        $baseQuery = QuizAttempt::whereIn('id', $bestAttemptIds);
+        $baseQuery = QuizAttempt::bestFinalAttempts();
 
         $results = (clone $baseQuery)
-            ->with(['user', 'quiz.course'])
+            ->with(['user', 'quiz.quizzable'])
             ->latest('id')
             ->get();
 
+        // Eager load certificates to avoid N+1 inside the loop
+        $quizUserIds = $results->pluck('user_id')->unique();
+        $quizCertificates = \App\Models\Certificate::with('certifiable')
+            ->whereIn('user_id', $quizUserIds)
+            ->where('certifiable_type', \App\Models\CourseOffering::class)
+            ->get();
+
         foreach ($results as $res) {
-            $masterCourseId = $res->quiz?->master_course_id ?? $res->quiz?->course?->master_course_id;
-            $res->certificate_record = \App\Models\Certificate::where('user_id', $res->user_id)
-                ->where(function ($q) use ($res, $masterCourseId) {
-                    if ($res->quiz?->course_id) {
-                        $q->where('course_offering_id', $res->quiz->course_id);
-                    }
-                    if ($masterCourseId) {
-                        $q->orWhereIn('course_offering_id', function ($sub) use ($masterCourseId) {
-                            $sub->select('id')->from('course_offerings')->where('master_course_id', $masterCourseId);
-                        });
-                    }
+            $quiz = $res->quiz;
+            $masterCourseId = $quiz?->isGlobal() ? $quiz->quizzable_id : $quiz?->quizzable?->master_course_id;
+            $offeringId = $quiz?->isClassSpecific() ? $quiz->quizzable_id : null;
+
+            $res->certificate_record = $quizCertificates->where('user_id', $res->user_id)
+                ->filter(function($cert) use ($offeringId, $masterCourseId) {
+                    if ($offeringId && $cert->certifiable_id == $offeringId) return true;
+                    if ($masterCourseId && $cert->certifiable?->master_course_id == $masterCourseId) return true;
+                    return false;
                 })
-                ->latest('id')
+                ->sortByDesc('id')
                 ->first();
         }
 
@@ -59,23 +54,35 @@ class ResultController extends Controller
         $pendingQuizCount  = (clone $baseQuery)->where('is_verified', false)->count();
         $averageQuizScore  = round((float) (clone $baseQuery)->avg('score'), 2);
 
-        // Tab 2: Project Results
-        $projectParticipations = \App\Models\ProjectParticipation::with(['user', 'project.creator.institution', 'project.skills', 'project.tags'])
-            ->latest()
+        // Tab 2: Project Participations Completed
+        $projectParticipations = \App\Models\ProjectParticipation::with([
+                'user',
+                'project.creator.institution',
+                'project.user.institution',
+                'project.skills',
+                'project.tags',
+            ])
+            ->where('status', 'completed')
+            ->latest('completed_at')
             ->get();
 
-        foreach ($projectParticipations as $part) {
-            $cert = \App\Models\Certificate::where('user_id', $part->user_id)
-                ->where('project_id', $part->project_id)
-                ->first();
-            $part->certificate_record = $cert;
-            $part->is_verified = $cert ? ($cert->is_verified && !empty($cert->blockchain_hash)) : false;
-            $part->is_pending = $cert ? ($cert->status === 'pending' && !$cert->is_verified) : ($part->status === 'completed');
-        }
+        // Eager load project certificates to avoid N+1
+        $projectUserIds = $projectParticipations->pluck('user_id')->unique();
+        $projectIds = $projectParticipations->pluck('project_id')->unique();
 
-        $totalProjectResults  = $projectParticipations->count();
+        $projectCertificates = \App\Models\Certificate::whereIn('user_id', $projectUserIds)
+            ->where('certifiable_type', \App\Models\Project::class)
+            ->whereIn('certifiable_id', $projectIds)
+            ->get()
+            ->groupBy(fn($cert) => $cert->user_id . '_' . $cert->certifiable_id);
+
+        foreach ($projectParticipations as $part) {
+            $part->certificate_record = $projectCertificates->get($part->user_id . '_' . $part->project_id)?->first();
+        }
+        
         $verifiedProjectCount = $projectParticipations->filter(fn($p) => $p->is_verified)->count();
         $pendingProjectCount  = $projectParticipations->filter(fn($p) => !$p->is_verified)->count();
+        $totalProjectResults  = $projectParticipations->count();
 
         $totalResults  = $activeTab === 'project' ? $totalProjectResults : $totalQuizResults;
         $verifiedCount = $activeTab === 'project' ? $verifiedProjectCount : $verifiedQuizCount;
@@ -96,8 +103,9 @@ class ResultController extends Controller
             $completedAt = $participation->completed_at ?? $participation->updated_at ?? now();
 
             $certificate = \App\Models\Certificate::firstOrNew([
-                'user_id' => $participation->user_id,
-                'project_id' => $participation->project_id,
+                'user_id'          => $participation->user_id,
+                'certifiable_type' => \App\Models\Project::class,
+                'certifiable_id'   => $participation->project_id,
             ]);
 
             if (empty($certificate->credential_code)) {
@@ -207,7 +215,8 @@ class ResultController extends Controller
     public function checkProjectIntegrity(\App\Models\ProjectParticipation $participation): RedirectResponse
     {
         $certificate = \App\Models\Certificate::where('user_id', $participation->user_id)
-            ->where('project_id', $participation->project_id)
+            ->where('certifiable_type', \App\Models\Project::class)
+            ->where('certifiable_id', $participation->project_id)
             ->first();
 
         if (! $certificate || ! $certificate->is_verified || ! $certificate->blockchain_hash) {
@@ -275,7 +284,7 @@ class ResultController extends Controller
             'Hanya hasil Final Quiz yang diproses untuk sertifikat & blockchain.'
         );
 
-        $result->load(['user', 'quiz.course']);
+        $result->load(['user', 'quiz.quizzable']);
         return view('admin.results.show', compact('result'));
     }
 
@@ -294,7 +303,8 @@ class ResultController extends Controller
         $student = $participation->user;
 
         $certificate = \App\Models\Certificate::where('user_id', $participation->user_id)
-            ->where('project_id', $participation->project_id)
+            ->where('certifiable_type', \App\Models\Project::class)
+            ->where('certifiable_id', $participation->project_id)
             ->first();
 
         return view('admin.results.project_show', compact('participation', 'project', 'student', 'certificate'));
@@ -364,19 +374,27 @@ class ResultController extends Controller
             ]);
 
             // Sync Certificate record
+            $quiz = $result->quiz;
+            $masterCourseId = $quiz?->isGlobal() ? $quiz->quizzable_id : $quiz?->quizzable?->master_course_id;
+
             $enrollment = \App\Models\Enrollment::where('user_id', $result->user_id)
-                ->whereIn('course_offering_id', function ($sub) use ($result) {
-                    $sub->select('id')->from('course_offerings')
-                        ->where('master_course_id', $result->quiz->master_course_id);
+                ->whereIn('course_offering_id', function ($sub) use ($masterCourseId, $quiz) {
+                    $sub->select('id')->from('course_offerings');
+                    if ($quiz?->isClassSpecific()) {
+                        $sub->where('id', $quiz->quizzable_id);
+                    } elseif ($masterCourseId) {
+                        $sub->where('master_course_id', $masterCourseId);
+                    }
                 })
                 ->first();
 
-            $offeringId = $enrollment?->course_offering_id;
+            $offeringId = $enrollment?->course_offering_id ?? ($quiz?->isClassSpecific() ? $quiz->quizzable_id : null);
 
             $certificate = \App\Models\Certificate::firstOrCreate(
                 [
-                    'user_id'            => $result->user_id,
-                    'course_offering_id' => $offeringId,
+                    'user_id'          => $result->user_id,
+                    'certifiable_type' => \App\Models\CourseOffering::class,
+                    'certifiable_id'   => $offeringId,
                 ],
                 [
                     'score'        => $result->score,

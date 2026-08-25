@@ -3,38 +3,30 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Material extends Model
 {
     protected $fillable = [
-        'master_course_id',
-        'course_offering_id',
+        'materialable_type',
+        'materialable_id',
         'title',
         'file_path',
     ];
 
     /**
-     * Materi dimiliki oleh MasterCourse (Pustaka Induk)
+     * Polymorphic relation to parent (MasterCourse, CourseOffering, or Project)
      */
-    public function masterCourse()
+    public function materialable(): MorphTo
     {
-        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+        return $this->morphTo();
     }
 
     /**
-     * Relasi ke penawaran kelas spesifik (opsional)
+     * Helper to check if material is global/master level
      */
-    public function courseOffering()
+    public function getIsGlobalAttribute(): bool
     {
-        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
-    }
-
-    /**
-     * Backward compatibility course relationship
-     */
-    public function course()
-    {
-        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+        return $this->materialable_type === MasterCourse::class;
     }
 }
-

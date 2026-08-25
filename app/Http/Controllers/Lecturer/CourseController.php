@@ -70,14 +70,25 @@ class CourseController extends Controller
                 ->get();
 
             $course = $offering;
-            $materials = Material::where('master_course_id', $offering->master_course_id)
-                ->where(function ($q) use ($offering) {
-                    $q->whereNull('course_offering_id')
-                      ->orWhere('course_offering_id', $offering->id);
-                })
-                ->latest()
-                ->get();
-            $quizzes = $offering->quizzes->count() > 0 ? $offering->quizzes : ($offering->masterCourse->quizzes ?? collect());
+            $masterCourseId = $offering->master_course_id;
+            $materials = Material::where(function ($q) use ($offering, $masterCourseId) {
+                $q->where(function ($sub) use ($masterCourseId) {
+                    $sub->where('materialable_type', \App\Models\MasterCourse::class)
+                        ->where('materialable_id', $masterCourseId);
+                })->orWhere(function ($sub) use ($offering) {
+                    $sub->where('materialable_type', \App\Models\CourseOffering::class)
+                        ->where('materialable_id', $offering->id);
+                });
+            })->latest()->get();
+            $quizzes = \App\Models\Quiz::where(function ($q) use ($offering, $masterCourseId) {
+                $q->where(function ($sub) use ($masterCourseId) {
+                    $sub->where('quizzable_type', \App\Models\MasterCourse::class)
+                        ->where('quizzable_id', $masterCourseId);
+                })->orWhere(function ($sub) use ($offering) {
+                    $sub->where('quizzable_type', \App\Models\CourseOffering::class)
+                        ->where('quizzable_id', $offering->id);
+                });
+            })->latest()->get();
             $students = $offering->enrollments->map(fn($e) => $e->user)->filter();
             $enrollments = $offering->enrollments;
             $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
@@ -117,16 +128,16 @@ class CourseController extends Controller
         ->where('lecturer_id', $lecturerId)
         ->findOrFail($id);
 
-        $isTermActive = true;
+        $students = $course->enrollments->map(fn($e) => $e->user)->filter();
+        $enrollments = $course->enrollments;
         $materials = $course->materials;
         $quizzes = $course->quizzes;
-        $students = $course->students;
-        $enrollments = $course->enrollments;
         $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz'])
-            ->whereIn('quiz_id', $quizzes->pluck('id'))
-            ->whereIn('user_id', $enrollments->pluck('user_id'))
+            ->whereIn('quiz_id', $course->quizzes->pluck('id'))
             ->latest()
             ->get();
+        $siblingOfferings = collect();
+        $isTermActive = true;
 
         return view('lecturer.courses.show', compact(
             'course',
@@ -135,6 +146,7 @@ class CourseController extends Controller
             'students',
             'enrollments',
             'retakeRequests',
+            'siblingOfferings',
             'isTermActive'
         ));
     }
@@ -299,14 +311,15 @@ class CourseController extends Controller
 
         foreach ($original->materials as $mat) {
             $newMat = $mat->replicate();
-            $newMat->master_course_id = $newCourse->master_course_id;
-            $newMat->course_offering_id = $newCourse->id;
+            $newMat->materialable_type = CourseOffering::class;
+            $newMat->materialable_id = $newCourse->id;
             $newMat->save();
         }
 
         foreach ($original->quizzes as $quiz) {
             $newQuiz = $quiz->replicate();
-            $newQuiz->master_course_id = $newCourse->master_course_id;
+            $newQuiz->quizzable_type = CourseOffering::class;
+            $newQuiz->quizzable_id = $newCourse->id;
             $newQuiz->save();
 
             foreach ($quiz->questions as $q) {

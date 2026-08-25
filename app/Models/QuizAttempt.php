@@ -37,4 +37,23 @@ class QuizAttempt extends Model
     {
         return $this->hasMany(QuizAnswer::class, 'quiz_attempt_id');
     }
+
+    /**
+     * Scope a query to only include the best final attempts per user and quiz.
+     * Extracts complex query logic from Admin/ResultController.
+     */
+    public function scopeBestFinalAttempts($query)
+    {
+        $bestAttemptIds = self::whereHas('quiz', function ($q) {
+                $q->where('quiz_type', 'final');
+            })
+            ->where(function ($q) {
+                $q->where('score', '>=', 75)->orWhere('is_verified', true);
+            })
+            ->select(\Illuminate\Support\Facades\DB::raw('MAX(id) as id'))
+            ->groupBy('user_id', 'quiz_id')
+            ->pluck('id');
+
+        return $query->whereIn('id', $bestAttemptIds);
+    }
 }

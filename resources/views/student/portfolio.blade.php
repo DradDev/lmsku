@@ -164,13 +164,13 @@
                                         {{ optional($cert->completed_at ?? $cert->created_at)->format('d M Y') }}
                                     </span>
 
-                                    @if($cert->course_offering_id || $cert->course_id)
-                                        <a href="{{ route('student.certificate.show', $cert->course_offering_id ?? $cert->course_id) }}" target="_blank"
+                                    @if($cert->certifiable_type === \App\Models\CourseOffering::class || $cert->certifiable_type === \App\Models\Course::class)
+                                        <a href="{{ route('student.certificate.show', $cert->certifiable_id) }}" target="_blank"
                                            class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition shadow-xs">
                                             Lihat Sertifikat
                                         </a>
-                                    @elseif($cert->project_id)
-                                        <a href="{{ route('student.certificate.project.show', $cert->project_id) }}" target="_blank"
+                                    @elseif($cert->certifiable_type === \App\Models\Project::class)
+                                        <a href="{{ route('student.certificate.project.show', $cert->certifiable_id) }}" target="_blank"
                                            class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-lg transition shadow-xs">
                                             Lihat Sertifikat Project
                                         </a>
@@ -382,7 +382,9 @@
                                     default => 'bg-amber-100 text-amber-800 border border-amber-200',
                                 };
 
-                                $projectCert = $certificates->firstWhere('project_id', $project->id);
+                                $projectCert = $certificates->first(function($c) use ($project) {
+                                    return $c->certifiable_type === \App\Models\Project::class && $c->certifiable_id === $project->id;
+                                });
                                 $isCertVerified = $projectCert && $projectCert->is_verified && !empty($projectCert->blockchain_hash);
                             @endphp
 

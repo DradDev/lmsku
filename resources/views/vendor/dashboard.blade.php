@@ -1,267 +1,255 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shadow-sm flex-shrink-0 font-bold text-lg">
-                    🏢
-                </div>
-                <div>
-                    <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                        Vendor Partner Dashboard
-                    </h2>
-                    <p class="text-sm text-gray-500">
-                        Kelola Program Pelatihan Industri, Sertifikasi Mahasiswa, dan Proyek Real-Client.
-                    </p>
-                </div>
-            </div>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-            <div class="flex items-center gap-2">
-                <a href="{{ route('vendor.courses.index') }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl shadow-sm transition">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-                    </svg>
-                    Kelola Course Sertifikasi
-                </a>
-            </div>
+.vendor-dash {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    color: #0f172a;
+    padding-bottom: 3rem;
+}
+
+.compro-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.compro-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.row-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 12px 16px;
+    transition: all 0.15s ease;
+}
+
+.row-item:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+</style>
+
+<div class="vendor-dash max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+
+    {{-- ALERT NOTIFICATIONS --}}
+    @if(session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 text-xs font-bold shadow-xs">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ session('success') }}</span>
         </div>
-    </x-slot>
+    @endif
 
-    <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    @if(session('error'))
+        <div class="p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-3 text-xs font-bold shadow-xs">
+            <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
 
-            {{-- Alerts --}}
-            @if(session('success'))
-                <div class="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl shadow-sm text-sm font-medium">
-                    <svg class="mt-0.5 flex-shrink-0 text-emerald-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 6 9 17l-5-5"/>
-                    </svg>
-                    <div>
-                        <p class="font-bold">Berhasil</p>
-                        <p class="mt-0.5 text-emerald-700">{{ session('success') }}</p>
-                    </div>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl shadow-sm text-sm font-medium">
-                    <svg class="mt-0.5 flex-shrink-0 text-rose-600" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-                    </svg>
-                    <div>
-                        <p class="font-bold">Pemberitahuan</p>
-                        <p class="mt-0.5 text-rose-700">{{ session('error') }}</p>
-                    </div>
-                </div>
-            @endif
-
-            {{-- Compact Tabs Nav --}}
-            <div class="flex items-center gap-1.5 p-1.5 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-x-auto">
-                <a href="{{ route('vendor.dashboard', ['tab' => 'overview']) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'overview' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7" rx="1"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1"/>
-                    </svg>
-                    Overview
-                </a>
-                <a href="{{ route('vendor.dashboard', ['tab' => 'materials']) }}"
-                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition whitespace-nowrap {{ $tab === 'materials' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14,2 14,8 20,8"/>
-                    </svg>
-                    Learning Materials ({{ $materials->count() }})
-                </a>
+    {{-- 1. TOP HEADER (MINIMALIS & ELEGAN) --}}
+    <div class="compro-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="text-[11px] font-extrabold uppercase tracking-wider text-purple-700 mb-1">
+                Portal Mitra Vendor • COMPRO LMS
             </div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                Dashboard Mitra Industri
+            </h1>
+            <p class="text-xs text-slate-500 mt-0.5">
+                Selamat datang, <span class="font-bold text-slate-700">{{ Auth::user()->name }}</span>. Pantau kursus sertifikasi aktif dan seleksi talenta mahasiswa.
+            </p>
+        </div>
 
-            {{-- ==================== OVERVIEW TAB ==================== --}}
-            @if($tab === 'overview')
-                <!-- Executive Stat Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl font-bold">
-                            🎓
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Course Sertifikasi</span>
-                            <span class="text-2xl font-black text-gray-900">{{ $totalCourses }}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl font-bold">
-                            📁
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Project Industri</span>
-                            <span class="text-2xl font-black text-gray-900">{{ $totalProjects }}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
-                            👨‍🎓
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Mahasiswa Enrolled</span>
-                            <span class="text-2xl font-black text-gray-900">{{ $totalEnrolledStudents }}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4 hover:shadow-md transition">
-                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl font-bold">
-                            🎯
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Talent Rekrutmen</span>
-                            <span class="text-2xl font-black text-gray-900">{{ $totalProjectStudents }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Main Management 2-Column Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-                    <!-- Left Card: Industry Certified Courses -->
-                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-                            <div>
-                                <h3 class="font-extrabold text-base text-gray-900 flex items-center gap-2">
-                                    <span>🎓 Course Sertifikasi Industri</span>
-                                </h3>
-                                <p class="text-xs text-gray-500">Pelatihan kompetensi & sertifikasi profesional mitra.</p>
-                            </div>
-                            <a href="{{ route('vendor.courses.index') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                                Lihat Semua →
-                            </a>
-                        </div>
-
-                        @if($courses->isEmpty())
-                            <div class="p-6 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center space-y-2">
-                                <p class="text-xs text-gray-500 font-medium">Belum ada course sertifikasi industri yang dibuat.</p>
-                                <a href="{{ route('vendor.courses.create') }}" class="inline-block px-3 py-1.5 bg-indigo-600 text-white font-bold text-xs rounded-lg">
-                                    + Buat Course Pertama
-                                </a>
-                            </div>
-                        @else
-                            <div class="space-y-3">
-                                @foreach($courses->take(4) as $course)
-                                    <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-100/80 transition">
-                                        <div>
-                                            <h4 class="font-bold text-xs text-gray-900">{{ $course->name }}</h4>
-                                            <p class="text-[11px] text-gray-500 mt-0.5">
-                                                Level: {{ $course->level }} | 👥 {{ $course->students_count }} Mahasiswa
-                                            </p>
-                                        </div>
-                                        <a href="{{ route('vendor.courses.show', $course) }}" class="px-3 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-lg transition">
-                                            Kelola →
-                                        </a>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-
-                    <!-- Right Card: Industry Real Projects -->
-                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-                        <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-                            <div>
-                                <h3 class="font-extrabold text-base text-gray-900 flex items-center gap-2">
-                                    <span>📁 Project Real Client Industri</span>
-                                </h3>
-                                <p class="text-xs text-gray-500">Studi kasus nyata industri & seleksi talenta.</p>
-                            </div>
-                            <a href="{{ route('vendor.projects.index') }}" class="text-xs font-bold text-purple-600 hover:text-purple-800">
-                                Lihat Semua →
-                            </a>
-                        </div>
-
-                        @if($projects->isEmpty())
-                            <div class="p-6 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-center space-y-2">
-                                <p class="text-xs text-gray-500 font-medium">Belum ada project industri dipublikasikan.</p>
-                                <a href="{{ route('vendor.projects.create') }}" class="inline-block px-3 py-1.5 bg-purple-600 text-white font-bold text-xs rounded-lg">
-                                    + Publikasikan Project
-                                </a>
-                            </div>
-                        @else
-                            <div class="space-y-3">
-                                @foreach($projects->take(4) as $proj)
-                                    <div class="p-3.5 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-100/80 transition">
-                                        <div>
-                                            <h4 class="font-bold text-xs text-gray-900">{{ $proj->title }}</h4>
-                                            <p class="text-[11px] text-gray-500 mt-0.5">
-                                                Tipe: {{ ucfirst($proj->type ?? 'General') }} | 🎯 {{ $proj->participations_count }} Pelamar
-                                            </p>
-                                        </div>
-                                        <div class="flex items-center gap-2">
-                                            <a href="{{ route('vendor.projects.talent-pool', $proj) }}" class="px-2.5 py-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold text-xs rounded-lg transition">
-                                                Talent Pool
-                                            </a>
-                                            <a href="{{ route('vendor.projects.show', $proj) }}" class="px-2.5 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold text-xs rounded-lg transition">
-                                                Detail →
-                                            </a>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-
-                </div>
-            @endif
-
-            {{-- ==================== MATERIALS TAB ==================== --}}
-            @if($tab === 'materials')
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
-                    <h3 class="font-extrabold text-base text-gray-900 border-b border-gray-100 pb-3 flex items-center justify-between">
-                        <span>📑 Daftar Seluruh Modul Pembelajaran Vendor</span>
-                        <span class="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-0.5 rounded-full">{{ $materials->count() }} Modul</span>
-                    </h3>
-
-                    <div class="space-y-3">
-                        @forelse($materials as $mat)
-                            <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-between hover:bg-gray-100/80 transition">
-                                <div class="flex items-start gap-3">
-                                    <span class="text-xl mt-0.5">📄</span>
-                                    <div class="space-y-1">
-                                        <h4 class="font-bold text-xs text-gray-900">{{ $mat->title }}</h4>
-                                        <p class="text-[11px] text-gray-500">Program Sertifikasi: <strong class="text-gray-700">{{ optional($mat->course)->name ?? 'General' }}</strong></p>
-                                        <div class="flex flex-wrap items-center gap-1.5 pt-0.5">
-                                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Diterapkan pada:</span>
-                                            @if($mat->is_all_classes)
-                                                <span class="px-2 py-0.5 text-[10px] font-bold bg-purple-50 text-purple-700 rounded-md border border-purple-200">
-                                                    Semua Batch
-                                                </span>
-                                            @elseif(!empty($mat->assigned_offerings) && $mat->assigned_offerings->isNotEmpty())
-                                                @foreach($mat->assigned_offerings as $assignedBatch)
-                                                    <span class="px-2 py-0.5 text-[10px] font-semibold bg-white text-slate-700 rounded-md border border-slate-200 shadow-2xs">
-                                                        {{ $assignedBatch->section_name ?: 'Batch ' . $assignedBatch->id }}
-                                                    </span>
-                                                @endforeach
-                                            @else
-                                                <span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 text-slate-600 rounded-md">
-                                                    Umum
-                                                </span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                                <a href="{{ route('vendor.courses.show', $mat->course_offering_id ?? ($mat->master_course_id ?? 1)) }}" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
-                                    Buka Course →
-                                </a>
-                            </div>
-                        @empty
-                            <div class="p-8 text-center bg-gray-50 border border-dashed border-gray-200 rounded-2xl text-xs text-gray-400">
-                                Belum ada modul pembelajaran diunggah. Buka salah satu Course untuk mengunggah materi.
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            @endif
-
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <a href="{{ route('vendor.courses.create') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                + Kursus Baru
+            </a>
+            <a href="{{ route('vendor.projects.create') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
+                <svg class="w-4 h-4 text-purple-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                + Publikasikan Proyek
+            </a>
         </div>
     </div>
+
+    {{-- 2. COMPACT KPI STRIP (SATU BARIS BERSIH & RAMPING) --}}
+    <div class="compro-card p-5 grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 gap-4 md:gap-0">
+        {{-- KPI 1: KURSUS SERTIFIKASI --}}
+        <div class="px-3 md:px-5 py-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kursus Sertifikasi</div>
+            <div class="text-2xl font-extrabold text-slate-900 mt-0.5 font-mono">{{ number_format($totalCourses) }}</div>
+            <div class="text-[11px] text-purple-700 font-semibold mt-0.5">Program Aktif</div>
+        </div>
+
+        {{-- KPI 2: PROYEK INDUSTRI --}}
+        <div class="px-3 md:px-5 py-1 pt-3 md:pt-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Proyek Industri</div>
+            <div class="text-2xl font-extrabold text-slate-900 mt-0.5 font-mono">{{ number_format($totalProjects) }}</div>
+            <div class="text-[11px] text-blue-600 font-semibold mt-0.5">Studi Kasus Klien</div>
+        </div>
+
+        {{-- KPI 3: PESERTA TERDAFTAR --}}
+        <div class="px-3 md:px-5 py-1 pt-3 md:pt-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Peserta Terdaftar</div>
+            <div class="text-2xl font-extrabold text-slate-900 mt-0.5 font-mono">{{ number_format($totalEnrolledStudents) }}</div>
+            <div class="text-[11px] text-emerald-600 font-semibold mt-0.5">Mahasiswa Aktif</div>
+        </div>
+
+        {{-- KPI 4: TALENT POOL --}}
+        <div class="px-3 md:px-5 py-1 pt-3 md:pt-1">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Talent Pool</div>
+            <div class="text-2xl font-extrabold text-slate-900 mt-0.5 font-mono">{{ number_format($totalProjectStudents) }}</div>
+            <div class="text-[11px] text-amber-600 font-semibold mt-0.5">Pelamar Proyek</div>
+        </div>
+    </div>
+
+    {{-- 3. MAIN WORKSPACE 2 KOLOM (50% : 50% - SEIMBANG, LAPANG & PRAKTIS) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+        {{-- KOLOM KIRI: KURSUS & BATCH SERTIFIKASI --}}
+        <div class="compro-card p-6 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-900">Kursus Sertifikasi Industri</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Program pelatihan dan sertifikasi kompetensi aktif</p>
+                </div>
+                <a href="{{ route('vendor.courses.index') }}" class="text-xs font-bold text-purple-700 hover:text-purple-900 transition">
+                    Lihat Semua ({{ $totalCourses }}) →
+                </a>
+            </div>
+
+            <div class="space-y-3">
+                @forelse($courses->take(4) as $course)
+                    <div class="row-item flex items-center justify-between gap-3">
+                        <div class="min-w-0 space-y-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="text-xs font-bold text-slate-900 truncate">
+                                    {{ $course->name }}
+                                </h3>
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-100">
+                                    {{ $course->level ?? 'Beginner' }}
+                                </span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 flex items-center gap-2">
+                                <span class="font-bold text-slate-700 font-mono">{{ $course->students_count ?? 0 }} Peserta</span>
+                                <span>•</span>
+                                <span>{{ $course->materials_count ?? 0 }} Modul</span>
+                                <span>•</span>
+                                <span>KKM: <strong class="text-emerald-700 font-mono">{{ $course->certificate_threshold ?? 75 }}%</strong></span>
+                            </div>
+                        </div>
+
+                        <a href="{{ route('vendor.courses.show', $course->id) }}" 
+                           class="px-3.5 py-2 bg-white hover:bg-purple-700 text-slate-700 hover:text-white border border-slate-200 hover:border-purple-700 text-xs font-bold rounded-xl shadow-2xs transition shrink-0">
+                            Kelola Batch →
+                        </a>
+                    </div>
+                @empty
+                    <div class="p-8 bg-slate-50 rounded-xl text-center space-y-2">
+                        <p class="text-xs text-slate-500 font-medium">Belum ada program kursus sertifikasi aktif.</p>
+                        <a href="{{ route('vendor.courses.create') }}" class="inline-block px-3 py-1.5 bg-purple-700 text-white font-bold text-xs rounded-lg">
+                            + Buat Kursus Pertama
+                        </a>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- KOLOM KANAN: PROYEK INDUSTRI & SELEKSI TALENTA --}}
+        <div class="compro-card p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-900">Proyek & Seleksi Talenta</h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Studi kasus industri dan seleksi pelamar mahasiswa</p>
+                </div>
+                <a href="{{ route('vendor.projects.index') }}" class="text-xs font-bold text-purple-700 hover:text-purple-900 transition">
+                    Kelola Proyek →
+                </a>
+            </div>
+
+            {{-- BAGIAN 1: PROYEK INDUSTRI AKTIF --}}
+            <div class="space-y-3">
+                <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Proyek Aktif Terbuka:</div>
+                @forelse($projects->take(2) as $proj)
+                    <div class="row-item flex items-center justify-between gap-3">
+                        <div class="min-w-0 space-y-1">
+                            <h3 class="text-xs font-bold text-slate-900 truncate">
+                                {{ $proj->title }}
+                            </h3>
+                            <div class="text-[11px] text-slate-500 flex items-center gap-2">
+                                <span class="font-bold text-purple-700 font-mono">{{ $proj->participations_count }} Pelamar</span>
+                                <span>•</span>
+                                <span>Durasi: {{ $proj->duration_days ? $proj->duration_days . ' Hari' : 'Fleksibel' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-1.5 shrink-0">
+                            <a href="{{ route('vendor.projects.talent-pool', $proj->id) }}" 
+                               class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold rounded-xl transition">
+                                Talent Pool
+                            </a>
+                            <a href="{{ route('vendor.projects.show', $proj->id) }}" 
+                               class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                                Detail →
+                            </a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="p-4 bg-slate-50 rounded-xl text-center text-xs text-slate-400">
+                        Belum ada proyek industri aktif dipublikasikan.
+                    </div>
+                @endforelse
+            </div>
+
+            {{-- BAGIAN 2: PELAMAR TERBARU YANG PERLU DIREVIEW --}}
+            <div class="pt-2 border-t border-slate-100 space-y-3">
+                <div class="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Pelamar Mahasiswa Terbaru:</div>
+                @if($participations->isNotEmpty())
+                    <div class="space-y-2">
+                        @foreach($participations->take(3) as $part)
+                            <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-2">
+                                <div class="min-w-0">
+                                    <div class="text-xs font-bold text-slate-900 truncate">{{ $part->user->name ?? 'Mahasiswa' }}</div>
+                                    <div class="text-[11px] text-slate-500 truncate">
+                                        {{ $part->project->title ?? 'Proyek' }}
+                                    </div>
+                                </div>
+                                @if($part->user)
+                                    <a href="{{ route('vendor.students.portfolio', $part->user->id) }}" 
+                                       class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition shrink-0">
+                                        Portofolio →
+                                    </a>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="p-3 bg-slate-50 rounded-xl text-center text-xs text-slate-400">
+                        Belum ada pelamar baru pada proyek Anda.
+                    </div>
+                @endif
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 </x-app-layout>

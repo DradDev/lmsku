@@ -15,7 +15,7 @@ use Illuminate\View\View;
 
 class QuizController extends Controller
 {
-    public function store(Request $request, $course): RedirectResponse
+    public function create(Request $request, $course): View
     {
         $courseObj = is_numeric($course)
             ? (\App\Models\CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
@@ -26,45 +26,42 @@ class QuizController extends Controller
                 ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Pembuatan kuis ditolak (Read-Only).');
         }
 
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'time_limit' => ['nullable', 'integer', 'min:1'],
-            'quiz_type' => ['required', Rule::in(['daily', 'weekly', 'final'])],
-            'max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'is_unlimited' => ['nullable', 'boolean'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-            'target_scope' => ['nullable', Rule::in(['all', 'class'])],
-        ]);
+        return view('lecturer.quizzes.create', compact('courseObj'));
+    }
+
+    public function store(\App\Http\Requests\Lecturer\StoreQuizRequest $request, $course): RedirectResponse
+    {
+        $validated = $request->validated();
+        
+        $courseObj = is_numeric($course)
+            ? (\App\Models\CourseOffering::find($course) ?? Course::findOrFail($course))
+            : $course;
+
+        $targetScope = $validated['target_scope'] ?? 'all';
+        $masterCourseId = ($courseObj instanceof \App\Models\MasterCourse)
+            ? $courseObj->id
+            : ($courseObj->master_course_id ?? $courseObj->id);
+
+        if ($targetScope === 'class' && $courseObj instanceof \App\Models\CourseOffering) {
+            $quizzableType = \App\Models\CourseOffering::class;
+            $quizzableId = $courseObj->id;
+        } else {
+            $quizzableType = \App\Models\MasterCourse::class;
+            $quizzableId = $masterCourseId;
+        }
 
         $isUnlimited = $request->boolean('is_unlimited');
         $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
-        $targetScope = $validated['target_scope'] ?? 'all';
-        $masterCourseId = $courseObj->master_course_id ?? $courseObj->id;
-
-        // Hanya boleh 1 quiz final per course/master course
-        if ($validated['quiz_type'] === 'final') {
-            $existingFinal = Quiz::where('master_course_id', $masterCourseId)
-                ->where('quiz_type', 'final')
-                ->exists();
-
-            if ($existingFinal) {
-                return redirect()
-                    ->back()
-                    ->withErrors(['quiz_type' => 'Mata kuliah ini sudah memiliki Final Quiz. Hapus atau ubah yang lama terlebih dahulu.'])
-                    ->withInput();
-            }
-        }
-
         $quiz = Quiz::create([
-            'master_course_id' => $masterCourseId,
-            'title' => $validated['title'],
-            'time_limit' => $validated['time_limit'] ?? null,
-            'quiz_type' => $validated['quiz_type'],
-            'max_attempts' => $maxAttemptsValue,
-            'start_date' => !empty($validated['start_date']) ? $validated['start_date'] : null,
-            'end_date' => !empty($validated['end_date']) ? $validated['end_date'] : null,
+            'quizzable_type' => $quizzableType,
+            'quizzable_id'   => $quizzableId,
+            'title'          => $validated['title'],
+            'time_limit'     => $validated['time_limit'] ?? null,
+            'quiz_type'      => $validated['quiz_type'],
+            'max_attempts'   => $maxAttemptsValue,
+            'start_date'     => !empty($validated['start_date']) ? $validated['start_date'] : null,
+            'end_date'       => !empty($validated['end_date']) ? $validated['end_date'] : null,
         ]);
 
         $typeLabel = match ($validated['quiz_type']) {
@@ -92,10 +89,10 @@ class QuizController extends Controller
                 ? (\App\Models\CourseOffering::with('academicTerm')->find($courseOrQuiz) ?? Course::findOrFail($courseOrQuiz))
                 : $courseOrQuiz;
         } else {
-            $courseObj = $quiz->course ?? ($quiz->masterCourse?->offerings()->where('lecturer_id', Auth::id())->first() ?? $quiz->masterCourse);
+            $courseObj = $quiz->course ?? ($quiz->quizzable instanceof \App\Models\MasterCourse ? $quiz->quizzable->offerings()->where('lecturer_id', Auth::id())->first() : $quiz->quizzable);
         }
 
-        $lecturerId = $courseObj?->lecturer_id ?? ($courseObj?->user_id ?? $quiz->masterCourse?->user_id);
+        $lecturerId = $courseObj?->lecturer_id ?? ($courseObj?->user_id ?? ($quiz->course?->user_id ?? null));
         if ($lecturerId && $lecturerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Kamu tidak memiliki akses ke kuis ini.');
         }
@@ -105,7 +102,7 @@ class QuizController extends Controller
             $isTermActive = (bool) $courseObj->academicTerm->is_active;
         }
 
-        $quiz->load(['questions' => fn($q) => $q->latest()], 'masterCourse');
+        $quiz->load(['questions' => fn($q) => $q->latest()], 'quizzable');
         $course = $courseObj ?? $quiz->course;
 
         return view('lecturer.quiz.show', compact('quiz', 'course', 'isTermActive'));
@@ -113,7 +110,7 @@ class QuizController extends Controller
 
     public function storeQuestion(Request $request, Quiz $quiz): RedirectResponse
     {
-        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        $ownerId = $quiz->course?->lecturer_id ?? ($quiz->course?->user_id ?? $quiz->quizzable?->user_id);
         if ($ownerId && $ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Kamu tidak memiliki akses ke kuis ini.');
         }
@@ -150,30 +147,9 @@ class QuizController extends Controller
         return redirect()->back()->with('success', 'Soal evaluasi berhasil ditambahkan ke kuis.');
     }
 
-    public function update(Request $request, $course, Quiz $quiz): RedirectResponse
+    public function update(\App\Http\Requests\Lecturer\UpdateQuizRequest $request, $course, Quiz $quiz): RedirectResponse
     {
-        $courseObj = is_numeric($course)
-            ? (\App\Models\CourseOffering::with('academicTerm')->find($course) ?? Course::findOrFail($course))
-            : $course;
-
-        $lecturerId = $courseObj->lecturer_id ?? ($courseObj->user_id ?? null);
-        if ($lecturerId !== Auth::id() && !Auth::user()->isAdmin()) {
-            abort(403, 'Kamu tidak memiliki akses ke course ini.');
-        }
-
-        if ($courseObj instanceof \App\Models\CourseOffering && $courseObj->academicTerm && !$courseObj->academicTerm->is_active) {
-            return redirect()->back()
-                ->with('error', 'Semester untuk kelas ini telah non-aktif / ditutup. Perubahan kuis ditolak (Read-Only).');
-        }
-
-        $validated = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'time_limit' => ['nullable', 'integer', 'min:1'],
-            'max_attempts' => ['nullable', 'integer', 'min:0', 'max:100'],
-            'is_unlimited' => ['nullable', 'boolean'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
-        ]);
+        $validated = $request->validated();
 
         $isUnlimited = $request->boolean('is_unlimited');
         $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
@@ -257,7 +233,7 @@ class QuizController extends Controller
         abort_unless($lecturerId === Auth::id() || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
 
         $offeringId = $courseObj instanceof \App\Models\CourseOffering ? $courseObj->id : null;
-        $quizzes = $courseObj->masterCourse ? $courseObj->masterCourse->quizzes : $courseObj->quizzes;
+        $quizzes = $courseObj instanceof \App\Models\CourseOffering ? $courseObj->all_quizzes : ($courseObj->masterCourse ? $courseObj->masterCourse->quizzes : $courseObj->quizzes);
         $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
 
         $query = \App\Models\QuizRetakeRequest::whereIn('quiz_id', $quizIds)
@@ -295,7 +271,7 @@ class QuizController extends Controller
 
         $course = $courseObj;
         $offeringId = $courseObj instanceof \App\Models\CourseOffering ? $courseObj->id : null;
-        $quizzes = $courseObj->masterCourse ? $courseObj->masterCourse->quizzes : $courseObj->quizzes;
+        $quizzes = $courseObj instanceof \App\Models\CourseOffering ? $courseObj->all_quizzes : ($courseObj->masterCourse ? $courseObj->masterCourse->quizzes : $courseObj->quizzes);
         $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
 
         $query = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'courseOffering'])

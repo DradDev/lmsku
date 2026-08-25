@@ -133,17 +133,20 @@ class GenerateRecommendationFeatureSnapshots extends Command
     {
         $masterCourseId = $course->master_course_id ?? $courseId;
 
-        $mainSkill = DB::table('master_course_skills')
-            ->where('master_course_id', $masterCourseId)
+        $mainSkill = DB::table('skillables')
+            ->where('skillable_type', \App\Models\MasterCourse::class)
+            ->where('skillable_id', $masterCourseId)
             ->where('is_main', true)
             ->first();
 
-        $skillCount = DB::table('master_course_skills')
-            ->where('master_course_id', $masterCourseId)
+        $skillCount = DB::table('skillables')
+            ->where('skillable_type', \App\Models\MasterCourse::class)
+            ->where('skillable_id', $masterCourseId)
             ->count();
 
-        $tagCount = DB::table('master_course_tags')
-            ->where('master_course_id', $masterCourseId)
+        $tagCount = DB::table('taggables')
+            ->where('taggable_type', \App\Models\MasterCourse::class)
+            ->where('taggable_id', $masterCourseId)
             ->count();
 
         return [
@@ -160,17 +163,20 @@ class GenerateRecommendationFeatureSnapshots extends Command
 
     private function getProjectItemFeatures(int $projectId, object $project): array
     {
-        $mainSkill = DB::table('project_skills')
-            ->where('project_id', $projectId)
+        $mainSkill = DB::table('skillables')
+            ->where('skillable_type', \App\Models\Project::class)
+            ->where('skillable_id', $projectId)
             ->where('is_main', true)
             ->first();
 
-        $skillCount = DB::table('project_skills')
-            ->where('project_id', $projectId)
+        $skillCount = DB::table('skillables')
+            ->where('skillable_type', \App\Models\Project::class)
+            ->where('skillable_id', $projectId)
             ->count();
 
-        $tagCount = DB::table('project_tags')
-            ->where('project_id', $projectId)
+        $tagCount = DB::table('taggables')
+            ->where('taggable_type', \App\Models\Project::class)
+            ->where('taggable_id', $projectId)
             ->count();
 
         $statistic = DB::table('item_statistics')
@@ -261,17 +267,23 @@ class GenerateRecommendationFeatureSnapshots extends Command
             $masterCourseId = $offering?->master_course_id ?? $itemId;
 
             $score = DB::table('user_interest_profiles')
-                ->join('master_course_tags', 'user_interest_profiles.tag_id', '=', 'master_course_tags.tag_id')
+                ->join('taggables', function ($join) {
+                    $join->on('user_interest_profiles.tag_id', '=', 'taggables.tag_id')
+                         ->where('taggables.taggable_type', \App\Models\MasterCourse::class);
+                })
                 ->where('user_interest_profiles.user_id', $userId)
-                ->where('master_course_tags.master_course_id', $masterCourseId)
+                ->where('taggables.taggable_id', $masterCourseId)
                 ->selectRaw('SUM(user_interest_profiles.interest_score) as score')
                 ->value('score');
         } else {
             $score = DB::table('user_interest_profiles')
-                ->join('project_tags', 'user_interest_profiles.tag_id', '=', 'project_tags.tag_id')
+                ->join('taggables as project_taggables', function ($join) {
+                    $join->on('user_interest_profiles.tag_id', '=', 'project_taggables.tag_id')
+                         ->where('project_taggables.taggable_type', \App\Models\Project::class);
+                })
                 ->where('user_interest_profiles.user_id', $userId)
-                ->where('project_tags.project_id', $itemId)
-                ->selectRaw('SUM(user_interest_profiles.interest_score * project_tags.weight) as score')
+                ->where('project_taggables.taggable_id', $itemId)
+                ->selectRaw('SUM(user_interest_profiles.interest_score * project_taggables.weight) as score')
                 ->value('score');
         }
 
@@ -285,17 +297,23 @@ class GenerateRecommendationFeatureSnapshots extends Command
             $masterCourseId = $offering?->master_course_id ?? $itemId;
 
             $score = DB::table('user_skill_profiles')
-                ->join('master_course_skills', 'user_skill_profiles.skill_id', '=', 'master_course_skills.skill_id')
+                ->join('skillables', function ($join) {
+                    $join->on('user_skill_profiles.skill_id', '=', 'skillables.skill_id')
+                         ->where('skillables.skillable_type', \App\Models\MasterCourse::class);
+                })
                 ->where('user_skill_profiles.user_id', $userId)
-                ->where('master_course_skills.master_course_id', $masterCourseId)
+                ->where('skillables.skillable_id', $masterCourseId)
                 ->selectRaw('AVG(100 - user_skill_profiles.avg_score) as score')
                 ->value('score');
         } else {
             $score = DB::table('user_skill_profiles')
-                ->join('project_skills', 'user_skill_profiles.skill_id', '=', 'project_skills.skill_id')
+                ->join('skillables as project_skillables', function ($join) {
+                    $join->on('user_skill_profiles.skill_id', '=', 'project_skillables.skill_id')
+                         ->where('project_skillables.skillable_type', \App\Models\Project::class);
+                })
                 ->where('user_skill_profiles.user_id', $userId)
-                ->where('project_skills.project_id', $itemId)
-                ->selectRaw('AVG((100 - user_skill_profiles.avg_score) * project_skills.weight) as score')
+                ->where('project_skillables.skillable_id', $itemId)
+                ->selectRaw('AVG((100 - user_skill_profiles.avg_score) * project_skillables.weight) as score')
                 ->value('score');
         }
 
@@ -309,17 +327,23 @@ class GenerateRecommendationFeatureSnapshots extends Command
             $masterCourseId = $offering?->master_course_id ?? $itemId;
 
             $score = DB::table('user_skill_profiles')
-                ->join('master_course_skills', 'user_skill_profiles.skill_id', '=', 'master_course_skills.skill_id')
+                ->join('skillables', function ($join) {
+                    $join->on('user_skill_profiles.skill_id', '=', 'skillables.skill_id')
+                         ->where('skillables.skillable_type', \App\Models\MasterCourse::class);
+                })
                 ->where('user_skill_profiles.user_id', $userId)
-                ->where('master_course_skills.master_course_id', $masterCourseId)
+                ->where('skillables.skillable_id', $masterCourseId)
                 ->selectRaw('AVG(user_skill_profiles.avg_score) as score')
                 ->value('score');
         } else {
             $score = DB::table('user_skill_profiles')
-                ->join('project_skills', 'user_skill_profiles.skill_id', '=', 'project_skills.skill_id')
+                ->join('skillables as project_skillables', function ($join) {
+                    $join->on('user_skill_profiles.skill_id', '=', 'project_skillables.skill_id')
+                         ->where('project_skillables.skillable_type', \App\Models\Project::class);
+                })
                 ->where('user_skill_profiles.user_id', $userId)
-                ->where('project_skills.project_id', $itemId)
-                ->selectRaw('AVG(user_skill_profiles.avg_score * project_skills.weight) as score')
+                ->where('project_skillables.skillable_id', $itemId)
+                ->selectRaw('AVG(user_skill_profiles.avg_score * project_skillables.weight) as score')
                 ->value('score');
         }
 

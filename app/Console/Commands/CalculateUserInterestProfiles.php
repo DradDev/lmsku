@@ -92,10 +92,13 @@ class CalculateUserInterestProfiles extends Command
     {
         $query = DB::table('learning_activity_logs')
             ->join('course_offerings', 'learning_activity_logs.course_offering_id', '=', 'course_offerings.id')
-            ->join('master_course_tags', 'course_offerings.master_course_id', '=', 'master_course_tags.master_course_id')
+            ->join('taggables', function ($join) {
+                $join->on('course_offerings.master_course_id', '=', 'taggables.taggable_id')
+                     ->where('taggables.taggable_type', \App\Models\MasterCourse::class);
+            })
             ->select(
                 'learning_activity_logs.user_id',
-                'master_course_tags.tag_id',
+                'taggables.tag_id',
                 DB::raw('SUM(
                     CASE learning_activity_logs.activity_type
                         WHEN "view_course" THEN 1
@@ -105,7 +108,7 @@ class CalculateUserInterestProfiles extends Command
                         WHEN "submit_assignment" THEN 3
                         WHEN "enroll_course" THEN 4
                         ELSE 0
-                    END
+                    END * taggables.weight
                 ) as interest_score'),
                 DB::raw('COUNT(learning_activity_logs.id) as interaction_count'),
                 DB::raw('MAX(learning_activity_logs.created_at) as last_activity_at')
@@ -119,7 +122,7 @@ class CalculateUserInterestProfiles extends Command
                 'submit_assignment',
                 'enroll_course',
             ])
-            ->groupBy('learning_activity_logs.user_id', 'master_course_tags.tag_id');
+            ->groupBy('learning_activity_logs.user_id', 'taggables.tag_id');
 
         if ($userId) {
             $query->where('learning_activity_logs.user_id', $userId);
@@ -131,17 +134,20 @@ class CalculateUserInterestProfiles extends Command
     private function calculateProjectInterest(?string $userId = null)
     {
         $query = DB::table('learning_activity_logs')
-            ->join('project_tags', 'learning_activity_logs.project_id', '=', 'project_tags.project_id')
+            ->join('taggables', function ($join) {
+                $join->on('learning_activity_logs.project_id', '=', 'taggables.taggable_id')
+                     ->where('taggables.taggable_type', \App\Models\Project::class);
+            })
             ->select(
                 'learning_activity_logs.user_id',
-                'project_tags.tag_id',
+                'taggables.tag_id',
                 DB::raw('SUM(
                     CASE learning_activity_logs.activity_type
                         WHEN "view_project" THEN 1
                         WHEN "join_project" THEN 4
                         WHEN "complete_project" THEN 6
                         ELSE 0
-                    END * project_tags.weight
+                    END * taggables.weight
                 ) as interest_score'),
                 DB::raw('COUNT(learning_activity_logs.id) as interaction_count'),
                 DB::raw('MAX(learning_activity_logs.occurred_at) as last_activity_at')
@@ -152,7 +158,7 @@ class CalculateUserInterestProfiles extends Command
                 'join_project',
                 'complete_project',
             ])
-            ->groupBy('learning_activity_logs.user_id', 'project_tags.tag_id');
+            ->groupBy('learning_activity_logs.user_id', 'taggables.tag_id');
 
         if ($userId) {
             $query->where('learning_activity_logs.user_id', $userId);

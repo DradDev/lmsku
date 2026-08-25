@@ -36,10 +36,22 @@ class QuizController extends Controller
         $isUnlimited = $request->boolean('is_unlimited');
         $maxAttemptsValue = $isUnlimited ? 0 : ($validated['max_attempts'] ?? 1);
 
+        $targetScope = $request->input('target_scope', 'all');
+        $masterCourseId = ($courseObj instanceof \App\Models\MasterCourse) ? $courseObj->id : ($courseObj->master_course_id ?? $courseObj->id);
+
+        if ($targetScope === 'class' && $courseObj instanceof CourseOffering) {
+            $quizzableType = CourseOffering::class;
+            $quizzableId = $courseObj->id;
+        } else {
+            $quizzableType = \App\Models\MasterCourse::class;
+            $quizzableId = $masterCourseId;
+        }
+
         $quiz = Quiz::firstOrCreate(
             [
-                'master_course_id' => $courseObj->master_course_id ?? $courseObj->id,
-                'title'            => $validated['title'],
+                'quizzable_type' => $quizzableType,
+                'quizzable_id'   => $quizzableId,
+                'title'          => $validated['title'],
             ],
             [
                 'quiz_type'    => $validated['quiz_type'],
@@ -91,7 +103,7 @@ class QuizController extends Controller
             ? $quizParam
             : ($courseOrQuiz instanceof Quiz ? $courseOrQuiz : Quiz::findOrFail(is_numeric($quizParam) ? $quizParam : $courseOrQuiz));
 
-        $ownerId = $quiz->masterCourse?->user_id ?? ($quiz->course?->lecturer_id ?? $quiz->course?->user_id);
+        $ownerId = $quiz->course?->lecturer_id ?? ($quiz->course?->user_id ?? $quiz->quizzable?->user_id);
         if ($ownerId && $ownerId !== Auth::id() && !Auth::user()->isAdmin()) {
             abort(403, 'Anda tidak memiliki akses ke kuis ini.');
         }
@@ -107,22 +119,26 @@ class QuizController extends Controller
                 $courseObj = CourseOffering::find($courseIdFromReq);
             }
             if (!$courseObj) {
-                $courseObj = CourseOffering::where('master_course_id', $quiz->master_course_id)
-                    ->where(function ($q) {
-                        if (!Auth::user()->isAdmin()) {
-                            $q->where('lecturer_id', Auth::id())
-                              ->orWhereHas('masterCourse', function ($mc) {
-                                  $mc->where('user_id', Auth::id());
-                              });
-                        }
-                    })
-                    ->latest()
-                    ->first();
+                if ($quiz->quizzable_type === CourseOffering::class) {
+                    $courseObj = CourseOffering::find($quiz->quizzable_id);
+                } else {
+                    $courseObj = CourseOffering::where('master_course_id', $quiz->quizzable_id)
+                        ->where(function ($q) {
+                            if (!Auth::user()->isAdmin()) {
+                                $q->where('lecturer_id', Auth::id())
+                                  ->orWhereHas('masterCourse', function ($mc) {
+                                      $mc->where('user_id', Auth::id());
+                                  });
+                            }
+                        })
+                        ->latest()
+                        ->first();
+                }
             }
         }
 
         $course = $courseObj ?? $quiz->course;
-        $quiz->load(['questions', 'masterCourse']);
+        $quiz->load(['questions', 'quizzable']);
 
         return view('vendor.quizzes.show', compact('quiz', 'course'));
     }
@@ -271,7 +287,7 @@ class QuizController extends Controller
         abort_unless($ownerId === $vendorId || Auth::user()->isAdmin(), 403, 'Akses ditolak.');
 
         $course->load(['masterCourse', 'enrollments.user']);
-        $quizzes = $course->masterCourse ? $course->masterCourse->quizzes : $course->quizzes;
+        $quizzes = $course->all_quizzes;
         $quizIds = $quizzes ? $quizzes->pluck('id') : collect();
 
         $retakeRequests = \App\Models\QuizRetakeRequest::with(['user', 'quiz', 'courseOffering'])

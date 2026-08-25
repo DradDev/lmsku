@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
+use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\LearningActivityLog;
 use App\Models\Project;
@@ -83,11 +84,12 @@ class ProjectController extends Controller
         }
 
         $certificate = Certificate::where('user_id', $student->id)
-            ->where('project_id', $project->id)
+            ->where('certifiable_type', Project::class)
+            ->where('certifiable_id', $project->id)
             ->first();
 
         if (!$certificate && $currentUser->role === 'admin') {
-            $certificate = Certificate::where('project_id', $project->id)->first();
+            $certificate = Certificate::where('certifiable_type', Project::class)->where('certifiable_id', $project->id)->first();
         }
 
         $eligibility = $this->checkStudentEligibility($student, $project);
@@ -222,10 +224,7 @@ class ProjectController extends Controller
         ]);
 
         $certificates = Certificate::with([
-            'courseOffering.masterCourse.skills',
-            'course.skills',
-            'project.creator.institution',
-            'project.skills'
+            'certifiable',
         ])
             ->where('user_id', $student->id)
             ->latest()
@@ -245,7 +244,7 @@ class ProjectController extends Controller
             $courseName = $masterCourse->name ?? ($enrollment->course->name ?? 'Course');
             $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
             $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
-                return $cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id;
+                return $cert->certifiable_type === CourseOffering::class && (int)$cert->certifiable_id === (int)$enrollment->course_offering_id;
             });
 
             foreach ($courseObj->skills as $skill) {

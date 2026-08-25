@@ -138,61 +138,7 @@
         }
 
         /* Bottom Hierarchy Widget matching TampilanAdmin.jpeg */
-        .admin-hierarchy-widget {
-            background: #FAFAFA;
-            border: 1px solid #E2E8F0;
-            border-radius: 14px;
-            padding: 1rem;
-            margin-top: 1.5rem;
-        }
 
-        .admin-hierarchy-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #0F172A;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .admin-hierarchy-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 0.75rem;
-        }
-
-        .admin-hierarchy-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 11.5px;
-            line-height: 1.3;
-        }
-
-        .admin-hierarchy-icon {
-            width: 22px;
-            height: 22px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            flex-shrink: 0;
-        }
-
-        .admin-hierarchy-step-mc { background: #EEF2FF; color: #4338CA; }
-        .admin-hierarchy-step-sem { background: #E0F2FE; color: #0369A1; }
-        .admin-hierarchy-step-off { background: #DCFCE7; color: #15803D; }
-
-        .admin-hierarchy-subtext {
-            font-size: 10.5px;
-            color: #64748B;
-            line-height: 1.4;
-            border-top: 1px border-dashed #CBD5E1;
-            padding-top: 6px;
-        }
 
         /* Right Content Area */
         .admin-main {
@@ -354,46 +300,6 @@
                     <span>Projects Audit</span>
                 </a>
             </nav>
-
-            <!-- Bottom Hierarchy Widget matching TampilanAdmin.jpeg -->
-            <div class="admin-hierarchy-widget">
-                <div class="admin-hierarchy-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                    Struktur Hirarki
-                </div>
-                <div class="admin-hierarchy-list">
-                    <div class="admin-hierarchy-step">
-                        <div class="admin-hierarchy-icon admin-hierarchy-step-mc">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                        </div>
-                        <div>
-                            <strong>Master Course</strong><br>
-                            <span style="color:#64748B;">Mata kuliah induk</span>
-                        </div>
-                    </div>
-                    <div class="admin-hierarchy-step">
-                        <div class="admin-hierarchy-icon admin-hierarchy-step-sem">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        </div>
-                        <div>
-                            <strong>Semester</strong><br>
-                            <span style="color:#64748B;">Periode akademik</span>
-                        </div>
-                    </div>
-                    <div class="admin-hierarchy-step">
-                        <div class="admin-hierarchy-icon admin-hierarchy-step-off">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
-                        </div>
-                        <div>
-                            <strong>Penawaran Kelas</strong><br>
-                            <span style="color:#64748B;">Kelas paralel di semester</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="admin-hierarchy-subtext">
-                    Kelola struktur akademik secara hierarkis dan terorganisir.
-                </div>
-            </div>
         </aside>
 
         <!-- RIGHT MAIN CONTENT AREA -->

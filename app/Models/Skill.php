@@ -13,29 +13,29 @@ class Skill extends Model
 
     public function courses()
     {
-        return $this->belongsToMany(MasterCourse::class, 'master_course_skills')
-            ->withPivot('is_main')
+        return $this->morphedByMany(MasterCourse::class, 'skillable')
+            ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 
     public function masterCourses()
     {
-        return $this->belongsToMany(MasterCourse::class, 'master_course_skills')
-            ->withPivot('is_main')
+        return $this->morphedByMany(MasterCourse::class, 'skillable')
+            ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'project_skills')
+        return $this->morphedByMany(Project::class, 'skillable')
             ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 
     public function questions()
     {
-        return $this->belongsToMany(Question::class, 'question_skills')
-            ->withPivot('weight')
+        return $this->morphedByMany(Question::class, 'skillable')
+            ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 

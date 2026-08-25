@@ -20,6 +20,13 @@ class Question extends Model
         'difficulty',
     ];
 
+    protected static function booted()
+    {
+        static::deleting(function ($model) {
+            $model->skills()->detach();
+        });
+    }
+
     public function quiz()
     {
         return $this->belongsTo(Quiz::class);
@@ -47,8 +54,8 @@ class Question extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'question_skills')
-            ->withPivot('weight')
+        return $this->morphToMany(Skill::class, 'skillable')
+            ->withPivot('weight', 'is_main')
             ->withTimestamps();
     }
 }

@@ -428,7 +428,8 @@ class ProjectController extends Controller
             $courseName = $courseObj->name ?? 'Course';
             $isCompleted = $enrollment->status === 'completed' || $enrollment->progress_percent >= 100;
             $hasVerifiedCert = $certificates->contains(function ($cert) use ($enrollment) {
-                return $cert->course_offering_id && $cert->course_offering_id === $enrollment->course_offering_id;
+                return $cert->certifiable_type === \App\Models\CourseOffering::class 
+                    && $cert->certifiable_id === $enrollment->course_offering_id;
             });
 
             foreach ($courseObj->skills as $skill) {
@@ -507,8 +508,9 @@ class ProjectController extends Controller
 
         // 2. Create or Update Certificate in 'pending' status for Admin Blockchain Verification
         $certificate = Certificate::firstOrNew([
-            'user_id' => $participation->user_id,
-            'project_id' => $project->id,
+            'user_id'          => $participation->user_id,
+            'certifiable_type' => Project::class,
+            'certifiable_id'   => $project->id,
         ]);
 
         if (!$certificate->exists) {

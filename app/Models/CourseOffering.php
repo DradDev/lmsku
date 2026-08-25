@@ -30,6 +30,16 @@ class CourseOffering extends Model
         'capacity' => 'integer',
     ];
 
+    protected static function booted()
+    {
+        static::deleting(function ($model) {
+            $model->materials()->delete();
+            $model->quizzes()->delete();
+            $model->certificates()->delete();
+            $model->enrollments()->delete();
+        });
+    }
+
     public function masterCourse()
     {
         return $this->belongsTo(MasterCourse::class, 'master_course_id');
@@ -51,24 +61,62 @@ class CourseOffering extends Model
     }
 
 
-    public function materials()
+    /**
+     * Polymorphic materials relation (Khusus Rombel / Batch Ini)
+     */
+    public function materials(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
-        return $this->hasMany(Material::class, 'course_offering_id');
+        return $this->morphMany(Material::class, 'materialable');
     }
 
+    /**
+     * Helper to get both Master and Class-specific materials
+     */
     public function getMaterialsAttribute()
     {
-        return Material::where('course_offering_id', $this->id)
-            ->orWhere(function ($q) {
-                $q->where('master_course_id', $this->master_course_id)->whereNull('course_offering_id');
-            })
-            ->latest()
-            ->get();
+        return Material::where(function ($q) {
+            $q->where('materialable_type', CourseOffering::class)->where('materialable_id', $this->id);
+        })->orWhere(function ($q) {
+            $q->where('materialable_type', MasterCourse::class)->where('materialable_id', $this->master_course_id);
+        })->latest()->get();
     }
 
-    public function quizzes()
+    public function getAllMaterialsAttribute()
     {
-        return $this->hasMany(Quiz::class, 'master_course_id', 'master_course_id');
+        return $this->getMaterialsAttribute();
+    }
+
+    /**
+     * Polymorphic certificates relation
+     */
+    public function certificates(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Certificate::class, 'certifiable');
+    }
+
+    /**
+     * Polymorphic quizzes relation (Khusus Rombel / Batch Ini)
+     */
+    public function quizzes(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Quiz::class, 'quizzable');
+    }
+
+    /**
+     * Helper to get both Master and Class-specific quizzes
+     */
+    public function getQuizzesAttribute()
+    {
+        return Quiz::where(function ($q) {
+            $q->where('quizzable_type', CourseOffering::class)->where('quizzable_id', $this->id);
+        })->orWhere(function ($q) {
+            $q->where('quizzable_type', MasterCourse::class)->where('quizzable_id', $this->master_course_id);
+        })->latest()->get();
+    }
+
+    public function getAllQuizzesAttribute()
+    {
+        return $this->getQuizzesAttribute();
     }
 
     public function enrollments()
@@ -76,10 +124,6 @@ class CourseOffering extends Model
         return $this->hasMany(Enrollment::class, 'course_offering_id');
     }
 
-    public function certificates()
-    {
-        return $this->hasMany(Certificate::class, 'course_offering_id');
-    }
 
     public function students()
     {
@@ -89,15 +133,12 @@ class CourseOffering extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class, 'master_course_skills', 'master_course_id', 'skill_id', 'master_course_id', 'id')
-            ->withPivot('is_main')
-            ->withTimestamps();
+        return $this->masterCourse ? $this->masterCourse->skills() : $this->morphToMany(Skill::class, 'skillable')->whereRaw('1=0');
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'master_course_tags', 'master_course_id', 'tag_id', 'master_course_id', 'id')
-            ->withTimestamps();
+        return $this->masterCourse ? $this->masterCourse->tags() : $this->morphToMany(Tag::class, 'taggable')->whereRaw('1=0');
     }
 
     // Accessors for 100% Backward Compatibility with Blade Views

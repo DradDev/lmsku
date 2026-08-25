@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Certificate extends Model
 {
     protected $fillable = [
         'user_id',
-        'course_offering_id',
-        'project_id',
+        'certifiable_type',
+        'certifiable_id',
         'credential_code',
         'score',
         'blockchain_hash',
@@ -24,9 +25,9 @@ class Certificate extends Model
 
     protected $casts = [
         'completed_at' => 'datetime',
-        'verified_at' => 'datetime',
-        'is_verified' => 'boolean',
-        'score' => 'integer',
+        'verified_at'  => 'datetime',
+        'is_verified'  => 'boolean',
+        'score'        => 'integer',
     ];
 
     public function user()
@@ -34,19 +35,61 @@ class Certificate extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Polymorphic relation to any certifiable entity (CourseOffering, Project, etc.)
+     */
+    public function certifiable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Backward-compatibility accessor for courseOffering
+     */
+    public function getCourseOfferingAttribute()
+    {
+        if ($this->certifiable_type === CourseOffering::class) {
+            return $this->certifiable;
+        }
+        return null;
+    }
+
+    /**
+     * Backward-compatibility method for courseOffering
+     */
     public function courseOffering()
     {
-        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
+        return $this->morphTo('certifiable');
     }
 
-    public function course()
+    /**
+     * Backward-compatibility accessor for course
+     */
+    public function getCourseAttribute()
     {
-        return $this->belongsTo(CourseOffering::class, 'course_offering_id');
+        if ($this->certifiable_type === CourseOffering::class) {
+            return $this->certifiable;
+        }
+        return null;
     }
 
+    /**
+     * Backward-compatibility accessor for project
+     */
+    public function getProjectAttribute()
+    {
+        if ($this->certifiable_type === Project::class) {
+            return $this->certifiable;
+        }
+        return null;
+    }
+
+    /**
+     * Backward-compatibility method for project
+     */
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->morphTo('certifiable');
     }
 
     public function verifiedByAdmin()
@@ -172,15 +215,19 @@ class Certificate extends Model
         $userIdFormatted = sprintf('%04d', $this->user_id);
         $completedDate = $this->completed_at ?? now();
 
+        $certifiable = $this->certifiable;
+        if (!$certifiable && $this->certifiable_type && $this->certifiable_id) {
+            $modelClass = $this->certifiable_type;
+            if (class_exists($modelClass)) {
+                $certifiable = $modelClass::find($this->certifiable_id);
+            }
+        }
+
         // ==========================================
         // DOMAIN A: PROJECT CERTIFICATE
         // ==========================================
-        if ($this->project_id || $this->project) {
-            $project = $this->project;
-            if (!$project && $this->project_id) {
-                $project = Project::with(['creator.institution', 'skills'])->find($this->project_id);
-            }
-
+        if ($certifiable instanceof Project || $this->certifiable_type === Project::class) {
+            $project = $certifiable;
             if ($project) {
                 $project->loadMissing(['creator.institution', 'skills']);
                 $creator = $project->creator;
@@ -190,7 +237,6 @@ class Certificate extends Model
 
                 if ($isInternal) {
                     // KATEGORI 2: LECTURER PROJECT (Internal Teknik Komputer)
-                    // Semester: Ganjil = 1 (Jul-Des), Genap = 2 (Jan-Jun)
                     $month = (int) $completedDate->format('n');
                     $termSuffix = ($month >= 1 && $month <= 6) ? '2' : '1';
                     $termCode = $completedDate->format('Y') . $termSuffix;
@@ -206,7 +252,7 @@ class Certificate extends Model
             }
 
             // Fallback project
-            $prjCode = sprintf('PRJ-%04d', $this->project_id ?? 1);
+            $prjCode = sprintf('PRJ-%04d', $this->certifiable_id ?? 1);
             $year = $completedDate->format('Y');
             return "CERT/{$prjCode}/{$year}/{$userIdFormatted}";
         }
@@ -214,9 +260,9 @@ class Certificate extends Model
         // ==========================================
         // DOMAIN B: COURSE CERTIFICATE
         // ==========================================
-        $offering = $this->courseOffering;
-        if (!$offering && $this->course_offering_id) {
-            $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.user.institution', 'lecturer.institution', 'academicTerm'])->find($this->course_offering_id);
+        $offering = ($certifiable instanceof CourseOffering) ? $certifiable : null;
+        if (!$offering && $this->certifiable_type === CourseOffering::class && $this->certifiable_id) {
+            $offering = CourseOffering::with(['masterCourse.skills', 'masterCourse.user.institution', 'lecturer.institution', 'academicTerm'])->find($this->certifiable_id);
         }
 
         $courseCreator = $offering?->lecturer ?? $offering?->masterCourse?->user ?? $offering?->user;

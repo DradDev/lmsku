@@ -633,6 +633,9 @@
                             @foreach($savedMaterials as $saved)
                                 @php
                                     $mat = $saved->material;
+                                @endphp
+                                @if(!$mat) @continue @endif
+                                @php
                                     $cName = $saved->courseOffering?->masterCourse?->name ?? ($mat->masterCourse?->name ?? 'Course');
                                 @endphp
                                 <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-3 transition hover:bg-slate-100/70">

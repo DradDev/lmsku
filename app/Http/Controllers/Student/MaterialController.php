@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\CourseOffering;
 use App\Models\LearningActivityLog;
+use App\Models\MasterCourse;
 use App\Models\Material;
 use App\Models\SavedMaterial;
 use App\Services\CourseProgressService;
@@ -15,6 +16,33 @@ use Illuminate\View\View;
 
 class MaterialController extends Controller
 {
+    private function getEnrolledOfferingForMaterial(Material $material, $user): ?CourseOffering
+    {
+        // 1. Jika materi bertipe CourseOffering (Khusus Rombel)
+        if ($material->materialable_type === CourseOffering::class) {
+            return CourseOffering::where('id', $material->materialable_id)
+                ->whereIn('id', function ($q) use ($user) {
+                    $q->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
+                })
+                ->first();
+        }
+
+        // 2. Jika materi bertipe MasterCourse (Induk)
+        $masterCourseId = $material->materialable_type === MasterCourse::class
+            ? $material->materialable_id
+            : ($material->master_course_id ?? optional($material->materialable)->master_course_id);
+
+        if ($masterCourseId) {
+            return CourseOffering::where('master_course_id', $masterCourseId)
+                ->whereIn('id', function ($q) use ($user) {
+                    $q->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
+                })
+                ->first();
+        }
+
+        return null;
+    }
+
     public function index(): View
     {
         $user = Auth::user();
@@ -30,12 +58,7 @@ class MaterialController extends Controller
     public function show(Material $material): View
     {
         $user = Auth::user();
-
-        $enrolledOffering = CourseOffering::where('master_course_id', $material->master_course_id)
-            ->whereIn('id', function ($q) use ($user) {
-                $q->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
-            })
-            ->first();
+        $enrolledOffering = $this->getEnrolledOfferingForMaterial($material, $user);
 
         abort_unless($enrolledOffering, 403, 'Kamu tidak memiliki akses ke materi ini.');
 
@@ -70,12 +93,7 @@ class MaterialController extends Controller
     public function toggleSave(Material $material): RedirectResponse
     {
         $user = Auth::user();
-
-        $enrolledOffering = CourseOffering::where('master_course_id', $material->master_course_id)
-            ->whereIn('id', function ($q) use ($user) {
-                $q->select('course_offering_id')->from('enrollments')->where('user_id', $user->id);
-            })
-            ->first();
+        $enrolledOffering = $this->getEnrolledOfferingForMaterial($material, $user);
 
         abort_unless($enrolledOffering, 403, 'Kamu tidak memiliki akses ke materi ini.');
 

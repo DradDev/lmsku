@@ -75,5 +75,13 @@ class Enrollment extends Model
     {
         return $this->belongsTo(CourseOffering::class, 'course_offering_id');
     }
+
+    /**
+     * Cek apakah pendaftaran ini sudah selesai (Lulus 100%).
+     */
+    public function getIsCompletedAttribute(): bool
+    {
+        return $this->progress_percent >= 100 || $this->status === 'completed';
+    }
 }
 

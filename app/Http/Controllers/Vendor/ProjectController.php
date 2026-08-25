@@ -357,8 +357,9 @@ class ProjectController extends Controller
 
         // 2. Create or Update Certificate in 'pending' status for Admin Blockchain Verification
         $certificate = Certificate::firstOrNew([
-            'user_id' => $participation->user_id,
-            'project_id' => $project->id,
+            'user_id'          => $participation->user_id,
+            'certifiable_type' => Project::class,
+            'certifiable_id'   => $project->id,
         ]);
 
         if (!$certificate->exists) {

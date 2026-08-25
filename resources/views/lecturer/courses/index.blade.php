@@ -1,410 +1,175 @@
 <x-app-layout>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-.page-wrap {
-    min-height: 100vh;
-    background: linear-gradient(180deg, #f8faff 0%, #f3f6fc 100%);
-    color: #1e2435;
-    padding: 2.5rem 0 4rem;
-    font-family: 'Inter', sans-serif;
-}
-
-.tabs-nav {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #e4e7ec;
-    padding-bottom: 1rem;
-}
-
-.tab-btn {
-    background: none;
-    border: none;
-    font-size: 15px;
-    font-weight: 600;
-    color: #667085;
-    cursor: pointer;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.tab-btn:hover {
-    color: #101828;
-    background: #f8fafc;
-}
-
-.tab-btn.active {
-    color: #4338ca;
-    background: #eef2ff;
-}
-
-.page-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.page-header {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-@media (min-width: 768px) {
-    .page-header {
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-    }
-}
-
-.page-eyebrow {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.3px;
-    text-transform: uppercase;
-    color: #4f46e5;
-    margin-bottom: 6px;
-}
-
-.page-title {
-    font-size: 28px;
-    font-weight: 800;
-    color: #101828;
-    letter-spacing: -0.5px;
-}
-
-.page-sub {
-    font-size: 14px;
-    color: #667085;
-    margin-top: 6px;
-    max-width: 720px;
-}
-
-.alert-success {
-    padding: 12px 16px;
-    border-radius: 14px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    background: #ecfdf3;
-    border: 1px solid #abefc6;
-    color: #067647;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 10px 18px;
-    border-radius: 12px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: 'Inter', sans-serif;
-    white-space: nowrap;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
-}
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(79, 70, 229, 0.35); }
-
-.stat-strip {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 2rem;
-}
-
-.stat-card {
-    background: #fff;
-    border: 1px solid #e4e7ec;
-    border-radius: 16px;
-    padding: 1.25rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-}
-
-.stat-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #667085;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.stat-value {
-    font-size: 24px;
-    font-weight: 800;
-    color: #101828;
-    margin-top: 4px;
-}
-
-.courses-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-}
-
-.course-card {
-    background: #fff;
-    border: 1px solid #e4e7ec;
-    border-radius: 20px;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    transition: all 0.2s;
-}
-
-.course-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
-}
-
-.course-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-}
-
-.course-tag {
-    font-size: 11px;
-    font-weight: 700;
-    color: #4f46e5;
-    background: #eef2ff;
-    padding: 3px 10px;
-    border-radius: 100px;
-}
-
-.course-badge {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 100px;
-    border: 1px solid transparent;
-}
-
-.course-name {
-    font-size: 17px;
-    font-weight: 800;
-    color: #101828;
-    margin-bottom: 6px;
-    line-height: 1.35;
-}
-
-.course-desc {
-    font-size: 13px;
-    color: #667085;
-    line-height: 1.5;
-    margin-bottom: 1.25rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    background: #f8fafc;
-    border: 1px solid #f1f5f9;
-    padding: 10px;
-    border-radius: 12px;
-    margin-bottom: 1.25rem;
-}
-
-.stat-mini-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-}
-
-.stat-mini-value {
-    font-size: 15px;
-    font-weight: 800;
+.courses-wrap {
+    font-family: 'Plus Jakarta Sans', sans-serif;
     color: #0f172a;
+    padding-bottom: 3rem;
 }
 
-.empty-state {
-    grid-column: 1 / -1;
-    background: rgba(255,255,255,0.94);
-    border: 1.5px dashed #d0d5dd;
-    border-radius: 22px;
-    padding: 4rem 2rem;
-    text-align: center;
+.compro-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.compro-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
 }
 </style>
 
-<div class="page-wrap">
-    <div class="page-container">
+<div class="courses-wrap max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        @php
-            $totalCourses = $activeCourses->count();
-            $totalMaterials = $activeCourses->sum(fn($course) => $course->materials ? $course->materials->count() : 0);
-            $totalQuizzes = $activeCourses->sum(fn($course) => $course->quizzes ? $course->quizzes->count() : 0);
-            $totalStudents = $activeCourses->sum(function($course) {
-                if (isset($course->students) && $course->students) return $course->students->count();
-                if (isset($course->enrollments) && $course->enrollments) return $course->enrollments->count();
-                return 0;
-            });
-        @endphp
+    {{-- ALERT NOTIFICATION --}}
+    @if(session('success'))
+        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-3 text-xs font-bold shadow-xs">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
 
-        <div class="page-header">
-            <div>
-                <p class="page-eyebrow">Dosen Pengampu Portal &bull; Manajemen Kelas Pembelajaran</p>
-                <h1 class="page-title">Daftar Kelas Pembelajaran Dosen</h1>
-                <p class="page-sub">Kelola materi modul, bank kuis (harian/akhir), dan kelulusan sertifikat mahasiswa di kelas semester aktif.</p>
+    {{-- TOP HEADER --}}
+    <div class="compro-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <div class="text-[11px] font-extrabold uppercase tracking-wider text-blue-600 mb-1">
+                Portal Dosen • COMPRO LMS
             </div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                Mata Kuliah & Kurikulum Dosen
+            </h1>
+            <p class="text-xs text-slate-500 mt-1">
+                Daftar mata kuliah yang Anda ampu pada semester aktif. Buka mata kuliah untuk memilih dan mengelola rombel kelas.
+            </p>
         </div>
 
-        @if(session('success'))
-            <div class="alert-success flex items-center gap-3">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs">✓</span>
-                <div>
-                    <strong>Berhasil!</strong> {{ session('success') }}
-                </div>
-            </div>
-        @endif
-
-        <div class="stat-strip">
-            <div class="stat-card">
-                <div class="stat-label">Total Kelas Aktif</div>
-                <div class="stat-value">{{ $totalCourses }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Materi Pembelajaran</div>
-                <div class="stat-value">{{ $totalMaterials }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Bank Kuis</div>
-                <div class="stat-value">{{ $totalQuizzes }}</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Mahasiswa Terdaftar</div>
-                <div class="stat-value">{{ $totalStudents }}</div>
-            </div>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('lecturer.dashboard') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Dashboard Dosen
+            </a>
         </div>
+    </div>
 
-        <div class="courses-grid">
-            @if(isset($groupedOfferings) && $groupedOfferings->isNotEmpty())
-                @foreach($groupedOfferings as $masterCourseId => $offeringsGroup)
-                    @php
-                        $firstOffering = $offeringsGroup->first();
-                        $totalGroupStudents = $offeringsGroup->sum(fn($o) => $o->enrollments ? $o->enrollments->count() : 0);
-                    @endphp
-                    <div class="course-card">
-                        <div class="course-top">
-                            <span class="course-tag">{{ $firstOffering->academicTerm->name ?? 'Semester Aktif' }}</span>
-                            <span class="course-badge text-indigo-700 bg-indigo-50 border-indigo-200 font-bold">
-                                {{ $offeringsGroup->count() }} Rombel Kelas
+    {{-- CARD-GRID MATA KULIAH (2 KOLOM MODERN, BUKAN TABEL PANJANG) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        @if(isset($groupedOfferings) && $groupedOfferings->isNotEmpty())
+            @foreach($groupedOfferings as $masterCourseId => $offeringsGroup)
+                @php
+                    $firstOffering = $offeringsGroup->first();
+                    $totalGroupStudents = $offeringsGroup->sum(fn($o) => $o->enrollments ? $o->enrollments->count() : 0);
+                    $masterCourse = $firstOffering->masterCourse;
+                @endphp
+                <div class="compro-card p-6 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-extrabold">
+                                {{ $firstOffering->academicTerm->name ?? 'Semester Aktif' }}
                             </span>
+                            @if($masterCourse && $masterCourse->code)
+                                <span class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-bold font-mono">
+                                    {{ $masterCourse->code }}
+                                </span>
+                            @endif
                         </div>
 
-                        <div class="course-name">{{ $firstOffering->name }}</div>
-
-                        <!-- List Pill Kelas Pararel (Kelas A, B, C) yang Diampu Dosen -->
-                        <div class="my-2 flex flex-wrap gap-1.5" style="display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0;">
-                            @foreach($offeringsGroup as $offeringItem)
-                                <a href="{{ route('lecturer.courses.show', $offeringItem->id) }}" 
-                                   class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition"
-                                   style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; text-decoration: none;">
-                                    <span>{{ $offeringItem->section_name ?: 'Kelas ' . $loop->iteration }}</span>
-                                    <span style="font-size: 10px; background: #c7d2fe; color: #312e81; padding: 1px 6px; border-radius: 999px; font-weight: 800;">
-                                        {{ $offeringItem->enrollments ? $offeringItem->enrollments->count() : 0 }} Mhs
-                                    </span>
-                                </a>
-                            @endforeach
+                        <div>
+                            <h2 class="text-lg font-extrabold text-slate-900 leading-snug">
+                                {{ $masterCourse->name ?? ($firstOffering->name ?? 'Mata Kuliah') }}
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                                {{ $firstOffering->description ?: 'Pengelolaan silabus materi, bank kuis, dan rombel perkuliahan mahasiswa.' }}
+                            </p>
                         </div>
 
-                        <p class="course-desc">{{ $firstOffering->description ?: 'Pengelolaan materi pembelajaran, bank kuis, dan kelulusan sertifikat.' }}</p>
-
-                        <div class="stats-row">
-                            <div class="stat-mini">
-                                <div class="stat-mini-label">Materials</div>
-                                <div class="stat-mini-value">{{ $firstOffering->materials ? $firstOffering->materials->count() : 0 }}</div>
+                        {{-- RINGKASAN JUMLAH KELAS & MAHASISWA --}}
+                        <div class="grid grid-cols-2 gap-3 pt-2">
+                            <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                                <div class="text-[10.5px] font-bold uppercase text-slate-400">Kelas Diampu</div>
+                                <div class="text-base font-extrabold text-slate-900 mt-0.5 font-mono">
+                                    {{ $offeringsGroup->count() }} Rombel
+                                </div>
                             </div>
-                            <div class="stat-mini">
-                                <div class="stat-mini-label">Quizzes</div>
-                                <div class="stat-mini-value">{{ $firstOffering->quizzes ? $firstOffering->quizzes->count() : 0 }}</div>
-                            </div>
-                            <div class="stat-mini">
-                                <div class="stat-mini-label">Total Mhs</div>
-                                <div class="stat-mini-value">{{ $totalGroupStudents }}</div>
+                            <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                                <div class="text-[10.5px] font-bold uppercase text-slate-400">Total Mahasiswa</div>
+                                <div class="text-base font-extrabold text-blue-600 mt-0.5 font-mono">
+                                    {{ $totalGroupStudents }} Mahasiswa
+                                </div>
                             </div>
                         </div>
-
-                        <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
-                        <div style="margin-top: auto;">
-                            <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" class="btn btn-primary w-full text-center">
-                                Buka Gerbang Kelas
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
-            @else
-            @forelse($activeCourses as $course)
-                <div class="course-card">
-                    <div class="course-top">
-                        <span class="course-tag">{{ $course->academicTerm->name ?? 'Semester Aktif' }}</span>
-                        <span class="course-badge text-green-700 bg-green-50 border-green-200">Aktif</span>
                     </div>
 
-                    <div class="course-name">{{ $course->name }}</div>
-
-                    <div class="text-xs text-indigo-600 mb-3 font-bold flex items-center gap-1.5">
-                        <span>Certificate Threshold:</span>
-                        <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md font-extrabold">{{ $course->certificate_threshold ?? 75 }}%</span>
-                    </div>
-
-                    <p class="course-desc">{{ $course->description ?: 'Pengelolaan materi pembelajaran, bank kuis, dan kelulusan sertifikat.' }}</p>
-
-                    <div class="stats-row">
-                        <div class="stat-mini">
-                            <div class="stat-mini-label">Materials</div>
-                            <div class="stat-mini-value">{{ $course->materials ? $course->materials->count() : 0 }}</div>
-                        </div>
-                        <div class="stat-mini">
-                            <div class="stat-mini-label">Quizzes</div>
-                            <div class="stat-mini-value">{{ $course->quizzes ? $course->quizzes->count() : 0 }}</div>
-                        </div>
-                        <div class="stat-mini">
-                            <div class="stat-mini-label">Students</div>
-                            <div class="stat-mini-value">{{ isset($course->students) && $course->students ? $course->students->count() : ($course->enrollments ? $course->enrollments->count() : 0) }}</div>
-                        </div>
-                    </div>
-
-                    <!-- TOMBOL TUNGGAL GERBANG KELAS DOSEN -->
-                    <div style="margin-top: auto;">
-                        <a href="{{ route('lecturer.courses.show', $course->id) }}" class="btn btn-primary w-full text-center">
-                            Buka Gerbang Kelas
+                    {{-- TOMBOL UTAMA MASUK MASTER COURSE --}}
+                    <div class="pt-3 border-t border-slate-100">
+                        <a href="{{ route('lecturer.courses.show', $firstOffering->id) }}" 
+                           class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                            <span>Kelola Mata Kuliah & Kelas</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
                         </a>
                     </div>
                 </div>
-            @empty
-                <div class="empty-state">
-                    <h3 style="font-size: 18px; font-weight: 800; color: #1e293b;">Belum Ada Kelas Aktif</h3>
-                    <p style="font-size: 13px; color: #64748b;">Mata kuliah dan penawaran kelas semester aktif akan disiapkan dan ditugaskan oleh Admin.</p>
-                </div>
-            @endforelse
-            @endif
-        </div>
+            @endforeach
+        @elseif(isset($activeCourses) && $activeCourses->isNotEmpty())
+            @foreach($activeCourses as $course)
+                <div class="compro-card p-6 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-extrabold">
+                                {{ $course->academicTerm->name ?? 'Semester Aktif' }}
+                            </span>
+                            @if($course->code)
+                                <span class="px-2.5 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[11px] font-bold font-mono">
+                                    {{ $course->code }}
+                                </span>
+                            @endif
+                        </div>
 
+                        <div>
+                            <h2 class="text-lg font-extrabold text-slate-900">
+                                {{ $course->name }}
+                            </h2>
+                            <p class="text-xs text-slate-500 mt-1">
+                                {{ $course->description ?: 'Pengelolaan silabus materi, bank kuis, dan mahasiswa terdaftar.' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-slate-100">
+                        <a href="{{ route('lecturer.courses.show', $course->id) }}" 
+                           class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition">
+                            <span>Kelola Mata Kuliah & Kelas</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        @else
+            <div class="col-span-2 compro-card p-12 text-center space-y-3">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <h3 class="text-base font-extrabold text-slate-800">Belum Ada Kelas Aktif</h3>
+                <p class="text-xs text-slate-500 max-w-md mx-auto">
+                    Mata kuliah dan penawaran kelas semester aktif akan disiapkan dan ditugaskan oleh Admin Akademik.
+                </p>
+            </div>
+        @endif
     </div>
+
 </div>
 </x-app-layout>

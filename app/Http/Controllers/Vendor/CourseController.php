@@ -236,13 +236,28 @@ class CourseController extends Controller
 
         // Materi & Kuis terpusat dari MasterCourse & seluruh batch di bawah kurikulum ini
         $masterCourse = $course->masterCourse;
-        $materials = $masterCourse
-            ? \App\Models\Material::where('master_course_id', $masterCourse->id)->get()
-            : $course->materials;
+        $masterCourseId = $masterCourse ? $masterCourse->id : $course->master_course_id;
+        $offeringIds = CourseOffering::where('master_course_id', $masterCourseId)->pluck('id');
 
-        $quizzes = $masterCourse
-            ? \App\Models\Quiz::with('questions')->where('master_course_id', $masterCourse->id)->get()
-            : $course->quizzes;
+        $materials = \App\Models\Material::where(function ($q) use ($masterCourseId, $offeringIds) {
+            $q->where(function ($sub) use ($masterCourseId) {
+                $sub->where('materialable_type', \App\Models\MasterCourse::class)
+                    ->where('materialable_id', $masterCourseId);
+            })->orWhere(function ($sub) use ($offeringIds) {
+                $sub->where('materialable_type', \App\Models\CourseOffering::class)
+                    ->whereIn('materialable_id', $offeringIds);
+            });
+        })->get();
+
+        $quizzes = \App\Models\Quiz::with('questions')->where(function ($q) use ($masterCourseId, $offeringIds) {
+            $q->where(function ($sub) use ($masterCourseId) {
+                $sub->where('quizzable_type', \App\Models\MasterCourse::class)
+                    ->where('quizzable_id', $masterCourseId);
+            })->orWhere(function ($sub) use ($offeringIds) {
+                $sub->where('quizzable_type', CourseOffering::class)
+                    ->whereIn('quizzable_id', $offeringIds);
+            });
+        })->get();
 
         $students = $course->students;
         $completedStudentCount = $course->enrollments()->where('status', 'completed')->count();

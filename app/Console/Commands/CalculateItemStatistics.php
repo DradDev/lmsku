@@ -43,7 +43,8 @@ class CalculateItemStatistics extends Command
                 ->count();
 
             $finalQuiz = DB::table('quizzes')
-                ->where('master_course_id', $masterCourse->id)
+                ->where('quizzable_type', \App\Models\MasterCourse::class)
+                ->where('quizzable_id', $masterCourse->id)
                 ->where('quiz_type', 'final')
                 ->first();
 

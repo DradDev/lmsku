@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Quiz extends Model
 {
     protected $fillable = [
-        'master_course_id',
+        'quizzable_type',
+        'quizzable_id',
         'title',
         'time_limit',
         'quiz_type',
@@ -22,14 +23,61 @@ class Quiz extends Model
         'max_attempts' => 'integer',
     ];
 
-    public function masterCourse()
+    /**
+     * Polymorphic relation to MasterCourse or CourseOffering
+     */
+    public function quizzable(): \Illuminate\Database\Eloquent\Relations\MorphTo
     {
-        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+        return $this->morphTo();
     }
 
-    public function course()
+    /**
+     * Dynamic accessors for seamless backward compatibility
+     */
+    public function getIsGlobalAttribute(): bool
     {
-        return $this->belongsTo(MasterCourse::class, 'master_course_id');
+        return $this->quizzable_type === MasterCourse::class;
+    }
+
+    public function isGlobal(): bool
+    {
+        return $this->quizzable_type === MasterCourse::class;
+    }
+
+    public function isClassSpecific(): bool
+    {
+        return $this->quizzable_type === CourseOffering::class;
+    }
+
+    public function getCourseAttribute()
+    {
+        if ($this->quizzable_type === MasterCourse::class) {
+            return $this->quizzable;
+        }
+
+        if ($this->quizzable_type === CourseOffering::class) {
+            return $this->quizzable?->masterCourse ?? $this->quizzable;
+        }
+
+        return null;
+    }
+
+    public function getMasterCourseAttribute()
+    {
+        return $this->getCourseAttribute();
+    }
+
+    public function getMasterCourseIdAttribute()
+    {
+        if ($this->quizzable_type === MasterCourse::class) {
+            return $this->quizzable_id;
+        }
+
+        if ($this->quizzable_type === CourseOffering::class) {
+            return $this->quizzable?->master_course_id;
+        }
+
+        return null;
     }
 
     public function questions()

@@ -219,6 +219,9 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/courses/{course}/duplicate', [LecturerCourseController::class, 'duplicate'])->name('courses.duplicate');
 
         // Course Quiz Management
+        Route::get('/courses/{course}/quizzes/create', [LecturerQuizController::class, 'create'])
+            ->name('courses.quizzes.create');
+
         Route::post('/courses/{course}/quizzes', [LecturerQuizController::class, 'store'])
             ->name('courses.quizzes.store');
 
@@ -262,7 +265,10 @@ Route::middleware(['auth', 'role:lecturer'])
         Route::post('/courses/{course}/quizzes/retake/bulk-approve', [LecturerQuizController::class, 'bulkApproveRetake'])
             ->name('courses.quizzes.retake.bulk-approve');
 
-        // Materials — hanya bisa dikelola dari dalam Course (nested)
+        // Materials Management
+        Route::get('/materials', [LecturerMaterialController::class, 'index'])
+            ->name('materials.index');
+
         Route::get('/courses/{course}/materials/create', [LecturerMaterialController::class, 'create'])
             ->name('materials.create');
 

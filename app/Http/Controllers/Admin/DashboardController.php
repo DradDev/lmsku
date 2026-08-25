@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AcademicTerm;
+use App\Models\Certificate;
 use App\Models\CourseOffering;
 use App\Models\Enrollment;
 use App\Models\MasterCourse;
+use App\Models\Project;
+use App\Models\ProjectParticipation;
 use App\Models\QuizAttempt;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -21,19 +24,10 @@ class DashboardController extends Controller
         $resultStatus = $request->input('result_status', 'all');
         $search = trim($request->input('search', ''));
 
-        // 1. Executive System Metrics
+        // 1. Four Core KPI Cards
         $totalUsers = User::count();
-        $pendingUsersCount = User::where('registration_status', 'pending')->count();
-        $studentCount = User::where('role', 'student')->count();
-        $lecturerCount = User::where('role', 'lecturer')->count();
-        $vendorCount = User::where('role', 'vendor')->count();
-
-        $totalMasterCourses = MasterCourse::count();
-        $academicCoursesCount = MasterCourse::whereNull('user_id')->count();
-        $vendorCoursesCount = MasterCourse::whereNotNull('user_id')->count();
-
         $activeTerm = AcademicTerm::where('is_active', true)->first();
-        $totalActiveOfferings = CourseOffering::where('is_archived', false)
+        $activeCoursesCount = CourseOffering::where('is_archived', false)
             ->when($activeTerm, function ($q) use ($activeTerm) {
                 $q->where(function ($sub) use ($activeTerm) {
                     $sub->where('academic_term_id', $activeTerm->id)
@@ -41,72 +35,95 @@ class DashboardController extends Controller
                 });
             })
             ->count();
+        $activeProjectsCount = Project::where('is_published', true)->count();
+        $activeStudentsCount = User::where('role', 'student')->where('registration_status', 'approved')->count();
 
+        // 2. Learning Progress & Completion Rates
         $totalEnrollments = Enrollment::count();
+        $completedEnrollments = Enrollment::where('status', 'completed')->count();
+        $inProgressEnrollments = Enrollment::where('status', 'in_progress')->count();
+        $notStartedEnrollments = Enrollment::where('status', 'not_started')->count();
+        $avgSystemProgress = $totalEnrollments > 0 ? round((float) Enrollment::avg('progress_percent')) : 0;
 
-        // 2. Pending User Approvals (Top 5 latest)
-        $pendingUsers = User::where('registration_status', 'pending')
-            ->with('institution')
-            ->latest()
-            ->take(5)
+        // 3. Top 3 Most Popular Courses
+        $topCourses = CourseOffering::with(['masterCourse', 'lecturer', 'academicTerm'])
+            ->withCount('enrollments')
+            ->withAvg('enrollments', 'progress_percent')
+            ->orderByDesc('enrollments_count')
+            ->take(3)
             ->get();
+        $totalMasterCourses = MasterCourse::count();
 
-        // 3. Final Quiz Results & Blockchain Integrity
-        $resultsQuery = QuizAttempt::whereHas('quiz', function ($query) {
-                $query->where('quiz_type', 'final');
-            })
-            ->with(['user', 'quiz.course', 'quiz.masterCourse'])
-            ->latest();
+        // 4. Active Semester & User Composition
+        $studentCount = User::where('role', 'student')->count();
+        $lecturerCount = User::where('role', 'lecturer')->count();
+        $vendorCount = User::where('role', 'vendor')->count();
 
-        if ($resultStatus === 'verified') {
-            $resultsQuery->where('is_verified', true);
-        } elseif ($resultStatus === 'unverified') {
-            $resultsQuery->where('is_verified', false);
-        }
+        // 5. Recent Activity Feed (Composite Timeline)
+        $recentActivities = collect();
 
-        if ($search !== '') {
-            $resultsQuery->where(function ($query) use ($search) {
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
-                })->orWhereHas('quiz.course', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })->orWhereHas('quiz.masterCourse', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        $results = $resultsQuery->take(15)->get();
-
-        $finalQuizAttempts = QuizAttempt::whereHas('quiz', function ($query) {
-            $query->where('quiz_type', 'final');
+        User::latest()->take(3)->get()->each(function ($u) use ($recentActivities) {
+            $roleLabel = match ($u->role) {
+                'lecturer' => 'Dosen / Instruktur',
+                'vendor' => 'Mitra Industri',
+                default => 'Mahasiswa',
+            };
+            $recentActivities->push([
+                'title' => $u->name . ' mendaftar sebagai ' . $roleLabel,
+                'subtitle' => $u->institution->name ?? ($u->email ?? 'Registrasi Pengguna'),
+                'time' => $u->created_at,
+                'type' => 'user',
+            ]);
         });
 
-        $resultStats = [
-            'total' => (clone $finalQuizAttempts)->count(),
-            'verified' => (clone $finalQuizAttempts)->where('is_verified', true)->count(),
-            'unverified' => (clone $finalQuizAttempts)->where('is_verified', false)->count(),
-            'average_score' => round((float) (clone $finalQuizAttempts)->avg('score')),
-        ];
+        QuizAttempt::whereHas('quiz', function ($q) {
+                $q->where('quiz_type', 'final');
+            })
+            ->with(['user', 'quiz.quizzable'])
+            ->latest()
+            ->take(3)
+            ->get()
+            ->each(function ($qa) use ($recentActivities) {
+                $recentActivities->push([
+                    'title' => ($qa->user->name ?? 'Mahasiswa') . ' menyelesaikan Final Quiz',
+                    'subtitle' => ($qa->quiz->course->name ?? 'Course') . ' • Nilai: ' . $qa->score . ' Pts',
+                    'time' => $qa->completed_at ?? $qa->created_at,
+                    'type' => 'quiz',
+                ]);
+            });
+
+        CourseOffering::with(['masterCourse', 'lecturer'])
+            ->latest()
+            ->take(2)
+            ->get()
+            ->each(function ($co) use ($recentActivities) {
+                $recentActivities->push([
+                    'title' => 'Rombel ' . ($co->section_name ?: 'Kelas') . ' ' . ($co->masterCourse->name ?? 'Mata Kuliah') . ' dibuka',
+                    'subtitle' => 'Pengampu: ' . ($co->lecturer->name ?? 'Dosen/Vendor'),
+                    'time' => $co->created_at,
+                    'type' => 'course',
+                ]);
+            });
+
+        $recentActivities = $recentActivities->sortByDesc('time')->take(5)->values();
 
         return view('admin.dashboard', compact(
-            'search',
-            'resultStatus',
-            'results',
-            'resultStats',
             'totalUsers',
-            'pendingUsersCount',
+            'activeCoursesCount',
+            'activeProjectsCount',
+            'activeStudentsCount',
+            'totalEnrollments',
+            'completedEnrollments',
+            'inProgressEnrollments',
+            'notStartedEnrollments',
+            'avgSystemProgress',
+            'topCourses',
+            'totalMasterCourses',
+            'activeTerm',
             'studentCount',
             'lecturerCount',
             'vendorCount',
-            'totalMasterCourses',
-            'academicCoursesCount',
-            'vendorCoursesCount',
-            'activeTerm',
-            'totalActiveOfferings',
-            'totalEnrollments',
-            'pendingUsers'
+            'recentActivities'
         ));
     }
 
