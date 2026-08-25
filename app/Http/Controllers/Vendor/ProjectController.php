@@ -198,6 +198,11 @@ class ProjectController extends Controller
             abort(403, 'Anda tidak memiliki akses ke project industri ini.');
         }
 
+        $enrollmentCount = $project->participations()->count();
+        if ($enrollmentCount > 0) {
+            return back()->with('error', "Tidak dapat menghapus project '{$project->title}' karena sudah memiliki {$enrollmentCount} pelamar/mahasiswa. Silakan nonaktifkan (Unpublish) project ini untuk menutup pendaftaran.");
+        }
+
         $project->delete();
 
         return redirect()
