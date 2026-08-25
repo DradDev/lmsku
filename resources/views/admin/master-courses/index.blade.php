@@ -121,10 +121,11 @@
         {{-- 1. INTERNAL KAMPUS MASTER COURSES --}}
         @foreach ($masterCourses as $mc)
             @php
-                $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . ($mc->description ?? '') . ' ' . ($mc->main_skill->name ?? ''));
+                $cleanDesc = preg_replace('/\s+/', ' ', $mc->description ?? '');
+                $searchHaystack = strtolower($mc->name . ' ' . ($mc->code ?? '') . ' ' . $cleanDesc . ' ' . ($mc->main_skill->name ?? ''));
                 $totalOfferingsCount = $mc->offerings_count ?? ($mc->offerings ? $mc->offerings->count() : 0);
             @endphp
-            <div x-show="(tab === 'all' || tab === 'internal') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
+            <div x-show="(tab === 'all' || tab === 'internal') && (search === '' || {{ json_encode($searchHaystack) }}.includes(search.toLowerCase()))"
                  class="compro-card p-6 flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-2">
@@ -193,10 +194,11 @@
         {{-- 2. VENDOR MITRA MASTER COURSES --}}
         @foreach ($vendorCourses as $vc)
             @php
-                $searchHaystack = strtolower($vc->name . ' ' . ($vc->code ?? '') . ' ' . ($vc->description ?? '') . ' ' . ($vc->user->name ?? ''));
+                $cleanDesc = preg_replace('/\s+/', ' ', $vc->description ?? '');
+                $searchHaystack = strtolower($vc->name . ' ' . ($vc->code ?? '') . ' ' . $cleanDesc . ' ' . ($vc->user->name ?? ''));
                 $totalBatches = $vc->courses ? $vc->courses->count() : 0;
             @endphp
-            <div x-show="(tab === 'all' || tab === 'vendor') && (search === '' || '{{ addslashes($searchHaystack) }}'.includes(search.toLowerCase()))"
+            <div x-show="(tab === 'all' || tab === 'vendor') && (search === '' || {{ json_encode($searchHaystack) }}.includes(search.toLowerCase()))"
                  class="compro-card p-6 flex flex-col justify-between space-y-4">
                 <div class="space-y-3">
                     <div class="flex items-center justify-between gap-2">

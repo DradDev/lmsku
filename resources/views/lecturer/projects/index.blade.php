@@ -38,6 +38,8 @@
                 </div>
             @endif
 
+            @if (session('error')) <div class="mb-5 flex items-start gap-3 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl shadow-sm"><svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><div><p class="font-semibold">Aksi Ditolak</p><p class="text-sm">{{ session('error') }}</p></div></div> @endif 
+
             @if (session('warning'))
                 <div class="mb-5 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl shadow-sm">
                     <svg class="mt-0.5 flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none"
